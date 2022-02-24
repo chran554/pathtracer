@@ -66,7 +66,7 @@ func createCameraRay(x int, y int, width int, height int, camera Camera, sampleN
 }
 
 func getCameraLensPoint(radius float32, amountSamples int, sample int) vec3.T {
-	xOffset, yOffset := sunflower(amountSamples, 1.0, sample)
+	xOffset, yOffset := sunflower(amountSamples, 1.0, sample, true)
 	return vec3.T{radius * xOffset, radius * yOffset, 0}
 }
 
@@ -90,11 +90,16 @@ func getCameraRayIntersectionWithFocalPlane(camera Camera, perfectHeading vec3.T
 // alpha controls point distribution on the edge. Typical values 1-2, higher values more points on the edge.
 // i is the index of a point. It is in the range [i,n] .
 // https://stackoverflow.com/questions/28567166/uniformly-distribute-x-points-inside-a-circle
-func sunflower(n int, alpha float32, i int) (float32, float32) { //  example: n=500, alpha=2
-	b := math.Round(float64(alpha) * math.Sqrt(float64(n))) // number of boundary points
-	phi := (math.Sqrt(5.0) + 1.0) / 2.0                     // golden ratio
-	r := sunflowerRadius(float64(i), float64(n), b)
-	theta := 2.0 * math.Pi * float64(i) / (phi * phi)
+func sunflower(amountPoints int, alpha float32, pointNumber int, randomize bool) (float32, float32) { // example: amountPoints=500, alpha=2, pointNumber=[1..amountPoints]
+	pointIndex := float32(pointNumber)
+	if randomize {
+		pointIndex += rand.Float32() - 0.5
+	}
+
+	b := math.Round(float64(alpha) * math.Sqrt(float64(amountPoints))) // number of boundary points
+	phi := (math.Sqrt(5.0) + 1.0) / 2.0                                // golden ratio
+	r := sunflowerRadius(float64(pointIndex), float64(amountPoints), b)
+	theta := 2.0 * math.Pi * float64(pointIndex) / (phi * phi)
 
 	return float32(r * math.Cos(theta)), float32(r * math.Sin(theta))
 }

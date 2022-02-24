@@ -6,15 +6,18 @@ import (
 	"math"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/ungerik/go3d/vec3"
 )
 
 func main() {
+	startTimestamp := time.Now()
+
 	sceneFilename := "scene/three_balls.scene.json"
 	imageFilename := "rendered/rendered.png"
-	const width = 300
-	const height = 225
+	const width = 800 * 1
+	const height = 600 * 1
 
 	var sceneJson, err = os.ReadFile(sceneFilename)
 	if err != nil {
@@ -42,6 +45,8 @@ func main() {
 	render(&scene, width, height, pixeldata)
 
 	writeImage(imageFilename, width, height, pixeldata)
+
+	fmt.Println("Total execution time:", time.Since(startTimestamp))
 }
 
 func (c *Color) add(color Color) {
