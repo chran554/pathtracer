@@ -6,8 +6,10 @@ import (
 	"math"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
+	progressbar2 "github.com/schollz/progressbar/v3"
 	"github.com/ungerik/go3d/vec3"
 )
 
@@ -62,27 +64,45 @@ func (c *Color) divide(divider float32) {
 }
 
 func render(scene *Scene, width int, height int, pixeldata []Color) {
-	for sampleNr := 0; sampleNr < scene.Camera.Samples; sampleNr++ {
-		if ((sampleNr + 1) % 10) == 0 {
-			fmt.Println("Running sample", sampleNr+1, "of", scene.Camera.Samples, "...")
-		}
+	var wg sync.WaitGroup
 
+	amountSamples := scene.Camera.Samples
+
+	progressbar := progressbar2.NewOptions(height,
+		progressbar2.OptionFullWidth(),
+		progressbar2.OptionClearOnFinish(),
+		progressbar2.OptionSetPredictTime(true),
+		progressbar2.OptionEnableColorCodes(true),
+		progressbar2.OptionSetDescription("Render progress"),
+	)
+
+	for y := 0; y < height; y++ {
 		for x := 0; x < width; x++ {
-			for y := 0; y < height; y++ {
-				cameraRay := createCameraRay(x, y, width, height, scene.Camera, sampleNr)
-				color := tracePath(cameraRay, scene)
-				pixeldata[y*width+x].add(color)
-			}
+			wg.Add(1)
+			go parallelPixelRendering(pixeldata, scene, width, height, x, y, amountSamples, &wg)
 		}
-
-		//writeImage("rendered/current_progress"+strconv.Itoa(sampleNr)+".png", width, height, pixeldata)
+		if err := progressbar.Set(y + 1); err != nil {
+			fmt.Println(err)
+		}
 	}
+
+	wg.Wait()
 
 	for x := 0; x < width; x++ {
 		for y := 0; y < height; y++ {
-			index := y*width + x
-			pixeldata[index].divide(float32(scene.Camera.Samples))
+			pixelIndex := y*width + x
+			pixeldata[pixelIndex].divide(float32(amountSamples))
 		}
+	}
+}
+
+func parallelPixelRendering(pixeldata []Color, scene *Scene, width int, height int, x int, y int, amountSamples int, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	for sampleIndex := 0; sampleIndex < amountSamples; sampleIndex++ {
+		cameraRay := createCameraRay(x, y, width, height, scene.Camera, sampleIndex)
+		color := tracePath(cameraRay, scene)
+		pixeldata[y*width+x].add(color)
 	}
 }
 

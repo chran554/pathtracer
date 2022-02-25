@@ -6,7 +6,7 @@
     "ViewPlaneDistance": 400,
     "LensRadius": 20,
     "FocalDistance": 200,
-    "Samples": 50,
+    "Samples": 40,
     "AntiAlias": true
   },
   "Spheres": [

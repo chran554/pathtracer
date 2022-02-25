@@ -22,7 +22,7 @@ func (camera *Camera) getCameraCoordinateSystem() mat3.T {
 	return camera._coordinateSystem
 }
 
-func createCameraRay(x int, y int, width int, height int, camera Camera, sampleNr int) ray {
+func createCameraRay(x int, y int, width int, height int, camera Camera, sampleIndex int) ray {
 	rayOrigin := camera.Origin
 
 	cameraCoordinateSystem := camera.getCameraCoordinateSystem()
@@ -45,7 +45,7 @@ func createCameraRay(x int, y int, width int, height int, camera Camera, sampleN
 	var headingInCameraCoordinateSystem vec3.T
 
 	if camera.LensRadius > 0 && camera.Samples > 0 {
-		cameraPointOffset := getCameraLensPoint(camera.LensRadius, camera.Samples, sampleNr+1)
+		cameraPointOffset := getCameraLensPoint(camera.LensRadius, camera.Samples, sampleIndex+1)
 		focalPointInCameraCoordinateSystem := getCameraRayIntersectionWithFocalPlane(camera, perfectHeadingInCameraCoordinateSystem)
 
 		headingInCameraCoordinateSystem = focalPointInCameraCoordinateSystem

@@ -2,9 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/ungerik/go3d/vec3"
+	"math/rand"
 	"strconv"
 	"testing"
+	"time"
+
+	"github.com/ungerik/go3d/vec3"
 )
 
 func Test_CameraCoordinateSystem(t *testing.T) {
@@ -71,9 +74,14 @@ func Test_Struct(t *testing.T) {
 
 func Test_sunflower(t *testing.T) {
 	t.Run("sunflower", func(t *testing.T) {
-		amount := 4000
 		width := 300
 		height := 300
+		amount := 4000
+		randomize := true
+
+		// ------------------------------------
+
+		rand.Seed(time.Now().UnixMicro())
 
 		halfWidth := float32(width / 2)
 		halfHeight := float32(height / 2)
@@ -81,13 +89,13 @@ func Test_sunflower(t *testing.T) {
 		pixeldata := make([]Color, width*height)
 
 		for i := 0; i < amount; i++ {
-			x, y := sunflower(amount, 2.0, i+1)
+			x, y := sunflower(amount, 2.0, i+1, randomize)
 			x2 := int(halfWidth * (1 + x))
 			y2 := int(halfHeight * (1 - y))
 			pixeldata[y2*width+x2] = Color{R: 1, G: 1, B: 1}
 		}
 
-		writeImage("sunflower_["+strconv.Itoa(width)+"x"+strconv.Itoa(height)+"]x"+strconv.Itoa(amount)+".png", width, height, pixeldata)
+		writeImage("sunflower_["+strconv.Itoa(width)+"x"+strconv.Itoa(height)+"]x"+strconv.Itoa(amount)+"_random.png", width, height, pixeldata)
 
 		//fmt.Printf("%+v\n", test)
 	})
