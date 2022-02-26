@@ -3,29 +3,15 @@ package main
 import (
 	"math"
 	"math/rand"
+	scn "pathtracer/internal/pkg/scene"
 
-	"github.com/ungerik/go3d/mat3"
 	"github.com/ungerik/go3d/vec3"
 )
 
-func (camera *Camera) getCameraCoordinateSystem() mat3.T {
-	if camera._coordinateSystem == (mat3.T{}) {
-		heading := camera.Heading.Normalized()
-
-		cameraX := vec3.Cross(&camera.ViewUp, &heading)
-		cameraX.Normalize()
-		cameraY := vec3.Cross(&heading, &cameraX)
-		cameraY.Normalize()
-
-		camera._coordinateSystem = mat3.T{cameraX, cameraY, camera.Heading}
-	}
-	return camera._coordinateSystem
-}
-
-func createCameraRay(x int, y int, width int, height int, camera Camera, sampleIndex int) ray {
+func CreateCameraRay(x int, y int, width int, height int, camera scn.Camera, sampleIndex int) scn.Ray {
 	rayOrigin := camera.Origin
 
-	cameraCoordinateSystem := camera.getCameraCoordinateSystem()
+	cameraCoordinateSystem := camera.GetCameraCoordinateSystem()
 
 	perfectHeadingInCameraCoordinateSystem := vec3.T{
 		-float32(width/2.0) + float32(x) + 0.5,
@@ -59,9 +45,9 @@ func createCameraRay(x int, y int, width int, height int, camera Camera, sampleI
 
 	headingInSceneCoordinateSystem := cameraCoordinateSystem.MulVec3(&headingInCameraCoordinateSystem)
 
-	return ray{
-		origin:  rayOrigin,
-		heading: headingInSceneCoordinateSystem,
+	return scn.Ray{
+		Origin:  rayOrigin,
+		Heading: headingInSceneCoordinateSystem,
 	}
 }
 
@@ -70,18 +56,18 @@ func getCameraLensPoint(radius float32, amountSamples int, sample int) vec3.T {
 	return vec3.T{radius * xOffset, radius * yOffset, 0}
 }
 
-func getCameraRayIntersectionWithFocalPlane(camera Camera, perfectHeading vec3.T) vec3.T {
-	ray := ray{
-		origin:  vec3.Zero,
-		heading: perfectHeading,
+func getCameraRayIntersectionWithFocalPlane(camera scn.Camera, perfectHeading vec3.T) vec3.T {
+	ray := scn.Ray{
+		Origin:  vec3.Zero,
+		Heading: perfectHeading,
 	}
 
-	focalPlane := plane{
-		origin: vec3.T{0, 0, camera.FocalDistance},
-		normal: vec3.T{0, 0, 1},
+	focalPlane := scn.Plane{
+		Origin: vec3.T{0, 0, camera.FocalDistance},
+		Normal: vec3.T{0, 0, 1},
 	}
 
-	pointInFocalPlaneInCameraCoordinateSystem, _ := getLinePlaneIntersectionPoint(ray, focalPlane)
+	pointInFocalPlaneInCameraCoordinateSystem, _ := GetLinePlaneIntersectionPoint(ray, focalPlane)
 
 	return pointInFocalPlaneInCameraCoordinateSystem
 }

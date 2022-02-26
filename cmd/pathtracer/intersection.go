@@ -2,6 +2,7 @@ package main
 
 import (
 	"math"
+	scn "pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/vec3"
 )
@@ -10,18 +11,18 @@ func negative(t1 float32) bool {
 	return math.Signbit(float64(t1))
 }
 
-func getLinePlaneIntersectionPoint(line ray, plane plane) (vec3.T, bool) {
+func GetLinePlaneIntersectionPoint(line scn.Ray, plane scn.Plane) (vec3.T, bool) {
 	WarningNone := 0
 	WarningNoIntersect := 1
 	WarningIntersectBehind := 2
 
 	warning := WarningNone
 
-	m := plane.normal[0]*(plane.origin[0]-line.origin[0]) +
-		plane.normal[1]*(plane.origin[1]-line.origin[1]) +
-		plane.normal[2]*(plane.origin[2]-line.origin[2])
+	m := plane.Normal[0]*(plane.Origin[0]-line.Origin[0]) +
+		plane.Normal[1]*(plane.Origin[1]-line.Origin[1]) +
+		plane.Normal[2]*(plane.Origin[2]-line.Origin[2])
 
-	n := plane.normal[0]*line.heading[0] + plane.normal[1]*line.heading[1] + plane.normal[2]*line.heading[2]
+	n := plane.Normal[0]*line.Heading[0] + plane.Normal[1]*line.Heading[1] + plane.Normal[2]*line.Heading[2]
 
 	t := float32(0)
 
@@ -37,9 +38,9 @@ func getLinePlaneIntersectionPoint(line ray, plane plane) (vec3.T, bool) {
 
 	if warning == WarningNone {
 		intersectionPoint := vec3.T{
-			line.origin[0] + t*line.heading[0],
-			line.origin[1] + t*line.heading[1],
-			line.origin[2] + t*line.heading[2],
+			line.Origin[0] + t*line.Heading[0],
+			line.Origin[1] + t*line.Heading[1],
+			line.Origin[2] + t*line.Heading[2],
 		}
 
 		return intersectionPoint, true
@@ -48,14 +49,14 @@ func getLinePlaneIntersectionPoint(line ray, plane plane) (vec3.T, bool) {
 	return vec3.T{0, 0, 0}, false
 }
 
-func discIntersection(line ray, disc Disc) (vec3.T, bool) {
-	plane := plane{
-		origin:   disc.Origin,
-		normal:   disc.Normal,
-		material: disc.Material,
+func DiscIntersection(line scn.Ray, disc scn.Disc) (vec3.T, bool) {
+	plane := scn.Plane{
+		Origin:   disc.Origin,
+		Normal:   disc.Normal,
+		Material: disc.Material,
 	}
 
-	intersectionPoint, intersection := getLinePlaneIntersectionPoint(line, plane)
+	intersectionPoint, intersection := GetLinePlaneIntersectionPoint(line, plane)
 
 	if intersection {
 		intersectionDistance := vec3.Distance(&disc.Origin, &intersectionPoint)
@@ -67,7 +68,7 @@ func discIntersection(line ray, disc Disc) (vec3.T, bool) {
 	return vec3.T{0, 0, 0}, false
 }
 
-func sphereIntersection(line ray, sphere Sphere) (vec3.T, bool) {
+func SphereIntersection(line scn.Ray, sphere scn.Sphere) (vec3.T, bool) {
 	WarningNone := 0
 	WarningNoIntersection := 1
 	WarningInside := 2
@@ -78,17 +79,17 @@ func sphereIntersection(line ray, sphere Sphere) (vec3.T, bool) {
 
 	t3 := float32(0)
 
-	m := line.heading[0]*(line.origin[0]-sphere.Origin[0]) +
-		line.heading[1]*(line.origin[1]-sphere.Origin[1]) +
-		line.heading[2]*(line.origin[2]-sphere.Origin[2])
+	m := line.Heading[0]*(line.Origin[0]-sphere.Origin[0]) +
+		line.Heading[1]*(line.Origin[1]-sphere.Origin[1]) +
+		line.Heading[2]*(line.Origin[2]-sphere.Origin[2])
 
-	n := line.heading[0]*line.heading[0] +
-		line.heading[1]*line.heading[1] +
-		line.heading[2]*line.heading[2]
+	n := line.Heading[0]*line.Heading[0] +
+		line.Heading[1]*line.Heading[1] +
+		line.Heading[2]*line.Heading[2]
 
-	o2 := sphere.Radius*sphere.Radius + float32(2)*((line.origin[0]*sphere.Origin[0])+(line.origin[1]*sphere.Origin[1])+(line.origin[2]*sphere.Origin[2]))
+	o2 := sphere.Radius*sphere.Radius + float32(2)*((line.Origin[0]*sphere.Origin[0])+(line.Origin[1]*sphere.Origin[1])+(line.Origin[2]*sphere.Origin[2]))
 
-	o3 := (line.origin[0]*line.origin[0] + line.origin[1]*line.origin[1] + line.origin[2]*line.origin[2]) +
+	o3 := (line.Origin[0]*line.Origin[0] + line.Origin[1]*line.Origin[1] + line.Origin[2]*line.Origin[2]) +
 		(sphere.Origin[0]*sphere.Origin[0] + sphere.Origin[1]*sphere.Origin[1] + sphere.Origin[2]*sphere.Origin[2])
 
 	o1 := o2 - o3
@@ -129,9 +130,9 @@ func sphereIntersection(line ray, sphere Sphere) (vec3.T, bool) {
 	if (warning == WarningNone) || (warning == WarningOn) || (warning == WarningInside) {
 		// Put in t3 into formula of line to get intersection point
 		intersectionPoint := vec3.T{
-			line.origin[0] + t3*line.heading[0],
-			line.origin[1] + t3*line.heading[1],
-			line.origin[2] + t3*line.heading[2],
+			line.Origin[0] + t3*line.Heading[0],
+			line.Origin[1] + t3*line.Heading[1],
+			line.Origin[2] + t3*line.Heading[2],
 		}
 
 		return intersectionPoint, true

@@ -7,9 +7,10 @@ import (
 	"image/png"
 	"math"
 	"os"
+	"pathtracer/internal/pkg/scene"
 )
 
-func writeImage(filename string, width int, height int, pixeldata []Color) {
+func writeImage(filename string, width int, height int, pixeldata []scene.Color) {
 	image := img.NewRGBA(img.Rect(0, 0, width, height))
 	for x := 0; x < width; x++ {
 		for y := 0; y < height; y++ {
