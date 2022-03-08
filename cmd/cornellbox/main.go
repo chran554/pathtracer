@@ -11,26 +11,28 @@ import (
 
 var ballRadius float64 = 20
 
-var amountSamples = 10
-var lensRadius float64 = 0
+var amountSamples = 256
+var lensRadius float64 = 8
 var antiAlias = true
+var viewPlaneDistance = 1600.0
 
 func main() {
 	animation := scn.Animation{
-		AnimationName: "cornellbox",
-		Frames:        []scn.Frame{},
-		Width:         800 * 2,
-		Height:        600 * 2,
+		AnimationName:     "cornellbox",
+		Frames:            []scn.Frame{},
+		Width:             800 * 2,
+		Height:            600 * 2,
+		WriteRawImageFile: false,
 	}
 
-	focalDistance := float64(200.0)
 	scene := scn.Scene{
-		Camera:  getCamera(focalDistance),
+		Camera:  getCamera(),
 		Spheres: []scn.Sphere{},
 		Discs:   getBoxWalls(),
 	}
 
 	sphere1 := scn.Sphere{
+		Name:   "Right sphere",
 		Origin: vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0},
 		Radius: ballRadius,
 		Material: scn.Material{
@@ -40,6 +42,7 @@ func main() {
 	}
 
 	sphere2 := scn.Sphere{
+		Name:   "Left sphere",
 		Origin: vec3.T{-(ballRadius + (ballRadius / 2)), ballRadius, 0},
 		Radius: ballRadius,
 		Material: scn.Material{
@@ -70,12 +73,14 @@ func main() {
 		fmt.Println("Ouuupps, no file writing performed")
 		os.Exit(1)
 	}
-	fmt.Println("Write animation file:", filename)
+
+	fmt.Println("Wrote animation file:", filename)
 }
 
 func getBoxWalls() []scn.Disc {
 	return []scn.Disc{
-		{ // Floor
+		{
+			Name:   "Floor",
 			Origin: vec3.T{0, 0, 0},
 			Normal: vec3.T{0, 1, 0},
 			Radius: 600,
@@ -84,7 +89,8 @@ func getBoxWalls() []scn.Disc {
 				Emission: &scn.Black,
 			},
 		},
-		{ // Right wall
+		{
+			Name:   "Right wall",
 			Origin: vec3.T{ballRadius * 3, 0, 0},
 			Normal: vec3.T{-1, 0, 0},
 			Radius: 600,
@@ -93,7 +99,8 @@ func getBoxWalls() []scn.Disc {
 				Emission: &scn.Black,
 			},
 		},
-		{ // Left wall
+		{
+			Name:   "Left wall",
 			Origin: vec3.T{-ballRadius * 3, 0, 0},
 			Normal: vec3.T{1, 0, 0},
 			Radius: 600,
@@ -102,7 +109,8 @@ func getBoxWalls() []scn.Disc {
 				Emission: &scn.Black,
 			},
 		},
-		{ // Roof
+		{
+			Name:   "Roof",
 			Origin: vec3.T{0, ballRadius * 6, 0},
 			Normal: vec3.T{0, -1, 0},
 			Radius: 600,
@@ -111,7 +119,8 @@ func getBoxWalls() []scn.Disc {
 				Emission: &scn.Black,
 			},
 		},
-		{ // back wall
+		{
+			Name:   "Back wall",
 			Origin: vec3.T{0, 0, ballRadius * 6},
 			Normal: vec3.T{0, 0, -1},
 			Radius: 600,
@@ -123,14 +132,17 @@ func getBoxWalls() []scn.Disc {
 	}
 }
 
-func getCamera(focalDistance float64) scn.Camera {
+func getCamera() scn.Camera {
 	origin := vec3.T{0, ballRadius, -200}
+
+	heading := vec3.T{-origin[0], -(origin[1] - ballRadius), -origin[2]}
+	focalDistance := heading.Length()
 
 	return scn.Camera{
 		Origin:            origin,
-		Heading:           vec3.T{-origin[0], -(origin[1] - ballRadius), -origin[2]},
+		Heading:           heading,
 		ViewUp:            vec3.T{0, 1, 0},
-		ViewPlaneDistance: 1600,
+		ViewPlaneDistance: viewPlaneDistance,
 		LensRadius:        lensRadius,
 		FocalDistance:     focalDistance,
 		Samples:           amountSamples,

@@ -117,10 +117,11 @@ func addBallsToScene(deltaFrameAngle float64, scene *scn.Scene) {
 
 func getAnimation(width int, height int) scn.Animation {
 	animation := scn.Animation{
-		AnimationName: "sphere_circle_rotation",
-		Frames:        []scn.Frame{},
-		Width:         width,
-		Height:        height,
+		AnimationName:     "sphere_circle_rotation",
+		Frames:            []scn.Frame{},
+		Width:             width,
+		Height:            height,
+		WriteRawImageFile: false,
 	}
 	return animation
 }

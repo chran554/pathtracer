@@ -26,10 +26,11 @@ type Frame struct {
 }
 
 type Animation struct {
-	AnimationName string
-	Frames        []Frame
-	Width         int
-	Height        int
+	AnimationName     string
+	Frames            []Frame
+	Width             int
+	Height            int
+	WriteRawImageFile bool
 }
 
 type Scene struct {
@@ -173,6 +174,7 @@ func getImageFromFilePath(filePath string) (image.Image, error) {
 }
 
 type Sphere struct {
+	Name   string
 	Origin vec3.T
 	Radius float64
 
@@ -199,6 +201,7 @@ type Line struct {
 type Ray Line
 
 type Plane struct {
+	Name   string
 	Origin vec3.T
 	Normal vec3.T
 
@@ -206,6 +209,7 @@ type Plane struct {
 }
 
 type Disc struct {
+	Name   string
 	Origin vec3.T
 	Normal vec3.T
 	Radius float64

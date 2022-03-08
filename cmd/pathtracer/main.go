@@ -79,6 +79,11 @@ func main() {
 		os.MkdirAll(animationDirectory, os.ModePerm)
 		writeImage(animationFrameFilename, animation.Width, animation.Height, renderedPixelData)
 
+		if animation.WriteRawImageFile {
+			animationFrameRawFilename := filepath.Join(animationDirectory, frame.Filename+".praw")
+			writeRawImage(animationFrameRawFilename, animation.Width, animation.Height, renderedPixelData)
+		}
+
 		deInitializeScene(&scene)
 		frame.Scene = scn.Scene{}
 		fmt.Println("Releasing resources...")
