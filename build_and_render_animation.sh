@@ -5,13 +5,13 @@ fi
 
 SCENE_NAME=$1
 
-echo "Building and running scene $SCENE_NAME"
+clear
+echo "-----------------------------------------------------------------------------"
+echo "Building and running scene \"$SCENE_NAME\""
 
 RENDER_RESULT_DIR=$SCENE_NAME
 SCENE_BIN=$SCENE_NAME
 SCENE_DEFINITION=$SCENE_NAME.animation.json
-
-clear
 
 # make build_sphere_rotation
 make build_all
@@ -26,7 +26,20 @@ rm -fR ./rendered/$RENDER_RESULT_DIR
 ./bin/pathtracer scene/$SCENE_DEFINITION
 
 # Encode movie from rendered images
+echo
+echo
+echo "Encoding movie: ./rendered/$RENDER_RESULT_DIR/$SCENE_NAME.mp4"
+echo "-----------------------------------------------------------------------------"
 cd ./rendered/$RENDER_RESULT_DIR
 ../../encode_movie.sh
 mv output.mp4 $SCENE_NAME.mp4
 cd -
+
+echo "-----------------------------------------------------------------------------"
+echo "Finished at      $(date '+%Y-%m-%d  %H:%M:%S')"
+echo
+echo "Rendered scene:  \"$SCENE_NAME\""
+echo "Rendered images: ./rendered/"
+echo "Created movie:   ./rendered/$RENDER_RESULT_DIR/$SCENE_NAME.mp4"
+
+open ./rendered/$RENDER_RESULT_DIR/$SCENE_NAME.mp4
