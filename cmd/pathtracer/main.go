@@ -13,7 +13,7 @@ import (
 	"time"
 
 	progressbar2 "github.com/schollz/progressbar/v3"
-	"github.com/ungerik/go3d/vec3"
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 func main() {
@@ -67,20 +67,45 @@ func main() {
 		fmt.Println("Amount spheres:   ", len(scene.Spheres))
 		fmt.Println()
 
-		pixeldata := make([]scn.Color, animation.Width*animation.Height)
+		fmt.Println("Initialize scene...")
+		initializeScene(&scene)
+		fmt.Println("Initialization done...")
+		fmt.Println()
 
-		render(&scene, animation.Width, animation.Height, pixeldata)
+		renderedPixelData := make([]scn.Color, animation.Width*animation.Height)
+
+		render(&scene, animation.Width, animation.Height, renderedPixelData)
 
 		animationDirectory := filepath.Join(".", "rendered", animation.AnimationName)
 		animationFrameFilename := filepath.Join(animationDirectory, frame.Filename+".png")
 		os.MkdirAll(animationDirectory, os.ModePerm)
-		writeImage(animationFrameFilename, animation.Width, animation.Height, pixeldata)
+		writeImage(animationFrameFilename, animation.Width, animation.Height, renderedPixelData)
 
 		fmt.Println("Frame render time:", time.Since(frameStartTimestamp))
 
 	}
 
 	fmt.Println("Total execution time:", time.Since(startTimestamp))
+}
+
+func initializeScene(scene *scn.Scene) {
+	discs := scene.Discs
+
+	for _, disc := range discs {
+		projection := disc.Material.Projection
+		if projection != nil {
+			projection.InitializeProjection()
+		}
+	}
+
+	spheres := scene.Spheres
+
+	for _, sphere := range spheres {
+		projection := sphere.Material.Projection
+		if projection != nil {
+			projection.InitializeProjection()
+		}
+	}
 }
 
 func render(scene *scn.Scene, width int, height int, pixeldata []scn.Color) {
@@ -111,7 +136,7 @@ func render(scene *scn.Scene, width int, height int, pixeldata []scn.Color) {
 	for x := 0; x < width; x++ {
 		for y := 0; y < height; y++ {
 			pixelIndex := y*width + x
-			pixeldata[pixelIndex].Divide(float32(amountSamples))
+			pixeldata[pixelIndex].Divide(float64(amountSamples))
 		}
 	}
 }
@@ -128,7 +153,7 @@ func parallelPixelRendering(pixeldata []scn.Color, scene *scn.Scene, width int, 
 }
 
 func tracePath(ray scn.Ray, scene *scn.Scene) scn.Color {
-	shortestDistance := float32(math.MaxFloat32)
+	shortestDistance := float64(math.MaxFloat64)
 	traceColor := scn.Black
 
 	for _, sphere := range scene.Spheres {
@@ -141,12 +166,19 @@ func tracePath(ray scn.Ray, scene *scn.Scene) scn.Color {
 				sphereOrigin := sphere.Origin
 				sphereNormalAtIntersection := intersectionPoint.Sub(&sphereOrigin)
 				incomingRay := ray.Heading.Inverted()
-				cosineIncomingRayAndSphereNormal := vec3.Dot(sphereNormalAtIntersection, &incomingRay) / (sphereNormalAtIntersection.Length() * incomingRay.Length())
+				cosineIncomingRayAndNormal := vec3.Dot(sphereNormalAtIntersection, &incomingRay) / (sphereNormalAtIntersection.Length() * incomingRay.Length())
+
+				material := sphere.Material
+
+				projectionColor := scn.White
+				if material.Projection != nil {
+					projectionColor = material.Projection.GetUV(&intersectionPoint)
+				}
 
 				traceColor = scn.Color{
-					R: sphere.Material.Color.R * cosineIncomingRayAndSphereNormal,
-					G: sphere.Material.Color.G * cosineIncomingRayAndSphereNormal,
-					B: sphere.Material.Color.B * cosineIncomingRayAndSphereNormal,
+					R: material.Color.R * cosineIncomingRayAndNormal * projectionColor.R,
+					G: material.Color.G * cosineIncomingRayAndNormal * projectionColor.G,
+					B: material.Color.B * cosineIncomingRayAndNormal * projectionColor.B,
 				}
 			}
 		}
@@ -163,10 +195,17 @@ func tracePath(ray scn.Ray, scene *scn.Scene) scn.Color {
 				incomingRay := ray.Heading.Inverted()
 				cosineIncomingRayAndNormal := vec3.Dot(&normalAtIntersection, &incomingRay) / (normalAtIntersection.Length() * incomingRay.Length())
 
+				material := disc.Material
+
+				projectionColor := scn.White
+				if material.Projection != nil {
+					projectionColor = material.Projection.GetUV(&intersectionPoint)
+				}
+
 				traceColor = scn.Color{
-					R: disc.Material.Color.R * cosineIncomingRayAndNormal,
-					G: disc.Material.Color.G * cosineIncomingRayAndNormal,
-					B: disc.Material.Color.B * cosineIncomingRayAndNormal,
+					R: material.Color.R * cosineIncomingRayAndNormal * projectionColor.R,
+					G: material.Color.G * cosineIncomingRayAndNormal * projectionColor.G,
+					B: material.Color.B * cosineIncomingRayAndNormal * projectionColor.B,
 				}
 			}
 		}

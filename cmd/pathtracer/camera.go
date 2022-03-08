@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	scn "pathtracer/internal/pkg/scene"
 
-	"github.com/ungerik/go3d/vec3"
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 func CreateCameraRay(x int, y int, width int, height int, camera scn.Camera, sampleIndex int) scn.Ray {
@@ -14,15 +14,15 @@ func CreateCameraRay(x int, y int, width int, height int, camera scn.Camera, sam
 	cameraCoordinateSystem := camera.GetCameraCoordinateSystem()
 
 	perfectHeadingInCameraCoordinateSystem := vec3.T{
-		-float32(width/2.0) + float32(x) + 0.5,
-		float32(height/2.0) - float32(y) - 0.5,
+		-float64(width/2.0) + float64(x) + 0.5,
+		float64(height/2.0) - float64(y) - 0.5,
 		camera.ViewPlaneDistance,
 	}
 
 	if camera.AntiAlias && (camera.Samples > 1) {
 		// Anti aliasing rays (random offsets within the pixel square)
-		xOffset := rand.Float32() - 0.5
-		yOffset := rand.Float32() - 0.5
+		xOffset := rand.Float64() - 0.5
+		yOffset := rand.Float64() - 0.5
 		aliasOffset := vec3.T{xOffset, yOffset, 0}
 
 		perfectHeadingInCameraCoordinateSystem.Add(&aliasOffset)
@@ -51,7 +51,7 @@ func CreateCameraRay(x int, y int, width int, height int, camera scn.Camera, sam
 	}
 }
 
-func getCameraLensPoint(radius float32, amountSamples int, sample int) vec3.T {
+func getCameraLensPoint(radius float64, amountSamples int, sample int) vec3.T {
 	xOffset, yOffset := sunflower(amountSamples, 1.0, sample, true)
 	return vec3.T{radius * xOffset, radius * yOffset, 0}
 }
@@ -74,12 +74,12 @@ func getCameraRayIntersectionWithFocalPlane(camera scn.Camera, perfectHeading ve
 
 // Distributes n points evenly within a circle with sunflowerRadius 1
 // alpha controls point distribution on the edge. Typical values 1-2, higher values more points on the edge.
-// i is the index of a point. It is in the range [i,n] .
+// i is the index of a point. It is in the range [1,n] .
 // https://stackoverflow.com/questions/28567166/uniformly-distribute-x-points-inside-a-circle
-func sunflower(amountPoints int, alpha float32, pointNumber int, randomize bool) (float32, float32) { // example: amountPoints=500, alpha=2, pointNumber=[1..amountPoints]
-	pointIndex := float32(pointNumber)
+func sunflower(amountPoints int, alpha float64, pointNumber int, randomize bool) (float64, float64) { // example: amountPoints=500, alpha=2, pointNumber=[1..amountPoints]
+	pointIndex := float64(pointNumber)
 	if randomize {
-		pointIndex += rand.Float32() - 0.5
+		pointIndex += rand.Float64() - 0.5
 	}
 
 	b := math.Round(float64(alpha) * math.Sqrt(float64(amountPoints))) // number of boundary points
@@ -87,7 +87,7 @@ func sunflower(amountPoints int, alpha float32, pointNumber int, randomize bool)
 	r := sunflowerRadius(float64(pointIndex), float64(amountPoints), b)
 	theta := 2.0 * math.Pi * float64(pointIndex) / (phi * phi)
 
-	return float32(r * math.Cos(theta)), float32(r * math.Sin(theta))
+	return float64(r * math.Cos(theta)), float64(r * math.Sin(theta))
 }
 
 func sunflowerRadius(i float64, n float64, b float64) float64 {

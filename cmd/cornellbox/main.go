@@ -6,13 +6,13 @@ import (
 	"os"
 	scn "pathtracer/internal/pkg/scene"
 
-	"github.com/ungerik/go3d/vec3"
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var ballRadius float32 = 20
+var ballRadius float64 = 20
 
 var amountSamples = 10
-var lensRadius float32 = 0
+var lensRadius float64 = 0
 var antiAlias = true
 
 func main() {
@@ -23,7 +23,7 @@ func main() {
 		Height:        600 * 2,
 	}
 
-	focalDistance := float32(200.0)
+	focalDistance := float64(200.0)
 	scene := scn.Scene{
 		Camera:  getCamera(focalDistance),
 		Spheres: []scn.Sphere{},
@@ -35,7 +35,7 @@ func main() {
 		Radius: ballRadius,
 		Material: scn.Material{
 			Color:    scn.Color{R: 1, G: 1, B: 1},
-			Emission: scn.Black,
+			Emission: &scn.Black,
 		},
 	}
 
@@ -44,7 +44,7 @@ func main() {
 		Radius: ballRadius,
 		Material: scn.Material{
 			Color:    scn.Color{R: 1, G: 1, B: 1},
-			Emission: scn.Black,
+			Emission: &scn.Black,
 		},
 	}
 
@@ -81,7 +81,7 @@ func getBoxWalls() []scn.Disc {
 			Radius: 600,
 			Material: scn.Material{
 				Color:    scn.Color{R: 1, G: 1, B: 1},
-				Emission: scn.Black,
+				Emission: &scn.Black,
 			},
 		},
 		{ // Right wall
@@ -90,7 +90,7 @@ func getBoxWalls() []scn.Disc {
 			Radius: 600,
 			Material: scn.Material{
 				Color:    scn.Color{R: 0.5, G: 0.5, B: 1},
-				Emission: scn.Black,
+				Emission: &scn.Black,
 			},
 		},
 		{ // Left wall
@@ -99,7 +99,7 @@ func getBoxWalls() []scn.Disc {
 			Radius: 600,
 			Material: scn.Material{
 				Color:    scn.Color{R: 1, G: 0.5, B: 0.5},
-				Emission: scn.Black,
+				Emission: &scn.Black,
 			},
 		},
 		{ // Roof
@@ -108,7 +108,7 @@ func getBoxWalls() []scn.Disc {
 			Radius: 600,
 			Material: scn.Material{
 				Color:    scn.Color{R: 1, G: 1, B: 1},
-				Emission: scn.Black,
+				Emission: &scn.Black,
 			},
 		},
 		{ // back wall
@@ -117,13 +117,13 @@ func getBoxWalls() []scn.Disc {
 			Radius: 600,
 			Material: scn.Material{
 				Color:    scn.Color{R: 1, G: 1, B: 1},
-				Emission: scn.Black,
+				Emission: &scn.Black,
 			},
 		},
 	}
 }
 
-func getCamera(focalDistance float32) scn.Camera {
+func getCamera(focalDistance float64) scn.Camera {
 	origin := vec3.T{0, ballRadius, -200}
 
 	return scn.Camera{

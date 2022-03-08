@@ -4,10 +4,10 @@ import (
 	"math"
 	scn "pathtracer/internal/pkg/scene"
 
-	"github.com/ungerik/go3d/vec3"
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
-func negative(t1 float32) bool {
+func negative(t1 float64) bool {
 	return math.Signbit(float64(t1))
 }
 
@@ -24,7 +24,7 @@ func GetLinePlaneIntersectionPoint(line scn.Ray, plane scn.Plane) (vec3.T, bool)
 
 	n := plane.Normal[0]*line.Heading[0] + plane.Normal[1]*line.Heading[1] + plane.Normal[2]*line.Heading[2]
 
-	t := float32(0)
+	t := float64(0)
 
 	if n != 0.0 {
 		t = m / n
@@ -77,7 +77,7 @@ func SphereIntersection(line scn.Ray, sphere scn.Sphere) (vec3.T, bool) {
 
 	warning := WarningNone
 
-	t3 := float32(0)
+	t3 := float64(0)
 
 	m := line.Heading[0]*(line.Origin[0]-sphere.Origin[0]) +
 		line.Heading[1]*(line.Origin[1]-sphere.Origin[1]) +
@@ -87,7 +87,7 @@ func SphereIntersection(line scn.Ray, sphere scn.Sphere) (vec3.T, bool) {
 		line.Heading[1]*line.Heading[1] +
 		line.Heading[2]*line.Heading[2]
 
-	o2 := sphere.Radius*sphere.Radius + float32(2)*((line.Origin[0]*sphere.Origin[0])+(line.Origin[1]*sphere.Origin[1])+(line.Origin[2]*sphere.Origin[2]))
+	o2 := sphere.Radius*sphere.Radius + float64(2)*((line.Origin[0]*sphere.Origin[0])+(line.Origin[1]*sphere.Origin[1])+(line.Origin[2]*sphere.Origin[2]))
 
 	o3 := (line.Origin[0]*line.Origin[0] + line.Origin[1]*line.Origin[1] + line.Origin[2]*line.Origin[2]) +
 		(sphere.Origin[0]*sphere.Origin[0] + sphere.Origin[1]*sphere.Origin[1] + sphere.Origin[2]*sphere.Origin[2])
@@ -102,11 +102,11 @@ func SphereIntersection(line scn.Ray, sphere scn.Sphere) (vec3.T, bool) {
 		warning = WarningNoIntersection
 
 	} else {
-		t1 := float32(0)
-		t2 := float32(0)
+		t1 := float64(0)
+		t2 := float64(0)
 
 		if q >= 0.0 {
-			root := float32(math.Sqrt(float64(q)))
+			root := float64(math.Sqrt(float64(q)))
 			t1 = -p + root
 			t2 = -p - root
 
