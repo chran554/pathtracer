@@ -27,6 +27,6 @@ rm -fR ./rendered/$RENDER_RESULT_DIR
 
 # Encode movie from rendered images
 cd ./rendered/$RENDER_RESULT_DIR
-../../encodeMovie.sh
+../../encode_movie.sh
 mv output.mp4 $SCENE_NAME.mp4
 cd -
