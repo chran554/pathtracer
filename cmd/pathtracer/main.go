@@ -69,8 +69,6 @@ func main() {
 
 		fmt.Println("Initialize scene...")
 		initializeScene(&scene)
-		fmt.Println("Initialization done...")
-		fmt.Println()
 
 		renderedPixelData := make([]scn.Color, animation.Width*animation.Height)
 
@@ -81,8 +79,12 @@ func main() {
 		os.MkdirAll(animationDirectory, os.ModePerm)
 		writeImage(animationFrameFilename, animation.Width, animation.Height, renderedPixelData)
 
-		fmt.Println("Frame render time:", time.Since(frameStartTimestamp))
+		deInitializeScene(&scene)
+		frame.Scene = scn.Scene{}
+		fmt.Println("Releasing resources...")
+		fmt.Println()
 
+		fmt.Println("Frame render time:", time.Since(frameStartTimestamp))
 	}
 
 	fmt.Println("Total execution time:", time.Since(startTimestamp))
@@ -104,6 +106,26 @@ func initializeScene(scene *scn.Scene) {
 		projection := sphere.Material.Projection
 		if projection != nil {
 			projection.InitializeProjection()
+		}
+	}
+}
+
+func deInitializeScene(scene *scn.Scene) {
+	discs := scene.Discs
+
+	for _, disc := range discs {
+		projection := disc.Material.Projection
+		if projection != nil {
+			projection.ClearProjection()
+		}
+	}
+
+	spheres := scene.Spheres
+
+	for _, sphere := range spheres {
+		projection := sphere.Material.Projection
+		if projection != nil {
+			projection.ClearProjection()
 		}
 	}
 }

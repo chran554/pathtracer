@@ -1,6 +1,15 @@
-RENDER_RESULT_DIR=sphere_circle_rotation
-SCENE_BIN=animation_sphere_circle_rotation
-SCENE_DEFINITION=sphere_circle_rotation.animation.json
+if [ $# -eq 0 ]; then
+    echo "No scene name provided as argument."
+    exit 1
+fi
+
+SCENE_NAME=$1
+
+echo "Building and running scene $SCENE_NAME"
+
+RENDER_RESULT_DIR=$SCENE_NAME
+SCENE_BIN=$SCENE_NAME
+SCENE_DEFINITION=$SCENE_NAME.animation.json
 
 clear
 
@@ -19,4 +28,5 @@ rm -fR ./rendered/$RENDER_RESULT_DIR
 # Encode movie from rendered images
 cd ./rendered/$RENDER_RESULT_DIR
 ../../encodeMovie.sh
+mv output.mp4 $SCENE_NAME.mp4
 cd -

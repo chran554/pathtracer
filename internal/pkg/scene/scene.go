@@ -77,6 +77,8 @@ func NewParallelImageProjection(textureFilename string, origin vec3.T, u vec3.T,
 }
 
 func (imageProjection *ParallelImageProjection) GetUV(point *vec3.T) Color {
+	imageProjection.InitializeProjection()
+
 	translatedPoint := point.Sub(&imageProjection.Origin)
 
 	pointInUV := imageProjection._invertedCoordinateSystemMatrix.MulVec3(translatedPoint)
@@ -113,6 +115,13 @@ func (imageProjection *ParallelImageProjection) GetUV(point *vec3.T) Color {
 	color := imageProjection._imageData[(imageProjection._imageHeight-1-textureY)*imageProjection._imageWidth+textureX]
 
 	return color
+}
+
+func (imageProjection *ParallelImageProjection) ClearProjection() {
+	imageProjection._imageData = nil
+	imageProjection._invertedCoordinateSystemMatrix = mat3.Zero
+	imageProjection._imageWidth = 0
+	imageProjection._imageHeight = 0
 }
 
 func (imageProjection *ParallelImageProjection) InitializeProjection() {
@@ -158,7 +167,7 @@ func getImageFromFilePath(filePath string) (image.Image, error) {
 	defer f.Close()
 	image, _, err := image.Decode(f)
 
-	fmt.Println("Read image:", filePath)
+	// fmt.Println("Read image:", filePath)
 
 	return image, err
 }
