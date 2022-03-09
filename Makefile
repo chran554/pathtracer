@@ -24,7 +24,7 @@ animations: build_sphere_rotation build_sphere_rotation_focaldistance build_corn
 # -----------------------------------
 
 build_sphere_rotation: build
-	go build -o bin/animation_sphere_circle_rotation ./cmd/animation_sphere_circle_rotation
+	go build -o bin/sphere_circle_rotation ./cmd/sphere_circle_rotation
 
 build_sphere_rotation_focaldistance: build
 	go build -o bin/animation_sphere_circle_rotation_focaldistance ./cmd/animation_sphere_circle_rotation_focaldistance

@@ -10,21 +10,35 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
+type projection struct {
+	filename string
+}
+
 var width = 800
 var height = 600
 
-var amountFrames = 64
+var amountFrames = 180
 var amountBalls = 16
 var ballRadius float64 = 20
 var circleRadius float64 = 100
-
 var amountSamples = 128
 var lensRadius float64 = 6
 
 func main() {
 	animation := getAnimation(width, height)
 
-	ballAngle := (2.0 * math.Pi) / float64(amountBalls)
+	ballAngle := 8.0 * (2.0 * math.Pi) / float64(amountBalls)
+
+	projectionData := []projection{
+		{filename: "textures/planets/earth_daymap.jpg"},
+		{filename: "textures/planets/jupiter2_6k_contrast.png"},
+		{filename: "textures/planets/moonmap4k_2.png"},
+		{filename: "textures/planets/mars.jpg"},
+		{filename: "textures/planets/sun.jpg"},
+		{filename: "textures/planets/venusmap.jpg"},
+		{filename: "textures/planets/makemake_fictional.jpg"},
+		{filename: "textures/planets/plutomap2k.jpg"},
+	}
 
 	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
 		scene := scn.Scene{
@@ -34,7 +48,7 @@ func main() {
 		}
 
 		deltaFrameAngle := ballAngle * (float64(frameIndex) / float64(amountFrames))
-		addBallsToScene(deltaFrameAngle, &scene)
+		addBallsToScene(deltaFrameAngle, projectionData, &scene)
 
 		//addOriginCoordinateSpheres(&scene)
 
@@ -83,7 +97,7 @@ func addOriginCoordinateSpheres(scene *scn.Scene) {
 	scene.Spheres = append(scene.Spheres, sphereZ)
 }
 
-func addBallsToScene(deltaFrameAngle float64, scene *scn.Scene) {
+func addBallsToScene(deltaFrameAngle float64, projectionData []projection, scene *scn.Scene) {
 	for ballIndex := 0; ballIndex < amountBalls; ballIndex++ {
 		s := 2.0 * math.Pi
 		t := float64(ballIndex) / float64(amountBalls)
@@ -91,19 +105,23 @@ func addBallsToScene(deltaFrameAngle float64, scene *scn.Scene) {
 		x := circleRadius * math.Cos(angle+deltaFrameAngle)
 		z := circleRadius * math.Sin(angle+deltaFrameAngle)
 
-		textureScale := 0.5
+		projectionDataIndex := ballIndex % len(projectionData)
+		ballOrigin := vec3.T{x, ballRadius, z}
+		projectionOrigin := ballOrigin
+		projectionOrigin.Sub(&vec3.T{0, ballRadius, 0})
+
 		sphere := scn.Sphere{
-			Origin: vec3.T{x, ballRadius, z},
+			Origin: ballOrigin,
 			Radius: ballRadius,
 			Material: scn.Material{
 				Color:    scn.Color{R: 1, G: 1, B: 1},
 				Emission: nil,
 				Projection: &scn.ImageProjection{
-					ProjectionType: scn.Parallel,
-					ImageFilename:  "textures/bricks_concrete_big.jpeg",
-					Origin:         vec3.T{0, ballRadius, 0},
-					U:              vec3.T{100 * textureScale, 0 * textureScale, -100 * textureScale},
-					V:              vec3.T{0 * textureScale, 100 * textureScale, 0 * textureScale},
+					ProjectionType: scn.Cylindrical,
+					ImageFilename:  projectionData[projectionDataIndex].filename,
+					Origin:         projectionOrigin,
+					U:              vec3.T{x, 0, z},
+					V:              vec3.T{0, 2 * ballRadius, 0},
 					RepeatU:        true,
 					RepeatV:        true,
 					FlipU:          false,
@@ -156,11 +174,11 @@ func getBottomPlate() []scn.Disc {
 }
 
 func getCamera() scn.Camera {
-	cameraDistanceFactor := 2.0
+	cameraDistanceFactor := 1.6
 	origin := vec3.T{0 * cameraDistanceFactor, 100 * cameraDistanceFactor, -200 * cameraDistanceFactor}
 	heading := vec3.T{-origin[0], -(origin[1] - ballRadius), -origin[2]}
 
-	focalDistance := heading.Length()
+	focalDistance := heading.Length() - 0.8*circleRadius
 
 	return scn.Camera{
 		Origin:            origin,
