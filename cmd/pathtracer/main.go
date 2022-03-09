@@ -191,9 +191,10 @@ func tracePath(ray scn.Ray, scene *scn.Scene) scn.Color {
 				shortestDistance = distance
 
 				sphereOrigin := sphere.Origin
-				sphereNormalAtIntersection := intersectionPoint.Sub(&sphereOrigin)
+				sphereNormalAtIntersection := intersectionPoint
+				sphereNormalAtIntersection.Sub(&sphereOrigin)
 				incomingRay := ray.Heading.Inverted()
-				cosineIncomingRayAndNormal := vec3.Dot(sphereNormalAtIntersection, &incomingRay) / (sphereNormalAtIntersection.Length() * incomingRay.Length())
+				cosineIncomingRayAndNormal := vec3.Dot(&sphereNormalAtIntersection, &incomingRay) / (sphereNormalAtIntersection.Length() * incomingRay.Length())
 
 				material := sphere.Material
 

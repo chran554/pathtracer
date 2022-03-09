@@ -100,7 +100,7 @@ func getBottomPlate() []scn.Disc {
 
 	u := vec3.T{50, 0, 0}
 	v := vec3.T{0, 0, 50}
-	parallelImageProjection := scn.NewParallelImageProjection2("textures/white_marble.png", origin, u, v)
+	parallelImageProjection := scn.NewParallelImageProjection("textures/white_marble.png", origin, u, v)
 	return []scn.Disc{
 		{
 			Origin: origin,
