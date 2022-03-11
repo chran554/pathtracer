@@ -7,6 +7,8 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/image"
 	scn "pathtracer/internal/pkg/scene"
 	"strconv"
 	"sync"
@@ -70,18 +72,18 @@ func main() {
 		fmt.Println("Initialize scene...")
 		initializeScene(&scene)
 
-		renderedPixelData := make([]scn.Color, animation.Width*animation.Height)
+		renderedPixelData := image.NewFloatImage(animation.Width, animation.Height)
 
 		render(&scene, animation.Width, animation.Height, renderedPixelData)
 
 		animationDirectory := filepath.Join(".", "rendered", animation.AnimationName)
 		animationFrameFilename := filepath.Join(animationDirectory, frame.Filename+".png")
 		os.MkdirAll(animationDirectory, os.ModePerm)
-		writeImage(animationFrameFilename, animation.Width, animation.Height, renderedPixelData)
+		image.WriteImage(animationFrameFilename, animation.Width, animation.Height, renderedPixelData)
 
 		if animation.WriteRawImageFile {
 			animationFrameRawFilename := filepath.Join(animationDirectory, frame.Filename+".praw")
-			writeRawImage(animationFrameRawFilename, animation.Width, animation.Height, renderedPixelData)
+			image.WriteImage(animationFrameRawFilename, animation.Width, animation.Height, renderedPixelData)
 		}
 
 		deInitializeScene(&scene)
@@ -135,7 +137,7 @@ func deInitializeScene(scene *scn.Scene) {
 	}
 }
 
-func render(scene *scn.Scene, width int, height int, pixeldata []scn.Color) {
+func render(scene *scn.Scene, width int, height int, pixeldata *image.FloatImage) {
 	var wg sync.WaitGroup
 
 	amountSamples := scene.Camera.Samples
@@ -162,26 +164,25 @@ func render(scene *scn.Scene, width int, height int, pixeldata []scn.Color) {
 
 	for x := 0; x < width; x++ {
 		for y := 0; y < height; y++ {
-			pixelIndex := y*width + x
-			pixeldata[pixelIndex].Divide(float64(amountSamples))
+			pixeldata.GetPixel(x, y).Divide(float64(amountSamples))
 		}
 	}
 }
 
-func parallelPixelRendering(pixeldata []scn.Color, scene *scn.Scene, width int, height int, x int, y int, amountSamples int, wg *sync.WaitGroup, progressbar *progressbar2.ProgressBar) {
+func parallelPixelRendering(pixeldata *image.FloatImage, scene *scn.Scene, width int, height int, x int, y int, amountSamples int, wg *sync.WaitGroup, progressbar *progressbar2.ProgressBar) {
 	defer wg.Done()
 	progressbar.Add(1)
 
 	for sampleIndex := 0; sampleIndex < amountSamples; sampleIndex++ {
 		cameraRay := CreateCameraRay(x, y, width, height, scene.Camera, sampleIndex)
-		color := tracePath(cameraRay, scene)
-		pixeldata[y*width+x].Add(color)
+		col := tracePath(cameraRay, scene)
+		pixeldata.GetPixel(x, y).Add(col)
 	}
 }
 
-func tracePath(ray scn.Ray, scene *scn.Scene) scn.Color {
+func tracePath(ray scn.Ray, scene *scn.Scene) color.Color {
 	shortestDistance := float64(math.MaxFloat64)
-	traceColor := scn.Black
+	traceColor := color.Black
 
 	for _, sphere := range scene.Spheres {
 		intersectionPoint, intersection := SphereIntersection(ray, sphere)
@@ -198,12 +199,12 @@ func tracePath(ray scn.Ray, scene *scn.Scene) scn.Color {
 
 				material := sphere.Material
 
-				projectionColor := scn.White
+				projectionColor := &color.White
 				if material.Projection != nil {
 					projectionColor = material.Projection.GetUV(&intersectionPoint)
 				}
 
-				traceColor = scn.Color{
+				traceColor = color.Color{
 					R: material.Color.R * cosineIncomingRayAndNormal * projectionColor.R,
 					G: material.Color.G * cosineIncomingRayAndNormal * projectionColor.G,
 					B: material.Color.B * cosineIncomingRayAndNormal * projectionColor.B,
@@ -225,12 +226,12 @@ func tracePath(ray scn.Ray, scene *scn.Scene) scn.Color {
 
 				material := disc.Material
 
-				projectionColor := scn.White
+				projectionColor := &color.White
 				if material.Projection != nil {
 					projectionColor = material.Projection.GetUV(&intersectionPoint)
 				}
 
-				traceColor = scn.Color{
+				traceColor = color.Color{
 					R: material.Color.R * cosineIncomingRayAndNormal * projectionColor.R,
 					G: material.Color.G * cosineIncomingRayAndNormal * projectionColor.G,
 					B: material.Color.B * cosineIncomingRayAndNormal * projectionColor.B,

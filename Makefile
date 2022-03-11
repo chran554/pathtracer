@@ -18,7 +18,7 @@ build:
 
 build_all: build animations
 
-animations: build_sphere_rotation build_sphere_rotation_focaldistance build_cornellbox build_cylindrical_projection
+animations: build_sphere_rotation build_sphere_rotation_focaldistance build_cornellbox build_cylindrical_projection build_parallel_projection
 
 # Build animation scenes
 # -----------------------------------
@@ -34,5 +34,8 @@ build_cornellbox: build
 
 build_cylindrical_projection: build
 	go build -o bin/cylindrical_projection ./cmd/cylindrical_projection
+
+build_parallel_projection: build
+	go build -o bin/parallel_projection ./cmd/parallel_projection
 
 

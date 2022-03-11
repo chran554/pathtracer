@@ -2,11 +2,10 @@ package scene
 
 import (
 	"fmt"
-	"image"
-	_ "image/jpeg"
-	_ "image/png"
 	"math"
 	"os"
+	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/image"
 
 	"github.com/ungerik/go3d/float64/mat3"
 	"github.com/ungerik/go3d/float64/vec3"
@@ -34,7 +33,7 @@ func NewImageProjection(projectionType ProjectionType, textureFilename string, o
 	}
 }
 
-func (imageProjection *ImageProjection) GetUV(point *vec3.T) Color {
+func (imageProjection *ImageProjection) GetUV(point *vec3.T) *color.Color {
 	if imageProjection.ProjectionType == Parallel {
 		return imageProjection.getParallelUV(point)
 	}
@@ -42,10 +41,10 @@ func (imageProjection *ImageProjection) GetUV(point *vec3.T) Color {
 		return imageProjection.getCylindricalUV(point)
 	}
 
-	return White
+	return &color.White
 }
 
-func (imageProjection *ImageProjection) getCylindricalUV(point *vec3.T) Color {
+func (imageProjection *ImageProjection) getCylindricalUV(point *vec3.T) *color.Color {
 	imageProjection.InitializeProjection()
 
 	translatedPoint := *point
@@ -75,7 +74,7 @@ func (imageProjection *ImageProjection) getCylindricalUV(point *vec3.T) Color {
 	// (Amount repeats along the equator/latitude can be of use though, see "textureLatitudeRepetitions".)
 
 	if !imageProjection.RepeatV && ((v >= 1.0) || (v < 0.0)) {
-		return White
+		return &color.White
 	}
 
 	if fracU < 0.0 {
@@ -92,16 +91,14 @@ func (imageProjection *ImageProjection) getCylindricalUV(point *vec3.T) Color {
 		fracV = 1.0 - fracV
 	}
 
-	textureX := int(math.Abs(fracU) * float64(imageProjection._imageWidth))
-	textureY := int(math.Abs(fracV) * float64(imageProjection._imageHeight))
-	textureY = (imageProjection._imageHeight - 1) - textureY // The pixel at UV-origin should be the pixel at bottom left in image
+	textureX := int(math.Abs(fracU) * float64(imageProjection._image.Width))
+	textureY := int(math.Abs(fracV) * float64(imageProjection._image.Height))
+	textureY = (imageProjection._image.Height - 1) - textureY // The pixel at UV-origin should be the pixel at bottom left in image
 
-	color := imageProjection._imageData[textureY*imageProjection._imageWidth+textureX]
-
-	return color
+	return imageProjection._image.GetPixel(textureX, textureY)
 }
 
-func (imageProjection *ImageProjection) getParallelUV(point *vec3.T) Color {
+func (imageProjection *ImageProjection) getParallelUV(point *vec3.T) *color.Color {
 	imageProjection.InitializeProjection()
 
 	translatedPoint := *point
@@ -114,11 +111,11 @@ func (imageProjection *ImageProjection) getParallelUV(point *vec3.T) Color {
 	_, fracV := math.Modf(v)
 
 	if !imageProjection.RepeatU && ((u >= 1.0) || (u < 0.0)) {
-		return White
+		return &color.White
 	}
 
 	if !imageProjection.RepeatV && ((v >= 1.0) || (v < 0.0)) {
-		return White
+		return &color.White
 	}
 
 	if fracU < 0.0 {
@@ -135,28 +132,22 @@ func (imageProjection *ImageProjection) getParallelUV(point *vec3.T) Color {
 		fracV = 1.0 - fracV
 	}
 
-	textureX := int(math.Abs(fracU) * float64(imageProjection._imageWidth))
-	textureY := int(math.Abs(fracV) * float64(imageProjection._imageHeight))
-	textureY = (imageProjection._imageHeight - 1) - textureY // The pixel at UV-origin should be the pixel at bottom left in image
+	textureX := int(math.Abs(fracU) * float64(imageProjection._image.Width))
+	textureY := int(math.Abs(fracV) * float64(imageProjection._image.Height))
+	textureY = (imageProjection._image.Height - 1) - textureY // The pixel at UV-origin should be the pixel at bottom left in image
 
-	color := imageProjection._imageData[textureY*imageProjection._imageWidth+textureX]
-
-	return color
+	return imageProjection._image.GetPixel(textureX, textureY)
 }
 
 func (imageProjection *ImageProjection) ClearProjection() {
-	imageProjection._imageData = nil
+	imageProjection._image.Clear()
 	imageProjection._invertedCoordinateSystemMatrix = mat3.Zero
-	imageProjection._imageWidth = 0
-	imageProjection._imageHeight = 0
 }
 
 func (imageProjection *ImageProjection) InitializeProjection() {
-	if len(imageProjection._imageData) == 0 {
-		width, height, imageData := loadProjectionImageData(imageProjection.ImageFilename)
-		imageProjection._imageWidth = width
-		imageProjection._imageHeight = height
-		imageProjection._imageData = *imageData
+	if !imageProjection._image.ContainImage() {
+		floatImage := image.LoadImageData(imageProjection.ImageFilename)
+		imageProjection._image = *floatImage
 	}
 
 	if (imageProjection.ProjectionType == Cylindrical) && (imageProjection._invertedCoordinateSystemMatrix == mat3.Zero) {
@@ -181,45 +172,6 @@ func (imageProjection *ImageProjection) InitializeProjection() {
 	}
 }
 
-func loadProjectionImageData(filename string) (int, int, *[]Color) {
-	textureImage, err := getImageFromFilePath(filename)
-	if err != nil {
-		fmt.Println("Ouupps, no image file could be loaded for parallel image projection.", filename)
-		os.Exit(1)
-	}
-
-	width := textureImage.Bounds().Max.X
-	height := textureImage.Bounds().Max.Y
-
-	imageData := make([]Color, width*height)
-	colorNormalizationFactor := 1.0 / 0xffff
-	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
-			r, g, b, _ := textureImage.At(x, y).RGBA()
-			imageData[y*width+x] = Color{
-				R: float64(r) * colorNormalizationFactor,
-				G: float64(g) * colorNormalizationFactor,
-				B: float64(b) * colorNormalizationFactor,
-			}
-		}
-	}
-
-	return width, height, &imageData
-}
-
-func getImageFromFilePath(filePath string) (image.Image, error) {
-	f, err := os.Open(filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	image, _, err := image.Decode(f)
-
-	// fmt.Println("Read image:", filePath)
-
-	return image, err
-}
-
 func (camera *Camera) GetCameraCoordinateSystem() mat3.T {
 	if camera._coordinateSystem == (mat3.T{}) {
 		heading := camera.Heading.Normalized()
@@ -232,16 +184,4 @@ func (camera *Camera) GetCameraCoordinateSystem() mat3.T {
 		camera._coordinateSystem = mat3.T{cameraX, cameraY, heading}
 	}
 	return camera._coordinateSystem
-}
-
-func (c *Color) Add(color Color) {
-	c.R += color.R
-	c.G += color.G
-	c.B += color.B
-}
-
-func (c *Color) Divide(divider float64) {
-	c.R /= divider
-	c.G /= divider
-	c.B /= divider
 }

@@ -1,24 +1,106 @@
-package main
+package image
 
 import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	_ "image/jpeg"
+	"image/png"
+	"pathtracer/internal/pkg/color"
+
 	img "image"
 	col "image/color"
-	"image/png"
 	"math"
 	"os"
-	"pathtracer/internal/pkg/scene"
 	"strconv"
 )
 
-func writeImage(filename string, width int, height int, pixelData []scene.Color) {
+type FloatImage struct {
+	pixels []color.Color
+	Width  int
+	Height int
+}
+
+func NewFloatImage(width, height int) *FloatImage {
+	floatImage := FloatImage{
+		pixels: make([]color.Color, width*height),
+		Width:  width,
+		Height: height,
+	}
+
+	return &floatImage
+}
+
+func (image *FloatImage) Clear() {
+	image.pixels = nil
+	image.Width = 0
+	image.Height = 0
+}
+
+func (image *FloatImage) ContainImage() bool {
+	return image.Width > 0 && image.Height > 0 && image.pixels != nil
+}
+
+func (image *FloatImage) GetPixel(x, y int) *color.Color {
+	return &image.pixels[y*image.Width+x]
+}
+
+func (image *FloatImage) SetPixel(x, y int, color color.Color) {
+	image.pixels[y*image.Width+x] = color
+}
+
+func LoadImageData(filename string) *FloatImage {
+	//fmt.Println("Loading image:", filename)
+	textureImage, err := getImageFromFilePath(filename)
+	if err != nil {
+		fmt.Println("Ouupps, no image file could be loaded for parallel image projection.", filename)
+		os.Exit(1)
+	}
+	//fmt.Println("Loaded image:", filename)
+
+	width := textureImage.Bounds().Max.X
+	height := textureImage.Bounds().Max.Y
+
+	//fmt.Println("Converting to color:", filename)
+	image := NewFloatImage(width, height)
+	colorNormalizationFactor := 1.0 / 0xffff
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			r, g, b, _ := textureImage.At(x, y).RGBA()
+
+			col := color.Color{
+				R: float64(r) * colorNormalizationFactor,
+				G: float64(g) * colorNormalizationFactor,
+				B: float64(b) * colorNormalizationFactor,
+			}
+
+			image.SetPixel(x, y, col)
+		}
+	}
+	//fmt.Println("Converted to color:", filename)
+
+	return image
+}
+
+func getImageFromFilePath(filePath string) (img.Image, error) {
+	f, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	image, _, err := img.Decode(f)
+
+	// fmt.Println("Read image:", filePath)
+
+	return image, err
+}
+
+func WriteImage(filename string, width int, height int, floatImage *FloatImage) {
 	image := img.NewRGBA(img.Rect(0, 0, width, height))
 
 	for x := 0; x < width; x++ {
 		for y := 0; y < height; y++ {
-			pixelValue := pixelData[y*width+x]
+			pixelValue := floatImage.GetPixel(x, y)
 
 			r := uint8(math.Round(pixelValue.R * 255.0))
 			g := uint8(math.Round(pixelValue.G * 255.0))
@@ -43,7 +125,7 @@ func writeImage(filename string, width int, height int, pixelData []scene.Color)
 	}
 }
 
-func writeRawImage(filename string, width int, height int, pixelData []scene.Color) {
+func WriteRawImage(filename string, width int, height int, pixelData FloatImage) {
 	var byteBuffer bytes.Buffer
 
 	fileFormatVersionMajor := 1

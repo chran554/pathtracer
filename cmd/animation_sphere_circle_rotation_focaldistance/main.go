@@ -1,10 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"math"
-	"os"
+	anm "pathtracer/internal/pkg/animation"
+	"pathtracer/internal/pkg/color"
 	scn "pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -12,14 +12,14 @@ import (
 
 var amountFrames = 128
 var amountBalls = 16
-var ballRadius float64 = 20
-var circleRadius float64 = 100
+var ballRadius = 20.0
+var circleRadius = 100.0
 
 var amountSamples = 512
-var lensRadius float64 = 15
+var lensRadius = 15.0
 
-var nominalViewPlaneDistance float64 = 800
-var magnification float64 = 1.0
+var nominalViewPlaneDistance = 800.0
+var magnification = 1.0
 
 var cameraOrigin = vec3.T{0, 200, -200}
 
@@ -56,14 +56,14 @@ func main() {
 			s := 2.0 * math.Pi
 			t := float64(ballIndex) / float64(amountBalls)
 			angle := s * t
-			x := circleRadius * float64(math.Cos(angle+deltaFrameAngle))
-			z := circleRadius * float64(math.Sin(angle+deltaFrameAngle))
+			x := circleRadius * math.Cos(angle+deltaFrameAngle)
+			z := circleRadius * math.Sin(angle+deltaFrameAngle)
 
 			sphere := scn.Sphere{
 				Origin: vec3.T{x, ballRadius, z},
 				Radius: ballRadius,
 				Material: scn.Material{
-					Color:    scn.Color{R: 1, G: 1, B: 1},
+					Color:    color.Color{R: 1, G: 1, B: 1},
 					Emission: nil,
 				},
 			}
@@ -80,19 +80,21 @@ func main() {
 		animation.Frames = append(animation.Frames, frame)
 	}
 
-	jsonData, err := json.MarshalIndent(animation, "", "  ")
-	if err != nil {
-		fmt.Println("Ouupps", err)
-		os.Exit(1)
-	}
+	anm.WriteAnimationToFile(animation)
+}
 
-	filename := "scene/" + animation.AnimationName + ".animation.json"
-	if err = os.WriteFile(filename, jsonData, 0644); err != nil {
-		fmt.Println("Ouuups", err)
-		os.Exit(1)
+func getCamera(focalDistance float64, viewPlaneDistance float64) scn.Camera {
+	return scn.Camera{
+		Origin:            cameraOrigin,
+		Heading:           vec3.T{-cameraOrigin[0], -(cameraOrigin[1] - ballRadius), -cameraOrigin[2]},
+		ViewUp:            vec3.T{0, 1, 0},
+		ViewPlaneDistance: viewPlaneDistance,
+		LensRadius:        lensRadius,
+		FocalDistance:     focalDistance,
+		Samples:           amountSamples,
+		AntiAlias:         true,
+		Magnification:     magnification,
 	}
-
-	fmt.Println("Wrote animation file:", filename)
 }
 
 func getBottomPlate() []scn.Disc {
@@ -107,25 +109,10 @@ func getBottomPlate() []scn.Disc {
 			Normal: vec3.T{0, 1, 0},
 			Radius: 600,
 			Material: scn.Material{
-				Color:      scn.Color{R: 0.5, G: 0.5, B: 0.5},
+				Color:      color.Color{R: 0.5, G: 0.5, B: 0.5},
 				Emission:   nil,
 				Projection: &parallelImageProjection,
 			},
 		},
-	}
-}
-
-func getCamera(focalDistance float64, viewPlaneDistance float64) scn.Camera {
-
-	return scn.Camera{
-		Origin:            cameraOrigin,
-		Heading:           vec3.T{-cameraOrigin[0], -(cameraOrigin[1] - ballRadius), -cameraOrigin[2]},
-		ViewUp:            vec3.T{0, 1, 0},
-		ViewPlaneDistance: viewPlaneDistance,
-		LensRadius:        lensRadius,
-		FocalDistance:     focalDistance,
-		Samples:           amountSamples,
-		AntiAlias:         true,
-		Magnification:     magnification,
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"pathtracer/internal/pkg/image"
 	"pathtracer/internal/pkg/scene"
 	"strconv"
 	"testing"
@@ -116,7 +117,7 @@ func Test_sunflower(t *testing.T) {
 			pixeldata[y2*width+x2] = scene.Color{R: 1, G: 1, B: 1}
 		}
 
-		writeImage("sunflower_["+strconv.Itoa(width)+"x"+strconv.Itoa(height)+"]x"+strconv.Itoa(amount)+"_random.png", width, height, pixeldata)
+		image.writeImage("sunflower_["+strconv.Itoa(width)+"x"+strconv.Itoa(height)+"]x"+strconv.Itoa(amount)+"_random.png", width, height, pixeldata)
 
 		//fmt.Printf("%+v\n", test)
 	})

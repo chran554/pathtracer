@@ -3,19 +3,27 @@ if [ $# -eq 0 ]; then
     exit 1
 fi
 
+set -e
+
 SCENE_NAME=$1
 
 clear
 echo "-----------------------------------------------------------------------------"
 echo "Building and running scene \"$SCENE_NAME\""
+echo "-----------------------------------------------------------------------------"
 
 RENDER_RESULT_DIR=$SCENE_NAME
 SCENE_BIN=$SCENE_NAME
 SCENE_DEFINITION=$SCENE_NAME.animation.json
 
+echo "Building executables:"
+
 # make build_sphere_rotation
 make build_all
 
+echo "-----------------------------------------------------------------------------"
+
+echo "Running scene animation creation executable $SCENE_BIN"
 # Run animation file creation program
 ./bin/$SCENE_BIN
 

@@ -13,9 +13,14 @@ func CreateCameraRay(x int, y int, width int, height int, camera scn.Camera, sam
 
 	cameraCoordinateSystem := camera.GetCameraCoordinateSystem()
 
+	magnification := camera.Magnification
+	if magnification == 0.0 {
+		magnification = 1.0
+	}
+
 	perfectHeadingInCameraCoordinateSystem := vec3.T{
-		-float64(width/2.0) + float64(x) + 0.5,
-		float64(height/2.0) - float64(y) - 0.5,
+		(-float64(width/2.0) + float64(x) + 0.5) / magnification,
+		(float64(height/2.0) - float64(y) - 0.5) / magnification,
 		camera.ViewPlaneDistance,
 	}
 

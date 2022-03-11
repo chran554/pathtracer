@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"pathtracer/internal/pkg/color"
 	scn "pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -36,8 +37,7 @@ func main() {
 		Origin: vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0},
 		Radius: ballRadius,
 		Material: scn.Material{
-			Color:    scn.Color{R: 1, G: 1, B: 1},
-			Emission: &scn.Black,
+			Color: color.Color{R: 1, G: 1, B: 1},
 		},
 	}
 
@@ -46,8 +46,7 @@ func main() {
 		Origin: vec3.T{-(ballRadius + (ballRadius / 2)), ballRadius, 0},
 		Radius: ballRadius,
 		Material: scn.Material{
-			Color:    scn.Color{R: 1, G: 1, B: 1},
-			Emission: &scn.Black,
+			Color: color.Color{R: 1, G: 1, B: 1},
 		},
 	}
 
@@ -85,8 +84,7 @@ func getBoxWalls() []scn.Disc {
 			Normal: vec3.T{0, 1, 0},
 			Radius: 600,
 			Material: scn.Material{
-				Color:    scn.Color{R: 1, G: 1, B: 1},
-				Emission: &scn.Black,
+				Color: color.Color{R: 1, G: 1, B: 1},
 			},
 		},
 		{
@@ -95,8 +93,7 @@ func getBoxWalls() []scn.Disc {
 			Normal: vec3.T{-1, 0, 0},
 			Radius: 600,
 			Material: scn.Material{
-				Color:    scn.Color{R: 0.5, G: 0.5, B: 1},
-				Emission: &scn.Black,
+				Color: color.Color{R: 0.5, G: 0.5, B: 1},
 			},
 		},
 		{
@@ -105,8 +102,7 @@ func getBoxWalls() []scn.Disc {
 			Normal: vec3.T{1, 0, 0},
 			Radius: 600,
 			Material: scn.Material{
-				Color:    scn.Color{R: 1, G: 0.5, B: 0.5},
-				Emission: &scn.Black,
+				Color: color.Color{R: 1, G: 0.5, B: 0.5},
 			},
 		},
 		{
@@ -115,8 +111,7 @@ func getBoxWalls() []scn.Disc {
 			Normal: vec3.T{0, -1, 0},
 			Radius: 600,
 			Material: scn.Material{
-				Color:    scn.Color{R: 1, G: 1, B: 1},
-				Emission: &scn.Black,
+				Color: color.Color{R: 1, G: 1, B: 1},
 			},
 		},
 		{
@@ -125,8 +120,7 @@ func getBoxWalls() []scn.Disc {
 			Normal: vec3.T{0, 0, -1},
 			Radius: 600,
 			Material: scn.Material{
-				Color:    scn.Color{R: 1, G: 1, B: 1},
-				Emission: &scn.Black,
+				Color: color.Color{R: 1, G: 1, B: 1},
 			},
 		},
 	}

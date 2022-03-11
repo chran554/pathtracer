@@ -3,14 +3,11 @@ package scene
 import (
 	_ "image/jpeg"
 	_ "image/png"
+	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/image"
 
 	"github.com/ungerik/go3d/float64/mat3"
 	"github.com/ungerik/go3d/float64/vec3"
-)
-
-var (
-	Black = Color{R: 0, G: 0, B: 0}
-	White = Color{R: 1, G: 1, B: 1}
 )
 
 type ProjectionType string
@@ -19,8 +16,6 @@ const (
 	Parallel    ProjectionType = "Parallel"
 	Cylindrical ProjectionType = "Cylindrical"
 )
-
-type Color struct{ R, G, B float64 }
 
 type Frame struct {
 	Filename   string
@@ -43,17 +38,15 @@ type Scene struct {
 }
 
 type Material struct {
-	Color      Color
-	Emission   *Color           `json:"Emission,omitempty"`
+	Color      color.Color
+	Emission   *color.Color     `json:"Emission,omitempty"`
 	Projection *ImageProjection `json:"Projection,omitempty"`
 }
 
 type ImageProjection struct {
 	ProjectionType                  ProjectionType `json:"ProjectionType"`
 	ImageFilename                   string         `json:"ImageFilename"`
-	_imageData                      []Color
-	_imageWidth                     int
-	_imageHeight                    int
+	_image                          image.FloatImage
 	_invertedCoordinateSystemMatrix mat3.T
 	Origin                          vec3.T `json:"Origin"`
 	U                               vec3.T `json:"U"`
