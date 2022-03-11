@@ -22,18 +22,19 @@ echo "Building executables:"
 make build_all
 
 echo "-----------------------------------------------------------------------------"
-
-echo "Running scene animation creation executable $SCENE_BIN"
-# Run animation file creation program
+echo "Running scene animation creation executable ./bin/$SCENE_BIN"
 ./bin/$SCENE_BIN
 
+echo "-----------------------------------------------------------------------------"
+echo "Removing old render files from ./rendered/$RENDER_RESULT_DIR"
 # Wipe/clear output directory
 rm -fR ./rendered/$RENDER_RESULT_DIR
 
-# Render animation/scene
+echo "-----------------------------------------------------------------------------"
+echo "Rendering scene ./scene/$SCENE_DEFINITION"
 ./bin/pathtracer scene/$SCENE_DEFINITION
+echo "-----------------------------------------------------------------------------"
 
-# Encode movie from rendered images
 echo
 echo
 echo "Encoding movie: ./rendered/$RENDER_RESULT_DIR/$SCENE_NAME.mp4"

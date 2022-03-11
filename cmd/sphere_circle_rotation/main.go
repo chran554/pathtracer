@@ -229,7 +229,7 @@ func getCamera(magnification float64, progress float64) scn.Camera {
 	// Point heading towards center of sphere ring (heading vector starts in camera origin)
 	heading := vec3.T{-origin[0], -(origin[1] - ballRadius), -origin[2]}
 
-	focalDistance := heading.Length() - 0.9*circleRadius
+	focalDistance := heading.Length() - circleRadius - 0.5*ballRadius
 
 	return scn.Camera{
 		Origin:            origin,

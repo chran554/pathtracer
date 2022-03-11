@@ -58,8 +58,9 @@ func main() {
 		frameStartTimestamp := time.Now()
 		scene := frame.Scene
 
+		progress := float64(frameIndex+1) / float64(len(animation.Frames))
 		fmt.Println("-----------------------------------------------")
-		fmt.Println("Frame number:     ", frameIndex+1, "of", len(animation.Frames))
+		fmt.Println("Frame number:     ", frameIndex+1, "of", len(animation.Frames), "   (progression "+fmt.Sprintf("%.2f", progress*100.0)+"%)")
 		fmt.Println("Frame label:      ", frame.FrameIndex)
 		fmt.Println("Frame image file: ", frame.Filename)
 		fmt.Println()
