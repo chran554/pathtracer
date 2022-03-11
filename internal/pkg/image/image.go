@@ -27,7 +27,6 @@ func NewFloatImage(width, height int) *FloatImage {
 		Width:  width,
 		Height: height,
 	}
-
 	return &floatImage
 }
 
@@ -68,13 +67,13 @@ func LoadImageData(filename string) *FloatImage {
 		for x := 0; x < width; x++ {
 			r, g, b, _ := textureImage.At(x, y).RGBA()
 
-			col := color.Color{
+			c := color.Color{
 				R: float64(r) * colorNormalizationFactor,
 				G: float64(g) * colorNormalizationFactor,
 				B: float64(b) * colorNormalizationFactor,
 			}
 
-			image.SetPixel(x, y, col)
+			image.SetPixel(x, y, c)
 		}
 	}
 	//fmt.Println("Converted to color:", filename)
@@ -125,7 +124,7 @@ func WriteImage(filename string, width int, height int, floatImage *FloatImage) 
 	}
 }
 
-func WriteRawImage(filename string, width int, height int, pixelData FloatImage) {
+func WriteRawImage(filename string, width int, height int, pixelData *FloatImage) {
 	var byteBuffer bytes.Buffer
 
 	fileFormatVersionMajor := 1
@@ -136,7 +135,7 @@ func WriteRawImage(filename string, width int, height int, pixelData FloatImage)
 	writeBinaryInt32(&byteBuffer, int32(width))
 	writeBinaryInt32(&byteBuffer, int32(height))
 
-	if err := binary.Write(&byteBuffer, binary.BigEndian, pixelData); err != nil {
+	if err := binary.Write(&byteBuffer, binary.BigEndian, pixelData.pixels); err != nil {
 		fmt.Println(err)
 	}
 

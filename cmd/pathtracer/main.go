@@ -138,7 +138,7 @@ func deInitializeScene(scene *scn.Scene) {
 	}
 }
 
-func render(scene *scn.Scene, width int, height int, pixeldata *image.FloatImage) {
+func render(scene *scn.Scene, width int, height int, renderImage *image.FloatImage) {
 	var wg sync.WaitGroup
 
 	amountSamples := scene.Camera.Samples
@@ -154,7 +154,7 @@ func render(scene *scn.Scene, width int, height int, pixeldata *image.FloatImage
 	for y := 0; y < height; y++ {
 		for x := 0; x < width; x++ {
 			wg.Add(1)
-			go parallelPixelRendering(pixeldata, scene, width, height, x, y, amountSamples, &wg, progressbar)
+			go parallelPixelRendering(renderImage, scene, width, height, x, y, amountSamples, &wg, progressbar)
 		}
 	}
 
@@ -165,7 +165,7 @@ func render(scene *scn.Scene, width int, height int, pixeldata *image.FloatImage
 
 	for x := 0; x < width; x++ {
 		for y := 0; y < height; y++ {
-			pixeldata.GetPixel(x, y).Divide(float64(amountSamples))
+			renderImage.GetPixel(x, y).Divide(float64(amountSamples))
 		}
 	}
 }
