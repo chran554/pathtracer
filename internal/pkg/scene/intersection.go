@@ -1,8 +1,7 @@
-package main
+package scene
 
 import (
 	"math"
-	scn "pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -11,7 +10,7 @@ func negative(t1 float64) bool {
 	return math.Signbit(float64(t1))
 }
 
-func GetLinePlaneIntersectionPoint(line scn.Ray, plane scn.Plane) (vec3.T, bool) {
+func GetLinePlaneIntersectionPoint(line Ray, plane Plane) (vec3.T, bool) {
 	WarningNone := 0
 	WarningNoIntersect := 1
 	WarningIntersectBehind := 2
@@ -49,8 +48,8 @@ func GetLinePlaneIntersectionPoint(line scn.Ray, plane scn.Plane) (vec3.T, bool)
 	return vec3.T{0, 0, 0}, false
 }
 
-func DiscIntersection(line scn.Ray, disc scn.Disc) (vec3.T, bool) {
-	plane := scn.Plane{
+func DiscIntersection(line Ray, disc Disc) (vec3.T, bool) {
+	plane := Plane{
 		Origin:   disc.Origin,
 		Normal:   disc.Normal,
 		Material: disc.Material,
@@ -68,7 +67,7 @@ func DiscIntersection(line scn.Ray, disc scn.Disc) (vec3.T, bool) {
 	return vec3.T{0, 0, 0}, false
 }
 
-func SphereIntersection(line scn.Ray, sphere scn.Sphere) (vec3.T, bool) {
+func SphereIntersection(line Ray, sphere Sphere) (vec3.T, bool) {
 	WarningNone := 0
 	WarningNoIntersection := 1
 	WarningInside := 2

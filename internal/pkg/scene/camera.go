@@ -1,14 +1,14 @@
-package main
+package scene
 
 import (
 	"math"
 	"math/rand"
-	scn "pathtracer/internal/pkg/scene"
 
+	"github.com/ungerik/go3d/float64/mat3"
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-func CreateCameraRay(x int, y int, width int, height int, camera scn.Camera, sampleIndex int) scn.Ray {
+func CreateCameraRay(x int, y int, width int, height int, camera Camera, sampleIndex int) Ray {
 	rayOrigin := camera.Origin
 
 	cameraCoordinateSystem := camera.GetCameraCoordinateSystem()
@@ -50,10 +50,24 @@ func CreateCameraRay(x int, y int, width int, height int, camera scn.Camera, sam
 
 	headingInSceneCoordinateSystem := cameraCoordinateSystem.MulVec3(&headingInCameraCoordinateSystem)
 
-	return scn.Ray{
+	return Ray{
 		Origin:  rayOrigin,
 		Heading: headingInSceneCoordinateSystem,
 	}
+}
+
+func (camera *Camera) GetCameraCoordinateSystem() mat3.T {
+	if camera._coordinateSystem == (mat3.T{}) {
+		heading := camera.Heading.Normalized()
+
+		cameraX := vec3.Cross(&camera.ViewUp, &heading)
+		cameraX.Normalize()
+		cameraY := vec3.Cross(&heading, &cameraX)
+		cameraY.Normalize()
+
+		camera._coordinateSystem = mat3.T{cameraX, cameraY, heading}
+	}
+	return camera._coordinateSystem
 }
 
 func getCameraLensPoint(radius float64, amountSamples int, sample int) vec3.T {
@@ -61,13 +75,13 @@ func getCameraLensPoint(radius float64, amountSamples int, sample int) vec3.T {
 	return vec3.T{radius * xOffset, radius * yOffset, 0}
 }
 
-func getCameraRayIntersectionWithFocalPlane(camera scn.Camera, perfectHeading vec3.T) vec3.T {
-	ray := scn.Ray{
+func getCameraRayIntersectionWithFocalPlane(camera Camera, perfectHeading vec3.T) vec3.T {
+	ray := Ray{
 		Origin:  vec3.Zero,
 		Heading: perfectHeading,
 	}
 
-	focalPlane := scn.Plane{
+	focalPlane := Plane{
 		Origin: vec3.T{0, 0, camera.FocalDistance},
 		Normal: vec3.T{0, 0, 1},
 	}

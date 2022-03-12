@@ -19,6 +19,10 @@ func NewCylindricalImageProjection(textureFilename string, origin vec3.T, u vec3
 	return NewImageProjection(Cylindrical, textureFilename, origin, u, v, false, true, false, false)
 }
 
+func NewSphericalImageProjection(textureFilename string, origin vec3.T, u vec3.T, v vec3.T) ImageProjection {
+	return NewImageProjection(Spherical, textureFilename, origin, u, v, false, true, false, false)
+}
+
 func NewImageProjection(projectionType ProjectionType, textureFilename string, origin vec3.T, u vec3.T, v vec3.T, repeatU bool, repeatV bool, flipU bool, flipV bool) ImageProjection {
 	return ImageProjection{
 		ProjectionType: projectionType,
@@ -40,8 +44,66 @@ func (imageProjection *ImageProjection) GetUV(point *vec3.T) *color.Color {
 	if imageProjection.ProjectionType == Cylindrical {
 		return imageProjection.getCylindricalUV(point)
 	}
+	if imageProjection.ProjectionType == Spherical {
+		return imageProjection.getSphericalUV(point)
+	}
 
 	return &color.White
+}
+
+func (imageProjection *ImageProjection) getSphericalUV_2(point *vec3.T) *color.Color {
+	imageProjection.InitializeProjection()
+
+	translatedPoint := *point
+	translatedPoint.Sub(&imageProjection.Origin)
+
+	p := imageProjection._invertedCoordinateSystemMatrix.MulVec3(&translatedPoint)
+
+	theta := math.Acos(p[1] / p.Length())
+
+	var phi float64
+	if p[0] > 0 {
+		phi = math.Atan(p[2] / p[0])
+
+	} else if (p[0] < 0) && (p[2] >= 0) {
+		phi = math.Atan(p[2]/p[0]) + math.Pi
+
+	} else if (p[0] < 0) && (p[2] < 0) {
+		phi = math.Atan(p[2]/p[0]) - math.Pi
+
+	} else if (p[0] == 0) && (p[2] >= 0) {
+		phi = math.Pi / 2.0
+
+	} else if (p[0] == 0) && (p[2] < 0) {
+		phi = -math.Pi / 2.0
+	}
+
+	textureX := int((phi / (2.0 * math.Pi)) * float64(imageProjection._image.Width))
+	textureY := int((theta / math.Pi) * float64(imageProjection._image.Height))
+
+	return imageProjection._image.GetPixel(textureX, textureY)
+}
+
+func (imageProjection *ImageProjection) getSphericalUV(point *vec3.T) *color.Color {
+	imageProjection.InitializeProjection()
+
+	translatedPoint := *point
+	translatedPoint.Sub(&imageProjection.Origin)
+
+	p := imageProjection._invertedCoordinateSystemMatrix.MulVec3(&translatedPoint)
+	pxzLength := math.Sqrt(p[0]*p[0] + p[2]*p[2])
+
+	theta := math.Acos(p[0] / pxzLength)
+	if p[2] < 0 {
+		theta = 2.0*math.Pi - theta
+	}
+
+	phi := math.Acos(p[1] / p.Length())
+
+	textureX := int((theta / (2.0 * math.Pi)) * float64(imageProjection._image.Width))
+	textureY := int((phi / math.Pi) * float64(imageProjection._image.Height))
+
+	return imageProjection._image.GetPixel(textureX, textureY)
 }
 
 func (imageProjection *ImageProjection) getCylindricalUV(point *vec3.T) *color.Color {
@@ -150,6 +212,18 @@ func (imageProjection *ImageProjection) InitializeProjection() {
 		imageProjection._image = *floatImage
 	}
 
+	if (imageProjection.ProjectionType == Spherical) && (imageProjection._invertedCoordinateSystemMatrix == mat3.Zero) {
+		Un := imageProjection.U.Normalized()
+		Vn := imageProjection.V.Normalized()
+		W := vec3.Cross(&Un, &Vn)
+		U := vec3.Cross(&Vn, &W)
+		imageProjection._invertedCoordinateSystemMatrix = mat3.T{U, imageProjection.V, W}
+		if _, err := imageProjection._invertedCoordinateSystemMatrix.Invert(); err != nil {
+			fmt.Println("Ouupps, could not initialize spherical projection as inverted matrix for uv system could not be created.", imageProjection.ImageFilename, imageProjection.U, imageProjection.V, imageProjection.Origin)
+			os.Exit(1)
+		}
+	}
+
 	if (imageProjection.ProjectionType == Cylindrical) && (imageProjection._invertedCoordinateSystemMatrix == mat3.Zero) {
 		Un := imageProjection.U.Normalized()
 		Vn := imageProjection.V.Normalized()
@@ -170,18 +244,4 @@ func (imageProjection *ImageProjection) InitializeProjection() {
 			os.Exit(1)
 		}
 	}
-}
-
-func (camera *Camera) GetCameraCoordinateSystem() mat3.T {
-	if camera._coordinateSystem == (mat3.T{}) {
-		heading := camera.Heading.Normalized()
-
-		cameraX := vec3.Cross(&camera.ViewUp, &heading)
-		cameraX.Normalize()
-		cameraY := vec3.Cross(&heading, &cameraX)
-		cameraY.Normalize()
-
-		camera._coordinateSystem = mat3.T{cameraX, cameraY, heading}
-	}
-	return camera._coordinateSystem
 }

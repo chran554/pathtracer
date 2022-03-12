@@ -175,7 +175,7 @@ func parallelPixelRendering(pixeldata *image.FloatImage, scene *scn.Scene, width
 	progressbar.Add(1)
 
 	for sampleIndex := 0; sampleIndex < amountSamples; sampleIndex++ {
-		cameraRay := CreateCameraRay(x, y, width, height, scene.Camera, sampleIndex)
+		cameraRay := scn.CreateCameraRay(x, y, width, height, scene.Camera, sampleIndex)
 		col := tracePath(cameraRay, scene)
 		pixeldata.GetPixel(x, y).Add(col)
 	}
@@ -186,7 +186,7 @@ func tracePath(ray scn.Ray, scene *scn.Scene) color.Color {
 	traceColor := color.Black
 
 	for _, sphere := range scene.Spheres {
-		intersectionPoint, intersection := SphereIntersection(ray, sphere)
+		intersectionPoint, intersection := scn.SphereIntersection(ray, sphere)
 		if intersection {
 			distance := vec3.Distance(&ray.Origin, &intersectionPoint)
 			if distance < shortestDistance {
@@ -215,7 +215,7 @@ func tracePath(ray scn.Ray, scene *scn.Scene) color.Color {
 	}
 
 	for _, disc := range scene.Discs {
-		intersectionPoint, intersection := DiscIntersection(ray, disc)
+		intersectionPoint, intersection := scn.DiscIntersection(ray, disc)
 		if intersection {
 			distance := vec3.Distance(&ray.Origin, &intersectionPoint)
 			if distance < shortestDistance {

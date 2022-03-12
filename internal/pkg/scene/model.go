@@ -15,6 +15,7 @@ type ProjectionType string
 const (
 	Parallel    ProjectionType = "Parallel"
 	Cylindrical ProjectionType = "Cylindrical"
+	Spherical   ProjectionType = "Spherical"
 )
 
 type Frame struct {
