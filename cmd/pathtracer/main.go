@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
@@ -181,63 +182,81 @@ func parallelPixelRendering(pixeldata *image.FloatImage, scene *scn.Scene, width
 	}
 }
 
+func getRandomHemisphereVector(hemisphereHeading vec3.T) *vec3.T {
+	var vector vec3.T
+
+	for loopCond := true; loopCond; loopCond = vector.LengthSqr() > 1.0 {
+		vector = vec3.T{
+			rand.Float64()*2.0 - 1.0,
+			rand.Float64()*2.0 - 1.0,
+			rand.Float64()*2.0 - 1.0,
+		}
+	}
+
+	// Check with dot product (really just sign check)
+	// if created random vector has an angle < 90 deg to the heading vector.
+	// Math: dot_product = a·b / (|a|*|b|) ; thus only the dot part will make the sign of dot product change
+	inHemisphere := (vector[0]*hemisphereHeading[0] + vector[1]*hemisphereHeading[1] + vector[2]*hemisphereHeading[2]) >= 0
+	if !inHemisphere {
+		// If the created vector is not pointing in the hemisphere direction the just flip it around
+		vector.Invert()
+	}
+
+	vector.Normalize()
+
+	return &vector
+}
+
 func tracePath(ray scn.Ray, scene *scn.Scene) color.Color {
-	shortestDistance := float64(math.MaxFloat64)
 	traceColor := color.Black
 
+	intersection := false               // Intersection occurred? True/false
+	intersectionPoint := vec3.Zero      // Point of intersection
+	shortestDistance := math.MaxFloat64 // At what distance from start point of fired ray
+	material := scn.Material{}          // The material of the closest object that was intersected
+	normalAtIntersection := vec3.Zero   // The normal of the object that was intersected, at intersection point
+
 	for _, sphere := range scene.Spheres {
-		intersectionPoint, intersection := scn.SphereIntersection(ray, sphere)
-		if intersection {
+		tempIntersectionPoint, tempIntersection := scn.SphereIntersection(ray, sphere)
+		if tempIntersection {
 			distance := vec3.Distance(&ray.Origin, &intersectionPoint)
 			if distance < shortestDistance {
-				shortestDistance = distance
-
-				sphereOrigin := sphere.Origin
-				sphereNormalAtIntersection := intersectionPoint
-				sphereNormalAtIntersection.Sub(&sphereOrigin)
-				incomingRay := ray.Heading.Inverted()
-				cosineIncomingRayAndNormal := vec3.Dot(&sphereNormalAtIntersection, &incomingRay) / (sphereNormalAtIntersection.Length() * incomingRay.Length())
-
-				material := sphere.Material
-
-				projectionColor := &color.White
-				if material.Projection != nil {
-					projectionColor = material.Projection.GetUV(&intersectionPoint)
-				}
-
-				traceColor = color.Color{
-					R: material.Color.R * cosineIncomingRayAndNormal * projectionColor.R,
-					G: material.Color.G * cosineIncomingRayAndNormal * projectionColor.G,
-					B: material.Color.B * cosineIncomingRayAndNormal * projectionColor.B,
-				}
+				intersection = tempIntersection           // Set to true, there has been an intersection
+				intersectionPoint = tempIntersectionPoint // Save the intersection point of the closest intersection
+				shortestDistance = distance               // Save the shortest intersection distance
+				material = sphere.Material
+				normalAtIntersection = intersectionPoint.Subed(&sphere.Origin)
 			}
 		}
 	}
 
 	for _, disc := range scene.Discs {
-		intersectionPoint, intersection := scn.DiscIntersection(ray, disc)
+		tempIntersectionPoint, tempIntersection := scn.DiscIntersection(ray, disc)
 		if intersection {
 			distance := vec3.Distance(&ray.Origin, &intersectionPoint)
 			if distance < shortestDistance {
-				shortestDistance = distance
-
-				normalAtIntersection := disc.Normal
-				incomingRay := ray.Heading.Inverted()
-				cosineIncomingRayAndNormal := vec3.Dot(&normalAtIntersection, &incomingRay) / (normalAtIntersection.Length() * incomingRay.Length())
-
-				material := disc.Material
-
-				projectionColor := &color.White
-				if material.Projection != nil {
-					projectionColor = material.Projection.GetUV(&intersectionPoint)
-				}
-
-				traceColor = color.Color{
-					R: material.Color.R * cosineIncomingRayAndNormal * projectionColor.R,
-					G: material.Color.G * cosineIncomingRayAndNormal * projectionColor.G,
-					B: material.Color.B * cosineIncomingRayAndNormal * projectionColor.B,
-				}
+				intersection = tempIntersection           // Set to true, there has been an intersection
+				intersectionPoint = tempIntersectionPoint // Save the intersection point of the closest intersection
+				shortestDistance = distance               // Save the shortest intersection distance
+				normalAtIntersection = disc.Normal
+				material = disc.Material
 			}
+		}
+	}
+
+	if intersection {
+		projectionColor := &color.White
+		if material.Projection != nil {
+			projectionColor = material.Projection.GetUV(&intersectionPoint)
+		}
+
+		incomingRayInverted := ray.Heading.Inverted()
+		cosineIncomingRayAndNormal := vec3.Dot(&normalAtIntersection, &incomingRayInverted) / (normalAtIntersection.Length() * incomingRayInverted.Length())
+
+		traceColor = color.Color{
+			R: material.Color.R * cosineIncomingRayAndNormal * projectionColor.R,
+			G: material.Color.G * cosineIncomingRayAndNormal * projectionColor.G,
+			B: material.Color.B * cosineIncomingRayAndNormal * projectionColor.B,
 		}
 	}
 
