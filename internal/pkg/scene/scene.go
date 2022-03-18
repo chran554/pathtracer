@@ -109,8 +109,7 @@ func (imageProjection *ImageProjection) getSphericalUV(point *vec3.T) *color.Col
 func (imageProjection *ImageProjection) getCylindricalUV(point *vec3.T) *color.Color {
 	imageProjection.InitializeProjection()
 
-	translatedPoint := *point
-	translatedPoint.Sub(&imageProjection.Origin)
+	translatedPoint := point.Subed(&imageProjection.Origin)
 
 	uvPoint := imageProjection._invertedCoordinateSystemMatrix.MulVec3(&translatedPoint)
 

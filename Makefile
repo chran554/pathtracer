@@ -19,12 +19,12 @@ build:
 
 build_all: build animations
 
-animations: build_sphere_rotation build_sphere_rotation_focaldistance build_cornellbox build_spherical_projection build_cylindrical_projection build_parallel_projection
+animations: build_sphere_circle_rotation build_sphere_rotation_focaldistance build_cornellbox build_spherical_projection build_cylindrical_projection build_parallel_projection
 
 # Build animation scenes
 # -----------------------------------
 
-build_sphere_rotation: build
+build_sphere_circle_rotation: build
 	go build -o bin/sphere_circle_rotation ./cmd/sphere_circle_rotation
 
 build_sphere_rotation_focaldistance: build

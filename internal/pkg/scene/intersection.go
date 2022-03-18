@@ -10,7 +10,7 @@ func negative(t1 float64) bool {
 	return math.Signbit(float64(t1))
 }
 
-func GetLinePlaneIntersectionPoint(line Ray, plane Plane) (vec3.T, bool) {
+func GetLinePlaneIntersectionPoint(line *Ray, plane *Plane) (vec3.T, bool) {
 	WarningNone := 0
 	WarningNoIntersect := 1
 	WarningIntersectBehind := 2
@@ -48,14 +48,14 @@ func GetLinePlaneIntersectionPoint(line Ray, plane Plane) (vec3.T, bool) {
 	return vec3.T{0, 0, 0}, false
 }
 
-func DiscIntersection(line Ray, disc Disc) (vec3.T, bool) {
+func DiscIntersection(line *Ray, disc *Disc) (vec3.T, bool) {
 	plane := Plane{
 		Origin:   disc.Origin,
 		Normal:   disc.Normal,
 		Material: disc.Material,
 	}
 
-	intersectionPoint, intersection := GetLinePlaneIntersectionPoint(line, plane)
+	intersectionPoint, intersection := GetLinePlaneIntersectionPoint(line, &plane)
 
 	if intersection {
 		intersectionDistance := vec3.Distance(&disc.Origin, &intersectionPoint)
@@ -67,7 +67,7 @@ func DiscIntersection(line Ray, disc Disc) (vec3.T, bool) {
 	return vec3.T{0, 0, 0}, false
 }
 
-func SphereIntersection(line Ray, sphere Sphere) (vec3.T, bool) {
+func SphereIntersection(line *Ray, sphere *Sphere) (vec3.T, bool) {
 	WarningNone := 0
 	WarningNoIntersection := 1
 	WarningInside := 2

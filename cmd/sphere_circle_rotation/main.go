@@ -27,11 +27,15 @@ var projectionTextures = []projection{
 
 var environmentEnvironMap = "textures/planets/environmentmap/space_fake_02_flip.png"
 
+var animationName = "sphere_circle_rotation"
+
 var imageWidth = 800
 var imageHeight = 600
 var magnification = 1.0
+var renderType = scn.Pathtracing
+var maxRecursion = 4
 
-var amountFrames = 360
+var amountFrames = 1 // 360
 
 var circleRadius = 100.0
 var amountBalls = len(projectionTextures) * 2
@@ -40,8 +44,8 @@ var amountBallsToRotateBeforeMovieLoop = len(projectionTextures)
 var cameraDistanceFactor = 1.1
 var viewPlaneDistance = 600.0
 
-var amountSamples = 128
-var lensRadius = 5.0
+var amountSamples = 512
+var lensRadius = 3.0
 
 func main() {
 	animation := getAnimation(int(float64(imageWidth)*magnification), int(float64(imageHeight)*magnification))
@@ -64,6 +68,8 @@ func main() {
 
 		//addOriginCoordinateSpheres(&scene)
 
+		addLampsToScene(&scene)
+
 		addEnvironmentMapping(environmentEnvironMap, &scene)
 
 		frame := scn.Frame{
@@ -78,6 +84,30 @@ func main() {
 	anm.WriteAnimationToFile(animation)
 }
 
+func addLampsToScene(scene *scn.Scene) {
+	lamp1 := scn.Sphere{
+		Name:   "Lamp 1 (right)",
+		Origin: vec3.T{circleRadius * 1.5, circleRadius * 1.0, -circleRadius * 1.5},
+		Radius: circleRadius * 0.75,
+		Material: scn.Material{
+			Color:    color.Color{R: 1, G: 1, B: 1},
+			Emission: &color.Color{R: 5, G: 5, B: 5},
+		},
+	}
+
+	lamp2 := scn.Sphere{
+		Name:   "Lamp 2 (left)",
+		Origin: vec3.T{-circleRadius * 1.5, circleRadius * 1.5, -circleRadius * 1.5},
+		Radius: circleRadius * 0.75,
+		Material: scn.Material{
+			Color:    color.Color{R: 1, G: 1, B: 1},
+			Emission: &color.Color{R: 5, G: 5, B: 5},
+		},
+	}
+
+	scene.Spheres = append(scene.Spheres, lamp1, lamp2)
+}
+
 func addEnvironmentMapping(filename string, scene *scn.Scene) {
 	environmentRadius := 100.0 * 1000.0
 
@@ -89,7 +119,7 @@ func addEnvironmentMapping(filename string, scene *scn.Scene) {
 		Radius: environmentRadius,
 		Material: scn.Material{
 			Color:    color.Color{R: 1, G: 1, B: 1},
-			Emission: nil,
+			Emission: &color.Color{R: 0.5, G: 0.5, B: 0.5},
 			Projection: &scn.ImageProjection{
 				ProjectionType: scn.Cylindrical,
 				ImageFilename:  filename,
@@ -177,7 +207,7 @@ func addBallsToScene(deltaBallAngle float64, projectionAngle float64, projection
 
 func getAnimation(width int, height int) scn.Animation {
 	animation := scn.Animation{
-		AnimationName:     "sphere_circle_rotation",
+		AnimationName:     animationName,
 		Frames:            []scn.Frame{},
 		Width:             width,
 		Height:            height,
@@ -226,6 +256,8 @@ func getCamera(magnification float64, progress float64) scn.Camera {
 		cameraDistance * math.Sin(-math.Pi*2.0+strideAngle),
 	}
 
+	origin = vec3.T{0, cameraHeight, -cameraDistance}
+
 	// Point heading towards center of sphere ring (heading vector starts in camera origin)
 	heading := vec3.T{-origin[0], -(origin[1] - ballRadius), -origin[2]}
 
@@ -241,5 +273,7 @@ func getCamera(magnification float64, progress float64) scn.Camera {
 		Samples:           amountSamples,
 		AntiAlias:         true,
 		Magnification:     magnification,
+		RenderType:        renderType,
+		RecursionDepth:    maxRecursion,
 	}
 }

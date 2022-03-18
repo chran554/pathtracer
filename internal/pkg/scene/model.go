@@ -18,6 +18,13 @@ const (
 	Spherical   ProjectionType = "Spherical"
 )
 
+type RenderType string
+
+const (
+	Pathtracing RenderType = "Pathtracing"
+	Raycasting  RenderType = "Raycasting"
+)
+
 type Frame struct {
 	Filename   string
 	FrameIndex int
@@ -77,7 +84,10 @@ type Camera struct {
 	Samples           int
 	AntiAlias         bool
 	Magnification     float64
+	RenderType        RenderType
+	RecursionDepth    int
 }
+
 type Line struct {
 	Origin  vec3.T
 	Heading vec3.T
@@ -101,14 +111,3 @@ type Disc struct {
 
 	Material Material
 }
-
-/*
-type triangle struct {
-	p1      vec3.T
-	p2      vec3.T
-	p3      vec3.T
-	_normal vec3.T
-
-	material Material
-}
-*/

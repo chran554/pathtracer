@@ -17,9 +17,7 @@ SCENE_BIN=$SCENE_NAME
 SCENE_DEFINITION=$SCENE_NAME.animation.json
 
 echo "Building executables:"
-
-# make build_sphere_rotation
-make build_all
+make build_$SCENE_NAME
 
 echo "-----------------------------------------------------------------------------"
 echo "Running scene animation creation executable ./bin/$SCENE_BIN"

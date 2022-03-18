@@ -65,8 +65,10 @@ func main() {
 		fmt.Println("Frame label:      ", frame.FrameIndex)
 		fmt.Println("Frame image file: ", frame.Filename)
 		fmt.Println()
+		fmt.Println("Render algorithm: ", scene.Camera.RenderType)
 		fmt.Println("Image size:       ", strconv.Itoa(animation.Width)+"x"+strconv.Itoa(animation.Height))
 		fmt.Println("Amount samples:   ", scene.Camera.Samples)
+		fmt.Println("Max recursion:    ", scene.Camera.RecursionDepth)
 		fmt.Println("Amount discs:     ", len(scene.Discs))
 		fmt.Println("Amount spheres:   ", len(scene.Spheres))
 		fmt.Println()
@@ -76,6 +78,7 @@ func main() {
 
 		renderedPixelData := image.NewFloatImage(animation.Width, animation.Height)
 
+		fmt.Println("Rendering...")
 		render(&scene, animation.Width, animation.Height, renderedPixelData)
 
 		animationDirectory := filepath.Join(".", "rendered", animation.AnimationName)
@@ -139,53 +142,57 @@ func deInitializeScene(scene *scn.Scene) {
 	}
 }
 
-func render(scene *scn.Scene, width int, height int, renderImage *image.FloatImage) {
+func render(scene *scn.Scene, width int, height int, renderedPixelData *image.FloatImage) {
 	var wg sync.WaitGroup
 
 	amountSamples := scene.Camera.Samples
 
-	progressbar := progressbar2.NewOptions(width*height+1, // Stay on 99% until all worker threads are done
+	progressbar := progressbar2.NewOptions(width*height*amountSamples+1+1, // Stay on 99% until all worker threads are done
 		progressbar2.OptionFullWidth(),
 		progressbar2.OptionClearOnFinish(),
+		progressbar2.OptionSetRenderBlankState(true),
 		progressbar2.OptionSetPredictTime(true),
 		progressbar2.OptionEnableColorCodes(true),
 		progressbar2.OptionSetDescription("Render progress"),
 	)
 
+	progressbar.Add(1) // Indicate start
+
 	for y := 0; y < height; y++ {
 		for x := 0; x < width; x++ {
 			wg.Add(1)
-			go parallelPixelRendering(renderImage, scene, width, height, x, y, amountSamples, &wg, progressbar)
+			go parallelPixelRendering(renderedPixelData, scene, width, height, x, y, amountSamples, &wg, progressbar)
 		}
 	}
 
 	wg.Wait()
 
-	progressbar.Add(1) // Final step to 100% in progress bar
+	progressbar.Add(1) // Indicate end, final step to 100% in progress bar
 	//progressbar.Clear()
 
 	for x := 0; x < width; x++ {
 		for y := 0; y < height; y++ {
-			renderImage.GetPixel(x, y).Divide(float64(amountSamples))
+			renderedPixelData.GetPixel(x, y).Divide(float64(amountSamples))
 		}
 	}
 }
 
-func parallelPixelRendering(pixeldata *image.FloatImage, scene *scn.Scene, width int, height int, x int, y int, amountSamples int, wg *sync.WaitGroup, progressbar *progressbar2.ProgressBar) {
+func parallelPixelRendering(renderedPixelData *image.FloatImage, scene *scn.Scene, width int, height int, x int, y int, amountSamples int, wg *sync.WaitGroup, progressbar *progressbar2.ProgressBar) {
 	defer wg.Done()
-	progressbar.Add(1)
 
 	for sampleIndex := 0; sampleIndex < amountSamples; sampleIndex++ {
-		cameraRay := scn.CreateCameraRay(x, y, width, height, scene.Camera, sampleIndex)
-		col := tracePath(cameraRay, scene)
-		pixeldata.GetPixel(x, y).Add(col)
+		cameraRay := scn.CreateCameraRay(x, y, width, height, &scene.Camera, sampleIndex)
+		col := tracePath(cameraRay, scene, 0)
+		renderedPixelData.GetPixel(x, y).Add(col)
+
+		progressbar.Add(1)
 	}
 }
 
-func getRandomHemisphereVector(hemisphereHeading vec3.T) *vec3.T {
+func getRandomHemisphereVector(hemisphereHeading *vec3.T) *vec3.T {
 	var vector vec3.T
 
-	for loopCond := true; loopCond; loopCond = vector.LengthSqr() > 1.0 {
+	for continueLoop := true; continueLoop; continueLoop = vector.LengthSqr() > 1.0 {
 		vector = vec3.T{
 			rand.Float64()*2.0 - 1.0,
 			rand.Float64()*2.0 - 1.0,
@@ -207,8 +214,12 @@ func getRandomHemisphereVector(hemisphereHeading vec3.T) *vec3.T {
 	return &vector
 }
 
-func tracePath(ray scn.Ray, scene *scn.Scene) color.Color {
-	traceColor := color.Black
+func tracePath(ray *scn.Ray, scene *scn.Scene, currentDepth int) color.Color {
+	outgoingEmission := color.Black
+
+	if currentDepth > scene.Camera.RecursionDepth {
+		return outgoingEmission
+	}
 
 	intersection := false               // Intersection occurred? True/false
 	intersectionPoint := vec3.Zero      // Point of intersection
@@ -217,29 +228,34 @@ func tracePath(ray scn.Ray, scene *scn.Scene) color.Color {
 	normalAtIntersection := vec3.Zero   // The normal of the object that was intersected, at intersection point
 
 	for _, sphere := range scene.Spheres {
-		tempIntersectionPoint, tempIntersection := scn.SphereIntersection(ray, sphere)
+		tempIntersectionPoint, tempIntersection := scn.SphereIntersection(ray, &sphere)
 		if tempIntersection {
-			distance := vec3.Distance(&ray.Origin, &intersectionPoint)
+			distance := vec3.Distance(&ray.Origin, &tempIntersectionPoint)
 			if distance < shortestDistance {
 				intersection = tempIntersection           // Set to true, there has been an intersection
 				intersectionPoint = tempIntersectionPoint // Save the intersection point of the closest intersection
 				shortestDistance = distance               // Save the shortest intersection distance
 				material = sphere.Material
 				normalAtIntersection = intersectionPoint.Subed(&sphere.Origin)
+
+				invertedRayHeading := ray.Heading.Inverted()
+				if vectorCosine(&normalAtIntersection, &invertedRayHeading) < 0 {
+					normalAtIntersection.Invert()
+				}
 			}
 		}
 	}
 
 	for _, disc := range scene.Discs {
-		tempIntersectionPoint, tempIntersection := scn.DiscIntersection(ray, disc)
-		if intersection {
-			distance := vec3.Distance(&ray.Origin, &intersectionPoint)
+		tempIntersectionPoint, tempIntersection := scn.DiscIntersection(ray, &disc)
+		if tempIntersection {
+			distance := vec3.Distance(&ray.Origin, &tempIntersectionPoint)
 			if distance < shortestDistance {
 				intersection = tempIntersection           // Set to true, there has been an intersection
 				intersectionPoint = tempIntersectionPoint // Save the intersection point of the closest intersection
 				shortestDistance = distance               // Save the shortest intersection distance
-				normalAtIntersection = disc.Normal
 				material = disc.Material
+				normalAtIntersection = disc.Normal
 			}
 		}
 	}
@@ -251,14 +267,43 @@ func tracePath(ray scn.Ray, scene *scn.Scene) color.Color {
 		}
 
 		incomingRayInverted := ray.Heading.Inverted()
-		cosineIncomingRayAndNormal := vec3.Dot(&normalAtIntersection, &incomingRayInverted) / (normalAtIntersection.Length() * incomingRayInverted.Length())
 
-		traceColor = color.Color{
-			R: material.Color.R * cosineIncomingRayAndNormal * projectionColor.R,
-			G: material.Color.G * cosineIncomingRayAndNormal * projectionColor.G,
-			B: material.Color.B * cosineIncomingRayAndNormal * projectionColor.B,
+		if scene.Camera.RenderType == "" || scene.Camera.RenderType == scn.Raycasting {
+			cosineIncomingRayAndNormal := vectorCosine(&normalAtIntersection, &incomingRayInverted)
+
+			outgoingEmission = color.Color{
+				R: material.Color.R * cosineIncomingRayAndNormal * projectionColor.R,
+				G: material.Color.G * cosineIncomingRayAndNormal * projectionColor.G,
+				B: material.Color.B * cosineIncomingRayAndNormal * projectionColor.B,
+			}
+
+		} else if scene.Camera.RenderType == scn.Pathtracing {
+			randomHeadingVector := getRandomHemisphereVector(&normalAtIntersection)
+			rayStartOffset := randomHeadingVector.Scaled(0.000001)
+			newRay := scn.Ray{
+				Origin:  intersectionPoint.Added(&rayStartOffset),
+				Heading: *randomHeadingVector,
+			}
+			incomingEmission := tracePath(&newRay, scene, currentDepth+1)
+			cosineRayAndNormal := vec3.Dot(&normalAtIntersection, randomHeadingVector) / (normalAtIntersection.Length() * randomHeadingVector.Length())
+
+			outgoingEmission = color.Color{
+				R: material.Color.R * cosineRayAndNormal * projectionColor.R * incomingEmission.R,
+				G: material.Color.G * cosineRayAndNormal * projectionColor.G * incomingEmission.G,
+				B: material.Color.B * cosineRayAndNormal * projectionColor.B * incomingEmission.B,
+			}
+
+			if material.Emission != nil {
+				outgoingEmission.R += material.Emission.R * projectionColor.R
+				outgoingEmission.G += material.Emission.G * projectionColor.G
+				outgoingEmission.B += material.Emission.B * projectionColor.B
+			}
 		}
 	}
 
-	return traceColor
+	return outgoingEmission
+}
+
+func vectorCosine(normalAtIntersection *vec3.T, incomingRayInverted *vec3.T) float64 {
+	return vec3.Dot(normalAtIntersection, incomingRayInverted) / math.Sqrt(normalAtIntersection.LengthSqr()*incomingRayInverted.LengthSqr())
 }

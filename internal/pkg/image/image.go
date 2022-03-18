@@ -44,23 +44,20 @@ func (image *FloatImage) GetPixel(x, y int) *color.Color {
 	return &image.pixels[y*image.Width+x]
 }
 
-func (image *FloatImage) SetPixel(x, y int, color color.Color) {
-	image.pixels[y*image.Width+x] = color
+func (image *FloatImage) SetPixel(x, y int, color *color.Color) {
+	image.pixels[y*image.Width+x] = *color
 }
 
 func LoadImageData(filename string) *FloatImage {
-	//fmt.Println("Loading image:", filename)
 	textureImage, err := getImageFromFilePath(filename)
 	if err != nil {
 		fmt.Println("Ouupps, no image file could be loaded for parallel image projection.", filename)
 		os.Exit(1)
 	}
-	//fmt.Println("Loaded image:", filename)
 
 	width := textureImage.Bounds().Max.X
 	height := textureImage.Bounds().Max.Y
 
-	//fmt.Println("Converting to color:", filename)
 	image := NewFloatImage(width, height)
 	colorNormalizationFactor := 1.0 / 0xffff
 	for y := 0; y < height; y++ {
@@ -73,10 +70,9 @@ func LoadImageData(filename string) *FloatImage {
 				B: float64(b) * colorNormalizationFactor,
 			}
 
-			image.SetPixel(x, y, c)
+			image.SetPixel(x, y, &c)
 		}
 	}
-	//fmt.Println("Converted to color:", filename)
 
 	return image
 }
@@ -101,9 +97,9 @@ func WriteImage(filename string, width int, height int, floatImage *FloatImage) 
 		for y := 0; y < height; y++ {
 			pixelValue := floatImage.GetPixel(x, y)
 
-			r := uint8(math.Round(pixelValue.R * 255.0))
-			g := uint8(math.Round(pixelValue.G * 255.0))
-			b := uint8(math.Round(pixelValue.B * 255.0))
+			r := uint8(clamp(0, 255, math.Round(pixelValue.R*255.0)))
+			g := uint8(clamp(0, 255, math.Round(pixelValue.G*255.0)))
+			b := uint8(clamp(0, 255, math.Round(pixelValue.B*255.0)))
 
 			image.Set(x, y, col.RGBA{R: r, G: g, B: b, A: 255})
 		}
@@ -122,6 +118,17 @@ func WriteImage(filename string, width int, height int, floatImage *FloatImage) 
 		fmt.Println("Oups, no image encode for you today.")
 		os.Exit(1)
 	}
+}
+
+func clamp(min float64, max float64, value float64) float64 {
+	if value < min {
+		return min
+	} else if value > max {
+		return max
+	} else {
+		return value
+	}
+
 }
 
 func WriteRawImage(filename string, width int, height int, pixelData *FloatImage) {

@@ -8,7 +8,7 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-func CreateCameraRay(x int, y int, width int, height int, camera Camera, sampleIndex int) Ray {
+func CreateCameraRay(x int, y int, width int, height int, camera *Camera, sampleIndex int) *Ray {
 	rayOrigin := camera.Origin
 
 	cameraCoordinateSystem := camera.GetCameraCoordinateSystem()
@@ -50,7 +50,7 @@ func CreateCameraRay(x int, y int, width int, height int, camera Camera, sampleI
 
 	headingInSceneCoordinateSystem := cameraCoordinateSystem.MulVec3(&headingInCameraCoordinateSystem)
 
-	return Ray{
+	return &Ray{
 		Origin:  rayOrigin,
 		Heading: headingInSceneCoordinateSystem,
 	}
@@ -75,13 +75,13 @@ func getCameraLensPoint(radius float64, amountSamples int, sample int) vec3.T {
 	return vec3.T{radius * xOffset, radius * yOffset, 0}
 }
 
-func getCameraRayIntersectionWithFocalPlane(camera Camera, perfectHeading vec3.T) vec3.T {
-	ray := Ray{
+func getCameraRayIntersectionWithFocalPlane(camera *Camera, perfectHeading vec3.T) vec3.T {
+	ray := &Ray{
 		Origin:  vec3.Zero,
 		Heading: perfectHeading,
 	}
 
-	focalPlane := Plane{
+	focalPlane := &Plane{
 		Origin: vec3.T{0, 0, camera.FocalDistance},
 		Normal: vec3.T{0, 0, 1},
 	}

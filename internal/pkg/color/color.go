@@ -7,6 +7,11 @@ var (
 
 type Color struct{ R, G, B float64 }
 
+func (c *Color) Copy() Color {
+	color := *c
+	return color
+}
+
 func (c *Color) Add(color Color) *Color {
 	c.R += color.R
 	c.G += color.G
@@ -18,5 +23,12 @@ func (c *Color) Divide(divider float64) *Color {
 	c.R /= divider
 	c.G /= divider
 	c.B /= divider
+	return c
+}
+
+func (c *Color) Multiply(factor float64) *Color {
+	c.R *= factor
+	c.G *= factor
+	c.B *= factor
 	return c
 }
