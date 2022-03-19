@@ -16,7 +16,7 @@ var ballRadius float64 = 20
 
 var renderType = scn.Pathtracing
 var maxRecursionDepth = 4
-var amountSamples = 4096
+var amountSamples = 2048
 var lensRadius float64 = 2
 var antiAlias = true
 
@@ -25,7 +25,7 @@ var cameraDistanceFactor = 2.0
 
 var imageWidth = 800
 var imageHeight = 600
-var magnification = 1.5
+var magnification = 0.25
 
 func main() {
 	animation := scn.Animation{

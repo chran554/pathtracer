@@ -65,9 +65,9 @@ func LoadImageData(filename string) *FloatImage {
 			r, g, b, _ := textureImage.At(x, y).RGBA()
 
 			c := color.Color{
-				R: float64(r) * colorNormalizationFactor,
-				G: float64(g) * colorNormalizationFactor,
-				B: float64(b) * colorNormalizationFactor,
+				R: float32(float64(r) * colorNormalizationFactor),
+				G: float32(float64(g) * colorNormalizationFactor),
+				B: float32(float64(b) * colorNormalizationFactor),
 			}
 
 			image.SetPixel(x, y, &c)
@@ -97,9 +97,9 @@ func WriteImage(filename string, width int, height int, floatImage *FloatImage) 
 		for y := 0; y < height; y++ {
 			pixelValue := floatImage.GetPixel(x, y)
 
-			r := uint8(clamp(0, 255, math.Round(pixelValue.R*255.0)))
-			g := uint8(clamp(0, 255, math.Round(pixelValue.G*255.0)))
-			b := uint8(clamp(0, 255, math.Round(pixelValue.B*255.0)))
+			r := uint8(clamp(0, 255, math.Round(float64(pixelValue.R)*255.0)))
+			g := uint8(clamp(0, 255, math.Round(float64(pixelValue.G)*255.0)))
+			b := uint8(clamp(0, 255, math.Round(float64(pixelValue.B)*255.0)))
 
 			image.Set(x, y, col.RGBA{R: r, G: g, B: b, A: 255})
 		}
@@ -146,15 +146,6 @@ func WriteRawImage(filename string, width int, height int, pixelData *FloatImage
 		fmt.Println(err)
 	}
 
-	//for x := 0; x < width; x++ {
-	//	for y := 0; y < height; y++ {
-	//		pixelValue := pixelData[y*width+x]
-	//		writeBinaryFloat64(&byteBuffer, pixelValue.R)
-	//		writeBinaryFloat64(&byteBuffer, pixelValue.G)
-	//		writeBinaryFloat64(&byteBuffer, pixelValue.B)
-	//	}
-	//}
-
 	byteData := byteBuffer.Bytes()
 	length := byteBuffer.Len()
 
@@ -168,6 +159,12 @@ func WriteRawImage(filename string, width int, height int, pixelData *FloatImage
 }
 
 func writeBinaryFloat64(buffer *bytes.Buffer, value float64) {
+	if err := binary.Write(buffer, binary.BigEndian, value); err != nil {
+		fmt.Println(err)
+	}
+}
+
+func writeBinaryFloat32(buffer *bytes.Buffer, value float32) {
 	if err := binary.Write(buffer, binary.BigEndian, value); err != nil {
 		fmt.Println(err)
 	}

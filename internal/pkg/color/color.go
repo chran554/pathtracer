@@ -5,7 +5,7 @@ var (
 	White = Color{R: 1, G: 1, B: 1}
 )
 
-type Color struct{ R, G, B float64 }
+type Color struct{ R, G, B float32 }
 
 func (c *Color) Copy() Color {
 	color := *c
@@ -19,14 +19,14 @@ func (c *Color) Add(color Color) *Color {
 	return c
 }
 
-func (c *Color) Divide(divider float64) *Color {
+func (c *Color) Divide(divider float32) *Color {
 	c.R /= divider
 	c.G /= divider
 	c.B /= divider
 	return c
 }
 
-func (c *Color) Multiply(factor float64) *Color {
+func (c *Color) Multiply(factor float32) *Color {
 	c.R *= factor
 	c.G *= factor
 	c.B *= factor

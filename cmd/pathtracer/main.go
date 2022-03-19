@@ -35,9 +35,6 @@ func main() {
 
 	startTimestamp := time.Now()
 
-	// animationFilename := "scene/three_balls.scene.json"
-	// animationFilename := "scene/sphere_circle_rotation_focaldistance.animation.json"
-	// imageFilename := "rendered/rendered.png"
 	var animationJson, err = os.ReadFile(animationFilename)
 	if err != nil {
 		panic(err)
@@ -163,10 +160,8 @@ func render(scene *scn.Scene, width int, height int, renderedPixelData *image.Fl
 	progressbar.Add(1) // Indicate start
 
 	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
-			wg.Add(1)
-			go parallelPixelRendering(renderedPixelData, scene, width, height, x, y, amountSamples, &wg, progressbar)
-		}
+		wg.Add(1)
+		go parallelPixelRendering(renderedPixelData, scene, width, height, y, amountSamples, &wg, progressbar)
 	}
 
 	wg.Wait()
@@ -176,20 +171,22 @@ func render(scene *scn.Scene, width int, height int, renderedPixelData *image.Fl
 
 	for x := 0; x < width; x++ {
 		for y := 0; y < height; y++ {
-			renderedPixelData.GetPixel(x, y).Divide(float64(amountSamples))
+			renderedPixelData.GetPixel(x, y).Divide(float32(amountSamples))
 		}
 	}
 }
 
-func parallelPixelRendering(renderedPixelData *image.FloatImage, scene *scn.Scene, width int, height int, x int, y int, amountSamples int, wg *sync.WaitGroup, progressbar *progressbar2.ProgressBar) {
+func parallelPixelRendering(renderedPixelData *image.FloatImage, scene *scn.Scene, width int, height int, y int, amountSamples int, wg *sync.WaitGroup, progressbar *progressbar2.ProgressBar) {
 	defer wg.Done()
 
-	for sampleIndex := 0; sampleIndex < amountSamples; sampleIndex++ {
-		cameraRay := scn.CreateCameraRay(x, y, width, height, &scene.Camera, sampleIndex)
-		col := tracePath(cameraRay, scene, 0)
-		renderedPixelData.GetPixel(x, y).Add(col)
+	for x := 0; x < width; x++ {
+		for sampleIndex := 0; sampleIndex < amountSamples; sampleIndex++ {
+			cameraRay := scn.CreateCameraRay(x, y, width, height, &scene.Camera, sampleIndex)
+			col := tracePath(cameraRay, scene, 0)
+			renderedPixelData.GetPixel(x, y).Add(col)
 
-		progressbar.Add(1)
+			progressbar.Add(1)
+		}
 	}
 }
 
@@ -276,9 +273,9 @@ func tracePath(ray *scn.Ray, scene *scn.Scene, currentDepth int) color.Color {
 			cosineIncomingRayAndNormal := vectorCosine(&normalAtIntersection, &incomingRayInverted)
 
 			outgoingEmission = color.Color{
-				R: material.Color.R * cosineIncomingRayAndNormal * projectionColor.R,
-				G: material.Color.G * cosineIncomingRayAndNormal * projectionColor.G,
-				B: material.Color.B * cosineIncomingRayAndNormal * projectionColor.B,
+				R: material.Color.R * float32(cosineIncomingRayAndNormal) * projectionColor.R,
+				G: material.Color.G * float32(cosineIncomingRayAndNormal) * projectionColor.G,
+				B: material.Color.B * float32(cosineIncomingRayAndNormal) * projectionColor.B,
 			}
 
 		} else if scene.Camera.RenderType == scn.Pathtracing {
@@ -292,9 +289,9 @@ func tracePath(ray *scn.Ray, scene *scn.Scene, currentDepth int) color.Color {
 			cosineRayAndNormal := vec3.Dot(&normalAtIntersection, randomHeadingVector) / (normalAtIntersection.Length() * randomHeadingVector.Length())
 
 			outgoingEmission = color.Color{
-				R: material.Color.R * cosineRayAndNormal * projectionColor.R * incomingEmission.R,
-				G: material.Color.G * cosineRayAndNormal * projectionColor.G * incomingEmission.G,
-				B: material.Color.B * cosineRayAndNormal * projectionColor.B * incomingEmission.B,
+				R: material.Color.R * float32(cosineRayAndNormal) * projectionColor.R * incomingEmission.R,
+				G: material.Color.G * float32(cosineRayAndNormal) * projectionColor.G * incomingEmission.G,
+				B: material.Color.B * float32(cosineRayAndNormal) * projectionColor.B * incomingEmission.B,
 			}
 
 			if material.Emission != nil {
