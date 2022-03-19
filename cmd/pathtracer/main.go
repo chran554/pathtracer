@@ -103,12 +103,14 @@ func main() {
 }
 
 func initializeScene(scene *scn.Scene) {
+	scene.Initialize()
+
 	discs := scene.Discs
 
 	for _, disc := range discs {
 		projection := disc.Material.Projection
 		if projection != nil {
-			projection.InitializeProjection()
+			projection.InitializeProjection(scene)
 		}
 	}
 
@@ -117,12 +119,14 @@ func initializeScene(scene *scn.Scene) {
 	for _, sphere := range spheres {
 		projection := sphere.Material.Projection
 		if projection != nil {
-			projection.InitializeProjection()
+			projection.InitializeProjection(scene)
 		}
 	}
 }
 
 func deInitializeScene(scene *scn.Scene) {
+	scene.Clear()
+
 	discs := scene.Discs
 
 	for _, disc := range discs {

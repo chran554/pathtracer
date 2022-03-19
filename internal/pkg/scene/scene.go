@@ -52,8 +52,6 @@ func (imageProjection *ImageProjection) GetUV(point *vec3.T) *color.Color {
 }
 
 func (imageProjection *ImageProjection) getSphericalUV_2(point *vec3.T) *color.Color {
-	imageProjection.InitializeProjection()
-
 	translatedPoint := *point
 	translatedPoint.Sub(&imageProjection.Origin)
 
@@ -85,8 +83,6 @@ func (imageProjection *ImageProjection) getSphericalUV_2(point *vec3.T) *color.C
 }
 
 func (imageProjection *ImageProjection) getSphericalUV(point *vec3.T) *color.Color {
-	imageProjection.InitializeProjection()
-
 	translatedPoint := *point
 	translatedPoint.Sub(&imageProjection.Origin)
 
@@ -107,8 +103,6 @@ func (imageProjection *ImageProjection) getSphericalUV(point *vec3.T) *color.Col
 }
 
 func (imageProjection *ImageProjection) getCylindricalUV(point *vec3.T) *color.Color {
-	imageProjection.InitializeProjection()
-
 	translatedPoint := point.Subed(&imageProjection.Origin)
 
 	uvPoint := imageProjection._invertedCoordinateSystemMatrix.MulVec3(&translatedPoint)
@@ -160,8 +154,6 @@ func (imageProjection *ImageProjection) getCylindricalUV(point *vec3.T) *color.C
 }
 
 func (imageProjection *ImageProjection) getParallelUV(point *vec3.T) *color.Color {
-	imageProjection.InitializeProjection()
-
 	translatedPoint := *point
 	translatedPoint.Sub(&imageProjection.Origin)
 
@@ -200,15 +192,22 @@ func (imageProjection *ImageProjection) getParallelUV(point *vec3.T) *color.Colo
 	return imageProjection._image.GetPixel(textureX, textureY)
 }
 
+func (scene *Scene) Clear() {
+	scene._imageCache = nil
+}
+
+func (scene *Scene) Initialize() {
+	scene._imageCache = make(image.ImageCache)
+}
+
 func (imageProjection *ImageProjection) ClearProjection() {
 	imageProjection._image.Clear()
 	imageProjection._invertedCoordinateSystemMatrix = mat3.Zero
 }
 
-func (imageProjection *ImageProjection) InitializeProjection() {
+func (imageProjection *ImageProjection) InitializeProjection(scene *Scene) {
 	if !imageProjection._image.ContainImage() {
-		floatImage := image.LoadImageData(imageProjection.ImageFilename)
-		imageProjection._image = *floatImage
+		imageProjection._image = scene._imageCache.GetImage(imageProjection.ImageFilename)
 	}
 
 	if (imageProjection.ProjectionType == Spherical) && (imageProjection._invertedCoordinateSystemMatrix == mat3.Zero) {

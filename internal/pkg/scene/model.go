@@ -40,9 +40,10 @@ type Animation struct {
 }
 
 type Scene struct {
-	Camera  Camera
-	Spheres []Sphere
-	Discs   []Disc
+	Camera      Camera
+	Spheres     []Sphere
+	Discs       []Disc
+	_imageCache image.ImageCache
 }
 
 type Material struct {
@@ -54,7 +55,7 @@ type Material struct {
 type ImageProjection struct {
 	ProjectionType                  ProjectionType `json:"ProjectionType"`
 	ImageFilename                   string         `json:"ImageFilename"`
-	_image                          image.FloatImage
+	_image                          *image.FloatImage
 	_invertedCoordinateSystemMatrix mat3.T
 	Origin                          vec3.T `json:"Origin"`
 	U                               vec3.T `json:"U"`

@@ -37,7 +37,7 @@ func (image *FloatImage) Clear() {
 }
 
 func (image *FloatImage) ContainImage() bool {
-	return image.Width > 0 && image.Height > 0 && image.pixels != nil
+	return (image != nil) && (image.Width > 0) && (image.Height > 0) && (image.pixels != nil)
 }
 
 func (image *FloatImage) GetPixel(x, y int) *color.Color {
@@ -190,4 +190,21 @@ func ByteCountIEC(b int64) string {
 		exp++
 	}
 	return fmt.Sprintf("%.1f %ciB", float64(b)/float64(div), "KMGTPE"[exp])
+}
+
+type ImageCache map[string]*FloatImage
+
+func (cache ImageCache) GetImage(filename string) *FloatImage {
+	image := cache[filename]
+
+	if image != nil {
+		return image
+	}
+
+	fmt.Print("Scene image cache loading file:", filename)
+	image = LoadImageData(filename)
+	fmt.Println("       ... done")
+	cache[filename] = image
+
+	return image
 }

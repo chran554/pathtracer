@@ -31,11 +31,11 @@ var animationName = "sphere_circle_rotation"
 
 var imageWidth = 800
 var imageHeight = 600
-var magnification = 1.0
+var magnification = 0.25
 var renderType = scn.Pathtracing
 var maxRecursion = 4
 
-var amountFrames = 1 // 360
+var amountFrames = 64 // 360
 
 var circleRadius = 100.0
 var amountBalls = len(projectionTextures) * 2
@@ -44,7 +44,7 @@ var amountBallsToRotateBeforeMovieLoop = len(projectionTextures)
 var cameraDistanceFactor = 1.1
 var viewPlaneDistance = 600.0
 
-var amountSamples = 512
+var amountSamples = 16
 var lensRadius = 3.0
 
 func main() {
@@ -251,12 +251,13 @@ func getCamera(magnification float64, progress float64) scn.Camera {
 	cameraHeight := 100 * cameraDistanceFactor
 
 	origin := vec3.T{
-		cameraDistance * math.Cos(-math.Pi*2.0+strideAngle),
+		cameraDistance * math.Cos(-math.Pi/2.0+strideAngle),
 		cameraHeight + (cameraHeight/2.0)*math.Sin(2.0*math.Pi*2.0*progress),
-		cameraDistance * math.Sin(-math.Pi*2.0+strideAngle),
+		cameraDistance * math.Sin(-math.Pi/2.0+strideAngle),
 	}
 
-	origin = vec3.T{0, cameraHeight, -cameraDistance}
+	// Static camera location
+	// origin = vec3.T{0, cameraHeight, -cameraDistance}
 
 	// Point heading towards center of sphere ring (heading vector starts in camera origin)
 	heading := vec3.T{-origin[0], -(origin[1] - ballRadius), -origin[2]}

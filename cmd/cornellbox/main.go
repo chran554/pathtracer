@@ -15,8 +15,8 @@ var animationName = "cornellbox"
 var ballRadius float64 = 20
 
 var renderType = scn.Pathtracing
-var maxRecursionDepth = 5
-var amountSamples = 64 // 512 // 2 * 1024
+var maxRecursionDepth = 4
+var amountSamples = 4096
 var lensRadius float64 = 2
 var antiAlias = true
 
@@ -25,7 +25,7 @@ var cameraDistanceFactor = 2.0
 
 var imageWidth = 800
 var imageHeight = 600
-var magnification = 0.5
+var magnification = 1.5
 
 func main() {
 	animation := scn.Animation{
@@ -122,8 +122,8 @@ func getCamera() scn.Camera {
 }
 
 func getBoxWalls() []scn.Disc {
-	roofTexture := scn.NewParallelImageProjection("textures/uv.png", vec3.T{0, ballRadius * 6, 0}, vec3.T{ballRadius, 0, 0}, vec3.T{0, 0, ballRadius})
-	floorTexture := scn.NewParallelImageProjection("textures/uv.png", vec3.T{0, 0, 0}, vec3.T{ballRadius, 0, 0}, vec3.T{0, 0, ballRadius})
+	//roofTexture := scn.NewParallelImageProjection("textures/uv.png", vec3.T{0, ballRadius * 6, 0}, vec3.T{ballRadius, 0, 0}, vec3.T{0, 0, ballRadius})
+	//floorTexture := scn.NewParallelImageProjection("textures/uv.png", vec3.T{0, 0, 0}, vec3.T{ballRadius, 0, 0}, vec3.T{0, 0, ballRadius})
 
 	floor := scn.Disc{
 		Name:   "Floor",
@@ -131,8 +131,8 @@ func getBoxWalls() []scn.Disc {
 		Normal: vec3.T{0, 1, 0},
 		Radius: 600,
 		Material: scn.Material{
-			Color:      color.Color{R: 1, G: 1, B: 1},
-			Projection: &floorTexture,
+			Color: color.Color{R: 1, G: 1, B: 1},
+			//			Projection: &floorTexture,
 		},
 	}
 
@@ -142,8 +142,8 @@ func getBoxWalls() []scn.Disc {
 		Normal: vec3.T{0, -1, 0},
 		Radius: 600,
 		Material: scn.Material{
-			Color:      color.Color{R: 1, G: 1, B: 1},
-			Projection: &roofTexture,
+			Color: color.Color{R: 1, G: 1, B: 1},
+			//			Projection: &roofTexture,
 		},
 	}
 
