@@ -200,7 +200,7 @@ func (cache ImageCache) GetImage(filename string) *FloatImage {
 
 	fmt.Print("Scene image cache loading file:", filename)
 	image = LoadImageData(filename)
-	fmt.Println("       ... done")
+	fmt.Println("  ... done")
 	cache[filename] = image
 
 	return image

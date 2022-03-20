@@ -29,23 +29,26 @@ var environmentEnvironMap = "textures/planets/environmentmap/space_fake_02_flip.
 
 var animationName = "sphere_circle_rotation"
 
+var amountFrames = 180
+
 var imageWidth = 800
 var imageHeight = 600
-var magnification = 0.25
-var renderType = scn.Pathtracing
-var maxRecursion = 4
+var magnification = 0.4
 
-var amountFrames = 64 // 360
+var renderType = scn.Pathtracing
+var amountSamples = 800
+var maxRecursion = 3
+
+var lampEmissionFactor = 1.5
 
 var circleRadius = 100.0
 var amountBalls = len(projectionTextures) * 2
 var ballRadius = 20.0
-var amountBallsToRotateBeforeMovieLoop = len(projectionTextures)
 var cameraDistanceFactor = 1.1
 var viewPlaneDistance = 600.0
-
-var amountSamples = 16
 var lensRadius = 3.0
+
+var amountBallsToRotateBeforeMovieLoop = len(projectionTextures)
 
 func main() {
 	animation := getAnimation(int(float64(imageWidth)*magnification), int(float64(imageHeight)*magnification))
@@ -66,6 +69,8 @@ func main() {
 
 		addBallsToScene(deltaBallAngle, -projectionAngle, projectionTextures, &scene)
 
+		addReflectiveCenterball(&scene)
+
 		//addOriginCoordinateSpheres(&scene)
 
 		addLampsToScene(&scene)
@@ -84,14 +89,32 @@ func main() {
 	anm.WriteAnimationToFile(animation)
 }
 
+func addReflectiveCenterball(scene *scn.Scene) {
+	mirrorSphereRadius := ballRadius * 3.0
+	sphere := scn.Sphere{
+		Name:   "Mirror sphere",
+		Origin: vec3.T{0, mirrorSphereRadius * 1, 0},
+		Radius: mirrorSphereRadius,
+		Material: scn.Material{
+			Color:      color.Color{R: 1, G: 1, B: 1},
+			Reflective: 0.9,
+		},
+	}
+
+	scene.Spheres = append(scene.Spheres, sphere)
+}
+
 func addLampsToScene(scene *scn.Scene) {
+	lampEmission := color.Color{R: 5, G: 5, B: 5}
+	lampEmission.Multiply(float32(lampEmissionFactor))
+
 	lamp1 := scn.Sphere{
 		Name:   "Lamp 1 (right)",
 		Origin: vec3.T{circleRadius * 1.5, circleRadius * 1.0, -circleRadius * 1.5},
 		Radius: circleRadius * 0.75,
 		Material: scn.Material{
 			Color:    color.Color{R: 1, G: 1, B: 1},
-			Emission: &color.Color{R: 5, G: 5, B: 5},
+			Emission: &lampEmission,
 		},
 	}
 
@@ -101,7 +124,7 @@ func addLampsToScene(scene *scn.Scene) {
 		Radius: circleRadius * 0.75,
 		Material: scn.Material{
 			Color:    color.Color{R: 1, G: 1, B: 1},
-			Emission: &color.Color{R: 5, G: 5, B: 5},
+			Emission: &lampEmission,
 		},
 	}
 
