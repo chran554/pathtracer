@@ -19,7 +19,7 @@ var renderType = scn.Pathtracing
 
 //var renderType = scn.Raycasting
 var maxRecursionDepth = 6
-var amountSamples = 1024
+var amountSamples = 1 * 1024
 var lensRadius float64 = 2
 var antiAlias = true
 
@@ -30,7 +30,7 @@ var lampEmissionFactor = 8.0
 
 var imageWidth = 1600
 var imageHeight = 500
-var magnification = 0.5
+var magnification = 0.250
 
 func main() {
 	animation := scn.Animation{
@@ -167,10 +167,15 @@ func getBoxWalls() []scn.Disc {
 		Normal: vec3.T{0, -1, 0},
 		Radius: 600,
 		Material: scn.Material{
-			Color: color.Color{R: 1, G: 1, B: 1},
+			Color: color.Color{R: 0.9, G: 1, B: 0.95},
 			//			Projection: &roofTexture,
 		},
 	}
+
+	backWallTexture := scn.NewParallelImageProjection("textures/bricks_yellow.png",
+		vec3.T{0, 0, 0},
+		vec3.T{ballRadius * 9, 0, 0},
+		vec3.T{0, ballRadius * 9, 0})
 
 	backWall := scn.Disc{
 		Name:   "Back wall",
@@ -178,7 +183,8 @@ func getBoxWalls() []scn.Disc {
 		Normal: vec3.T{0, 0, -1},
 		Radius: 600,
 		Material: scn.Material{
-			Color: color.Color{R: 1, G: 0.75, B: 0.5},
+			Color:      color.Color{R: 1, G: 1, B: 1},
+			Projection: &backWallTexture,
 		},
 	}
 
