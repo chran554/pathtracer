@@ -205,7 +205,7 @@ func (imageProjection *ImageProjection) ClearProjection() {
 	imageProjection._invertedCoordinateSystemMatrix = mat3.Zero
 }
 
-func (imageProjection *ImageProjection) InitializeProjection(scene *Scene) {
+func (imageProjection *ImageProjection) Initialize(scene *Scene) {
 	if !imageProjection._image.ContainImage() {
 		imageProjection._image = scene._imageCache.GetImage(imageProjection.ImageFilename)
 	}

@@ -49,6 +49,7 @@ func CreateCameraRay(x int, y int, width int, height int, camera *Camera, sample
 	}
 
 	headingInSceneCoordinateSystem := cameraCoordinateSystem.MulVec3(&headingInCameraCoordinateSystem)
+	headingInSceneCoordinateSystem.Normalize()
 
 	return &Ray{
 		Origin:  rayOrigin,

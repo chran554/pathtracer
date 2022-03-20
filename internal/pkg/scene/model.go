@@ -48,7 +48,8 @@ type Scene struct {
 
 type Material struct {
 	Color      color.Color
-	Emission   *color.Color     `json:"Emission,omitempty"`
+	Emission   *color.Color `json:"Emission,omitempty"`
+	Reflective float64
 	Projection *ImageProjection `json:"Projection,omitempty"`
 }
 
@@ -111,4 +112,20 @@ type Disc struct {
 	Radius float64
 
 	Material Material
+}
+
+func (sphere Sphere) Initialize(scene *Scene) {
+	projection := sphere.Material.Projection
+	if projection != nil {
+		projection.Initialize(scene)
+	}
+}
+
+func (disc *Disc) Initialize(scene *Scene) {
+	disc.Normal.Normalize()
+
+	projection := disc.Material.Projection
+	if projection != nil {
+		projection.Initialize(scene)
+	}
 }

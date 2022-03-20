@@ -103,21 +103,13 @@ func initializeScene(scene *scn.Scene) {
 	scene.Initialize()
 
 	discs := scene.Discs
-
 	for _, disc := range discs {
-		projection := disc.Material.Projection
-		if projection != nil {
-			projection.InitializeProjection(scene)
-		}
+		disc.Initialize(scene)
 	}
 
 	spheres := scene.Spheres
-
 	for _, sphere := range spheres {
-		projection := sphere.Material.Projection
-		if projection != nil {
-			projection.InitializeProjection(scene)
-		}
+		sphere.Initialize(scene)
 	}
 }
 
@@ -190,7 +182,7 @@ func parallelPixelRendering(renderedPixelData *image.FloatImage, scene *scn.Scen
 	}
 }
 
-func getRandomHemisphereVector(hemisphereHeading *vec3.T) *vec3.T {
+func getRandomHemisphereVector(hemisphereHeading *vec3.T) vec3.T {
 	var vector vec3.T
 
 	for continueLoop := true; continueLoop; continueLoop = vector.LengthSqr() > 1.0 {
@@ -212,7 +204,7 @@ func getRandomHemisphereVector(hemisphereHeading *vec3.T) *vec3.T {
 
 	vector.Normalize()
 
-	return &vector
+	return vector
 }
 
 func tracePath(ray *scn.Ray, scene *scn.Scene, currentDepth int) color.Color {
@@ -237,10 +229,12 @@ func tracePath(ray *scn.Ray, scene *scn.Scene, currentDepth int) color.Color {
 				intersectionPoint = tempIntersectionPoint // Save the intersection point of the closest intersection
 				shortestDistance = distance               // Save the shortest intersection distance
 				material = sphere.Material
-				normalAtIntersection = intersectionPoint.Subed(&sphere.Origin)
 
-				invertedRayHeading := ray.Heading.Inverted()
-				if vectorCosine(&normalAtIntersection, &invertedRayHeading) < 0 {
+				normalAtIntersection = intersectionPoint.Subed(&sphere.Origin)
+				normalAtIntersection.Normalize()
+
+				// Flip normal if it is pointing away from the incoming ray
+				if vectorCosinePositive(&normalAtIntersection, &ray.Heading) {
 					normalAtIntersection.Invert()
 				}
 			}
@@ -256,7 +250,12 @@ func tracePath(ray *scn.Ray, scene *scn.Scene, currentDepth int) color.Color {
 				intersectionPoint = tempIntersectionPoint // Save the intersection point of the closest intersection
 				shortestDistance = distance               // Save the shortest intersection distance
 				material = disc.Material
-				normalAtIntersection = disc.Normal
+				normalAtIntersection = disc.Normal // Should be normalized from initialization
+
+				// Flip normal if it is pointing away from the incoming ray
+				if vectorCosinePositive(&normalAtIntersection, &ray.Heading) {
+					normalAtIntersection.Invert()
+				}
 			}
 		}
 	}
@@ -279,19 +278,41 @@ func tracePath(ray *scn.Ray, scene *scn.Scene, currentDepth int) color.Color {
 			}
 
 		} else if scene.Camera.RenderType == scn.Pathtracing {
-			randomHeadingVector := getRandomHemisphereVector(&normalAtIntersection)
-			rayStartOffset := randomHeadingVector.Scaled(0.000001)
+
+			var newRayHeading vec3.T
+
+			// Reflectiveness / Glossiness
+			if material.Reflective == 0.0 {
+				// Perfect matte surface
+				newRayHeading = getRandomHemisphereVector(&normalAtIntersection)
+			} else if material.Reflective == 1.0 {
+				// Perfect reflective (mirror)
+				newRayHeading = getReflectionVector(&normalAtIntersection, &ray.Heading)
+			} else {
+				// Glossy surface, somewhat reflective (on a scale from 0 to 1)
+				perfectReflectionHeadingVector := getReflectionVector(&normalAtIntersection, &ray.Heading)
+				perfectReflectionHeadingVector.Scale(material.Reflective)
+
+				randomHeadingVector := getRandomHemisphereVector(&normalAtIntersection)
+				randomHeadingVector.Scale(1.0 - material.Reflective)
+
+				perfectReflectionHeadingVector.Add(&randomHeadingVector)
+				perfectReflectionHeadingVector.Normalize()
+				newRayHeading = perfectReflectionHeadingVector
+			}
+
+			rayStartOffset := newRayHeading.Scaled(0.000001)
 			newRay := scn.Ray{
 				Origin:  intersectionPoint.Added(&rayStartOffset),
-				Heading: *randomHeadingVector,
+				Heading: newRayHeading,
 			}
 			incomingEmission := tracePath(&newRay, scene, currentDepth+1)
-			cosineRayAndNormal := vec3.Dot(&normalAtIntersection, randomHeadingVector) / (normalAtIntersection.Length() * randomHeadingVector.Length())
+			cosineNewRayAndNormal := vec3.Dot(&normalAtIntersection, &newRayHeading) / (normalAtIntersection.Length() * newRayHeading.Length())
 
 			outgoingEmission = color.Color{
-				R: material.Color.R * float32(cosineRayAndNormal) * projectionColor.R * incomingEmission.R,
-				G: material.Color.G * float32(cosineRayAndNormal) * projectionColor.G * incomingEmission.G,
-				B: material.Color.B * float32(cosineRayAndNormal) * projectionColor.B * incomingEmission.B,
+				R: material.Color.R * float32(cosineNewRayAndNormal) * projectionColor.R * incomingEmission.R,
+				G: material.Color.G * float32(cosineNewRayAndNormal) * projectionColor.G * incomingEmission.G,
+				B: material.Color.B * float32(cosineNewRayAndNormal) * projectionColor.B * incomingEmission.B,
 			}
 
 			if material.Emission != nil {
@@ -305,6 +326,19 @@ func tracePath(ray *scn.Ray, scene *scn.Scene, currentDepth int) color.Color {
 	return outgoingEmission
 }
 
+func getReflectionVector(normal *vec3.T, incomingVector *vec3.T) vec3.T {
+	tempV := normal.Scaled(2.0 * vec3.Dot(normal, incomingVector))
+	return incomingVector.Subed(&tempV)
+}
+
 func vectorCosine(normalAtIntersection *vec3.T, incomingRayInverted *vec3.T) float64 {
 	return vec3.Dot(normalAtIntersection, incomingRayInverted) / math.Sqrt(normalAtIntersection.LengthSqr()*incomingRayInverted.LengthSqr())
+}
+
+func vectorCosinePositive(normalAtIntersection *vec3.T, incomingRayInverted *vec3.T) bool {
+	return vec3.Dot(normalAtIntersection, incomingRayInverted) >= 0
+}
+
+func vectorCosineNegative(normalAtIntersection *vec3.T, incomingRayInverted *vec3.T) bool {
+	return vec3.Dot(normalAtIntersection, incomingRayInverted) < 0
 }

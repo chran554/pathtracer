@@ -42,4 +42,7 @@ build_spherical_projection: build
 build_parallel_projection: build
 	go build -o bin/parallel_projection ./cmd/parallel_projection
 
+build_reflective_test: build
+	go build -o bin/reflective_test ./cmd/reflective_test
+
 
