@@ -18,8 +18,8 @@ var ballRadius float64 = 20
 var renderType = scn.Pathtracing
 
 //var renderType = scn.Raycasting
-var maxRecursionDepth = 6
-var amountSamples = 1 * 1024
+var maxRecursionDepth = 5
+var amountSamples = 10 * 1024
 var lensRadius float64 = 2
 var antiAlias = true
 
@@ -30,7 +30,7 @@ var lampEmissionFactor = 8.0
 
 var imageWidth = 1600
 var imageHeight = 500
-var magnification = 0.250
+var magnification = 1.0
 
 func main() {
 	animation := scn.Animation{
