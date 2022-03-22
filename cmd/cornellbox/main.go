@@ -1,9 +1,7 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"os"
+	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
 	scn "pathtracer/internal/pkg/scene"
 
@@ -84,19 +82,7 @@ func main() {
 
 	animation.Frames = append(animation.Frames, frame)
 
-	jsonData, err := json.MarshalIndent(animation, "", "  ")
-	if err != nil {
-		fmt.Println("Ouupps, failed to marshal data", err)
-		os.Exit(1)
-	}
-
-	filename := "scene/" + animation.AnimationName + ".animation.json"
-	if err = os.WriteFile(filename, jsonData, 0644); err != nil {
-		fmt.Println("Ouuupps, no file writing performed")
-		os.Exit(1)
-	}
-
-	fmt.Println("Wrote animation file:", filename)
+	anm.WriteAnimationToFile(animation)
 }
 
 func getCamera() scn.Camera {
