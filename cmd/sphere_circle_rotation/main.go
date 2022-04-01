@@ -11,7 +11,9 @@ import (
 )
 
 type projection struct {
-	filename string
+	filename      string
+	emission      *color.Color
+	rayTerminator bool
 }
 
 var projectionTextures = []projection{
@@ -19,7 +21,7 @@ var projectionTextures = []projection{
 	{filename: "textures/planets/jupiter2_6k_contrast.png"},
 	{filename: "textures/planets/moonmap4k_2.png"},
 	{filename: "textures/planets/mars.jpg"},
-	{filename: "textures/planets/sun.jpg"},
+	{filename: "textures/planets/sun.jpg", emission: &color.Color{R: 4.0, G: 4.0, B: 4.0}, rayTerminator: true},
 	{filename: "textures/planets/venusmap.jpg"},
 	{filename: "textures/planets/makemake_fictional.jpg"},
 	{filename: "textures/planets/plutomap2k.jpg"},
@@ -27,27 +29,29 @@ var projectionTextures = []projection{
 
 //var environmentEnvironMap = "textures/planets/environmentmap/space_fake_02_flip.png"
 //var environmentEnvironMap = "textures/equirectangular/open_grassfield_sunny_day.jpg"
-var environmentEnvironMap = "textures/equirectangular/forest_sunny_day.jpg"
+//var environmentEnvironMap = "textures/equirectangular/forest_sunny_day.jpg"
+var environmentEnvironMap = "textures/planets/environmentmap/Stellarium3.jpeg"
 
 var animationName = "sphere_circle_rotation"
 
-var amountFrames = 180
+var amountFrames = 1
 
 var imageWidth = 800
 var imageHeight = 600
-var magnification = 0.5
+var magnification = 1.0
 
 var renderType = scn.Pathtracing
-var amountSamples = 200
-var maxRecursion = 3
+var amountSamples = 4096
+var maxRecursion = 4
 
-var lampEmissionFactor = 1.8
-var lampDistanceFactor = 1.35
+var lampEmissionFactor = 2.0
+var lampDistanceFactor = 1.5
+
+var cameraDistanceFactor = 2.5
 
 var circleRadius = 200.0
 var amountBalls = len(projectionTextures) * 2
 var ballRadius = 40.0
-var cameraDistanceFactor = 2.0
 var viewPlaneDistance = 600.0
 var lensRadius = 2.5
 
@@ -107,7 +111,7 @@ func addReflectiveCenterBall(scene *scn.Scene) {
 		Origin: vec3.T{0, mirrorSphereRadius * 1, 0},
 		Radius: mirrorSphereRadius,
 		Material: scn.Material{
-			Color:      color.Color{R: 1, G: 1, B: 1},
+			Color:      color.Color{R: 0.95, G: 0.95, B: 0.95},
 			Reflective: 0.95,
 		},
 	}
@@ -178,13 +182,14 @@ func addEnvironmentMapping(filename string, scene *scn.Scene) {
 		Origin: origin,
 		Radius: environmentRadius,
 		Material: scn.Material{
-			Color:    color.Color{R: 1.0, G: 1.0, B: 1.0},
-			Emission: &color.Color{R: 0.75, G: 0.75, B: 0.75},
+			Color:         color.Color{R: 1.0, G: 1.0, B: 1.0},
+			Emission:      &color.Color{R: 1.0, G: 1.0, B: 1.0},
+			RayTerminator: true,
 			Projection: &scn.ImageProjection{
 				ProjectionType: scn.Spherical,
 				ImageFilename:  filename,
 				Origin:         origin,
-				U:              vec3.T{0, 0, -1},
+				U:              vec3.T{1, 0, 0},
 				V:              vec3.T{0, 1, 0},
 				RepeatU:        true,
 				RepeatV:        true,
@@ -243,8 +248,9 @@ func addBallsToScene(deltaBallAngle float64, projectionAngle float64, projection
 			Origin: ballOrigin,
 			Radius: ballRadius,
 			Material: scn.Material{
-				Color:    color.Color{R: 1, G: 1, B: 1},
-				Emission: nil,
+				Color:         color.Color{R: 1, G: 1, B: 1},
+				Emission:      projectionData[projectionTextureIndex].emission,
+				RayTerminator: projectionData[projectionTextureIndex].rayTerminator,
 				Projection: &scn.ImageProjection{
 					ProjectionType: scn.Spherical,
 					ImageFilename:  projectionData[projectionTextureIndex].filename,

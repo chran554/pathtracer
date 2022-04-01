@@ -52,6 +52,7 @@ type Material struct {
 	Projection      *ImageProjection `json:"Projection,omitempty"`
 	RefractionIndex float64
 	Transparancy    float64
+	RayTerminator   bool
 }
 
 type ImageProjection struct {

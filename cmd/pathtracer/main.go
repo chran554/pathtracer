@@ -355,13 +355,16 @@ func tracePath(ray *scn.Ray, scene *scn.Scene, currentDepth int) color.Color {
 				Heading:         newRayHeading,
 				RefractionIndex: newRefractionIndex,
 			}
-			incomingEmission := tracePath(&newRay, scene, currentDepth+1)
-			cosineNewRayAndNormal := vec3.Dot(&normalAtIntersection, &newRayHeading) / (normalAtIntersection.Length() * newRayHeading.Length())
 
-			outgoingEmission = color.Color{
-				R: material.Color.R * float32(cosineNewRayAndNormal) * projectionColor.R * incomingEmission.R,
-				G: material.Color.G * float32(cosineNewRayAndNormal) * projectionColor.G * incomingEmission.G,
-				B: material.Color.B * float32(cosineNewRayAndNormal) * projectionColor.B * incomingEmission.B,
+			if !material.RayTerminator {
+				incomingEmission := tracePath(&newRay, scene, currentDepth+1)
+				cosineNewRayAndNormal := vec3.Dot(&normalAtIntersection, &newRayHeading) / (normalAtIntersection.Length() * newRayHeading.Length())
+
+				outgoingEmission = color.Color{
+					R: material.Color.R * float32(cosineNewRayAndNormal) * projectionColor.R * incomingEmission.R,
+					G: material.Color.G * float32(cosineNewRayAndNormal) * projectionColor.G * incomingEmission.G,
+					B: material.Color.B * float32(cosineNewRayAndNormal) * projectionColor.B * incomingEmission.B,
+				}
 			}
 
 			if material.Emission != nil {
