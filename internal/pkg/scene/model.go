@@ -40,17 +40,18 @@ type Animation struct {
 }
 
 type Scene struct {
-	Camera      Camera
-	Spheres     []Sphere
-	Discs       []Disc
-	_imageCache image.ImageCache
+	Camera  Camera
+	Spheres []Sphere
+	Discs   []Disc
 }
 
 type Material struct {
-	Color      color.Color
-	Emission   *color.Color `json:"Emission,omitempty"`
-	Reflective float64
-	Projection *ImageProjection `json:"Projection,omitempty"`
+	Color           color.Color
+	Emission        *color.Color `json:"Emission,omitempty"`
+	Reflective      float64
+	Projection      *ImageProjection `json:"Projection,omitempty"`
+	RefractionIndex float64
+	Transparancy    float64
 }
 
 type ImageProjection struct {
@@ -90,12 +91,11 @@ type Camera struct {
 	RecursionDepth    int
 }
 
-type Line struct {
-	Origin  vec3.T
-	Heading vec3.T
+type Ray struct {
+	Origin          vec3.T
+	Heading         vec3.T
+	RefractionIndex float64
 }
-
-type Ray Line
 
 type Plane struct {
 	Name   string

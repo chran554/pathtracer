@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/image"
+	"pathtracer/internal/pkg/rendermonitor"
 	scn "pathtracer/internal/pkg/scene"
 	"strconv"
 	"sync"
@@ -18,6 +19,45 @@ import (
 	progressbar2 "github.com/schollz/progressbar/v3"
 	"github.com/ungerik/go3d/float64/vec3"
 )
+
+var quadRenderPasses = renderPasses{
+	maxPixelWidth:  2,
+	maxPixelHeight: 2,
+	renderPasses: []renderPass{
+		{dx: 0, dy: 0, pixelWidth: 2, pixelHeight: 2},
+		{dx: 1, dy: 1, pixelWidth: -2, pixelHeight: 1},
+		{dx: 1, dy: 0, pixelWidth: 1, pixelHeight: 1},
+		{dx: 0, dy: 1, pixelWidth: 1, pixelHeight: 1},
+	},
+}
+
+var nonaRenderPasses = renderPasses{
+	maxPixelWidth:  3,
+	maxPixelHeight: 3,
+	renderPasses: []renderPass{
+		{dx: 0, dy: 0, pixelWidth: 3, pixelHeight: 3},
+		{dx: 1, dy: 1, pixelWidth: 2, pixelHeight: 2},
+		{dx: 2, dy: 0, pixelWidth: 1, pixelHeight: 2},
+		{dx: 0, dy: 2, pixelWidth: 2, pixelHeight: 1},
+		{dx: 2, dy: 1, pixelWidth: 1, pixelHeight: 2},
+
+		{dx: 0, dy: 1, pixelWidth: 1, pixelHeight: 1},
+		{dx: 2, dy: 2, pixelWidth: 1, pixelHeight: 1},
+		{dx: 1, dy: 0, pixelWidth: 1, pixelHeight: 1},
+		{dx: 1, dy: 2, pixelWidth: 1, pixelHeight: 1},
+	},
+}
+
+type renderPasses struct {
+	renderPasses   []renderPass
+	maxPixelWidth  int
+	maxPixelHeight int
+}
+
+type renderPass struct {
+	dx, dy                  int
+	pixelWidth, pixelHeight int
+}
 
 func main() {
 	if len(os.Args) != 2 {
@@ -52,8 +92,14 @@ func main() {
 	fmt.Println("Amount frames:  ", len(animation.Frames))
 	fmt.Println()
 
+	renderMonitor := rendermonitor.NewRenderMonitor()
+	defer renderMonitor.Close()
+
 	for frameIndex, frame := range animation.Frames {
 		frameStartTimestamp := time.Now()
+		renderMonitor.Initialize(animation.AnimationName, frame.Filename, animation.Width, animation.Height)
+		time.Sleep(50 * time.Millisecond)
+
 		scene := frame.Scene
 
 		progress := float64(frameIndex+1) / float64(len(animation.Frames))
@@ -73,10 +119,10 @@ func main() {
 		fmt.Println("Initialize scene...")
 		initializeScene(&scene)
 
-		renderedPixelData := image.NewFloatImage(animation.Width, animation.Height)
+		renderedPixelData := image.NewFloatImage(animation.AnimationName, animation.Width, animation.Height)
 
 		fmt.Println("Rendering...")
-		render(&scene, animation.Width, animation.Height, renderedPixelData)
+		render(&scene, animation.Width, animation.Height, renderedPixelData, &renderMonitor)
 
 		animationDirectory := filepath.Join(".", "rendered", animation.AnimationName)
 		animationFrameFilename := filepath.Join(animationDirectory, frame.Filename+".png")
@@ -135,7 +181,7 @@ func deInitializeScene(scene *scn.Scene) {
 	}
 }
 
-func render(scene *scn.Scene, width int, height int, renderedPixelData *image.FloatImage) {
+func render(scene *scn.Scene, width int, height int, renderedPixelData *image.FloatImage, rm *rendermonitor.RenderMonitor) {
 	var wg sync.WaitGroup
 
 	amountSamples := scene.Camera.Samples
@@ -151,9 +197,13 @@ func render(scene *scn.Scene, width int, height int, renderedPixelData *image.Fl
 
 	progressbar.Add(1) // Indicate start
 
-	for y := 0; y < height; y++ {
-		wg.Add(1)
-		go parallelPixelRendering(renderedPixelData, scene, width, height, y, amountSamples, &wg, progressbar)
+	renderPasses := nonaRenderPasses
+	for _, renderPass := range renderPasses.renderPasses {
+		for y := 0; (y + renderPass.dy) < height; y += renderPasses.maxPixelHeight {
+			wg.Add(1)
+			go parallelPixelRendering(renderedPixelData, scene, width, height, y, renderPass, renderPasses.maxPixelWidth, amountSamples, &wg, progressbar, rm)
+		}
+		wg.Wait()
 	}
 
 	wg.Wait()
@@ -168,17 +218,23 @@ func render(scene *scn.Scene, width int, height int, renderedPixelData *image.Fl
 	}
 }
 
-func parallelPixelRendering(renderedPixelData *image.FloatImage, scene *scn.Scene, width int, height int, y int, amountSamples int, wg *sync.WaitGroup, progressbar *progressbar2.ProgressBar) {
+func parallelPixelRendering(renderedPixelData *image.FloatImage, scene *scn.Scene, width int, height int,
+	y int, renderPass renderPass, maxPixelWidth int, amountSamples int, wg *sync.WaitGroup, progressbar *progressbar2.ProgressBar, rm *rendermonitor.RenderMonitor) {
+
 	defer wg.Done()
 
-	for x := 0; x < width; x++ {
+	for x := 0; (x + renderPass.dx) < width; x += maxPixelWidth {
 		for sampleIndex := 0; sampleIndex < amountSamples; sampleIndex++ {
-			cameraRay := scn.CreateCameraRay(x, y, width, height, &scene.Camera, sampleIndex)
+			cameraRay := scn.CreateCameraRay(x+renderPass.dx, y+renderPass.dy, width, height, &scene.Camera, sampleIndex)
 			col := tracePath(cameraRay, scene, 0)
-			renderedPixelData.GetPixel(x, y).Add(col)
+			renderedPixelData.GetPixel(x+renderPass.dx, y+renderPass.dy).Add(col)
 
 			progressbar.Add(1)
 		}
+
+		// "Log" progress to render monitor
+		pixelColor := renderedPixelData.GetPixel(x+renderPass.dx, y+renderPass.dy)
+		rm.SetPixel(x+renderPass.dx, y+renderPass.dy, renderPass.pixelWidth, renderPass.pixelHeight, pixelColor, amountSamples)
 	}
 }
 
@@ -195,7 +251,7 @@ func getRandomHemisphereVector(hemisphereHeading *vec3.T) vec3.T {
 
 	// Check with dot product (really just sign check)
 	// if created random vector has an angle < 90 deg to the heading vector.
-	// Math: dot_product = a·b / (|a|*|b|) ; thus only the dot part will make the sign of dot product change
+	// Math: dot_product = a·b / (|a|*|b|) ; thus only the dot part will change the sign of dot product
 	inHemisphere := (vector[0]*hemisphereHeading[0] + vector[1]*hemisphereHeading[1] + vector[2]*hemisphereHeading[2]) >= 0
 	if !inHemisphere {
 		// If the created vector is not pointing in the hemisphere direction the just flip it around
@@ -263,7 +319,7 @@ func tracePath(ray *scn.Ray, scene *scn.Scene, currentDepth int) color.Color {
 	if intersection {
 		projectionColor := &color.White
 		if material.Projection != nil {
-			projectionColor = material.Projection.GetUV(&intersectionPoint)
+			projectionColor = material.Projection.GetColor(&intersectionPoint)
 		}
 
 		incomingRayInverted := ray.Heading.Inverted()
@@ -280,31 +336,24 @@ func tracePath(ray *scn.Ray, scene *scn.Scene, currentDepth int) color.Color {
 		} else if scene.Camera.RenderType == scn.Pathtracing {
 
 			var newRayHeading vec3.T
+			var newRefractionIndex = ray.RefractionIndex
 
-			// Reflectiveness / Glossiness
-			if material.Reflective == 0.0 {
-				// Perfect matte surface
-				newRayHeading = getRandomHemisphereVector(&normalAtIntersection)
-			} else if material.Reflective == 1.0 {
-				// Perfect reflective (mirror)
-				newRayHeading = getReflectionVector(&normalAtIntersection, &ray.Heading)
+			if (material.RefractionIndex > 0.0) && (rand.Float64() > -0.5) {
+				var totalInternalReflection bool
+				newRayHeading, totalInternalReflection = getRefractionVector(&normalAtIntersection, &ray.Heading, ray.RefractionIndex, material.RefractionIndex)
+
+				if !totalInternalReflection {
+					newRefractionIndex = material.RefractionIndex
+				}
 			} else {
-				// Glossy surface, somewhat reflective (on a scale from 0 to 1)
-				perfectReflectionHeadingVector := getReflectionVector(&normalAtIntersection, &ray.Heading)
-				perfectReflectionHeadingVector.Scale(material.Reflective)
-
-				randomHeadingVector := getRandomHemisphereVector(&normalAtIntersection)
-				randomHeadingVector.Scale(1.0 - material.Reflective)
-
-				perfectReflectionHeadingVector.Add(&randomHeadingVector)
-				perfectReflectionHeadingVector.Normalize()
-				newRayHeading = perfectReflectionHeadingVector
+				newRayHeading = getReflectionHeading(ray, material, normalAtIntersection)
 			}
 
 			rayStartOffset := newRayHeading.Scaled(0.000001)
 			newRay := scn.Ray{
-				Origin:  intersectionPoint.Added(&rayStartOffset),
-				Heading: newRayHeading,
+				Origin:          intersectionPoint.Added(&rayStartOffset),
+				Heading:         newRayHeading,
+				RefractionIndex: newRefractionIndex,
 			}
 			incomingEmission := tracePath(&newRay, scene, currentDepth+1)
 			cosineNewRayAndNormal := vec3.Dot(&normalAtIntersection, &newRayHeading) / (normalAtIntersection.Length() * newRayHeading.Length())
@@ -326,9 +375,62 @@ func tracePath(ray *scn.Ray, scene *scn.Scene, currentDepth int) color.Color {
 	return outgoingEmission
 }
 
+func getReflectionHeading(ray *scn.Ray, material scn.Material, normalAtIntersection vec3.T) vec3.T {
+	var newHeading vec3.T
+
+	// Reflectiveness / Glossiness
+	if material.Reflective == 0.0 {
+		// Perfect matte surface
+		newHeading = getRandomHemisphereVector(&normalAtIntersection)
+	} else if material.Reflective == 1.0 {
+		// Perfect reflective (mirror)
+		newHeading = getReflectionVector(&normalAtIntersection, &ray.Heading)
+	} else {
+		// Glossy surface, somewhat reflective (on a scale from 0 to 1)
+		perfectReflectionHeadingVector := getReflectionVector(&normalAtIntersection, &ray.Heading)
+		perfectReflectionHeadingVector.Scale(material.Reflective)
+
+		randomHeadingVector := getRandomHemisphereVector(&normalAtIntersection)
+		randomHeadingVector.Scale(1.0 - material.Reflective)
+
+		perfectReflectionHeadingVector.Add(&randomHeadingVector)
+		perfectReflectionHeadingVector.Normalize()
+		newHeading = perfectReflectionHeadingVector
+	}
+
+	return newHeading
+}
+
 func getReflectionVector(normal *vec3.T, incomingVector *vec3.T) vec3.T {
 	tempV := normal.Scaled(2.0 * vec3.Dot(normal, incomingVector))
 	return incomingVector.Subed(&tempV)
+}
+
+// getRefractionVector according to
+// https://graphics.stanford.edu/courses/cs148-10-summer/docs/2006--degreve--reflection_refraction.pdf
+func getRefractionVector(normal *vec3.T, incomingVector *vec3.T, leavingRefractionIndex float64, enteringRefractionIndex float64) (outgoingVector vec3.T, totalInternalReflection bool) {
+	outgoingVector = *incomingVector // No refraction
+
+	refractionRatio := leavingRefractionIndex / enteringRefractionIndex
+	cosi := -vec3.Dot(incomingVector, normal)                        // Cosine for angle of incoming vector and surface normal
+	sinlsqr := refractionRatio * refractionRatio * (1.0 - cosi*cosi) // Squared sinus for angle between refraction (leaving) vector and inverted normal
+
+	// If the incoming vector angle is to flat to the surface of an optically lighter material then
+	// total reflection occur. (Like the mirror effect on the water surface when you are diving and looking up.)
+	// Calculate the reflection vector instead.
+	if sinlsqr > 1.0 {
+		return getReflectionVector(normal, incomingVector), true
+	}
+
+	cosl := math.Sqrt(1.0 - sinlsqr) // Need to verify that this part actually is "cosine" of angle
+
+	io := incomingVector.Scaled(refractionRatio)     // Incoming vector part of outgoing (refraction) vector
+	no := normal.Scaled(refractionRatio*cosi - cosl) // Normal vector part of outgoing (refraction) vector
+
+	io.Add(&no)
+	outgoingVector = io
+
+	return outgoingVector, false
 }
 
 func vectorCosine(normalAtIntersection *vec3.T, incomingRayInverted *vec3.T) float64 {

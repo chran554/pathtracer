@@ -10,17 +10,22 @@ import (
 
 var ballRadius float64 = 30
 
-var amountSamples = 5
+//var cameraOrigin = vec3.T{0, 0, -200} // Looking straight on
+var cameraOrigin = vec3.T{0, 200, -200} // Looking straight on, slightly from above
+//var cameraOrigin = vec3.T{0, -200, -200} // Looking straight on, slightly from below
+
+var amountSamples = 256
 var lensRadius float64 = 0
 var antiAlias = true
 var viewPlaneDistance = 1600.0
+var magnification = 1.5
 
 func main() {
 	animation := scn.Animation{
 		AnimationName:     "spherical_projection",
 		Frames:            []scn.Frame{},
-		Width:             800,
-		Height:            600,
+		Width:             int(float64(1200) * magnification),
+		Height:            int(float64(600) * magnification),
 		WriteRawImageFile: false,
 	}
 
@@ -30,37 +35,57 @@ func main() {
 		Discs:   []scn.Disc{},
 	}
 
-	sphereOrigin := vec3.T{0, 0, 0}
-	projectionOrigin := sphereOrigin.Subed(&vec3.T{0, ballRadius, 0})
+	sphere2Origin := vec3.T{0, 0, 0}
+	sphere1Origin := sphere2Origin.Added(&vec3.T{-ballRadius * 2.2, 0, 0})
+	sphere3Origin := sphere2Origin.Added(&vec3.T{ballRadius * 2.2, 0, 0})
 
-	projectionU := vec3.T{0, 0, ballRadius}
-	projectionV := vec3.T{0, 2.0 * ballRadius, 0}
+	projection1Origin := sphere1Origin
+	projection2Origin := sphere2Origin
+	projection3Origin := sphere3Origin
 
-	//sphericalProjection := scn.NewSphericalImageProjection("textures/propeller_brick.png", projectionOrigin, projectionU, projectionV)
+	projectionU := vec3.T{0, 0, -ballRadius}
+	projectionV := vec3.T{0, ballRadius, 0}
 
-	//sphericalProjection := scn.NewSphericalImageProjection("textures/uv.png", projectionOrigin, projectionU, projectionV)
-	//cylindricalProjection := scn.NewCylindricalImageProjection("textures/uv.png", projectionOrigin, projectionU, projectionV)
-
-	//sphericalProjection := scn.NewSphericalImageProjection("textures/equirectangular/Blue_Marble_3840px-2002.png", projectionOrigin, projectionU, projectionV)
-	//projection := scn.NewSphericalImageProjection("textures/equirectangular/2560px-Plate_Carrée_with_Tissot's_Indicatrices_of_Distortion.svg.png", projectionOrigin, projectionU, projectionV)
-	projection := scn.NewCylindricalImageProjection("textures/equirectangular/world_map_latlonlines_equirectangular.jpeg", projectionOrigin, projectionU, projectionV)
-	//sphericalProjection := scn.NewSphericalImageProjection("textures/equirectangular/bathroom.jpeg", projectionOrigin, projectionU, projectionV)
-	//sphericalProjection := scn.NewSphericalImageProjection("textures/planets/earth_daymap.jpg", projectionOrigin, projectionU, projectionV)
-	//cylindricalProjection := scn.NewCylindricalImageProjection("textures/planets/earth_daymap.jpg", projectionOrigin, projectionU, projectionV)
-	//cylindricalProjection := scn.NewCylindricalImageProjection("textures/planets/earth_daymap.jpg", projectionOrigin, projectionU, projectionV)
+	projection1 := scn.NewSphericalImageProjection("textures/planets/earth_daymap.jpg", projection1Origin, projectionU.Inverted(), projectionV)
+	projection2 := scn.NewSphericalImageProjection("textures/checkered 360x180 with lines.png", projection2Origin, projectionU, projectionV)
+	projection3 := scn.NewSphericalImageProjection("textures/equirectangular/2560px-Plate_Carrée_with_Tissot's_Indicatrices_of_Distortion.svg.png", projection3Origin, projectionU.Inverted(), projectionV)
 
 	sphere1 := scn.Sphere{
-		Name:   "Textured sphere",
-		Origin: sphereOrigin,
+		Name:   "Textured sphere - Earth",
+		Origin: sphere1Origin,
 		Radius: ballRadius,
 		Material: scn.Material{
 			Color:      color.Color{R: 1, G: 1, B: 1},
 			Emission:   &color.Black,
-			Projection: &projection,
+			Projection: &projection1,
+		},
+	}
+
+	sphere2 := scn.Sphere{
+		Name:   "Textured sphere - checkered",
+		Origin: sphere2Origin,
+		Radius: ballRadius,
+		Material: scn.Material{
+			Color:      color.Color{R: 1, G: 1, B: 1},
+			Emission:   &color.Black,
+			Projection: &projection2,
+		},
+	}
+
+	sphere3 := scn.Sphere{
+		Name:   "Textured sphere - Tissot's_Indicatrices_of_Distortion",
+		Origin: sphere3Origin,
+		Radius: ballRadius,
+		Material: scn.Material{
+			Color:      color.Color{R: 1, G: 1, B: 1},
+			Emission:   &color.Black,
+			Projection: &projection3,
 		},
 	}
 
 	scene.Spheres = append(scene.Spheres, sphere1)
+	scene.Spheres = append(scene.Spheres, sphere2)
+	scene.Spheres = append(scene.Spheres, sphere3)
 
 	frame := scn.Frame{
 		Filename:   animation.AnimationName,
@@ -74,15 +99,11 @@ func main() {
 }
 
 func getCamera() scn.Camera {
-	//origin := vec3.T{0, -200, -200}
-	origin := vec3.T{0, 200, -200}
-	//origin := vec3.T{0, 0, -200}
-
-	heading := vec3.T{-origin[0], -origin[1], -origin[2]}
+	heading := vec3.T{-cameraOrigin[0], -cameraOrigin[1], -cameraOrigin[2]}
 	focalDistance := heading.Length()
 
 	return scn.Camera{
-		Origin:            origin,
+		Origin:            cameraOrigin,
 		Heading:           heading,
 		ViewUp:            vec3.T{0, 1, 0},
 		ViewPlaneDistance: viewPlaneDistance,
@@ -90,5 +111,6 @@ func getCamera() scn.Camera {
 		FocalDistance:     focalDistance,
 		Samples:           amountSamples,
 		AntiAlias:         antiAlias,
+		Magnification:     magnification,
 	}
 }

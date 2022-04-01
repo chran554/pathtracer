@@ -4,25 +4,26 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	_ "image/jpeg"
-	"image/png"
-	"pathtracer/internal/pkg/color"
-
 	img "image"
 	col "image/color"
+	_ "image/jpeg"
+	"image/png"
 	"math"
 	"os"
+	"pathtracer/internal/pkg/color"
 	"strconv"
 )
 
 type FloatImage struct {
+	name   string
 	pixels []color.Color
 	Width  int
 	Height int
 }
 
-func NewFloatImage(width, height int) *FloatImage {
+func NewFloatImage(name string, width, height int) *FloatImage {
 	floatImage := FloatImage{
+		name:   name,
 		pixels: make([]color.Color, width*height),
 		Width:  width,
 		Height: height,
@@ -36,11 +37,14 @@ func (image *FloatImage) Clear() {
 	image.Height = 0
 }
 
-func (image *FloatImage) ContainImage() bool {
-	return (image != nil) && (image.Width > 0) && (image.Height > 0) && (image.pixels != nil)
+func (image *FloatImage) ContainImageData() bool {
+	return (image.Width > 0) && (image.Height > 0) && (image.pixels != nil)
 }
 
 func (image *FloatImage) GetPixel(x, y int) *color.Color {
+	if (x >= image.Width) || (y >= image.Height) || (x < 0) || (y < 0) {
+		fmt.Printf("Illegal pixel access in image \"%s\" of size (%d x %d). There is no pixel at (%d x %d).\n", image.name, image.Width, image.Height, x, y)
+	}
 	return &image.pixels[y*image.Width+x]
 }
 
@@ -51,14 +55,14 @@ func (image *FloatImage) SetPixel(x, y int, color *color.Color) {
 func LoadImageData(filename string) *FloatImage {
 	textureImage, err := getImageFromFilePath(filename)
 	if err != nil {
-		fmt.Println("Ouupps, no image file could be loaded for parallel image projection.", filename)
+		fmt.Printf("image file \"%s\" could not be loaded\n", filename)
 		os.Exit(1)
 	}
 
 	width := textureImage.Bounds().Max.X
 	height := textureImage.Bounds().Max.Y
 
-	image := NewFloatImage(width, height)
+	image := NewFloatImage(filename, width, height)
 	colorNormalizationFactor := 1.0 / 0xffff
 	for y := 0; y < height; y++ {
 		for x := 0; x < width; x++ {
@@ -84,9 +88,6 @@ func getImageFromFilePath(filePath string) (img.Image, error) {
 	}
 	defer f.Close()
 	image, _, err := img.Decode(f)
-
-	// fmt.Println("Read image:", filePath)
-
 	return image, err
 }
 
@@ -128,7 +129,6 @@ func clamp(min float64, max float64, value float64) float64 {
 	} else {
 		return value
 	}
-
 }
 
 func WriteRawImage(filename string, width int, height int, pixelData *FloatImage) {
@@ -187,21 +187,4 @@ func ByteCountIEC(b int64) string {
 		exp++
 	}
 	return fmt.Sprintf("%.1f %ciB", float64(b)/float64(div), "KMGTPE"[exp])
-}
-
-type ImageCache map[string]*FloatImage
-
-func (cache ImageCache) GetImage(filename string) *FloatImage {
-	image := cache[filename]
-
-	if image != nil {
-		return image
-	}
-
-	fmt.Print("Scene image cache loading file:", filename)
-	image = LoadImageData(filename)
-	fmt.Println("  ... done")
-	cache[filename] = image
-
-	return image
 }

@@ -108,13 +108,13 @@ func Test_sunflower(t *testing.T) {
 		halfWidth := float64(width / 2)
 		halfHeight := float64(height / 2)
 
-		image := img.NewFloatImage(width, height)
+		image := img.NewFloatImage("sunflower", width, height)
 
 		for i := 0; i < amount; i++ {
 			x, y := sunflower(amount, 2.0, i+1, randomize)
 			x2 := int(halfWidth * (1 + x))
 			y2 := int(halfHeight * (1 - y))
-			image.SetPixel(x2, y2, color.Color{R: 1, G: 1, B: 1})
+			image.SetPixel(x2, y2, &color.Color{R: 1, G: 1, B: 1})
 		}
 
 		img.WriteImage("sunflower_["+strconv.Itoa(width)+"x"+strconv.Itoa(height)+"]x"+strconv.Itoa(amount)+"_random.png", width, height, image)

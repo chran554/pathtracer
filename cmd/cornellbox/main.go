@@ -13,7 +13,7 @@ var animationName = "cornellbox"
 var ballRadius float64 = 20
 
 var renderType = scn.Pathtracing
-var maxRecursionDepth = 4
+var maxRecursionDepth = 6
 var amountSamples = 2048
 var lensRadius float64 = 2
 var antiAlias = true
@@ -23,7 +23,9 @@ var cameraDistanceFactor = 2.0
 
 var imageWidth = 800
 var imageHeight = 600
-var magnification = 0.25
+var magnification = 0.5
+
+var roofHeight = ballRadius * 3.0
 
 func main() {
 	animation := scn.Animation{
@@ -45,7 +47,7 @@ func main() {
 		Origin: vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0},
 		Radius: ballRadius,
 		Material: scn.Material{
-			Color: color.Color{R: 1, G: 1, B: 1},
+			Color: color.Color{R: 0.85, G: 0.9, B: 0.9},
 		},
 	}
 
@@ -54,16 +56,17 @@ func main() {
 		Origin: vec3.T{-(ballRadius + (ballRadius / 2)), ballRadius, 0},
 		Radius: ballRadius,
 		Material: scn.Material{
-			Color: color.Color{R: 1, G: 1, B: 1},
+			Color: color.Color{R: 0.9, G: 0.9, B: 0.85},
 		},
 	}
 
-	lampEmission := color.White.Copy()
-	lampEmission.Multiply(10.0)
-	roofLamp := scn.Sphere{
-		Name:   "Roof lamp",
-		Origin: vec3.T{0, ballRadius*3 + ballRadius*2*0.75, -ballRadius},
-		Radius: ballRadius * 2,
+	lampEmission := color.Color{R: 0.9, G: 0.9, B: 0.85}
+	lampEmission.Multiply(6.0)
+	lampRadius := ballRadius * 6
+	lamp := scn.Sphere{
+		Name:   "Lamp",
+		Origin: vec3.T{0, roofHeight + lampRadius*0.9, -ballRadius},
+		Radius: lampRadius,
 		Material: scn.Material{
 			Color:    color.Color{R: 1, G: 1, B: 1},
 			Emission: &lampEmission,
@@ -72,7 +75,7 @@ func main() {
 
 	scene.Spheres = append(scene.Spheres, sphere1)
 	scene.Spheres = append(scene.Spheres, sphere2)
-	scene.Spheres = append(scene.Spheres, roofLamp)
+	scene.Spheres = append(scene.Spheres, lamp)
 
 	frame := scn.Frame{
 		Filename:   animation.AnimationName,
@@ -124,7 +127,7 @@ func getBoxWalls() []scn.Disc {
 
 	roof := scn.Disc{
 		Name:   "Roof",
-		Origin: vec3.T{0, ballRadius * 3, 0},
+		Origin: vec3.T{0, roofHeight, 0},
 		Normal: vec3.T{0, -1, 0},
 		Radius: 600,
 		Material: scn.Material{

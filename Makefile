@@ -45,4 +45,7 @@ build_parallel_projection: build
 build_reflective_test: build
 	go build -o bin/reflective_test ./cmd/reflective_test
 
+build_refraction_test: build
+	go build -o bin/refraction_test ./cmd/refraction_test
+
 

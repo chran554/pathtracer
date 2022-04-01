@@ -5,6 +5,7 @@ import (
 	"math/rand"
 
 	"github.com/ungerik/go3d/float64/mat3"
+	"github.com/ungerik/go3d/float64/vec2"
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
@@ -18,19 +19,18 @@ func CreateCameraRay(x int, y int, width int, height int, camera *Camera, sample
 		magnification = 1.0
 	}
 
-	perfectHeadingInCameraCoordinateSystem := vec3.T{
-		(-float64(width/2.0) + float64(x) + 0.5) / magnification,
-		(float64(height/2.0) - float64(y) - 0.5) / magnification,
-		camera.ViewPlaneDistance,
-	}
-
+	aliasOffset := vec2.T{0, 0}
 	if camera.AntiAlias && (camera.Samples > 1) {
 		// Anti aliasing rays (random offsets within the pixel square)
 		xOffset := rand.Float64() - 0.5
 		yOffset := rand.Float64() - 0.5
-		aliasOffset := vec3.T{xOffset, yOffset, 0}
+		aliasOffset = vec2.T{xOffset, yOffset}
+	}
 
-		perfectHeadingInCameraCoordinateSystem.Add(&aliasOffset)
+	perfectHeadingInCameraCoordinateSystem := vec3.T{
+		(-float64(width/2.0) + float64(x) + 0.5 + aliasOffset[0]) / magnification,
+		(float64(height/2.0) - float64(y) - 0.5 + aliasOffset[1]) / magnification,
+		camera.ViewPlaneDistance,
 	}
 
 	var headingInCameraCoordinateSystem vec3.T
@@ -52,8 +52,9 @@ func CreateCameraRay(x int, y int, width int, height int, camera *Camera, sample
 	headingInSceneCoordinateSystem.Normalize()
 
 	return &Ray{
-		Origin:  rayOrigin,
-		Heading: headingInSceneCoordinateSystem,
+		Origin:          rayOrigin,
+		Heading:         headingInSceneCoordinateSystem,
+		RefractionIndex: 1.000273, // Refraction index of air (at 20 degrees Celsius, STP)
 	}
 }
 

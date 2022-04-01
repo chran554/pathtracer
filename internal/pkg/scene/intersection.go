@@ -7,7 +7,7 @@ import (
 )
 
 func negative(t1 float64) bool {
-	return math.Signbit(float64(t1))
+	return math.Signbit(t1)
 }
 
 func GetLinePlaneIntersectionPoint(line *Ray, plane *Plane) (vec3.T, bool) {
@@ -105,7 +105,7 @@ func SphereIntersection(line *Ray, sphere *Sphere) (vec3.T, bool) {
 		t2 := float64(0)
 
 		if q >= 0.0 {
-			root := float64(math.Sqrt(float64(q)))
+			root := math.Sqrt(q)
 			t1 = -p + root
 			t2 = -p - root
 
@@ -120,6 +120,12 @@ func SphereIntersection(line *Ray, sphere *Sphere) (vec3.T, bool) {
 
 		} else if negative(t1) != negative(t2) {
 			warning = WarningInside
+
+			if negative(t1) {
+				t3 = t2
+			} else {
+				t3 = t1
+			}
 
 		} else if negative(t1) && negative(t2) {
 			warning = WarningBehind
