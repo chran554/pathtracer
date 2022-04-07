@@ -11,6 +11,7 @@ import (
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/image"
 	"pathtracer/internal/pkg/rendermonitor"
+	"pathtracer/internal/pkg/renderpass"
 	scn "pathtracer/internal/pkg/scene"
 	"strconv"
 	"sync"
@@ -19,45 +20,6 @@ import (
 	progressbar2 "github.com/schollz/progressbar/v3"
 	"github.com/ungerik/go3d/float64/vec3"
 )
-
-var quadRenderPasses = renderPasses{
-	maxPixelWidth:  2,
-	maxPixelHeight: 2,
-	renderPasses: []renderPass{
-		{dx: 0, dy: 0, pixelWidth: 2, pixelHeight: 2},
-		{dx: 1, dy: 1, pixelWidth: -2, pixelHeight: 1},
-		{dx: 1, dy: 0, pixelWidth: 1, pixelHeight: 1},
-		{dx: 0, dy: 1, pixelWidth: 1, pixelHeight: 1},
-	},
-}
-
-var nonaRenderPasses = renderPasses{
-	maxPixelWidth:  3,
-	maxPixelHeight: 3,
-	renderPasses: []renderPass{
-		{dx: 0, dy: 0, pixelWidth: 3, pixelHeight: 3},
-		{dx: 1, dy: 1, pixelWidth: 2, pixelHeight: 2},
-		{dx: 2, dy: 0, pixelWidth: 1, pixelHeight: 2},
-		{dx: 0, dy: 2, pixelWidth: 2, pixelHeight: 1},
-		{dx: 2, dy: 1, pixelWidth: 1, pixelHeight: 2},
-
-		{dx: 0, dy: 1, pixelWidth: 1, pixelHeight: 1},
-		{dx: 2, dy: 2, pixelWidth: 1, pixelHeight: 1},
-		{dx: 1, dy: 0, pixelWidth: 1, pixelHeight: 1},
-		{dx: 1, dy: 2, pixelWidth: 1, pixelHeight: 1},
-	},
-}
-
-type renderPasses struct {
-	renderPasses   []renderPass
-	maxPixelWidth  int
-	maxPixelHeight int
-}
-
-type renderPass struct {
-	dx, dy                  int
-	pixelWidth, pixelHeight int
-}
 
 func main() {
 	if len(os.Args) != 2 {
@@ -197,11 +159,11 @@ func render(scene *scn.Scene, width int, height int, renderedPixelData *image.Fl
 
 	progressbar.Add(1) // Indicate start
 
-	renderPasses := nonaRenderPasses
-	for _, renderPass := range renderPasses.renderPasses {
-		for y := 0; (y + renderPass.dy) < height; y += renderPasses.maxPixelHeight {
+	renderPasses := renderpass.CreateRenderPasses(20)
+	for _, renderPass := range renderPasses.RenderPasses {
+		for y := 0; (y + renderPass.Dy) < height; y += renderPasses.MaxPixelHeight {
 			wg.Add(1)
-			go parallelPixelRendering(renderedPixelData, scene, width, height, y, renderPass, renderPasses.maxPixelWidth, amountSamples, &wg, progressbar, rm)
+			go parallelPixelRendering(renderedPixelData, scene, width, height, y, renderPass, renderPasses.MaxPixelWidth, amountSamples, &wg, progressbar, rm)
 		}
 		wg.Wait()
 	}
@@ -219,22 +181,22 @@ func render(scene *scn.Scene, width int, height int, renderedPixelData *image.Fl
 }
 
 func parallelPixelRendering(renderedPixelData *image.FloatImage, scene *scn.Scene, width int, height int,
-	y int, renderPass renderPass, maxPixelWidth int, amountSamples int, wg *sync.WaitGroup, progressbar *progressbar2.ProgressBar, rm *rendermonitor.RenderMonitor) {
+	y int, renderPass renderpass.RenderPass, maxPixelWidth int, amountSamples int, wg *sync.WaitGroup, progressbar *progressbar2.ProgressBar, rm *rendermonitor.RenderMonitor) {
 
 	defer wg.Done()
 
-	for x := 0; (x + renderPass.dx) < width; x += maxPixelWidth {
+	for x := 0; (x + renderPass.Dx) < width; x += maxPixelWidth {
 		for sampleIndex := 0; sampleIndex < amountSamples; sampleIndex++ {
-			cameraRay := scn.CreateCameraRay(x+renderPass.dx, y+renderPass.dy, width, height, &scene.Camera, sampleIndex)
+			cameraRay := scn.CreateCameraRay(x+renderPass.Dx, y+renderPass.Dy, width, height, &scene.Camera, sampleIndex)
 			col := tracePath(cameraRay, scene, 0)
-			renderedPixelData.GetPixel(x+renderPass.dx, y+renderPass.dy).Add(col)
+			renderedPixelData.GetPixel(x+renderPass.Dx, y+renderPass.Dy).Add(col)
 
 			progressbar.Add(1)
 		}
 
 		// "Log" progress to render monitor
-		pixelColor := renderedPixelData.GetPixel(x+renderPass.dx, y+renderPass.dy)
-		rm.SetPixel(x+renderPass.dx, y+renderPass.dy, renderPass.pixelWidth, renderPass.pixelHeight, pixelColor, amountSamples)
+		pixelColor := renderedPixelData.GetPixel(x+renderPass.Dx, y+renderPass.Dy)
+		rm.SetPixel(x+renderPass.Dx, y+renderPass.Dy, renderPass.PaintWidth, renderPass.PaintHeight, pixelColor, amountSamples)
 	}
 }
 
