@@ -15,7 +15,7 @@ var ballRadius float64 = 20
 var renderType = scn.Pathtracing
 var maxRecursionDepth = 6
 var amountSamples = 2048
-var lensRadius float64 = 2
+var lensRadius float64 = 0
 var antiAlias = true
 
 var viewPlaneDistance = 4000.0
@@ -33,7 +33,7 @@ func main() {
 		Frames:            []scn.Frame{},
 		Width:             int(float64(imageWidth) * magnification),
 		Height:            int(float64(imageHeight) * magnification),
-		WriteRawImageFile: false,
+		WriteRawImageFile: true,
 	}
 
 	scene := scn.Scene{
@@ -47,7 +47,7 @@ func main() {
 		Origin: vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0},
 		Radius: ballRadius,
 		Material: scn.Material{
-			Color: color.Color{R: 0.85, G: 0.9, B: 0.9},
+			Color: color.Color{R: 0.9, G: 0.9, B: 0.9},
 		},
 	}
 
@@ -56,12 +56,12 @@ func main() {
 		Origin: vec3.T{-(ballRadius + (ballRadius / 2)), ballRadius, 0},
 		Radius: ballRadius,
 		Material: scn.Material{
-			Color: color.Color{R: 0.9, G: 0.9, B: 0.85},
+			Color: color.Color{R: 0.9, G: 0.9, B: 0.9},
 		},
 	}
 
-	lampEmission := color.Color{R: 0.9, G: 0.9, B: 0.85}
-	lampEmission.Multiply(6.0)
+	lampEmission := color.Color{R: 0.9, G: 0.9, B: 0.9}
+	lampEmission.Multiply(16.0)
 	lampRadius := ballRadius * 6
 	lamp := scn.Sphere{
 		Name:   "Lamp",

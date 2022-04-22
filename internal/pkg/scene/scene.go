@@ -240,7 +240,10 @@ func (imageProjection *ImageProjection) ClearProjection() {
 
 func (imageProjection *ImageProjection) Initialize(scene *Scene) {
 	if imageProjection._image == nil || !imageProjection._image.ContainImageData() {
-		imageProjection._image = image.GetCachedImage(imageProjection.ImageFilename)
+		if imageProjection.Gamma == 0.0 {
+			imageProjection.Gamma = 1.0 // No gamma correction
+		}
+		imageProjection._image = image.GetCachedImage(imageProjection.ImageFilename, imageProjection.Gamma)
 	}
 
 	switch imageProjection.ProjectionType {

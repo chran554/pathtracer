@@ -89,11 +89,11 @@ func main() {
 		animationDirectory := filepath.Join(".", "rendered", animation.AnimationName)
 		animationFrameFilename := filepath.Join(animationDirectory, frame.Filename+".png")
 		os.MkdirAll(animationDirectory, os.ModePerm)
-		image.WriteImage(animationFrameFilename, animation.Width, animation.Height, renderedPixelData)
+		image.WriteImage(animationFrameFilename, renderedPixelData)
 
 		if animation.WriteRawImageFile {
 			animationFrameRawFilename := filepath.Join(animationDirectory, frame.Filename+".praw")
-			image.WriteImage(animationFrameRawFilename, animation.Width, animation.Height, renderedPixelData)
+			image.WriteRawImage(animationFrameRawFilename, renderedPixelData)
 		}
 
 		deInitializeScene(&scene)
@@ -344,19 +344,19 @@ func getReflectionHeading(ray *scn.Ray, material scn.Material, normalAtIntersect
 	var newHeading vec3.T
 
 	// Reflectiveness / Glossiness
-	if material.Reflective == 0.0 {
+	if material.Glossiness == 0.0 {
 		// Perfect matte surface
 		newHeading = getRandomHemisphereVector(&normalAtIntersection)
-	} else if material.Reflective == 1.0 {
+	} else if material.Glossiness == 1.0 {
 		// Perfect reflective (mirror)
 		newHeading = getReflectionVector(&normalAtIntersection, &ray.Heading)
 	} else {
 		// Glossy surface, somewhat reflective (on a scale from 0 to 1)
 		perfectReflectionHeadingVector := getReflectionVector(&normalAtIntersection, &ray.Heading)
-		perfectReflectionHeadingVector.Scale(material.Reflective)
+		perfectReflectionHeadingVector.Scale(material.Glossiness)
 
 		randomHeadingVector := getRandomHemisphereVector(&normalAtIntersection)
-		randomHeadingVector.Scale(1.0 - material.Reflective)
+		randomHeadingVector.Scale(1.0 - material.Glossiness)
 
 		perfectReflectionHeadingVector.Add(&randomHeadingVector)
 		perfectReflectionHeadingVector.Normalize()

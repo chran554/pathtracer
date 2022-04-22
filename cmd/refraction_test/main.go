@@ -84,7 +84,7 @@ func main() {
 			Radius: ballRadius,
 			Material: scn.Material{
 				Color:           color.Color{R: 0.97, G: 0.99, B: 1},
-				Reflective:      0.9,
+				Glossiness:      0.9,
 				RefractionIndex: sphereRefractionIndex,
 				Transparancy:    transparency,
 			},

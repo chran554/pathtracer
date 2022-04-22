@@ -9,11 +9,11 @@ var globalImageCache = ImageCache{}
 
 type ImageCache map[string]*FloatImage
 
-func GetCachedImage(filename string) *FloatImage {
-	return globalImageCache.GetImage(filename)
+func GetCachedImage(filename string, gamma float64) *FloatImage {
+	return globalImageCache.GetImage(filename, gamma)
 }
 
-func (cache ImageCache) GetImage(filename string) *FloatImage {
+func (cache ImageCache) GetImage(filename string, gamma float64) *FloatImage {
 	image := cache[filename]
 
 	if image != nil {
@@ -22,7 +22,7 @@ func (cache ImageCache) GetImage(filename string) *FloatImage {
 
 	if strings.TrimSpace(filename) != "" {
 		fmt.Println("Scene image cache loading file:", filename)
-		image = LoadImageData(filename)
+		image = LoadImageData(filename, gamma)
 		fmt.Println("Scene image cache loading file:", filename, "... done")
 		cache[filename] = image
 	}

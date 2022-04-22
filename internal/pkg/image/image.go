@@ -52,7 +52,7 @@ func (image *FloatImage) SetPixel(x, y int, color *color.Color) {
 	image.pixels[y*image.Width+x] = *color
 }
 
-func LoadImageData(filename string) *FloatImage {
+func LoadImageData(filename string, gamma float64) *FloatImage {
 	textureImage, err := getImageFromFilePath(filename)
 	if err != nil {
 		fmt.Printf("image file \"%s\" could not be loaded\n", filename)
@@ -69,9 +69,9 @@ func LoadImageData(filename string) *FloatImage {
 			r, g, b, _ := textureImage.At(x, y).RGBA()
 
 			c := color.Color{
-				R: float32(float64(r) * colorNormalizationFactor),
-				G: float32(float64(g) * colorNormalizationFactor),
-				B: float32(float64(b) * colorNormalizationFactor),
+				R: float32(math.Pow(float64(r)*colorNormalizationFactor, gamma)),
+				G: float32(math.Pow(float64(g)*colorNormalizationFactor, gamma)),
+				B: float32(math.Pow(float64(b)*colorNormalizationFactor, gamma)),
 			}
 
 			image.SetPixel(x, y, &c)
@@ -91,7 +91,10 @@ func getImageFromFilePath(filePath string) (img.Image, error) {
 	return image, err
 }
 
-func WriteImage(filename string, width int, height int, floatImage *FloatImage) {
+func WriteImage(filename string, floatImage *FloatImage) {
+	width := floatImage.Width
+	height := floatImage.Height
+
 	image := img.NewRGBA(img.Rect(0, 0, width, height))
 
 	for x := 0; x < width; x++ {
@@ -131,8 +134,11 @@ func clamp(min float64, max float64, value float64) float64 {
 	}
 }
 
-func WriteRawImage(filename string, width int, height int, pixelData *FloatImage) {
+func WriteRawImage(filename string, image *FloatImage) {
 	var byteBuffer bytes.Buffer
+
+	width := image.Width
+	height := image.Height
 
 	fileFormatVersionMajor := 1
 	fileFormatVersionMinor := 0
@@ -142,7 +148,7 @@ func WriteRawImage(filename string, width int, height int, pixelData *FloatImage
 	writeBinaryInt32(&byteBuffer, int32(width))
 	writeBinaryInt32(&byteBuffer, int32(height))
 
-	if err := binary.Write(&byteBuffer, binary.BigEndian, pixelData.pixels); err != nil {
+	if err := binary.Write(&byteBuffer, binary.BigEndian, image.pixels); err != nil {
 		fmt.Println(err)
 	}
 
@@ -151,7 +157,7 @@ func WriteRawImage(filename string, width int, height int, pixelData *FloatImage
 
 	err := os.WriteFile(filename, byteData, 0644)
 	if err != nil {
-		fmt.Println("Could not write raw image file:", filename)
+		fmt.Println("could not write raw image file:", filename)
 		os.Exit(1)
 	} else {
 		fmt.Println("Wrote raw image file \"" + filename + "\" of size " + ByteCountIEC(int64(length)) + " (" + strconv.Itoa(length) + " bytes)")

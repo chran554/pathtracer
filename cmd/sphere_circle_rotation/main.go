@@ -112,7 +112,7 @@ func addReflectiveCenterBall(scene *scn.Scene) {
 		Radius: mirrorSphereRadius,
 		Material: scn.Material{
 			Color:      color.Color{R: 0.95, G: 0.95, B: 0.95},
-			Reflective: 0.95,
+			Glossiness: 0.95,
 		},
 	}
 

@@ -48,7 +48,7 @@ type Scene struct {
 type Material struct {
 	Color           color.Color
 	Emission        *color.Color `json:"Emission,omitempty"`
-	Reflective      float64
+	Glossiness      float64
 	Projection      *ImageProjection `json:"Projection,omitempty"`
 	RefractionIndex float64
 	Transparancy    float64
@@ -60,13 +60,14 @@ type ImageProjection struct {
 	ImageFilename                   string         `json:"ImageFilename"`
 	_image                          *image.FloatImage
 	_invertedCoordinateSystemMatrix mat3.T
-	Origin                          vec3.T `json:"Origin"`
-	U                               vec3.T `json:"U"`
-	V                               vec3.T `json:"V"`
-	RepeatU                         bool   `json:"RepeatU,omitempty"`
-	RepeatV                         bool   `json:"RepeatV,omitempty"`
-	FlipU                           bool   `json:"FlipU,omitempty"`
-	FlipV                           bool   `json:"FlipV,omitempty"`
+	Origin                          vec3.T  `json:"Origin"`
+	U                               vec3.T  `json:"U"`
+	V                               vec3.T  `json:"V"`
+	RepeatU                         bool    `json:"RepeatU,omitempty"`
+	RepeatV                         bool    `json:"RepeatV,omitempty"`
+	FlipU                           bool    `json:"FlipU,omitempty"`
+	FlipV                           bool    `json:"FlipV,omitempty"`
+	Gamma                           float64 `json:"Gamma,omitempty"`
 }
 
 type Sphere struct {

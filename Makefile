@@ -19,7 +19,7 @@ build:
 
 build_all: build animations
 
-animations: build_sphere_circle_rotation build_sphere_rotation_focaldistance build_cornellbox build_spherical_projection build_cylindrical_projection build_parallel_projection
+animations: build_sphere_circle_rotation build_sphere_rotation_focaldistance build_cornellbox build_spherical_projection build_cylindrical_projection build_parallel_projection build_recursive_spheres
 
 # Build animation scenes
 # -----------------------------------
@@ -47,5 +47,8 @@ build_reflective_test: build
 
 build_refraction_test: build
 	go build -o bin/refraction_test ./cmd/refraction_test
+
+build_recursive_spheres: build
+	go build -o bin/recursive_spheres ./cmd/recursive_spheres
 
 

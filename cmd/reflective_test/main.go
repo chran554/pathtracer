@@ -59,7 +59,7 @@ func main() {
 			Radius: ballRadius,
 			Material: scn.Material{
 				Color:      color.Color{R: 1, G: 1, B: 1},
-				Reflective: reflectiveness,
+				Glossiness: reflectiveness,
 			},
 		}
 		scene.Spheres = append(scene.Spheres, sphere)
