@@ -46,8 +46,7 @@ func main() {
 		viewPlaneDistance := nominalViewPlaneDistance
 		//viewPlaneDistance := nominalViewPlaneDistance + (nominalViewPlaneDistance/2.0)*float64(math.Sin(math.Pi*2.0*animationProgress))
 
-		scene := scn.Scene{
-			Camera:  getCamera(focalDistance, viewPlaneDistance),
+		scene := scn.SceneNode{
 			Spheres: []scn.Sphere{},
 			Discs:   getBottomPlate(),
 		}
@@ -71,10 +70,12 @@ func main() {
 			scene.Spheres = append(scene.Spheres, sphere)
 		}
 
+		camera := getCamera(focalDistance, viewPlaneDistance)
 		frame := scn.Frame{
 			Filename:   animation.AnimationName + "_" + fmt.Sprintf("%06d", frameIndex),
 			FrameIndex: frameIndex,
-			Scene:      scene,
+			Camera:     &camera,
+			SceneNode:  &scene,
 		}
 
 		animation.Frames = append(animation.Frames, frame)

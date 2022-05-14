@@ -63,8 +63,7 @@ func main() {
 	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
 
-		scene := scn.Scene{
-			Camera:  getCamera(magnification, animationProgress),
+		scene := scn.SceneNode{
 			Spheres: []scn.Sphere{},
 			Discs:   []scn.Disc{},
 		}
@@ -88,10 +87,13 @@ func main() {
 
 		addEnvironmentMapping(environmentEnvironMap, &scene)
 
+		camera := getCamera(magnification, animationProgress)
+
 		frame := scn.Frame{
 			Filename:   animation.AnimationName + "_" + fmt.Sprintf("%06d", frameIndex),
 			FrameIndex: frameIndex,
-			Scene:      scene,
+			SceneNode:  &scene,
+			Camera:     &camera,
 		}
 
 		animation.Frames = append(animation.Frames, frame)
@@ -100,11 +102,11 @@ func main() {
 	anm.WriteAnimationToFile(animation)
 }
 
-func addBottomDisc(scene *scn.Scene) {
+func addBottomDisc(scene *scn.SceneNode) {
 	scene.Discs = append(scene.Discs, getBottomPlate())
 }
 
-func addReflectiveCenterBall(scene *scn.Scene) {
+func addReflectiveCenterBall(scene *scn.SceneNode) {
 	mirrorSphereRadius := ballRadius * 3.0
 	sphere := scn.Sphere{
 		Name:   "Mirror sphere",
@@ -119,7 +121,7 @@ func addReflectiveCenterBall(scene *scn.Scene) {
 	scene.Spheres = append(scene.Spheres, sphere)
 }
 
-func addSphericalProjectionCenterBall(scene *scn.Scene) {
+func addSphericalProjectionCenterBall(scene *scn.SceneNode) {
 	projectionSphereRadius := ballRadius * 3.0
 	projectionSphereOrigin := vec3.T{0, projectionSphereRadius * 3, 0}
 
@@ -146,7 +148,7 @@ func addSphericalProjectionCenterBall(scene *scn.Scene) {
 	scene.Spheres = append(scene.Spheres, sphere)
 }
 
-func addLampsToScene(scene *scn.Scene) {
+func addLampsToScene(scene *scn.SceneNode) {
 	lampEmission := color.Color{R: 5, G: 5, B: 5}
 	lampEmission.Multiply(float32(lampEmissionFactor))
 
@@ -173,7 +175,7 @@ func addLampsToScene(scene *scn.Scene) {
 	scene.Spheres = append(scene.Spheres, lamp1, lamp2)
 }
 
-func addEnvironmentMapping(filename string, scene *scn.Scene) {
+func addEnvironmentMapping(filename string, scene *scn.SceneNode) {
 	environmentRadius := 100.0 * 1000.0
 
 	origin := vec3.T{0, 0, 0}
@@ -202,7 +204,7 @@ func addEnvironmentMapping(filename string, scene *scn.Scene) {
 	scene.Spheres = append(scene.Spheres, sphere)
 }
 
-func addOriginCoordinateSpheres(scene *scn.Scene) {
+func addOriginCoordinateSpheres(scene *scn.SceneNode) {
 	sphereOrigin := scn.Sphere{
 		Origin:   vec3.T{0, ballRadius, 0},
 		Radius:   ballRadius / 2,
@@ -224,7 +226,7 @@ func addOriginCoordinateSpheres(scene *scn.Scene) {
 	scene.Spheres = append(scene.Spheres, sphereZ)
 }
 
-func addBallsToScene(deltaBallAngle float64, projectionAngle float64, projectionData []projection, scene *scn.Scene) {
+func addBallsToScene(deltaBallAngle float64, projectionAngle float64, projectionData []projection, scene *scn.SceneNode) {
 	for ballIndex := 0; ballIndex < amountBalls; ballIndex++ {
 		s := 2.0 * math.Pi
 		t := float64(ballIndex) / float64(amountBalls)

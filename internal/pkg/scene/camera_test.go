@@ -117,7 +117,7 @@ func Test_sunflower(t *testing.T) {
 			image.SetPixel(x2, y2, &color.Color{R: 1, G: 1, B: 1})
 		}
 
-		img.WriteImage("sunflower_["+strconv.Itoa(width)+"x"+strconv.Itoa(height)+"]x"+strconv.Itoa(amount)+"_random.png", width, height, image)
+		img.WriteImage("sunflower_["+strconv.Itoa(width)+"x"+strconv.Itoa(height)+"]x"+strconv.Itoa(amount)+"_random.png", image)
 
 		//fmt.Printf("%+v\n", test)
 	})

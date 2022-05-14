@@ -25,12 +25,6 @@ const (
 	Raycasting  RenderType = "Raycasting"
 )
 
-type Frame struct {
-	Filename   string
-	FrameIndex int
-	Scene      Scene
-}
-
 type Animation struct {
 	AnimationName     string
 	Frames            []Frame
@@ -39,10 +33,58 @@ type Animation struct {
 	WriteRawImageFile bool
 }
 
-type Scene struct {
-	Camera  Camera
-	Spheres []Sphere
-	Discs   []Disc
+type Frame struct {
+	Filename   string
+	FrameIndex int
+	Camera     *Camera
+	SceneNode  *SceneNode
+}
+
+type SceneTreeNode interface {
+	GetSpheres() []Sphere
+	GetDiscs() []Disc
+	GetChildNodes() []SceneTreeNode
+	GetParentNode() *SceneTreeNode
+
+	Clear()
+}
+
+// SceneNode implement both BoundingBox and SceneTreeNode.
+type SceneNode struct {
+	Spheres    []Sphere
+	Discs      []Disc
+	ChildNodes []SceneNode
+	ParentNode *SceneNode
+	Bounds     *Bounds
+}
+
+func (sn *SceneNode) GetSpheres() []Sphere {
+	return sn.Spheres
+}
+
+func (sn *SceneNode) GetDiscs() []Disc {
+	return sn.Discs
+}
+
+func (sn *SceneNode) Clear() {
+	sn.Spheres = nil
+	sn.Discs = nil
+
+	for _, node := range sn.GetChildNodes() {
+		node.Clear()
+	}
+}
+
+func (sn *SceneNode) GetChildNodes() []SceneNode {
+	return sn.ChildNodes
+}
+
+func (sn *SceneNode) GetParentNode() *SceneNode {
+	return sn.ParentNode
+}
+
+func (sn *SceneNode) GetBounds() *Bounds {
+	return sn.Bounds
 }
 
 type Material struct {
@@ -99,6 +141,14 @@ type Ray struct {
 	RefractionIndex float64
 }
 
+func (r Ray) point(t float64) *vec3.T {
+	return &vec3.T{
+		r.Origin[0] + r.Heading[0]*t,
+		r.Origin[1] + r.Heading[1]*t,
+		r.Origin[2] + r.Heading[2]*t,
+	}
+}
+
 type Plane struct {
 	Name   string
 	Origin vec3.T
@@ -116,18 +166,18 @@ type Disc struct {
 	Material Material
 }
 
-func (sphere Sphere) Initialize(scene *Scene) {
+func (sphere Sphere) Initialize() {
 	projection := sphere.Material.Projection
 	if projection != nil {
-		projection.Initialize(scene)
+		projection.Initialize()
 	}
 }
 
-func (disc *Disc) Initialize(scene *Scene) {
+func (disc *Disc) Initialize() {
 	disc.Normal.Normalize()
 
 	projection := disc.Material.Projection
 	if projection != nil {
-		projection.Initialize(scene)
+		projection.Initialize()
 	}
 }

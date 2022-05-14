@@ -24,8 +24,7 @@ func main() {
 		WriteRawImageFile: false,
 	}
 
-	scene := scn.Scene{
-		Camera:  getCamera(),
+	scene := scn.SceneNode{
 		Spheres: []scn.Sphere{},
 		Discs:   []scn.Disc{},
 	}
@@ -53,10 +52,13 @@ func main() {
 
 	scene.Spheres = append(scene.Spheres, sphere1)
 
+	camera := getCamera()
+
 	frame := scn.Frame{
 		Filename:   animation.AnimationName,
 		FrameIndex: 0,
-		Scene:      scene,
+		Camera:     &camera,
+		SceneNode:  &scene,
 	}
 
 	animation.Frames = append(animation.Frames, frame)

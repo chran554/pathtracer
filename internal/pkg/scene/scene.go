@@ -225,11 +225,7 @@ func (imageProjection *ImageProjection) getParallelColor(point *vec3.T) *color.C
 	return imageProjection._image.GetPixel(textureX, textureY)
 }
 
-func (scene *Scene) Clear() {
-	// Empty by intention
-}
-
-func (scene *Scene) Initialize() {
+func (scene *SceneNode) Initialize() {
 	// Empty by intention
 }
 
@@ -238,7 +234,7 @@ func (imageProjection *ImageProjection) ClearProjection() {
 	imageProjection._invertedCoordinateSystemMatrix = mat3.Zero
 }
 
-func (imageProjection *ImageProjection) Initialize(scene *Scene) {
+func (imageProjection *ImageProjection) Initialize() {
 	if imageProjection._image == nil || !imageProjection._image.ContainImageData() {
 		if imageProjection.Gamma == 0.0 {
 			imageProjection.Gamma = 1.0 // No gamma correction

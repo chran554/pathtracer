@@ -14,7 +14,7 @@ var ballRadius float64 = 20
 
 var renderType = scn.Pathtracing
 var maxRecursionDepth = 6
-var amountSamples = 2048
+var amountSamples = 256
 var lensRadius float64 = 0
 var antiAlias = true
 
@@ -36,8 +36,7 @@ func main() {
 		WriteRawImageFile: true,
 	}
 
-	scene := scn.Scene{
-		Camera:  getCamera(),
+	scene := scn.SceneNode{
 		Spheres: []scn.Sphere{},
 		Discs:   getBoxWalls(),
 	}
@@ -77,10 +76,13 @@ func main() {
 	scene.Spheres = append(scene.Spheres, sphere2)
 	scene.Spheres = append(scene.Spheres, lamp)
 
+	camera := getCamera()
+
 	frame := scn.Frame{
 		Filename:   animation.AnimationName,
 		FrameIndex: 0,
-		Scene:      scene,
+		Camera:     &camera,
+		SceneNode:  &scene,
 	}
 
 	animation.Frames = append(animation.Frames, frame)

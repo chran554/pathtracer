@@ -62,7 +62,8 @@ func main() {
 		renderMonitor.Initialize(animation.AnimationName, frame.Filename, animation.Width, animation.Height)
 		time.Sleep(50 * time.Millisecond)
 
-		scene := frame.Scene
+		var scene scn.SceneNode
+		scene = *frame.SceneNode
 
 		progress := float64(frameIndex+1) / float64(len(animation.Frames))
 		fmt.Println("-----------------------------------------------")
@@ -70,12 +71,12 @@ func main() {
 		fmt.Println("Frame label:      ", frame.FrameIndex)
 		fmt.Println("Frame image file: ", frame.Filename)
 		fmt.Println()
-		fmt.Println("Render algorithm: ", scene.Camera.RenderType)
+		fmt.Println("Render algorithm: ", frame.Camera.RenderType)
 		fmt.Println("Image size:       ", strconv.Itoa(animation.Width)+"x"+strconv.Itoa(animation.Height))
-		fmt.Println("Amount samples:   ", scene.Camera.Samples)
-		fmt.Println("Max recursion:    ", scene.Camera.RecursionDepth)
-		fmt.Println("Amount discs:     ", len(scene.Discs))
-		fmt.Println("Amount spheres:   ", len(scene.Spheres))
+		fmt.Println("Amount samples:   ", frame.Camera.Samples)
+		fmt.Println("Max recursion:    ", frame.Camera.RecursionDepth)
+		fmt.Println("Amount discs:     ", len(scene.GetDiscs()))
+		fmt.Println("Amount spheres:   ", len(scene.GetSpheres()))
 		fmt.Println()
 
 		fmt.Println("Initialize scene...")
@@ -84,7 +85,7 @@ func main() {
 		renderedPixelData := image.NewFloatImage(animation.AnimationName, animation.Width, animation.Height)
 
 		fmt.Println("Rendering...")
-		render(&scene, animation.Width, animation.Height, renderedPixelData, &renderMonitor)
+		render(frame.Camera, &scene, animation.Width, animation.Height, renderedPixelData, &renderMonitor)
 
 		animationDirectory := filepath.Join(".", "rendered", animation.AnimationName)
 		animationFrameFilename := filepath.Join(animationDirectory, frame.Filename+".png")
@@ -97,7 +98,7 @@ func main() {
 		}
 
 		deInitializeScene(&scene)
-		frame.Scene = scn.Scene{}
+		frame.SceneNode = nil
 		fmt.Println("Releasing resources...")
 		fmt.Println()
 
@@ -107,24 +108,22 @@ func main() {
 	fmt.Println("Total execution time:", time.Since(startTimestamp))
 }
 
-func initializeScene(scene *scn.Scene) {
-	scene.Initialize()
-
-	discs := scene.Discs
+func initializeScene(scene *scn.SceneNode) {
+	discs := (*scene).GetDiscs()
 	for _, disc := range discs {
-		disc.Initialize(scene)
+		disc.Initialize()
 	}
 
-	spheres := scene.Spheres
+	spheres := (*scene).GetSpheres()
 	for _, sphere := range spheres {
-		sphere.Initialize(scene)
+		sphere.Initialize()
 	}
 }
 
-func deInitializeScene(scene *scn.Scene) {
-	scene.Clear()
+func deInitializeScene(scene *scn.SceneNode) {
+	(*scene).Clear()
 
-	discs := scene.Discs
+	discs := (*scene).GetDiscs()
 
 	for _, disc := range discs {
 		projection := disc.Material.Projection
@@ -133,7 +132,7 @@ func deInitializeScene(scene *scn.Scene) {
 		}
 	}
 
-	spheres := scene.Spheres
+	spheres := (*scene).GetSpheres()
 
 	for _, sphere := range spheres {
 		projection := sphere.Material.Projection
@@ -143,10 +142,10 @@ func deInitializeScene(scene *scn.Scene) {
 	}
 }
 
-func render(scene *scn.Scene, width int, height int, renderedPixelData *image.FloatImage, rm *rendermonitor.RenderMonitor) {
+func render(camera *scn.Camera, scene *scn.SceneNode, width int, height int, renderedPixelData *image.FloatImage, rm *rendermonitor.RenderMonitor) {
 	var wg sync.WaitGroup
 
-	amountSamples := scene.Camera.Samples
+	amountSamples := camera.Samples
 
 	progressbar := progressbar2.NewOptions(width*height*amountSamples+1+1, // Stay on 99% until all worker threads are done
 		progressbar2.OptionFullWidth(),
@@ -163,7 +162,7 @@ func render(scene *scn.Scene, width int, height int, renderedPixelData *image.Fl
 	for _, renderPass := range renderPasses.RenderPasses {
 		for y := 0; (y + renderPass.Dy) < height; y += renderPasses.MaxPixelHeight {
 			wg.Add(1)
-			go parallelPixelRendering(renderedPixelData, scene, width, height, y, renderPass, renderPasses.MaxPixelWidth, amountSamples, &wg, progressbar, rm)
+			go parallelPixelRendering(renderedPixelData, camera, scene, width, height, y, renderPass, renderPasses.MaxPixelWidth, amountSamples, &wg, progressbar, rm)
 		}
 		wg.Wait()
 	}
@@ -180,15 +179,15 @@ func render(scene *scn.Scene, width int, height int, renderedPixelData *image.Fl
 	}
 }
 
-func parallelPixelRendering(renderedPixelData *image.FloatImage, scene *scn.Scene, width int, height int,
+func parallelPixelRendering(renderedPixelData *image.FloatImage, camera *scn.Camera, scene *scn.SceneNode, width int, height int,
 	y int, renderPass renderpass.RenderPass, maxPixelWidth int, amountSamples int, wg *sync.WaitGroup, progressbar *progressbar2.ProgressBar, rm *rendermonitor.RenderMonitor) {
 
 	defer wg.Done()
 
 	for x := 0; (x + renderPass.Dx) < width; x += maxPixelWidth {
 		for sampleIndex := 0; sampleIndex < amountSamples; sampleIndex++ {
-			cameraRay := scn.CreateCameraRay(x+renderPass.Dx, y+renderPass.Dy, width, height, &scene.Camera, sampleIndex)
-			col := tracePath(cameraRay, scene, 0)
+			cameraRay := scn.CreateCameraRay(x+renderPass.Dx, y+renderPass.Dy, width, height, camera, sampleIndex)
+			col := tracePath(cameraRay, camera, scene, 0)
 			renderedPixelData.GetPixel(x+renderPass.Dx, y+renderPass.Dy).Add(col)
 
 			progressbar.Add(1)
@@ -225,10 +224,10 @@ func getRandomHemisphereVector(hemisphereHeading *vec3.T) vec3.T {
 	return vector
 }
 
-func tracePath(ray *scn.Ray, scene *scn.Scene, currentDepth int) color.Color {
+func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDepth int) color.Color {
 	outgoingEmission := color.Black
 
-	if currentDepth > scene.Camera.RecursionDepth {
+	if currentDepth > camera.RecursionDepth {
 		return outgoingEmission
 	}
 
@@ -238,7 +237,7 @@ func tracePath(ray *scn.Ray, scene *scn.Scene, currentDepth int) color.Color {
 	material := scn.Material{}          // The material of the closest object that was intersected
 	normalAtIntersection := vec3.Zero   // The normal of the object that was intersected, at intersection point
 
-	for _, sphere := range scene.Spheres {
+	for _, sphere := range (*scene).GetSpheres() {
 		tempIntersectionPoint, tempIntersection := scn.SphereIntersection(ray, &sphere)
 		if tempIntersection {
 			distance := vec3.Distance(&ray.Origin, &tempIntersectionPoint)
@@ -259,7 +258,7 @@ func tracePath(ray *scn.Ray, scene *scn.Scene, currentDepth int) color.Color {
 		}
 	}
 
-	for _, disc := range scene.Discs {
+	for _, disc := range (*scene).GetDiscs() {
 		tempIntersectionPoint, tempIntersection := scn.DiscIntersection(ray, &disc)
 		if tempIntersection {
 			distance := vec3.Distance(&ray.Origin, &tempIntersectionPoint)
@@ -286,7 +285,7 @@ func tracePath(ray *scn.Ray, scene *scn.Scene, currentDepth int) color.Color {
 
 		incomingRayInverted := ray.Heading.Inverted()
 
-		if scene.Camera.RenderType == "" || scene.Camera.RenderType == scn.Raycasting {
+		if camera.RenderType == "" || camera.RenderType == scn.Raycasting {
 			cosineIncomingRayAndNormal := vectorCosine(&normalAtIntersection, &incomingRayInverted)
 
 			outgoingEmission = color.Color{
@@ -295,7 +294,7 @@ func tracePath(ray *scn.Ray, scene *scn.Scene, currentDepth int) color.Color {
 				B: material.Color.B * float32(cosineIncomingRayAndNormal) * projectionColor.B,
 			}
 
-		} else if scene.Camera.RenderType == scn.Pathtracing {
+		} else if camera.RenderType == scn.Pathtracing {
 
 			var newRayHeading vec3.T
 			var newRefractionIndex = ray.RefractionIndex
@@ -319,7 +318,7 @@ func tracePath(ray *scn.Ray, scene *scn.Scene, currentDepth int) color.Color {
 			}
 
 			if !material.RayTerminator {
-				incomingEmission := tracePath(&newRay, scene, currentDepth+1)
+				incomingEmission := tracePath(&newRay, camera, scene, currentDepth+1)
 				cosineNewRayAndNormal := vec3.Dot(&normalAtIntersection, &newRayHeading) / (normalAtIntersection.Length() * newRayHeading.Length())
 
 				outgoingEmission = color.Color{
