@@ -40,22 +40,11 @@ type Frame struct {
 	SceneNode  *SceneNode
 }
 
-type SceneTreeNode interface {
-	GetSpheres() []Sphere
-	GetDiscs() []Disc
-	GetChildNodes() []SceneTreeNode
-	GetParentNode() *SceneTreeNode
-
-	Clear()
-}
-
-// SceneNode implement both BoundingBox and SceneTreeNode.
 type SceneNode struct {
 	Spheres    []*Sphere
 	Discs      []*Disc
 	ChildNodes []*SceneNode
-	// ParentNode *SceneNode
-	Bounds *Bounds
+	Bounds     *Bounds
 }
 
 func (sn *SceneNode) GetSpheres() []*Sphere {

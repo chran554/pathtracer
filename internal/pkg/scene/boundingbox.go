@@ -28,13 +28,13 @@ func (b *Bounds) AddDiscBounds(d *Disc) {
 	b.Zmax = math.Max(b.Zmax, d.Origin[2]+d.Radius)
 }
 
-func (b *Bounds) AddBounds(s *Bounds) {
-	b.Xmin = math.Min(b.Xmin, s.Xmin)
-	b.Xmax = math.Max(b.Xmax, s.Xmax)
-	b.Ymin = math.Min(b.Ymin, s.Ymin)
-	b.Ymax = math.Max(b.Ymax, s.Ymax)
-	b.Zmin = math.Min(b.Zmin, s.Zmin)
-	b.Zmax = math.Max(b.Zmax, s.Zmax)
+func (b *Bounds) AddBounds(bounds *Bounds) {
+	b.Xmin = math.Min(b.Xmin, bounds.Xmin)
+	b.Xmax = math.Max(b.Xmax, bounds.Xmax)
+	b.Ymin = math.Min(b.Ymin, bounds.Ymin)
+	b.Ymax = math.Max(b.Ymax, bounds.Ymax)
+	b.Zmin = math.Min(b.Zmin, bounds.Zmin)
+	b.Zmax = math.Max(b.Zmax, bounds.Zmax)
 }
 
 func NewBounds() Bounds {
@@ -46,6 +46,16 @@ func NewBounds() Bounds {
 		Zmin: math.MaxFloat64,
 		Zmax: -math.MaxFloat64,
 	}
+}
+
+func (b *Bounds) IsZeroBounds() bool {
+	return b.Xmin == math.MaxFloat64 &&
+		b.Xmax == -math.MaxFloat64 &&
+		b.Ymin == math.MaxFloat64 &&
+		b.Ymax == -math.MaxFloat64 &&
+		b.Zmin == math.MaxFloat64 &&
+		b.Zmax == -math.MaxFloat64
+
 }
 
 func BoundingBoxIntersection1(line *Ray, bounds *Bounds) bool {
