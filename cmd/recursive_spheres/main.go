@@ -14,11 +14,13 @@ import (
 //var environmentEnvironMap = "textures/equirectangular/open_grassfield_sunny_day.jpg"
 
 //var environmentEnvironMap = "textures/equirectangular/forest_sunny_day.jpg"
+
 var environmentEnvironMap = "textures/equirectangular/canyon 3200x1600.jpeg"
+var environmentRadius = 100.0 * 800.0 // 80m (if 1 unit is 1 cm)
+var environmentEmissionFactor = float32(2.0)
 
 //var environmentEnvironMap = "textures/planets/environmentmap/Stellarium3.jpeg"
-var environmentRadius = 100.0 * 80.0 // 80m (if 1 unit is 1 cm)
-var environmentEmissionFactor = float32(2.0)
+//var environmentRadius = 100.0 * 80.0 // 80m (if 1 unit is 1 cm)
 
 var animationName = "recursive_spheres"
 
