@@ -75,8 +75,8 @@ func main() {
 		fmt.Println("Image size:       ", strconv.Itoa(animation.Width)+"x"+strconv.Itoa(animation.Height))
 		fmt.Println("Amount samples:   ", frame.Camera.Samples)
 		fmt.Println("Max recursion:    ", frame.Camera.RecursionDepth)
-		fmt.Println("Amount discs:     ", len(scene.GetDiscs()))
-		fmt.Println("Amount spheres:   ", len(scene.GetSpheres()))
+		fmt.Println("Amount spheres:   ", scene.GetAmountSpheres())
+		fmt.Println("Amount discs:     ", scene.GetAmountDiscs())
 		fmt.Println()
 
 		fmt.Println("Initialize scene...")
@@ -237,43 +237,64 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 	material := scn.Material{}          // The material of the closest object that was intersected
 	normalAtIntersection := vec3.Zero   // The normal of the object that was intersected, at intersection point
 
-	for _, sphere := range (*scene).GetSpheres() {
-		tempIntersectionPoint, tempIntersection := scn.SphereIntersection(ray, &sphere)
-		if tempIntersection {
-			distance := vec3.Distance(&ray.Origin, &tempIntersectionPoint)
-			if distance < shortestDistance {
-				intersection = tempIntersection           // Set to true, there has been an intersection
-				intersectionPoint = tempIntersectionPoint // Save the intersection point of the closest intersection
-				shortestDistance = distance               // Save the shortest intersection distance
-				material = sphere.Material
+	var sceneNodeStack []*scn.SceneNode
+	sceneNodeStack = append(sceneNodeStack, scene) // Put the root scene node initially onto the scene node stack
 
-				normalAtIntersection = intersectionPoint.Subed(&sphere.Origin)
-				normalAtIntersection.Normalize()
+	for len(sceneNodeStack) > 0 {
+		// Pop scene node from stack
+		topSceneNodeIndex := len(sceneNodeStack) - 1          // Top element index in stack (slice)
+		currentSceneNode := sceneNodeStack[topSceneNodeIndex] // Store value at top of stack
+		sceneNodeStack[topSceneNodeIndex] = nil               // Erase top element entry (write zero value)
+		sceneNodeStack = sceneNodeStack[:topSceneNodeIndex]   // Decrease stack size
 
-				// Flip normal if it is pointing away from the incoming ray
-				if vectorCosinePositive(&normalAtIntersection, &ray.Heading) {
-					normalAtIntersection.Invert()
+		traverseCurrentSceneNode := (currentSceneNode.Bounds == nil) || scn.BoundingBoxIntersection1(ray, currentSceneNode.Bounds)
+
+		if traverseCurrentSceneNode {
+
+			if len(currentSceneNode.GetChildNodes()) > 0 {
+				sceneNodeStack = append(sceneNodeStack, currentSceneNode.GetChildNodes()...)
+			}
+
+			for _, sphere := range (*currentSceneNode).GetSpheres() {
+				tempIntersectionPoint, tempIntersection := scn.SphereIntersection(ray, sphere)
+				if tempIntersection {
+					distance := vec3.Distance(&ray.Origin, &tempIntersectionPoint)
+					if distance < shortestDistance {
+						intersection = tempIntersection           // Set to true, there has been an intersection
+						intersectionPoint = tempIntersectionPoint // Save the intersection point of the closest intersection
+						shortestDistance = distance               // Save the shortest intersection distance
+						material = sphere.Material
+
+						normalAtIntersection = intersectionPoint.Subed(&sphere.Origin)
+						normalAtIntersection.Normalize()
+
+						// Flip normal if it is pointing away from the incoming ray
+						if vectorCosinePositive(&normalAtIntersection, &ray.Heading) {
+							normalAtIntersection.Invert()
+						}
+					}
 				}
 			}
-		}
-	}
 
-	for _, disc := range (*scene).GetDiscs() {
-		tempIntersectionPoint, tempIntersection := scn.DiscIntersection(ray, &disc)
-		if tempIntersection {
-			distance := vec3.Distance(&ray.Origin, &tempIntersectionPoint)
-			if distance < shortestDistance {
-				intersection = tempIntersection           // Set to true, there has been an intersection
-				intersectionPoint = tempIntersectionPoint // Save the intersection point of the closest intersection
-				shortestDistance = distance               // Save the shortest intersection distance
-				material = disc.Material
-				normalAtIntersection = disc.Normal // Should be normalized from initialization
+			for _, disc := range (*currentSceneNode).GetDiscs() {
+				tempIntersectionPoint, tempIntersection := scn.DiscIntersection(ray, disc)
+				if tempIntersection {
+					distance := vec3.Distance(&ray.Origin, &tempIntersectionPoint)
+					if distance < shortestDistance {
+						intersection = tempIntersection           // Set to true, there has been an intersection
+						intersectionPoint = tempIntersectionPoint // Save the intersection point of the closest intersection
+						shortestDistance = distance               // Save the shortest intersection distance
+						material = disc.Material
+						normalAtIntersection = disc.Normal // Should be normalized from initialization
 
-				// Flip normal if it is pointing away from the incoming ray
-				if vectorCosinePositive(&normalAtIntersection, &ray.Heading) {
-					normalAtIntersection.Invert()
+						// Flip normal if it is pointing away from the incoming ray
+						if vectorCosinePositive(&normalAtIntersection, &ray.Heading) {
+							normalAtIntersection.Invert()
+						}
+					}
 				}
 			}
+
 		}
 	}
 

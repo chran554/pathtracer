@@ -51,19 +51,35 @@ type SceneTreeNode interface {
 
 // SceneNode implement both BoundingBox and SceneTreeNode.
 type SceneNode struct {
-	Spheres    []Sphere
-	Discs      []Disc
-	ChildNodes []SceneNode
-	ParentNode *SceneNode
-	Bounds     *Bounds
+	Spheres    []*Sphere
+	Discs      []*Disc
+	ChildNodes []*SceneNode
+	// ParentNode *SceneNode
+	Bounds *Bounds
 }
 
-func (sn *SceneNode) GetSpheres() []Sphere {
+func (sn *SceneNode) GetSpheres() []*Sphere {
 	return sn.Spheres
 }
 
-func (sn *SceneNode) GetDiscs() []Disc {
+func (sn *SceneNode) GetAmountSpheres() int {
+	amountSpheres := len(sn.Spheres)
+	for _, node := range sn.GetChildNodes() {
+		amountSpheres += node.GetAmountSpheres()
+	}
+	return amountSpheres
+}
+
+func (sn *SceneNode) GetDiscs() []*Disc {
 	return sn.Discs
+}
+
+func (sn *SceneNode) GetAmountDiscs() int {
+	amountDiscs := len(sn.Discs)
+	for _, node := range sn.GetChildNodes() {
+		amountDiscs += node.GetAmountDiscs()
+	}
+	return amountDiscs
 }
 
 func (sn *SceneNode) Clear() {
@@ -75,13 +91,13 @@ func (sn *SceneNode) Clear() {
 	}
 }
 
-func (sn *SceneNode) GetChildNodes() []SceneNode {
+func (sn *SceneNode) GetChildNodes() []*SceneNode {
 	return sn.ChildNodes
 }
 
-func (sn *SceneNode) GetParentNode() *SceneNode {
-	return sn.ParentNode
-}
+//func (sn *SceneNode) GetParentNode() *SceneNode {
+//	return sn.ParentNode
+//}
 
 func (sn *SceneNode) GetBounds() *Bounds {
 	return sn.Bounds

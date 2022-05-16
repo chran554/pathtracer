@@ -5,90 +5,126 @@ import (
 )
 
 type Bounds struct {
-	xmin, xmax float64
-	ymin, ymax float64
-	zmin, zmax float64
+	Xmin, Xmax float64
+	Ymin, Ymax float64
+	Zmin, Zmax float64
 }
 
-type BoundingBox interface {
-	GetBounds() *Bounds
+func (b *Bounds) AddSphereBounds(s *Sphere) {
+	b.Xmin = math.Min(b.Xmin, s.Origin[0]-s.Radius)
+	b.Xmax = math.Max(b.Xmax, s.Origin[0]+s.Radius)
+	b.Ymin = math.Min(b.Ymin, s.Origin[1]-s.Radius)
+	b.Ymax = math.Max(b.Ymax, s.Origin[1]+s.Radius)
+	b.Zmin = math.Min(b.Zmin, s.Origin[2]-s.Radius)
+	b.Zmax = math.Max(b.Zmax, s.Origin[2]+s.Radius)
 }
 
-func BoundingBoxIntersection1(line *Ray, box *BoundingBox) bool {
+func (b *Bounds) AddDiscBounds(d *Disc) {
+	b.Xmin = math.Min(b.Xmin, d.Origin[0]-d.Radius)
+	b.Xmax = math.Max(b.Xmax, d.Origin[0]+d.Radius)
+	b.Ymin = math.Min(b.Ymin, d.Origin[1]-d.Radius)
+	b.Ymax = math.Max(b.Ymax, d.Origin[1]+d.Radius)
+	b.Zmin = math.Min(b.Zmin, d.Origin[2]-d.Radius)
+	b.Zmax = math.Max(b.Zmax, d.Origin[2]+d.Radius)
+}
+
+func (b *Bounds) AddBounds(s *Bounds) {
+	b.Xmin = math.Min(b.Xmin, s.Xmin)
+	b.Xmax = math.Max(b.Xmax, s.Xmax)
+	b.Ymin = math.Min(b.Ymin, s.Ymin)
+	b.Ymax = math.Max(b.Ymax, s.Ymax)
+	b.Zmin = math.Min(b.Zmin, s.Zmin)
+	b.Zmax = math.Max(b.Zmax, s.Zmax)
+}
+
+func NewBounds() Bounds {
+	return Bounds{
+		Xmin: math.MaxFloat64,
+		Xmax: -math.MaxFloat64,
+		Ymin: math.MaxFloat64,
+		Ymax: -math.MaxFloat64,
+		Zmin: math.MaxFloat64,
+		Zmax: -math.MaxFloat64,
+	}
+}
+
+func BoundingBoxIntersection1(line *Ray, bounds *Bounds) bool {
 	hit := false
 
-	bounds := (*box).GetBounds()
+	if bounds == nil {
+		return false
+	}
 
 	if !hit && line.Heading[0] != 0.0 {
 
-		txmin := (bounds.xmin - line.Origin[0]) / line.Heading[0] // Intersection with bounding box yz-plane at min x
+		txmin := (bounds.Xmin - line.Origin[0]) / line.Heading[0] // Intersection with bounding box yz-plane at min x
 		pxmin := line.point(txmin)
 
 		// Intersect bounding box on the "min x" side
-		hit = bounds.ymin < pxmin[1] && bounds.ymax > pxmin[1] &&
-			bounds.zmin < pxmin[2] && bounds.zmax > pxmin[2]
+		hit = bounds.Ymin < pxmin[1] && bounds.Ymax > pxmin[1] &&
+			bounds.Zmin < pxmin[2] && bounds.Zmax > pxmin[2]
 
 		if !hit {
-			txmax := (bounds.xmax - line.Origin[0]) / line.Heading[0] // Intersection with bounding box yz-plane at max x
+			txmax := (bounds.Xmax - line.Origin[0]) / line.Heading[0] // Intersection with bounding box yz-plane at max x
 			pxmax := line.point(txmax)
 
 			// Intersect bounding box on the "max x" side
-			hit = bounds.ymin < pxmax[1] && bounds.ymax > pxmax[1] &&
-				bounds.zmin < pxmax[2] && bounds.zmax > pxmax[2]
+			hit = bounds.Ymin < pxmax[1] && bounds.Ymax > pxmax[1] &&
+				bounds.Zmin < pxmax[2] && bounds.Zmax > pxmax[2]
 		}
 	}
 
 	if !hit && line.Heading[1] != 0.0 {
-		tymin := (bounds.ymin - line.Origin[1]) / line.Heading[1] // Intersection with bounding box xz-plane at min y
+		tymin := (bounds.Ymin - line.Origin[1]) / line.Heading[1] // Intersection with bounding box xz-plane at min y
 		pymin := line.point(tymin)
 
 		// Intersect bounding box on the "min y" side
-		hit = bounds.xmin < pymin[0] && bounds.xmax > pymin[0] &&
-			bounds.zmin < pymin[2] && bounds.zmax > pymin[2]
+		hit = bounds.Xmin < pymin[0] && bounds.Xmax > pymin[0] &&
+			bounds.Zmin < pymin[2] && bounds.Zmax > pymin[2]
 
 		if !hit {
-			tymax := (bounds.ymax - line.Origin[1]) / line.Heading[1] // Intersection with bounding box xz-plane at max y
+			tymax := (bounds.Ymax - line.Origin[1]) / line.Heading[1] // Intersection with bounding box xz-plane at max y
 			pymax := line.point(tymax)
 
 			// Intersect bounding box on the "max y" side
-			hit = bounds.xmin < pymax[0] && bounds.xmax > pymax[0] &&
-				bounds.zmin < pymax[2] && bounds.zmax > pymax[2]
+			hit = bounds.Xmin < pymax[0] && bounds.Xmax > pymax[0] &&
+				bounds.Zmin < pymax[2] && bounds.Zmax > pymax[2]
 		}
 	}
 
-	if !hit && line.Heading[1] != 0.0 {
-		tzmin := (bounds.zmin - line.Origin[2]) / line.Heading[2] // Intersection with bounding box xy-plane at min z
+	if !hit && line.Heading[2] != 0.0 {
+		tzmin := (bounds.Zmin - line.Origin[2]) / line.Heading[2] // Intersection with bounding box xy-plane at min z
 		pzmin := line.point(tzmin)
 
 		// Intersect bounding box on the "min z" side
-		hit = bounds.xmin < pzmin[0] && bounds.xmax > pzmin[0] &&
-			bounds.ymin < pzmin[1] && bounds.ymax > pzmin[1]
+		hit = bounds.Xmin < pzmin[0] && bounds.Xmax > pzmin[0] &&
+			bounds.Ymin < pzmin[1] && bounds.Ymax > pzmin[1]
 
 		if !hit {
-			tzmax := (bounds.zmax - line.Origin[2]) / line.Heading[2] // Intersection with bounding box xy-plane at max z
+			tzmax := (bounds.Zmax - line.Origin[2]) / line.Heading[2] // Intersection with bounding box xy-plane at max z
 			pzmax := line.point(tzmax)
 
 			// Intersect bounding box on the "max z" side
-			hit = bounds.xmin < pzmax[0] && bounds.xmax > pzmax[0] &&
-				bounds.ymin < pzmax[1] && bounds.ymax > pzmax[1]
+			hit = bounds.Xmin < pzmax[0] && bounds.Xmax > pzmax[0] &&
+				bounds.Ymin < pzmax[1] && bounds.Ymax > pzmax[1]
 		}
 	}
 
 	return hit
 }
 
-func BoundingBoxIntersection2(line *Ray, box *BoundingBox) bool {
+func BoundingBoxIntersection2(line *Ray, bounds *Bounds) bool {
 	hit := true
 	noHit := false
 
-	txmin := ((*box).GetBounds().xmin - line.Origin[0]) / line.Heading[0] // Intersection with bounding box yz-plane at min x
-	txmax := ((*box).GetBounds().xmax - line.Origin[0]) / line.Heading[0] // Intersection with bounding box yz-plane at max x
+	txmin := (bounds.Xmin - line.Origin[0]) / line.Heading[0] // Intersection with bounding box yz-plane at min x
+	txmax := (bounds.Xmax - line.Origin[0]) / line.Heading[0] // Intersection with bounding box yz-plane at max x
 	if txmin > txmax {
 		txmin, txmax = txmax, txmin
 	}
 
-	tymin := ((*box).GetBounds().ymin - line.Origin[1]) / line.Heading[1] // Intersection with bounding box xz-plane at min y
-	tymax := ((*box).GetBounds().ymax - line.Origin[1]) / line.Heading[1] // Intersection with bounding box xz-plane at max y
+	tymin := (bounds.Ymin - line.Origin[1]) / line.Heading[1] // Intersection with bounding box xz-plane at min y
+	tymax := (bounds.Ymax - line.Origin[1]) / line.Heading[1] // Intersection with bounding box xz-plane at max y
 	if tymin > tymax {
 		tymin, tymax = tymax, tymin
 	}
@@ -104,8 +140,8 @@ func BoundingBoxIntersection2(line *Ray, box *BoundingBox) bool {
 	tmin := math.Max(txmin, tymin)
 	tmax := math.Min(txmax, tymax)
 
-	tzmin := ((*box).GetBounds().zmin - line.Origin[2]) / line.Heading[2] // Intersection with bounding box xy-plane at min z
-	tzmax := ((*box).GetBounds().zmax - line.Origin[2]) / line.Heading[2] // Intersection with bounding box xy-plane at max z
+	tzmin := (bounds.Zmin - line.Origin[2]) / line.Heading[2] // Intersection with bounding box xy-plane at min z
+	tzmax := (bounds.Zmax - line.Origin[2]) / line.Heading[2] // Intersection with bounding box xy-plane at max z
 	if tzmin > tzmax {
 		tzmin, tzmax = tzmax, tzmin
 	}

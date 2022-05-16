@@ -14,7 +14,7 @@ import (
 //var environmentEnvironMap = "textures/equirectangular/open_grassfield_sunny_day.jpg"
 
 //var environmentEnvironMap = "textures/equirectangular/forest_sunny_day.jpg"
-var environmentEnvironMap = "textures/equirectangular/canyon.jpeg"
+var environmentEnvironMap = "textures/equirectangular/canyon 3200x1600.jpeg"
 
 //var environmentEnvironMap = "textures/planets/environmentmap/Stellarium3.jpeg"
 var environmentRadius = 100.0 * 80.0 // 80m (if 1 unit is 1 cm)
@@ -38,7 +38,7 @@ var lampDistanceFactor = 1.5
 var cameraDistanceFactor = 2.8
 
 var startSphereRadius = 150.0
-var maxSphereRecursionDepth = 1
+var maxSphereRecursionDepth = 6
 
 var circleRadius = 200.0
 var viewPlaneDistance = 500.0
@@ -57,8 +57,8 @@ func main() {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
 
 		scene := scn.SceneNode{
-			Spheres: []scn.Sphere{},
-			Discs:   []scn.Disc{},
+			Spheres: []*scn.Sphere{},
+			Discs:   []*scn.Disc{},
 		}
 
 		getRecursiveBalls(startSphereRadius, maxSphereRecursionDepth, &scene)
@@ -77,6 +77,9 @@ func main() {
 
 		camera := getCamera(magnification, animationProgress)
 
+		updateBoundingBoxes(&scene)
+		scene.Bounds = nil
+
 		frame := scn.Frame{
 			Filename:   animation.AnimationName + "_" + fmt.Sprintf("%06d", frameIndex),
 			FrameIndex: frameIndex,
@@ -90,10 +93,31 @@ func main() {
 	anm.WriteAnimationToFile(animation)
 }
 
+func updateBoundingBoxes(sceneNode *scn.SceneNode) *scn.Bounds {
+	bb := scn.NewBounds()
+
+	for _, sphere := range sceneNode.Spheres {
+		bb.AddSphereBounds(sphere)
+	}
+
+	for _, disc := range sceneNode.Discs {
+		bb.AddDiscBounds(disc)
+	}
+
+	for _, childNode := range sceneNode.ChildNodes {
+		childBb := updateBoundingBoxes(childNode)
+		bb.AddBounds(childBb)
+	}
+
+	sceneNode.Bounds = &bb
+
+	return &bb
+}
+
 func getRecursiveBalls(middleSphereRadius float64, maxRecursionDepth int, scene *scn.SceneNode) {
 	middleSphere := getSphere(vec3.T{0, 0, 0}, middleSphereRadius, "0")
 
-	scene.Spheres = append(scene.Spheres, middleSphere)
+	scene.Spheres = append(scene.Spheres, &middleSphere)
 	_getRecursiveBalls(middleSphere, maxRecursionDepth, 0, scene)
 }
 
@@ -104,46 +128,46 @@ func _getRecursiveBalls(parentSphere scn.Sphere, maxRecursionDepth int, takenSid
 		return
 	}
 
-	childRadius := parentSphere.Radius * 0.45
+	childRadius := parentSphere.Radius * 0.48
 	childOffset := parentSphere.Radius + childRadius*1.05
 
 	if takenSide != 2 { // offset in negative x
 		sphere := getSphere(parentSphere.Origin.Added(&vec3.T{-childOffset, 0, 0}), childRadius, parentSphere.Name+" -x")
-		sceneSubNode.Spheres = append(sceneSubNode.Spheres, sphere)
+		sceneSubNode.Spheres = append(sceneSubNode.Spheres, &sphere)
 		_getRecursiveBalls(sphere, maxRecursionDepth-1, 1, &sceneSubNode)
 	}
 
 	if takenSide != 1 { // offset in positive x
 		sphere := getSphere(parentSphere.Origin.Added(&vec3.T{childOffset, 0, 0}), childRadius, parentSphere.Name+" +x")
-		sceneSubNode.Spheres = append(sceneSubNode.Spheres, sphere)
+		sceneSubNode.Spheres = append(sceneSubNode.Spheres, &sphere)
 		_getRecursiveBalls(sphere, maxRecursionDepth-1, 2, &sceneSubNode)
 	}
 
 	if takenSide != 4 { // offset in negative y
 		sphere := getSphere(parentSphere.Origin.Added(&vec3.T{0, -childOffset, 0}), childRadius, parentSphere.Name+" -y")
-		sceneSubNode.Spheres = append(sceneSubNode.Spheres, sphere)
+		sceneSubNode.Spheres = append(sceneSubNode.Spheres, &sphere)
 		_getRecursiveBalls(sphere, maxRecursionDepth-1, 3, &sceneSubNode)
 	}
 
 	if takenSide != 3 { // offset in positive y
 		sphere := getSphere(parentSphere.Origin.Added(&vec3.T{0, childOffset, 0}), childRadius, parentSphere.Name+" +y")
-		sceneSubNode.Spheres = append(sceneSubNode.Spheres, sphere)
+		sceneSubNode.Spheres = append(sceneSubNode.Spheres, &sphere)
 		_getRecursiveBalls(sphere, maxRecursionDepth-1, 4, &sceneSubNode)
 	}
 
 	if takenSide != 6 { // offset in negative z
 		sphere := getSphere(parentSphere.Origin.Added(&vec3.T{0, 0, -childOffset}), childRadius, parentSphere.Name+" -z")
-		sceneSubNode.Spheres = append(sceneSubNode.Spheres, sphere)
+		sceneSubNode.Spheres = append(sceneSubNode.Spheres, &sphere)
 		_getRecursiveBalls(sphere, maxRecursionDepth-1, 5, &sceneSubNode)
 	}
 
 	if takenSide != 5 { // offset in positive z
 		sphere := getSphere(parentSphere.Origin.Added(&vec3.T{0, 0, childOffset}), childRadius, parentSphere.Name+" +z")
-		sceneSubNode.Spheres = append(sceneSubNode.Spheres, sphere)
+		sceneSubNode.Spheres = append(sceneSubNode.Spheres, &sphere)
 		_getRecursiveBalls(sphere, maxRecursionDepth-1, 6, &sceneSubNode)
 	}
 
-	scene.ChildNodes = append(scene.ChildNodes, sceneSubNode)
+	scene.ChildNodes = append(scene.ChildNodes, &sceneSubNode)
 }
 
 func getSphere(origin vec3.T, radius float64, name string) scn.Sphere {
@@ -179,7 +203,7 @@ func addLampsToScene(scene *scn.SceneNode) {
 		},
 	}
 
-	scene.Spheres = append(scene.Spheres, lamp1, lamp2)
+	scene.Spheres = append(scene.Spheres, &lamp1, &lamp2)
 }
 
 func addEnvironmentMapping(filename string, scene *scn.SceneNode) {
@@ -208,7 +232,7 @@ func addEnvironmentMapping(filename string, scene *scn.SceneNode) {
 		},
 	}
 
-	scene.Spheres = append(scene.Spheres, sphere)
+	scene.Spheres = append(scene.Spheres, &sphere)
 }
 
 func getAnimation(width int, height int) scn.Animation {
