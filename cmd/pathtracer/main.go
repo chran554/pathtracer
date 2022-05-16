@@ -237,22 +237,17 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 	material := scn.Material{}          // The material of the closest object that was intersected
 	normalAtIntersection := vec3.Zero   // The normal of the object that was intersected, at intersection point
 
-	var sceneNodeStack []*scn.SceneNode
-	sceneNodeStack = append(sceneNodeStack, scene) // Put the root scene node initially onto the scene node stack
+	var sceneNodeStack scn.SceneNodeStack
+	sceneNodeStack.Push(scene) // Put the root scene node initially onto the scene node stack
 
-	for len(sceneNodeStack) > 0 {
-		// Pop scene node from stack
-		topSceneNodeIndex := len(sceneNodeStack) - 1          // Top element index in stack (slice)
-		currentSceneNode := sceneNodeStack[topSceneNodeIndex] // Store value at top of stack
-		sceneNodeStack[topSceneNodeIndex] = nil               // Erase top element entry (write zero value)
-		sceneNodeStack = sceneNodeStack[:topSceneNodeIndex]   // Decrease stack size
+	for !sceneNodeStack.IsEmpty() {
+		currentSceneNode, _ := sceneNodeStack.Pop()
 
 		traverseCurrentSceneNode := (currentSceneNode.Bounds == nil) || scn.BoundingBoxIntersection1(ray, currentSceneNode.Bounds)
-
 		if traverseCurrentSceneNode {
 
-			if len(currentSceneNode.GetChildNodes()) > 0 {
-				sceneNodeStack = append(sceneNodeStack, currentSceneNode.GetChildNodes()...)
+			if currentSceneNode.HasChildNodes() {
+				sceneNodeStack.PushAll(currentSceneNode.GetChildNodes())
 			}
 
 			for _, sphere := range (*currentSceneNode).GetSpheres() {

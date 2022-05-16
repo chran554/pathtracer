@@ -84,9 +84,9 @@ func (sn *SceneNode) GetChildNodes() []*SceneNode {
 	return sn.ChildNodes
 }
 
-//func (sn *SceneNode) GetParentNode() *SceneNode {
-//	return sn.ParentNode
-//}
+func (sn *SceneNode) HasChildNodes() bool {
+	return len(sn.ChildNodes) > 0
+}
 
 func (sn *SceneNode) GetBounds() *Bounds {
 	return sn.Bounds

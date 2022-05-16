@@ -24,12 +24,12 @@ var animationName = "recursive_spheres"
 
 var amountFrames = 1
 
-var imageWidth = 800
-var imageHeight = 600
+var imageWidth = 1024
+var imageHeight = 800
 var magnification = 1.0
 
 var renderType = scn.Pathtracing
-var amountSamples = 512
+var amountSamples = 2048
 var maxRecursion = 8
 
 var lampEmissionFactor = 2.0
@@ -250,7 +250,7 @@ func getCamera(magnification float64, progress float64) scn.Camera {
 	degrees45 := math.Pi / 4.0
 	strideAngle := degrees45 * math.Sin(2.0*math.Pi*progress)
 	cameraDistance := 200.0 * cameraDistanceFactor
-	cameraHeight := 50.0 * cameraDistanceFactor
+	cameraHeight := 75.0 * cameraDistanceFactor
 
 	cameraOrigin := vec3.T{
 		cameraDistance * math.Cos(-math.Pi/2.0+strideAngle+degrees45),
