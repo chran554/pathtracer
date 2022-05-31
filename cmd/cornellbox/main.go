@@ -37,7 +37,7 @@ func main() {
 	}
 
 	scene := scn.SceneNode{
-		Spheres: []scn.Sphere{},
+		Spheres: []*scn.Sphere{},
 		Discs:   getBoxWalls(),
 	}
 
@@ -72,9 +72,9 @@ func main() {
 		},
 	}
 
-	scene.Spheres = append(scene.Spheres, sphere1)
-	scene.Spheres = append(scene.Spheres, sphere2)
-	scene.Spheres = append(scene.Spheres, lamp)
+	scene.Spheres = append(scene.Spheres, &sphere1)
+	scene.Spheres = append(scene.Spheres, &sphere2)
+	scene.Spheres = append(scene.Spheres, &lamp)
 
 	camera := getCamera()
 
@@ -112,7 +112,7 @@ func getCamera() scn.Camera {
 	}
 }
 
-func getBoxWalls() []scn.Disc {
+func getBoxWalls() []*scn.Disc {
 	//roofTexture := scn.NewParallelImageProjection("textures/uv.png", vec3.T{0, ballRadius * 6, 0}, vec3.T{ballRadius, 0, 0}, vec3.T{0, 0, ballRadius})
 	//floorTexture := scn.NewParallelImageProjection("textures/uv.png", vec3.T{0, 0, 0}, vec3.T{ballRadius, 0, 0}, vec3.T{0, 0, ballRadius})
 
@@ -168,5 +168,5 @@ func getBoxWalls() []scn.Disc {
 		},
 	}
 
-	return []scn.Disc{floor, roof, rightWall, leftWall, backWall}
+	return []*scn.Disc{&floor, &roof, &rightWall, &leftWall, &backWall}
 }

@@ -26,8 +26,8 @@ func main() {
 	}
 
 	scene := scn.SceneNode{
-		Spheres: []scn.Sphere{},
-		Discs:   []scn.Disc{},
+		Spheres: []*scn.Sphere{},
+		Discs:   []*scn.Disc{},
 	}
 
 	discOrigin := vec3.T{0, 0, 0}
@@ -51,7 +51,7 @@ func main() {
 		},
 	}
 
-	scene.Discs = append(scene.Discs, disc)
+	scene.Discs = append(scene.Discs, &disc)
 
 	camera := getCamera()
 

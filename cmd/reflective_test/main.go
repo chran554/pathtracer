@@ -42,7 +42,7 @@ func main() {
 	}
 
 	scene := scn.SceneNode{
-		Spheres: []scn.Sphere{},
+		Spheres: []*scn.Sphere{},
 		Discs:   getBoxWalls(),
 	}
 
@@ -61,7 +61,7 @@ func main() {
 				Glossiness: reflectiveness,
 			},
 		}
-		scene.Spheres = append(scene.Spheres, sphere)
+		scene.Spheres = append(scene.Spheres, &sphere)
 	}
 
 	lampEmission := color.White.Copy()
@@ -96,9 +96,9 @@ func main() {
 		},
 	}
 
-	scene.Spheres = append(scene.Spheres, lampLeft)
-	scene.Spheres = append(scene.Spheres, lampMiddle)
-	scene.Spheres = append(scene.Spheres, lampRight)
+	scene.Spheres = append(scene.Spheres, &lampLeft)
+	scene.Spheres = append(scene.Spheres, &lampMiddle)
+	scene.Spheres = append(scene.Spheres, &lampRight)
 
 	camera := getCamera()
 
@@ -148,7 +148,7 @@ func getCamera() scn.Camera {
 	}
 }
 
-func getBoxWalls() []scn.Disc {
+func getBoxWalls() []*scn.Disc {
 	//roofTexture := scn.NewParallelImageProjection("textures/uv.png", vec3.T{0, ballRadius * 6, 0}, vec3.T{ballRadius, 0, 0}, vec3.T{0, 0, ballRadius})
 	floorTexture := scn.NewParallelImageProjection("textures/tilesf4.jpeg", vec3.T{0, 0, 0}, vec3.T{ballRadius * 4, 0, 0}, vec3.T{0, 0, ballRadius * 4})
 
@@ -190,5 +190,5 @@ func getBoxWalls() []scn.Disc {
 		},
 	}
 
-	return []scn.Disc{floor, roof, backWall}
+	return []*scn.Disc{&floor, &roof, &backWall}
 }

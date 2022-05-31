@@ -30,8 +30,8 @@ func main() {
 	}
 
 	scene := scn.SceneNode{
-		Spheres: []scn.Sphere{},
-		Discs:   []scn.Disc{},
+		Spheres: []*scn.Sphere{},
+		Discs:   []*scn.Disc{},
 	}
 
 	sphere2Origin := vec3.T{0, 0, 0}
@@ -82,9 +82,9 @@ func main() {
 		},
 	}
 
-	scene.Spheres = append(scene.Spheres, sphere1)
-	scene.Spheres = append(scene.Spheres, sphere2)
-	scene.Spheres = append(scene.Spheres, sphere3)
+	scene.Spheres = append(scene.Spheres, &sphere1)
+	scene.Spheres = append(scene.Spheres, &sphere2)
+	scene.Spheres = append(scene.Spheres, &sphere3)
 
 	camera := getCamera()
 	frame := scn.Frame{

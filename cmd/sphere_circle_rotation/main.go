@@ -64,8 +64,8 @@ func main() {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
 
 		scene := scn.SceneNode{
-			Spheres: []scn.Sphere{},
-			Discs:   []scn.Disc{},
+			Spheres: []*scn.Sphere{},
+			Discs:   []*scn.Disc{},
 		}
 
 		ballAnimationTravelAngle := (2.0 * math.Pi) * float64(amountBallsToRotateBeforeMovieLoop) / float64(amountBalls)
@@ -118,7 +118,7 @@ func addReflectiveCenterBall(scene *scn.SceneNode) {
 		},
 	}
 
-	scene.Spheres = append(scene.Spheres, sphere)
+	scene.Spheres = append(scene.Spheres, &sphere)
 }
 
 func addSphericalProjectionCenterBall(scene *scn.SceneNode) {
@@ -145,7 +145,7 @@ func addSphericalProjectionCenterBall(scene *scn.SceneNode) {
 		},
 	}
 
-	scene.Spheres = append(scene.Spheres, sphere)
+	scene.Spheres = append(scene.Spheres, &sphere)
 }
 
 func addLampsToScene(scene *scn.SceneNode) {
@@ -172,7 +172,7 @@ func addLampsToScene(scene *scn.SceneNode) {
 		},
 	}
 
-	scene.Spheres = append(scene.Spheres, lamp1, lamp2)
+	scene.Spheres = append(scene.Spheres, &lamp1, &lamp2)
 }
 
 func addEnvironmentMapping(filename string, scene *scn.SceneNode) {
@@ -201,7 +201,7 @@ func addEnvironmentMapping(filename string, scene *scn.SceneNode) {
 		},
 	}
 
-	scene.Spheres = append(scene.Spheres, sphere)
+	scene.Spheres = append(scene.Spheres, &sphere)
 }
 
 func addOriginCoordinateSpheres(scene *scn.SceneNode) {
@@ -221,9 +221,9 @@ func addOriginCoordinateSpheres(scene *scn.SceneNode) {
 		Material: scn.Material{Color: color.Color{R: 0, G: 1, B: 1}},
 	}
 
-	scene.Spheres = append(scene.Spheres, sphereOrigin)
-	scene.Spheres = append(scene.Spheres, sphereX)
-	scene.Spheres = append(scene.Spheres, sphereZ)
+	scene.Spheres = append(scene.Spheres, &sphereOrigin)
+	scene.Spheres = append(scene.Spheres, &sphereX)
+	scene.Spheres = append(scene.Spheres, &sphereZ)
 }
 
 func addBallsToScene(deltaBallAngle float64, projectionAngle float64, projectionData []projection, scene *scn.SceneNode) {
@@ -267,7 +267,7 @@ func addBallsToScene(deltaBallAngle float64, projectionAngle float64, projection
 			},
 		}
 
-		scene.Spheres = append(scene.Spheres, sphere)
+		scene.Spheres = append(scene.Spheres, &sphere)
 	}
 }
 
@@ -282,11 +282,11 @@ func getAnimation(width int, height int) scn.Animation {
 	return animation
 }
 
-func getBottomPlate() scn.Disc {
+func getBottomPlate() *scn.Disc {
 	origin := vec3.T{0, 0, 0}
 	normal := vec3.T{0, 1, 0}
 	textureScale := 400.0
-	return scn.Disc{
+	return &scn.Disc{
 		Origin: origin,
 		Normal: normal,
 		Radius: circleRadius * 2,

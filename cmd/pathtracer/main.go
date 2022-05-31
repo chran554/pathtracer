@@ -37,13 +37,13 @@ func main() {
 
 	startTimestamp := time.Now()
 
-	var animationJson, err = os.ReadFile(animationFilename)
+	var animationJSON, err = os.ReadFile(animationFilename)
 	if err != nil {
 		panic(err)
 	}
 
 	animation := scn.Animation{}
-	err = json.Unmarshal(animationJson, &animation)
+	err = json.Unmarshal(animationJSON, &animation)
 	if err != nil {
 		panic(err)
 	}

@@ -47,7 +47,7 @@ func main() {
 		//viewPlaneDistance := nominalViewPlaneDistance + (nominalViewPlaneDistance/2.0)*float64(math.Sin(math.Pi*2.0*animationProgress))
 
 		scene := scn.SceneNode{
-			Spheres: []scn.Sphere{},
+			Spheres: []*scn.Sphere{},
 			Discs:   getBottomPlate(),
 		}
 
@@ -67,7 +67,7 @@ func main() {
 				},
 			}
 
-			scene.Spheres = append(scene.Spheres, sphere)
+			scene.Spheres = append(scene.Spheres, &sphere)
 		}
 
 		camera := getCamera(focalDistance, viewPlaneDistance)
@@ -98,13 +98,13 @@ func getCamera(focalDistance float64, viewPlaneDistance float64) scn.Camera {
 	}
 }
 
-func getBottomPlate() []scn.Disc {
+func getBottomPlate() []*scn.Disc {
 	origin := vec3.T{0, 0, 0}
 
 	u := vec3.T{50, 0, 0}
 	v := vec3.T{0, 0, 50}
 	parallelImageProjection := scn.NewParallelImageProjection("textures/white_marble.png", origin, u, v)
-	return []scn.Disc{
+	return []*scn.Disc{
 		{
 			Origin: origin,
 			Normal: vec3.T{0, 1, 0},
