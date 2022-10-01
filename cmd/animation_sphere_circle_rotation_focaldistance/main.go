@@ -61,7 +61,7 @@ func main() {
 			sphere := scn.Sphere{
 				Origin: vec3.T{x, ballRadius, z},
 				Radius: ballRadius,
-				Material: scn.Material{
+				Material: &scn.Material{
 					Color:    color.Color{R: 1, G: 1, B: 1},
 					Emission: nil,
 				},
@@ -81,14 +81,14 @@ func main() {
 		animation.Frames = append(animation.Frames, frame)
 	}
 
-	anm.WriteAnimationToFile(animation)
+	anm.WriteAnimationToFile(animation, false)
 }
 
 func getCamera(focalDistance float64, viewPlaneDistance float64) scn.Camera {
 	return scn.Camera{
-		Origin:            cameraOrigin,
-		Heading:           vec3.T{-cameraOrigin[0], -(cameraOrigin[1] - ballRadius), -cameraOrigin[2]},
-		ViewUp:            vec3.T{0, 1, 0},
+		Origin:            &cameraOrigin,
+		Heading:           &vec3.T{-cameraOrigin[0], -(cameraOrigin[1] - ballRadius), -cameraOrigin[2]},
+		ViewUp:            &vec3.T{0, 1, 0},
 		ViewPlaneDistance: viewPlaneDistance,
 		LensRadius:        lensRadius,
 		FocalDistance:     focalDistance,
@@ -106,10 +106,10 @@ func getBottomPlate() []*scn.Disc {
 	parallelImageProjection := scn.NewParallelImageProjection("textures/white_marble.png", origin, u, v)
 	return []*scn.Disc{
 		{
-			Origin: origin,
-			Normal: vec3.T{0, 1, 0},
+			Origin: &origin,
+			Normal: &vec3.T{0, 1, 0},
 			Radius: 600,
-			Material: scn.Material{
+			Material: &scn.Material{
 				Color:      color.Color{R: 0.5, G: 0.5, B: 0.5},
 				Emission:   nil,
 				Projection: &parallelImageProjection,

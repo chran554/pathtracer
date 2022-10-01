@@ -8,10 +8,17 @@ import (
 	"strconv"
 )
 
-func WriteAnimationToFile(animation scene.Animation) {
-	jsonData, err := json.MarshalIndent(animation, "", "  ")
+func WriteAnimationToFile(animation scene.Animation, indent bool) {
+	var jsonData []byte
+	var err error
+
+	if indent {
+		jsonData, err = json.MarshalIndent(animation, "", "  ")
+	} else {
+		jsonData, err = json.Marshal(animation)
+	}
 	if err != nil {
-		fmt.Println("Ouupps, could not marshal animation to json", err)
+		fmt.Printf("ouupps, could not marshal animation \"%s\" to json: %s", animation.AnimationName, err.Error())
 	}
 
 	filename := "scene/" + animation.AnimationName + ".animation.json"

@@ -22,7 +22,7 @@ build:
 
 build_all: build animations
 
-animations: build_sphere_circle_rotation build_sphere_rotation_focaldistance build_cornellbox build_spherical_projection build_cylindrical_projection build_parallel_projection build_recursive_spheres
+animations: build_sphere_circle_rotation build_sphere_rotation_focaldistance build_cornellbox build_spherical_projection build_cylindrical_projection build_parallel_projection build_recursive_spheres build_facetobj_test
 
 # Build animation scenes
 # -----------------------------------
@@ -54,4 +54,5 @@ build_refraction_test: build
 build_recursive_spheres: build
 	go build -o bin/recursive_spheres ./cmd/recursive_spheres
 
-
+build_facetobj_test: build
+	go build -o bin/facetobj_test ./cmd/facetobj_test

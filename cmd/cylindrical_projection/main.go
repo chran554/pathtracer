@@ -43,7 +43,7 @@ func main() {
 		Name:   "Textured sphere",
 		Origin: sphereOrigin,
 		Radius: ballRadius,
-		Material: scn.Material{
+		Material: &scn.Material{
 			Color:      color.Color{R: 1, G: 1, B: 1},
 			Emission:   &color.Black,
 			Projection: &projection,
@@ -63,7 +63,7 @@ func main() {
 
 	animation.Frames = append(animation.Frames, frame)
 
-	anm.WriteAnimationToFile(animation)
+	anm.WriteAnimationToFile(animation, false)
 }
 
 func getCamera() scn.Camera {
@@ -73,9 +73,9 @@ func getCamera() scn.Camera {
 	focalDistance := heading.Length()
 
 	return scn.Camera{
-		Origin:            origin,
-		Heading:           heading,
-		ViewUp:            vec3.T{0, 1, 0},
+		Origin:            &origin,
+		Heading:           &heading,
+		ViewUp:            &vec3.T{0, 1, 0},
 		ViewPlaneDistance: viewPlaneDistance,
 		LensRadius:        lensRadius,
 		FocalDistance:     focalDistance,

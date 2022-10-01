@@ -27,13 +27,13 @@ func CreateCameraRay(x int, y int, width int, height int, camera *Camera, sample
 		aliasOffset = vec2.T{xOffset, yOffset}
 	}
 
-	perfectHeadingInCameraCoordinateSystem := vec3.T{
+	perfectHeadingInCameraCoordinateSystem := &vec3.T{
 		(-float64(width/2.0) + float64(x) + 0.5 + aliasOffset[0]) / magnification,
 		(float64(height/2.0) - float64(y) - 0.5 + aliasOffset[1]) / magnification,
 		camera.ViewPlaneDistance,
 	}
 
-	var headingInCameraCoordinateSystem vec3.T
+	var headingInCameraCoordinateSystem *vec3.T
 
 	if camera.LensRadius > 0 && camera.Samples > 0 {
 		cameraPointOffset := getCameraLensPoint(camera.LensRadius, camera.Samples, sampleIndex+1)
@@ -48,26 +48,26 @@ func CreateCameraRay(x int, y int, width int, height int, camera *Camera, sample
 		headingInCameraCoordinateSystem = perfectHeadingInCameraCoordinateSystem
 	}
 
-	headingInSceneCoordinateSystem := cameraCoordinateSystem.MulVec3(&headingInCameraCoordinateSystem)
+	headingInSceneCoordinateSystem := cameraCoordinateSystem.MulVec3(headingInCameraCoordinateSystem)
 	headingInSceneCoordinateSystem.Normalize()
 
 	return &Ray{
 		Origin:          rayOrigin,
-		Heading:         headingInSceneCoordinateSystem,
+		Heading:         &headingInSceneCoordinateSystem,
 		RefractionIndex: 1.000273, // Refraction index of air (at 20 degrees Celsius, STP)
 	}
 }
 
-func (camera *Camera) GetCameraCoordinateSystem() mat3.T {
-	if camera._coordinateSystem == (mat3.T{}) {
+func (camera *Camera) GetCameraCoordinateSystem() *mat3.T {
+	if camera._coordinateSystem == nil {
 		heading := camera.Heading.Normalized()
 
-		cameraX := vec3.Cross(&camera.ViewUp, &heading)
+		cameraX := vec3.Cross(camera.ViewUp, &heading)
 		cameraX.Normalize()
 		cameraY := vec3.Cross(&heading, &cameraX)
 		cameraY.Normalize()
 
-		camera._coordinateSystem = mat3.T{cameraX, cameraY, heading}
+		camera._coordinateSystem = &mat3.T{cameraX, cameraY, heading}
 	}
 	return camera._coordinateSystem
 }
@@ -77,18 +77,18 @@ func getCameraLensPoint(radius float64, amountSamples int, sample int) vec3.T {
 	return vec3.T{radius * xOffset, radius * yOffset, 0}
 }
 
-func getCameraRayIntersectionWithFocalPlane(camera *Camera, perfectHeading vec3.T) vec3.T {
+func getCameraRayIntersectionWithFocalPlane(camera *Camera, perfectHeading *vec3.T) *vec3.T {
 	ray := &Ray{
-		Origin:  vec3.Zero,
+		Origin:  &vec3.Zero,
 		Heading: perfectHeading,
 	}
 
 	focalPlane := &Plane{
-		Origin: vec3.T{0, 0, camera.FocalDistance},
-		Normal: vec3.T{0, 0, 1},
+		Origin: &vec3.T{0, 0, camera.FocalDistance},
+		Normal: &vec3.T{0, 0, 1},
 	}
 
-	pointInFocalPlaneInCameraCoordinateSystem, _ := GetLinePlaneIntersectionPoint(ray, focalPlane)
+	pointInFocalPlaneInCameraCoordinateSystem, _ := GetLinePlaneIntersectionPoint2(ray, focalPlane)
 
 	return pointInFocalPlaneInCameraCoordinateSystem
 }

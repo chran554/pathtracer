@@ -1,6 +1,7 @@
 package scene
 
 import (
+	"fmt"
 	_ "image/jpeg"
 	_ "image/png"
 	"pathtracer/internal/pkg/color"
@@ -33,6 +34,39 @@ type Animation struct {
 	WriteRawImageFile bool
 }
 
+type FacetStructure struct {
+	Name            string            `json:"Name,omitempty"`
+	Material        *Material         `json:"Material,omitempty"`
+	Facets          []*Facet          `json:"Facets,omitempty"`
+	FacetStructures []*FacetStructure `json:"FacetStructures,omitempty"`
+
+	Bounds *Bounds `json:"-"` // Calculated attribute. See UpdateBounds(). Derived from all vertices in all sub facets recursively.
+}
+
+type Facet struct {
+	Vertices        []*vec3.T `json:"Vertices"`
+	TextureVertices []*vec3.T `json:"TextureVertices,omitempty"`
+	VertexNormals   []*vec3.T `json:"VertexNormals,omitempty"`
+
+	Normal *vec3.T `json:"-"` // Calculated attribute. See UpdateNormal(). Derived from the first three vertices of the triangle.
+	Bounds *Bounds `json:"-"` // Calculated attribute. See UpdateBounds(). Derived from all vertices in the facet.
+}
+
+type Camera struct {
+	Origin            *vec3.T
+	Heading           *vec3.T
+	ViewUp            *vec3.T
+	ViewPlaneDistance float64
+	_coordinateSystem *mat3.T
+	LensRadius        float64
+	FocalDistance     float64
+	Samples           int
+	AntiAlias         bool
+	Magnification     float64
+	RenderType        RenderType
+	RecursionDepth    int
+}
+
 type Frame struct {
 	Filename   string
 	FrameIndex int
@@ -41,10 +75,295 @@ type Frame struct {
 }
 
 type SceneNode struct {
-	Spheres    []*Sphere
-	Discs      []*Disc
-	ChildNodes []*SceneNode
-	Bounds     *Bounds
+	Spheres         []*Sphere
+	Discs           []*Disc
+	ChildNodes      []*SceneNode
+	FacetStructures []*FacetStructure
+	Bounds          *Bounds `json:"-"`
+}
+
+type Sphere struct {
+	Name     string
+	Origin   vec3.T
+	Radius   float64
+	Material *Material `json:"material,omitempty"`
+}
+
+func (fs *FacetStructure) GetAmountFacets() int {
+	amount := len(fs.Facets)
+
+	for _, facetStructure := range fs.FacetStructures {
+		amount += facetStructure.GetAmountFacets()
+	}
+
+	return amount
+}
+
+func (fs *FacetStructure) UpdateBounds() *Bounds {
+	bounds := NewBounds()
+
+	for _, facet := range fs.Facets {
+		facetBounds := facet.UpdateBounds()
+		if !facetBounds.IsZeroBounds() {
+			bounds.AddBounds(facetBounds)
+		}
+	}
+
+	for _, facetStructure := range fs.FacetStructures {
+		faceStructureBounds := facetStructure.UpdateBounds()
+		if !faceStructureBounds.IsZeroBounds() {
+			bounds.AddBounds(faceStructureBounds)
+		}
+	}
+
+	fs.Bounds = &bounds
+	return fs.Bounds
+}
+
+func (fs *FacetStructure) UpdateNormals() {
+	for _, facet := range fs.Facets {
+		facet.UpdateNormal()
+	}
+
+	for _, facetStructure := range fs.FacetStructures {
+		facetStructure.UpdateNormals()
+	}
+}
+
+func (fs *FacetStructure) String() string {
+	name := "<noname>"
+	if fs.Name != "" {
+		name = fs.Name
+	}
+
+	subStructures := ""
+	if len(fs.FacetStructures) > 0 {
+		subStructures = "{"
+		for i, facetStructure := range fs.FacetStructures {
+			if i > 0 {
+				subStructures = subStructures + ", "
+			}
+			subStructures = subStructures + facetStructure.String()
+		}
+		subStructures = subStructures + "}"
+	}
+
+	return fmt.Sprintf("%s (%d facets)%s", name, len(fs.Facets), subStructures)
+}
+
+func (fs *FacetStructure) Initialize() {
+	fs.UpdateNormals()
+	fs.UpdateBounds()
+}
+
+func (fs *FacetStructure) RotateX(rotationOrigin *vec3.T, angle float64) {
+	for _, facet := range fs.Facets {
+		facet.RotateX(rotationOrigin, angle)
+	}
+
+	if len(fs.FacetStructures) > 0 {
+		for _, facetStructure := range fs.FacetStructures {
+			facetStructure.RotateX(rotationOrigin, angle)
+		}
+	}
+}
+
+func (fs *FacetStructure) RotateY(rotationOrigin *vec3.T, angle float64) {
+	rotatedPoints := make(map[*vec3.T]bool)
+	rotatedNormals := make(map[*vec3.T]bool)
+
+	rotationMatrix := mat3.T{}
+	rotationMatrix.AssignYRotation(angle)
+
+	fs.rotateY(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals)
+}
+
+func (fs *FacetStructure) rotateY(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool) {
+	for _, facet := range fs.Facets {
+		facet.rotateY(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals)
+	}
+
+	if len(fs.FacetStructures) > 0 {
+		for _, facetStructure := range fs.FacetStructures {
+			facetStructure.rotateY(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals)
+		}
+	}
+}
+
+func (fs *FacetStructure) RotateZ(rotationOrigin *vec3.T, angle float64) {
+	for _, facet := range fs.Facets {
+		facet.RotateZ(rotationOrigin, angle)
+	}
+
+	if len(fs.FacetStructures) > 0 {
+		for _, facetStructure := range fs.FacetStructures {
+			facetStructure.RotateZ(rotationOrigin, angle)
+		}
+	}
+}
+
+func (fs *FacetStructure) Scale(scaleOrigin *vec3.T, scale float64) {
+	scaledPoints := make(map[*vec3.T]bool)
+
+	fs.scale(scaleOrigin, scale, scaledPoints)
+}
+
+func (fs *FacetStructure) scale(scaleOrigin *vec3.T, scale float64, scaledPoints map[*vec3.T]bool) {
+	for _, facet := range fs.Facets {
+		facet.scale(scaleOrigin, scale, scaledPoints)
+	}
+
+	if len(fs.FacetStructures) > 0 {
+		for _, facetStructure := range fs.FacetStructures {
+			facetStructure.scale(scaleOrigin, scale, scaledPoints)
+		}
+	}
+}
+
+func (f *Facet) UpdateBounds() *Bounds {
+	bounds := NewBounds()
+	for _, vertex := range f.Vertices {
+		bounds.IncludeVertex(vertex)
+	}
+
+	f.Bounds = &bounds
+	return &bounds
+}
+
+func (f *Facet) UpdateNormal() {
+	if f.Normal == nil {
+		sideVector1 := vec3.Sub(f.Vertices[1], f.Vertices[0])
+		sideVector2 := vec3.Sub(f.Vertices[2], f.Vertices[0])
+		normal := vec3.Cross(&sideVector1, &sideVector2)
+		f.Normal = &normal
+	}
+}
+
+func (f *Facet) Center() *vec3.T {
+	center := vec3.T{0, 0, 0}
+
+	for _, vertex := range f.Vertices {
+		center[0] += vertex[0]
+		center[1] += vertex[1]
+		center[2] += vertex[2]
+	}
+
+	amountVertices := float64(len(f.Vertices))
+
+	center[0] /= amountVertices
+	center[1] /= amountVertices
+	center[2] /= amountVertices
+
+	return &center
+}
+
+func (f *Facet) RotateX(rotationOrigin *vec3.T, angle float64) {
+	rotationMatrix := mat3.T{}
+	rotationMatrix.AssignXRotation(angle)
+
+	for i := range f.Vertices {
+		newVertex := f.Vertices[i].Subed(rotationOrigin)
+		rotatedVertex := rotationMatrix.MulVec3(&newVertex)
+		rotatedVertex.Add(rotationOrigin)
+
+		f.Vertices[i] = &rotatedVertex
+	}
+
+	for i := range f.VertexNormals {
+		vertexNormal := f.VertexNormals[i]
+		rotatedVertex := rotationMatrix.MulVec3(vertexNormal)
+		rotatedVertex.Add(rotationOrigin)
+
+		f.Vertices[i] = &rotatedVertex
+	}
+}
+
+func (f *Facet) RotateY(rotationOrigin *vec3.T, angle float64) {
+	rotatedPoints := make(map[*vec3.T]bool)
+	rotatedNormals := make(map[*vec3.T]bool)
+
+	rotationMatrix := mat3.T{}
+	rotationMatrix.AssignYRotation(angle)
+
+	f.rotateY(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals)
+}
+
+func (f *Facet) rotateY(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool) {
+	for _, vertex := range f.Vertices {
+		if rotatedPoints[vertex] {
+			// fmt.Printf("Point already rotated: %+v\n", vertex)
+		} else {
+			newVertex := vertex.Subed(rotationOrigin)
+			rotatedVertex := rotationMatrix.MulVec3(&newVertex)
+			rotatedVertex.Add(rotationOrigin)
+
+			vertex[0] = rotatedVertex[0]
+			vertex[1] = rotatedVertex[1]
+			vertex[2] = rotatedVertex[2]
+
+			rotatedPoints[vertex] = true
+		}
+	}
+
+	for _, vertexNormal := range f.VertexNormals {
+		if rotatedNormals[vertexNormal] {
+			// fmt.Printf("Normal already rotated: %+v\n", vertexNormal)
+		} else {
+			rotatedNormal := rotationMatrix.MulVec3(vertexNormal)
+			vertexNormal[0] = rotatedNormal[0]
+			vertexNormal[1] = rotatedNormal[1]
+			vertexNormal[2] = rotatedNormal[2]
+
+			rotatedNormals[vertexNormal] = true
+		}
+	}
+}
+
+func (f *Facet) RotateZ(rotationOrigin *vec3.T, angle float64) {
+	rotationMatrix := mat3.T{}
+	rotationMatrix.AssignZRotation(angle)
+
+	for i := range f.Vertices {
+		newVertex := f.Vertices[i].Subed(rotationOrigin)
+		rotatedVertex := rotationMatrix.MulVec3(&newVertex)
+		rotatedVertex.Add(rotationOrigin)
+
+		f.Vertices[i] = &rotatedVertex
+	}
+
+	for i := range f.VertexNormals {
+		vertexNormal := f.VertexNormals[i]
+		rotatedVertex := rotationMatrix.MulVec3(vertexNormal)
+		rotatedVertex.Add(rotationOrigin)
+
+		f.Vertices[i] = &rotatedVertex
+	}
+}
+
+func (f *Facet) scale(scaleOrigin *vec3.T, scale float64, scaledPoints map[*vec3.T]bool) {
+	for _, vertex := range f.Vertices {
+		if scaledPoints[vertex] {
+			// fmt.Printf("Point already scaled: %+v\n", vertex)
+		} else {
+			newVertex := vertex.Subed(scaleOrigin)
+			newVertex.Scale(scale)
+			newVertex.Add(scaleOrigin)
+
+			vertex[0] = newVertex[0]
+			vertex[1] = newVertex[1]
+			vertex[2] = newVertex[2]
+
+			scaledPoints[vertex] = true
+		}
+	}
+}
+
+func (sn *SceneNode) GetAmountFacets() int {
+	amount := 0
+	for _, facetStructure := range sn.GetFacetStructures() {
+		amount += facetStructure.GetAmountFacets()
+	}
+	return amount
 }
 
 func (sn *SceneNode) GetSpheres() []*Sphere {
@@ -92,13 +411,18 @@ func (sn *SceneNode) GetBounds() *Bounds {
 	return sn.Bounds
 }
 
+func (sn *SceneNode) GetFacetStructures() []*FacetStructure {
+	return sn.FacetStructures
+}
+
 type Material struct {
-	Color           color.Color
-	Emission        *color.Color `json:"Emission,omitempty"`
-	Glossiness      float64
+	Color           color.Color      `json:"Color,omitempty"`
+	Emission        *color.Color     `json:"Emission,omitempty"`
+	Glossiness      float32          `json:"Glossiness,omitempty"` // Glossiness is the percent amount that will make out specular reflection. Values [0.0 .. 1.0] with default 0.0. Lower value the more diffuse color will appear and higher the more
+	Roughness       float32          `json:"Roughness,omitempty"`  // Roughness is the diffuse spread of the specular reflection. Values [0.0 .. 1.0] with default 0.0. Lower is like brushed metal and higher value more mirror like.
 	Projection      *ImageProjection `json:"Projection,omitempty"`
 	RefractionIndex float64
-	Transparancy    float64
+	Transparency    float64
 	RayTerminator   bool
 }
 
@@ -117,32 +441,9 @@ type ImageProjection struct {
 	Gamma                           float64 `json:"Gamma,omitempty"`
 }
 
-type Sphere struct {
-	Name   string
-	Origin vec3.T
-	Radius float64
-
-	Material Material
-}
-
-type Camera struct {
-	Origin            vec3.T
-	Heading           vec3.T
-	ViewUp            vec3.T
-	ViewPlaneDistance float64
-	_coordinateSystem mat3.T
-	LensRadius        float64
-	FocalDistance     float64
-	Samples           int
-	AntiAlias         bool
-	Magnification     float64
-	RenderType        RenderType
-	RecursionDepth    int
-}
-
 type Ray struct {
-	Origin          vec3.T
-	Heading         vec3.T
+	Origin          *vec3.T
+	Heading         *vec3.T
 	RefractionIndex float64
 }
 
@@ -155,20 +456,18 @@ func (r Ray) point(t float64) *vec3.T {
 }
 
 type Plane struct {
-	Name   string
-	Origin vec3.T
-	Normal vec3.T
-
-	Material Material
+	Name     string
+	Origin   *vec3.T
+	Normal   *vec3.T
+	Material *Material `json:"Material,omitempty"`
 }
 
 type Disc struct {
-	Name   string
-	Origin vec3.T
-	Normal vec3.T
-	Radius float64
-
-	Material Material
+	Name     string
+	Origin   *vec3.T
+	Normal   *vec3.T
+	Radius   float64
+	Material *Material `json:"Material,omitempty"`
 }
 
 func (sphere Sphere) Initialize() {

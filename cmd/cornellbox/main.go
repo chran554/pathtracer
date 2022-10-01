@@ -45,7 +45,7 @@ func main() {
 		Name:   "Right sphere",
 		Origin: vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0},
 		Radius: ballRadius,
-		Material: scn.Material{
+		Material: &scn.Material{
 			Color: color.Color{R: 0.9, G: 0.9, B: 0.9},
 		},
 	}
@@ -54,7 +54,7 @@ func main() {
 		Name:   "Left sphere",
 		Origin: vec3.T{-(ballRadius + (ballRadius / 2)), ballRadius, 0},
 		Radius: ballRadius,
-		Material: scn.Material{
+		Material: &scn.Material{
 			Color: color.Color{R: 0.9, G: 0.9, B: 0.9},
 		},
 	}
@@ -66,7 +66,7 @@ func main() {
 		Name:   "Lamp",
 		Origin: vec3.T{0, roofHeight + lampRadius*0.9, -ballRadius},
 		Radius: lampRadius,
-		Material: scn.Material{
+		Material: &scn.Material{
 			Color:    color.Color{R: 1, G: 1, B: 1},
 			Emission: &lampEmission,
 		},
@@ -87,7 +87,7 @@ func main() {
 
 	animation.Frames = append(animation.Frames, frame)
 
-	anm.WriteAnimationToFile(animation)
+	anm.WriteAnimationToFile(animation, false)
 }
 
 func getCamera() scn.Camera {
@@ -98,9 +98,9 @@ func getCamera() scn.Camera {
 	focalDistance := heading.Length()
 
 	return scn.Camera{
-		Origin:            origin,
-		Heading:           heading,
-		ViewUp:            vec3.T{0, 1, 0},
+		Origin:            &origin,
+		Heading:           &heading,
+		ViewUp:            &vec3.T{0, 1, 0},
 		ViewPlaneDistance: viewPlaneDistance,
 		LensRadius:        lensRadius,
 		FocalDistance:     focalDistance,
@@ -118,10 +118,10 @@ func getBoxWalls() []*scn.Disc {
 
 	floor := scn.Disc{
 		Name:   "Floor",
-		Origin: vec3.T{0, 0, 0},
-		Normal: vec3.T{0, 1, 0},
+		Origin: &vec3.T{0, 0, 0},
+		Normal: &vec3.T{0, 1, 0},
 		Radius: 600,
-		Material: scn.Material{
+		Material: &scn.Material{
 			Color: color.Color{R: 1, G: 1, B: 1},
 			//			Projection: &floorTexture,
 		},
@@ -129,10 +129,10 @@ func getBoxWalls() []*scn.Disc {
 
 	roof := scn.Disc{
 		Name:   "Roof",
-		Origin: vec3.T{0, roofHeight, 0},
-		Normal: vec3.T{0, -1, 0},
+		Origin: &vec3.T{0, roofHeight, 0},
+		Normal: &vec3.T{0, -1, 0},
 		Radius: 600,
-		Material: scn.Material{
+		Material: &scn.Material{
 			Color: color.Color{R: 1, G: 1, B: 1},
 			//			Projection: &roofTexture,
 		},
@@ -140,30 +140,30 @@ func getBoxWalls() []*scn.Disc {
 
 	rightWall := scn.Disc{
 		Name:   "Right wall",
-		Origin: vec3.T{ballRadius * 3, 0, 0},
-		Normal: vec3.T{-1, 0, 0},
+		Origin: &vec3.T{ballRadius * 3, 0, 0},
+		Normal: &vec3.T{-1, 0, 0},
 		Radius: 600,
-		Material: scn.Material{
+		Material: &scn.Material{
 			Color: color.Color{R: 0.5, G: 0.5, B: 1},
 		},
 	}
 
 	leftWall := scn.Disc{
 		Name:   "Left wall",
-		Origin: vec3.T{-ballRadius * 3, 0, 0},
-		Normal: vec3.T{1, 0, 0},
+		Origin: &vec3.T{-ballRadius * 3, 0, 0},
+		Normal: &vec3.T{1, 0, 0},
 		Radius: 600,
-		Material: scn.Material{
+		Material: &scn.Material{
 			Color: color.Color{R: 1, G: 0.5, B: 0.5},
 		},
 	}
 
 	backWall := scn.Disc{
 		Name:   "Back wall",
-		Origin: vec3.T{0, 0, ballRadius * 3},
-		Normal: vec3.T{0, 0, -1},
+		Origin: &vec3.T{0, 0, ballRadius * 3},
+		Normal: &vec3.T{0, 0, -1},
 		Radius: 600,
-		Material: scn.Material{
+		Material: &scn.Material{
 			Color: color.Color{R: 1, G: 1, B: 1},
 		},
 	}

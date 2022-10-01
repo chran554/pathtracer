@@ -26,12 +26,12 @@ var animationName = "recursive_spheres"
 
 var amountFrames = 1
 
-var imageWidth = 1024
-var imageHeight = 800
+var imageWidth = 1280
+var imageHeight = 1024
 var magnification = 1.0
 
 var renderType = scn.Pathtracing
-var amountSamples = 2048
+var amountSamples = 1024
 var maxRecursion = 8
 
 var lampEmissionFactor = 2.0
@@ -92,7 +92,7 @@ func main() {
 		animation.Frames = append(animation.Frames, frame)
 	}
 
-	anm.WriteAnimationToFile(animation)
+	anm.WriteAnimationToFile(animation, false)
 }
 
 func updateBoundingBoxes(sceneNode *scn.SceneNode) *scn.Bounds {
@@ -177,7 +177,7 @@ func getSphere(origin vec3.T, radius float64, name string) scn.Sphere {
 		Name:     name,
 		Origin:   origin,
 		Radius:   radius,
-		Material: sphereMaterial,
+		Material: &sphereMaterial,
 	}
 }
 
@@ -189,7 +189,7 @@ func addLampsToScene(scene *scn.SceneNode) {
 		Name:   "Lamp 1 (right)",
 		Origin: vec3.T{lampDistanceFactor * circleRadius * 1.5, lampDistanceFactor * circleRadius * 1.0, -lampDistanceFactor * circleRadius * 1.5},
 		Radius: circleRadius * 0.75,
-		Material: scn.Material{
+		Material: &scn.Material{
 			Color:    color.Color{R: 1, G: 1, B: 1},
 			Emission: &lampEmission,
 		},
@@ -199,7 +199,7 @@ func addLampsToScene(scene *scn.SceneNode) {
 		Name:   "Lamp 2 (left)",
 		Origin: vec3.T{-lampDistanceFactor * circleRadius * 2.5, lampDistanceFactor * circleRadius * 1.5, -lampDistanceFactor * circleRadius * 2.0},
 		Radius: circleRadius * 0.75,
-		Material: scn.Material{
+		Material: &scn.Material{
 			Color:    color.Color{R: 1, G: 1, B: 1},
 			Emission: &lampEmission,
 		},
@@ -215,7 +215,7 @@ func addEnvironmentMapping(filename string, scene *scn.SceneNode) {
 		Name:   "Environment mapping",
 		Origin: origin,
 		Radius: environmentRadius,
-		Material: scn.Material{
+		Material: &scn.Material{
 			Color:         color.Color{R: 1.0, G: 1.0, B: 1.0},
 			Emission:      &color.Color{R: 1.0 * environmentEmissionFactor, G: 1.0 * environmentEmissionFactor, B: 1.0 * environmentEmissionFactor},
 			RayTerminator: true,
@@ -269,9 +269,9 @@ func getCamera(magnification float64, progress float64) scn.Camera {
 	focalDistance := heading.Length() - startSphereRadius - 0.3*startSphereRadius
 
 	return scn.Camera{
-		Origin:            cameraOrigin,
-		Heading:           heading,
-		ViewUp:            vec3.T{0, 1, 0},
+		Origin:            &cameraOrigin,
+		Heading:           &heading,
+		ViewUp:            &vec3.T{0, 1, 0},
 		ViewPlaneDistance: viewPlaneDistance,
 		LensRadius:        lensRadius,
 		FocalDistance:     focalDistance,

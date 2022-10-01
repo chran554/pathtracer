@@ -2,12 +2,30 @@ package scene
 
 import (
 	"math"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 type Bounds struct {
 	Xmin, Xmax float64
 	Ymin, Ymax float64
 	Zmin, Zmax float64
+}
+
+func (b *Bounds) Center() *vec3.T {
+	return &vec3.T{
+		(b.Xmax-b.Xmin)/2.0 + b.Xmin,
+		(b.Ymax-b.Ymin)/2.0 + b.Ymin,
+		(b.Zmax-b.Zmin)/2.0 + b.Zmin,
+	}
+}
+
+func (b *Bounds) Max() float64 {
+	return math.Max(b.Xmax, math.Max(b.Ymax, b.Zmax))
+}
+
+func (b *Bounds) Min() float64 {
+	return math.Min(b.Xmax, math.Min(b.Ymax, b.Zmax))
 }
 
 func (b *Bounds) AddSphereBounds(s *Sphere) {
@@ -35,6 +53,15 @@ func (b *Bounds) AddBounds(bounds *Bounds) {
 	b.Ymax = math.Max(b.Ymax, bounds.Ymax)
 	b.Zmin = math.Min(b.Zmin, bounds.Zmin)
 	b.Zmax = math.Max(b.Zmax, bounds.Zmax)
+}
+
+func (b *Bounds) IncludeVertex(vertex *vec3.T) {
+	b.Xmin = math.Min(b.Xmin, vertex[0])
+	b.Xmax = math.Max(b.Xmax, vertex[0])
+	b.Ymin = math.Min(b.Ymin, vertex[1])
+	b.Ymax = math.Max(b.Ymax, vertex[1])
+	b.Zmin = math.Min(b.Zmin, vertex[2])
+	b.Zmax = math.Max(b.Zmax, vertex[2])
 }
 
 func NewBounds() Bounds {

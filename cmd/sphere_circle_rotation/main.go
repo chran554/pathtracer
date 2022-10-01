@@ -21,15 +21,16 @@ var projectionTextures = []projection{
 	{filename: "textures/planets/jupiter2_6k_contrast.png"},
 	{filename: "textures/planets/moonmap4k_2.png"},
 	{filename: "textures/planets/mars.jpg"},
-	{filename: "textures/planets/sun.jpg", emission: &color.Color{R: 4.0, G: 4.0, B: 4.0}, rayTerminator: true},
+	//{filename: "textures/planets/sun.jpg", emission: &color.Color{R: 32.0, G: 32.0, B: 32.0}, rayTerminator: true},
+	{filename: "textures/planets/sunmap.jpg", emission: &color.Color{R: 42.0, G: 42.0, B: 42.0}, rayTerminator: true},
 	{filename: "textures/planets/venusmap.jpg"},
 	{filename: "textures/planets/makemake_fictional.jpg"},
 	{filename: "textures/planets/plutomap2k.jpg"},
 }
 
-//var environmentEnvironMap = "textures/planets/environmentmap/space_fake_02_flip.png"
-//var environmentEnvironMap = "textures/equirectangular/open_grassfield_sunny_day.jpg"
-//var environmentEnvironMap = "textures/equirectangular/forest_sunny_day.jpg"
+// var environmentEnvironMap = "textures/planets/environmentmap/space_fake_02_flip.png"
+// var environmentEnvironMap = "textures/equirectangular/open_grassfield_sunny_day.jpg"
+// var environmentEnvironMap = "textures/equirectangular/forest_sunny_day.jpg"
 var environmentEnvironMap = "textures/planets/environmentmap/Stellarium3.jpeg"
 
 var animationName = "sphere_circle_rotation"
@@ -38,11 +39,11 @@ var amountFrames = 1
 
 var imageWidth = 800
 var imageHeight = 600
-var magnification = 1.0
+var magnification = 1.0 * 2
 
 var renderType = scn.Pathtracing
-var amountSamples = 4096
-var maxRecursion = 4
+var amountSamples = 512 * 2 * 8
+var maxRecursion = 6
 
 var lampEmissionFactor = 2.0
 var lampDistanceFactor = 1.5
@@ -53,7 +54,7 @@ var circleRadius = 200.0
 var amountBalls = len(projectionTextures) * 2
 var ballRadius = 40.0
 var viewPlaneDistance = 600.0
-var lensRadius = 2.5
+var lensRadius = 0.05
 
 var amountBallsToRotateBeforeMovieLoop = len(projectionTextures)
 
@@ -81,7 +82,7 @@ func main() {
 
 		// addOriginCoordinateSpheres(&scene)
 
-		addLampsToScene(&scene)
+		// addLampsToScene(&scene)
 
 		// addBottomDisc(&scene)
 
@@ -99,7 +100,7 @@ func main() {
 		animation.Frames = append(animation.Frames, frame)
 	}
 
-	anm.WriteAnimationToFile(animation)
+	anm.WriteAnimationToFile(animation, false)
 }
 
 func addBottomDisc(scene *scn.SceneNode) {
@@ -112,9 +113,9 @@ func addReflectiveCenterBall(scene *scn.SceneNode) {
 		Name:   "Mirror sphere",
 		Origin: vec3.T{0, mirrorSphereRadius * 1, 0},
 		Radius: mirrorSphereRadius,
-		Material: scn.Material{
-			Color:      color.Color{R: 0.95, G: 0.95, B: 0.95},
-			Glossiness: 0.95,
+		Material: &scn.Material{
+			Color:      color.Color{R: 0.90, G: 0.90, B: 0.90},
+			Glossiness: 0.975,
 		},
 	}
 
@@ -139,7 +140,7 @@ func addSphericalProjectionCenterBall(scene *scn.SceneNode) {
 		Name:   "Spherical projected",
 		Origin: projectionSphereOrigin,
 		Radius: projectionSphereRadius,
-		Material: scn.Material{
+		Material: &scn.Material{
 			Color:      color.Color{R: 1, G: 1, B: 1},
 			Projection: &projection,
 		},
@@ -156,7 +157,7 @@ func addLampsToScene(scene *scn.SceneNode) {
 		Name:   "Lamp 1 (right)",
 		Origin: vec3.T{lampDistanceFactor * circleRadius * 1.5, lampDistanceFactor * circleRadius * 1.0, -lampDistanceFactor * circleRadius * 1.5},
 		Radius: circleRadius * 0.75,
-		Material: scn.Material{
+		Material: &scn.Material{
 			Color:    color.Color{R: 1, G: 1, B: 1},
 			Emission: &lampEmission,
 		},
@@ -166,7 +167,7 @@ func addLampsToScene(scene *scn.SceneNode) {
 		Name:   "Lamp 2 (left)",
 		Origin: vec3.T{-lampDistanceFactor * circleRadius * 1.5, lampDistanceFactor * circleRadius * 1.5, -lampDistanceFactor * circleRadius * 1.5},
 		Radius: circleRadius * 0.75,
-		Material: scn.Material{
+		Material: &scn.Material{
 			Color:    color.Color{R: 1, G: 1, B: 1},
 			Emission: &lampEmission,
 		},
@@ -183,7 +184,7 @@ func addEnvironmentMapping(filename string, scene *scn.SceneNode) {
 	sphere := scn.Sphere{
 		Origin: origin,
 		Radius: environmentRadius,
-		Material: scn.Material{
+		Material: &scn.Material{
 			Color:         color.Color{R: 1.0, G: 1.0, B: 1.0},
 			Emission:      &color.Color{R: 1.0, G: 1.0, B: 1.0},
 			RayTerminator: true,
@@ -208,17 +209,17 @@ func addOriginCoordinateSpheres(scene *scn.SceneNode) {
 	sphereOrigin := scn.Sphere{
 		Origin:   vec3.T{0, ballRadius, 0},
 		Radius:   ballRadius / 2,
-		Material: scn.Material{Color: color.Color{R: 0.1, G: 0.1, B: 0.1}},
+		Material: &scn.Material{Color: color.Color{R: 0.1, G: 0.1, B: 0.1}},
 	}
 	sphereX := scn.Sphere{
 		Origin:   vec3.T{ballRadius / 2, ballRadius, 0},
 		Radius:   ballRadius / 2,
-		Material: scn.Material{Color: color.Color{R: 1, G: 1, B: 0}},
+		Material: &scn.Material{Color: color.Color{R: 1, G: 1, B: 0}},
 	}
 	sphereZ := scn.Sphere{
 		Origin:   vec3.T{0, ballRadius, ballRadius / 2},
 		Radius:   ballRadius / 2,
-		Material: scn.Material{Color: color.Color{R: 0, G: 1, B: 1}},
+		Material: &scn.Material{Color: color.Color{R: 0, G: 1, B: 1}},
 	}
 
 	scene.Spheres = append(scene.Spheres, &sphereOrigin)
@@ -238,7 +239,7 @@ func addBallsToScene(deltaBallAngle float64, projectionAngle float64, projection
 		x := circleRadius * math.Cos(ballAngle)
 		z := circleRadius * math.Sin(ballAngle)
 
-		ballOrigin := vec3.T{x, ballRadius, z}
+		ballOrigin := vec3.T{x, 1.5*ballRadius - 3.0*ballRadius*float64(ballIndex%2), z}
 
 		projectionTextureIndex := ballIndex % len(projectionData)
 
@@ -249,7 +250,7 @@ func addBallsToScene(deltaBallAngle float64, projectionAngle float64, projection
 		sphere := scn.Sphere{
 			Origin: ballOrigin,
 			Radius: ballRadius,
-			Material: scn.Material{
+			Material: &scn.Material{
 				Color:         color.Color{R: 1, G: 1, B: 1},
 				Emission:      projectionData[projectionTextureIndex].emission,
 				RayTerminator: projectionData[projectionTextureIndex].rayTerminator,
@@ -277,7 +278,7 @@ func getAnimation(width int, height int) scn.Animation {
 		Frames:            []scn.Frame{},
 		Width:             width,
 		Height:            height,
-		WriteRawImageFile: false,
+		WriteRawImageFile: true,
 	}
 	return animation
 }
@@ -287,10 +288,10 @@ func getBottomPlate() *scn.Disc {
 	normal := vec3.T{0, 1, 0}
 	textureScale := 400.0
 	return &scn.Disc{
-		Origin: origin,
-		Normal: normal,
+		Origin: &origin,
+		Normal: &normal,
 		Radius: circleRadius * 2,
-		Material: scn.Material{
+		Material: &scn.Material{
 			Color:    color.Color{R: 1, G: 1, B: 1},
 			Emission: nil,
 			Projection: &scn.ImageProjection{
@@ -329,9 +330,9 @@ func getCamera(magnification float64, progress float64) scn.Camera {
 	focalDistance := heading.Length() - circleRadius - 0.5*ballRadius
 
 	return scn.Camera{
-		Origin:            origin,
-		Heading:           heading,
-		ViewUp:            vec3.T{0, 1, 0},
+		Origin:            &origin,
+		Heading:           &heading,
+		ViewUp:            &vec3.T{0, 1, 0},
 		ViewPlaneDistance: viewPlaneDistance,
 		LensRadius:        lensRadius,
 		FocalDistance:     focalDistance,

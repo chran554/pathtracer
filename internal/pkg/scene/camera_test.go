@@ -17,8 +17,8 @@ import (
 func Test_CameraCoordinateSystem(t *testing.T) {
 	t.Run("Camera coordinate system", func(t *testing.T) {
 		camera := Camera{
-			Heading: vec3.T{1, 0, 1},
-			ViewUp:  vec3.T{0, 1, 0},
+			Heading: &vec3.T{1, 0, 1},
+			ViewUp:  &vec3.T{0, 1, 0},
 		}
 
 		cameraSystem := camera.GetCameraCoordinateSystem()
@@ -38,8 +38,8 @@ func Test_CoordinateSystemChangeForPoint(t *testing.T) {
 		vectorInCameraSpace := vec3.T{0, 0, 1}
 
 		camera := Camera{
-			Heading: vec3.T{1, 0, 1},
-			ViewUp:  vec3.T{0, 1, 0},
+			Heading: &vec3.T{1, 0, 1},
+			ViewUp:  &vec3.T{0, 1, 0},
 		}
 
 		cameraSystem := camera.GetCameraCoordinateSystem()
