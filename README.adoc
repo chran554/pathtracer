@@ -1,0 +1,4 @@
+= Pathtracer
+
+A pathtracer for testing out ideas and algorithms.
+
