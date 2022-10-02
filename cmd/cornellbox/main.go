@@ -13,17 +13,17 @@ var animationName = "cornellbox"
 var ballRadius float64 = 20
 
 var renderType = scn.Pathtracing
-var maxRecursionDepth = 6
-var amountSamples = 256
+var maxRecursionDepth = 5
+var amountSamples = 256 * 16
 var lensRadius float64 = 0
 var antiAlias = true
 
-var viewPlaneDistance = 4000.0
-var cameraDistanceFactor = 2.0
+var viewPlaneDistance = 1500.0
+var cameraDistanceFactor = 1.0
 
 var imageWidth = 800
-var imageHeight = 600
-var magnification = 0.5
+var imageHeight = 500
+var magnification = 1.0
 
 var roofHeight = ballRadius * 3.0
 
@@ -36,9 +36,30 @@ func main() {
 		WriteRawImageFile: true,
 	}
 
+	openBox := getBoxWalls()
+	openBox.Scale(&vec3.Zero, &vec3.T{2 * ballRadius * 3, roofHeight, 3 * ballRadius * 3})
+	openBox.Translate(&vec3.T{-ballRadius * 3, 0, -2 * ballRadius * 3})
+
+	lampEmission := color.Color{R: 0.9, G: 0.9, B: 0.9}
+	lampEmission.Multiply(8.0)
+	lampHeight := roofHeight - 0.1
+	lampSize := ballRadius * 2
+	lamp := scn.FacetStructure{
+		Material: &scn.Material{
+			Emission:      &lampEmission,
+			RayTerminator: true,
+		},
+		Facets: getFlatRectangleFacets(
+			&vec3.T{-lampSize, lampHeight, +lampSize},
+			&vec3.T{+lampSize, lampHeight, +lampSize},
+			&vec3.T{+lampSize, lampHeight, -lampSize},
+			&vec3.T{-lampSize, lampHeight, -lampSize},
+		),
+	}
+
 	scene := scn.SceneNode{
-		Spheres: []*scn.Sphere{},
-		Discs:   getBoxWalls(),
+		Spheres:         []*scn.Sphere{},
+		FacetStructures: []*scn.FacetStructure{openBox, &lamp},
 	}
 
 	sphere1 := scn.Sphere{
@@ -59,22 +80,8 @@ func main() {
 		},
 	}
 
-	lampEmission := color.Color{R: 0.9, G: 0.9, B: 0.9}
-	lampEmission.Multiply(16.0)
-	lampRadius := ballRadius * 6
-	lamp := scn.Sphere{
-		Name:   "Lamp",
-		Origin: vec3.T{0, roofHeight + lampRadius*0.9, -ballRadius},
-		Radius: lampRadius,
-		Material: &scn.Material{
-			Color:    color.Color{R: 1, G: 1, B: 1},
-			Emission: &lampEmission,
-		},
-	}
-
 	scene.Spheres = append(scene.Spheres, &sphere1)
 	scene.Spheres = append(scene.Spheres, &sphere2)
-	scene.Spheres = append(scene.Spheres, &lamp)
 
 	camera := getCamera()
 
@@ -91,14 +98,15 @@ func main() {
 }
 
 func getCamera() scn.Camera {
-	origin := vec3.T{0, ballRadius, -400}
-	origin.Scale(cameraDistanceFactor)
+	cameraOrigin := vec3.T{0, ballRadius * 2, -15 * ballRadius}
+	cameraOrigin.Scale(cameraDistanceFactor)
 
-	heading := vec3.T{-origin[0], -(origin[1] - ballRadius), -origin[2]}
+	focusPoint := vec3.T{0, ballRadius, 0}
+	heading := focusPoint.Subed(&cameraOrigin)
 	focalDistance := heading.Length()
 
 	return scn.Camera{
-		Origin:            &origin,
+		Origin:            &cameraOrigin,
 		Heading:           &heading,
 		ViewUp:            &vec3.T{0, 1, 0},
 		ViewPlaneDistance: viewPlaneDistance,
@@ -112,61 +120,79 @@ func getCamera() scn.Camera {
 	}
 }
 
-func getBoxWalls() []*scn.Disc {
+func getBoxWalls() *scn.FacetStructure {
 	//roofTexture := scn.NewParallelImageProjection("textures/uv.png", vec3.T{0, ballRadius * 6, 0}, vec3.T{ballRadius, 0, 0}, vec3.T{0, 0, ballRadius})
 	//floorTexture := scn.NewParallelImageProjection("textures/uv.png", vec3.T{0, 0, 0}, vec3.T{ballRadius, 0, 0}, vec3.T{0, 0, ballRadius})
 
-	floor := scn.Disc{
-		Name:   "Floor",
-		Origin: &vec3.T{0, 0, 0},
-		Normal: &vec3.T{0, 1, 0},
-		Radius: 600,
-		Material: &scn.Material{
-			Color: color.Color{R: 1, G: 1, B: 1},
-			//			Projection: &floorTexture,
+	boxP1 := vec3.T{1, 1, 0} // Top right close            3----------2
+	boxP2 := vec3.T{1, 1, 1} // Top right away            /          /|
+	boxP3 := vec3.T{0, 1, 1} // Top left away            /          / |
+	boxP4 := vec3.T{0, 1, 0} // Top left close          4----------1  |
+	boxP5 := vec3.T{1, 0, 0} // Bottom right close      | (7)      |  6
+	boxP6 := vec3.T{1, 0, 1} // Bottom right away       |          | /
+	boxP7 := vec3.T{0, 0, 1} // Bottom left away        |          |/
+	boxP8 := vec3.T{0, 0, 0} // Bottom left close       8----------5
+
+	boxMaterial := scn.Material{
+		Color: color.Color{R: 0.90, G: 0.90, B: 0.90},
+	}
+
+	leftWallMaterial := scn.Material{
+		Color: color.Color{R: 0.85, G: 0.20, B: 0.20},
+	}
+
+	rightWallMaterial := scn.Material{
+		Color: color.Color{R: 0.20, G: 0.20, B: 0.85},
+	}
+
+	box := scn.FacetStructure{
+		Name: "Open box",
+		FacetStructures: []*scn.FacetStructure{
+			{
+				Name:     "Roof",
+				Material: &boxMaterial,
+				Facets:   getFlatRectangleFacets(&boxP1, &boxP2, &boxP3, &boxP4),
+			},
+			{
+				Name:     "Floor",
+				Material: &boxMaterial,
+				Facets:   getFlatRectangleFacets(&boxP8, &boxP7, &boxP6, &boxP5),
+			},
+			{
+				Name:     "Back wall",
+				Material: &boxMaterial,
+				Facets:   getFlatRectangleFacets(&boxP6, &boxP7, &boxP3, &boxP2),
+			},
+			{
+				Name:     "Right side wall",
+				Material: &rightWallMaterial,
+				Facets:   getFlatRectangleFacets(&boxP6, &boxP2, &boxP1, &boxP5),
+			},
+			{
+				Name:     "Left side wall",
+				Material: &leftWallMaterial,
+				Facets:   getFlatRectangleFacets(&boxP7, &boxP8, &boxP4, &boxP3),
+			},
 		},
 	}
 
-	roof := scn.Disc{
-		Name:   "Roof",
-		Origin: &vec3.T{0, roofHeight, 0},
-		Normal: &vec3.T{0, -1, 0},
-		Radius: 600,
-		Material: &scn.Material{
-			Color: color.Color{R: 1, G: 1, B: 1},
-			//			Projection: &roofTexture,
+	return &box
+}
+
+func getFlatRectangleFacets(p1, p2, p3, p4 *vec3.T) []*scn.Facet {
+	v1 := p2.Subed(p1)
+	v2 := p3.Subed(p1)
+	normal := vec3.Cross(&v1, &v2)
+	normal.Normalize()
+
+	return []*scn.Facet{
+		{
+			Vertices: []*vec3.T{p1, p2, p4},
+			Normal:   &normal,
+		},
+		{
+			Vertices: []*vec3.T{p4, p2, p3},
+			Normal:   &normal,
 		},
 	}
-
-	rightWall := scn.Disc{
-		Name:   "Right wall",
-		Origin: &vec3.T{ballRadius * 3, 0, 0},
-		Normal: &vec3.T{-1, 0, 0},
-		Radius: 600,
-		Material: &scn.Material{
-			Color: color.Color{R: 0.5, G: 0.5, B: 1},
-		},
-	}
-
-	leftWall := scn.Disc{
-		Name:   "Left wall",
-		Origin: &vec3.T{-ballRadius * 3, 0, 0},
-		Normal: &vec3.T{1, 0, 0},
-		Radius: 600,
-		Material: &scn.Material{
-			Color: color.Color{R: 1, G: 0.5, B: 0.5},
-		},
-	}
-
-	backWall := scn.Disc{
-		Name:   "Back wall",
-		Origin: &vec3.T{0, 0, ballRadius * 3},
-		Normal: &vec3.T{0, 0, -1},
-		Radius: 600,
-		Material: &scn.Material{
-			Color: color.Color{R: 1, G: 1, B: 1},
-		},
-	}
-
-	return []*scn.Disc{&floor, &roof, &rightWall, &leftWall, &backWall}
 }

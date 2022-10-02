@@ -202,13 +202,34 @@ func (fs *FacetStructure) RotateZ(rotationOrigin *vec3.T, angle float64) {
 	}
 }
 
-func (fs *FacetStructure) Scale(scaleOrigin *vec3.T, scale float64) {
-	scaledPoints := make(map[*vec3.T]bool)
+func (fs *FacetStructure) Translate(translation *vec3.T) {
+	translatedPoints := make(map[*vec3.T]bool)
+	fs.translate(translation, translatedPoints)
+}
 
+func (fs *FacetStructure) translate(translation *vec3.T, translatedPoints map[*vec3.T]bool) {
+	for _, facet := range fs.Facets {
+		facet.translate(translation, translatedPoints)
+	}
+
+	if len(fs.FacetStructures) > 0 {
+		for _, facetStructure := range fs.FacetStructures {
+			facetStructure.translate(translation, translatedPoints)
+		}
+	}
+}
+
+func (fs *FacetStructure) ScaleUniform(scaleOrigin *vec3.T, scale float64) {
+	scale3d := &vec3.T{scale, scale, scale}
+	fs.Scale(scaleOrigin, scale3d)
+}
+
+func (fs *FacetStructure) Scale(scaleOrigin *vec3.T, scale *vec3.T) {
+	scaledPoints := make(map[*vec3.T]bool)
 	fs.scale(scaleOrigin, scale, scaledPoints)
 }
 
-func (fs *FacetStructure) scale(scaleOrigin *vec3.T, scale float64, scaledPoints map[*vec3.T]bool) {
+func (fs *FacetStructure) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool) {
 	for _, facet := range fs.Facets {
 		facet.scale(scaleOrigin, scale, scaledPoints)
 	}
@@ -340,13 +361,29 @@ func (f *Facet) RotateZ(rotationOrigin *vec3.T, angle float64) {
 	}
 }
 
-func (f *Facet) scale(scaleOrigin *vec3.T, scale float64, scaledPoints map[*vec3.T]bool) {
+func (f *Facet) translate(translation *vec3.T, translatedPoints map[*vec3.T]bool) {
+	for _, vertex := range f.Vertices {
+		if translatedPoints[vertex] {
+			// fmt.Printf("Point already translated: %+v\n", vertex)
+		} else {
+			newVertex := vertex.Added(translation)
+
+			vertex[0] = newVertex[0]
+			vertex[1] = newVertex[1]
+			vertex[2] = newVertex[2]
+
+			translatedPoints[vertex] = true
+		}
+	}
+}
+
+func (f *Facet) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool) {
 	for _, vertex := range f.Vertices {
 		if scaledPoints[vertex] {
 			// fmt.Printf("Point already scaled: %+v\n", vertex)
 		} else {
 			newVertex := vertex.Subed(scaleOrigin)
-			newVertex.Scale(scale)
+			newVertex.Mul(scale)
 			newVertex.Add(scaleOrigin)
 
 			vertex[0] = newVertex[0]

@@ -1,4 +1,49 @@
 = Pathtracer
 
-A pathtracer for testing out ideas and algorithms.
+A pathtracer written in go (golang) for testing out pathtracing ideas and algorithms as well as learning the go programming language.
 
+.The Go Gopher mascot rendered by the pathtracer
+image::documentation/images/go_gopher.png[Go Gopher]
+
+== How to run
+
+The renderer accepts a render scene file as program argument.
+
+There are several go programs in the `cmd` directory that will create a scene file.
+Run one of those programs to create a scene file.
+
+=== Build and run pathracer for a scene file
+
+You can use a script to conveniently build and execute a scene file creation program and then build and run the pathtracer for that created scene file.
+
+The produced result will end up in the `rendered` directory.
+
+`% .build_and_render_animation.sh <animation name>`
+
+Animation name is the same as the directory name for the main file for the scene file.
+For example:
+
+`% .build_and_render_animation.sh cornellbox`
+
+This will build and run the rendering of a cornell box image.
+
+== Features
+
+* Load scene-files (json-based file format) capable of multi frame animations.
+* Pathtracing algorithm
+* Primitives: sphere, disc (circle on plane), triangle (facet)
+* Reflection (mirror)
+* Color definitions by RGB
+* Texture projections: sphere (equirectangular), cylindrical, flat (parallel)
+* Progressive/recursive pixel rendering, a quite useful overview after only 5% rendering.
+* Bounding boxes
+* Super sampling: Anti alias
+* Super sampling: DOP - Depth of field (focal distance and "aperture size")
+* Save image in RAW-format ("praw") for post light editing.
+* Sending broadcast (UDP) messages of rendered pixels to render monitor
+
+=== TODO
+
+* Refraction - using refraction index
+* Refraction - color absorption in gas and liquid (solid) using Beer-Lambert Law
+* ...
