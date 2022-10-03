@@ -1,0 +1,26 @@
+= Gallery
+:toc:
+
+Some images to illustrate renderer functionality and some _show off_ gems.
+
+== Brag 'n' boost
+
+Nope, nothing to brag about yet.... :/
+
+== Functionality
+
+=== Pathtracing
+
+==== Cornell box
+
+.The classic Cornell box. Color bleeding. Lightning fixed for raw image in post render editor.
+image::{docdir}/cornellbox_03.png[Go Gopher]
+.Cornell box details
+----
+Image size:        800x500
+Amount samples:    4096
+Max recursion:     5
+Amount facets:     12
+Amount spheres:    2
+Frame render time: 14h10m18.07531675s
+----

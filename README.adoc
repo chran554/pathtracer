@@ -5,6 +5,10 @@ A pathtracer written in go (golang) for testing out pathtracing ideas and algori
 .The Go Gopher mascot rendered by the pathtracer
 image::documentation/images/go_gopher.png[Go Gopher]
 
+== Gallery
+
+Some images created during development can be found in the link:documentation/gallery/gallery.adoc[Gallery].
+
 == How to run
 
 The renderer accepts a render scene file as program argument.
