@@ -116,7 +116,7 @@ func main() {
 		fmt.Println("Frame render time:", time.Since(frameStartTimestamp))
 	}
 
-	fmt.Println("Total execution time:", time.Since(startTimestamp))
+	fmt.Printf("Total execution time (for %d frames): %s\n", len(animation.Frames), time.Since(startTimestamp))
 }
 
 func initializeScene(scene *scn.SceneNode) {

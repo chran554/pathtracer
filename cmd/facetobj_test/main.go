@@ -98,7 +98,7 @@ func main() {
 		facetStructure.UpdateBounds()
 		fmt.Printf("Object in file \"%s\" has bounds %+v.\n", objectFilename, facetStructure.Bounds)
 
-		facetStructure.Scale(&vec3.Zero, objectScale)
+		facetStructure.ScaleUniform(&vec3.Zero, objectScale)
 		facetStructure.RotateY(&vec3.Zero, objectStartAngle)
 
 		sceneNode := scn.SceneNode{

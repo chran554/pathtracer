@@ -120,6 +120,19 @@ func (fs *FacetStructure) UpdateBounds() *Bounds {
 	return fs.Bounds
 }
 
+func (fs *FacetStructure) InitializeProjection() {
+	for _, facetStructure := range fs.FacetStructures {
+		facetStructure.InitializeProjection()
+	}
+
+	if fs.Material != nil {
+		projection := fs.Material.Projection
+		if projection != nil {
+			projection.Initialize()
+		}
+	}
+}
+
 func (fs *FacetStructure) UpdateNormals() {
 	for _, facet := range fs.Facets {
 		facet.UpdateNormal()
@@ -154,6 +167,7 @@ func (fs *FacetStructure) String() string {
 func (fs *FacetStructure) Initialize() {
 	fs.UpdateNormals()
 	fs.UpdateBounds()
+	fs.InitializeProjection()
 }
 
 func (fs *FacetStructure) RotateX(rotationOrigin *vec3.T, angle float64) {
@@ -239,6 +253,24 @@ func (fs *FacetStructure) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints
 			facetStructure.scale(scaleOrigin, scale, scaledPoints)
 		}
 	}
+}
+
+func (fs *FacetStructure) GetFirstObjectByName(objectName string) *FacetStructure {
+	if fs.Name == objectName {
+		return fs
+	}
+
+	if len(fs.FacetStructures) > 0 {
+		for _, facetStructure := range fs.FacetStructures {
+			object := facetStructure.GetFirstObjectByName(objectName)
+
+			if object != nil {
+				return object
+			}
+		}
+	}
+
+	return nil
 }
 
 func (f *Facet) UpdateBounds() *Bounds {
