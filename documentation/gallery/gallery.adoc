@@ -14,7 +14,7 @@ Nope, nothing to brag about yet.... :/
 ==== Cornell box
 
 .The classic Cornell box. Color bleeding. Lightning fixed for raw image in post render editor.
-image::{docdir}/cornellbox_03.png[Cornell box]
+image::{docdir}/cornellbox_01.png[Cornell box]
 .Cornell box details
 ----
 Image size:        800x500
@@ -28,7 +28,7 @@ Frame render time: 14h10m18.07531675s
 === Metallic like settings "glossy" and "roughness"
 
 .A Cornell box with "metallic like" settings. Lightning fixed for raw image in post render editor.
-image::{docdir}/cornellbox_04.png[Cornell box with metallic settings]
+image::{docdir}/cornellbox_02.png[Cornell box with metallic settings]
 
 Using "glossy" and "roughness" parameters rather than the usual "mirror/diffuse".
 The algorithms for metallicness that I tried out, are my own and are most likely not true to the path tracing concept of conservation of energy. (I believe that the algorithms introduce a bit of energy to the system.) +
