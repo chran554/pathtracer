@@ -16,7 +16,7 @@ The renderer accepts a render scene file as program argument.
 There are several go programs in the `cmd` directory that will create a scene file.
 Run one of those programs to create a scene file.
 
-=== Build and run pathracer for a scene file
+=== Build and run path tracer for a scene file
 
 You can use a script to conveniently build and execute a scene file creation program and then build and run the pathtracer for that created scene file.
 
@@ -45,6 +45,7 @@ This will build and run the rendering of a cornell box image.
 * Super sampling: DOP - Depth of field (focal distance and "aperture size")
 * Save image in RAW-format ("praw") for post light editing.
 * Sending broadcast (UDP) messages of rendered pixels to render monitor
+* Metallic parameters "glossy" and "roughness"
 
 === TODO
 
