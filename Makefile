@@ -22,7 +22,7 @@ build:
 
 build_all: build animations
 
-animations: build_sphere_circle_rotation build_sphere_rotation_focaldistance build_cornellbox build_spherical_projection build_cylindrical_projection build_parallel_projection build_recursive_spheres build_facetobj_test
+animations: build_sphere_circle_rotation build_sphere_rotation_focaldistance build_cornellbox build_spherical_projection build_cylindrical_projection build_parallel_projection build_recursive_spheres build_facetobj_test gordian_knot
 
 # Build animation scenes
 # -----------------------------------
@@ -56,3 +56,6 @@ build_recursive_spheres: build
 
 build_facetobj_test: build
 	go build -o bin/facetobj_test ./cmd/facetobj_test
+
+build_gordian_knot: build
+	go build -o bin/gordian_knot ./cmd/gordian_knot
