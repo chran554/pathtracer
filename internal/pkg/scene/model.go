@@ -143,6 +143,27 @@ func (fs *FacetStructure) UpdateNormals() {
 	}
 }
 
+func (fs *FacetStructure) SplitMultiPointFacets() {
+	for i := 0; i < len(fs.Facets); {
+		facet := fs.Facets[i]
+
+		if facet.IsMultiPointFacet() {
+			splitFacets := facet.SplitMultiPointFacet()
+
+			allFacets := append(fs.Facets[:i], append(splitFacets, fs.Facets[i+1:]...)...)
+			fs.Facets = allFacets
+
+			i += len(splitFacets)
+		} else {
+			i++
+		}
+	}
+
+	for _, facetStructure := range fs.FacetStructures {
+		facetStructure.SplitMultiPointFacets()
+	}
+}
+
 func (fs *FacetStructure) String() string {
 	name := "<noname>"
 	if fs.Name != "" {
@@ -273,6 +294,42 @@ func (fs *FacetStructure) GetFirstObjectByName(objectName string) *FacetStructur
 	return nil
 }
 
+// SplitMultiPointFacet maps a multipoint (> 3 points) face into a list of triangles.
+// The supplied face must have at least 3 points and be a convex face.
+func (f *Facet) SplitMultiPointFacet() []*Facet {
+	var facets []*Facet
+
+	if f.IsMultiPointFacet() {
+		// Add consecutive triangles of facet
+		amountVertices := len(f.Vertices)
+		for i := 1; i < (amountVertices - 1); i++ {
+			newVertices := []*vec3.T{f.Vertices[0], f.Vertices[i], f.Vertices[i+1]}
+
+			var newTextureVertices []*vec3.T
+			if len(f.TextureVertices) > 0 {
+				newTextureVertices = []*vec3.T{f.TextureVertices[0], f.TextureVertices[i], f.TextureVertices[i+1]}
+			}
+
+			var newVertexNormals []*vec3.T
+			if len(f.VertexNormals) > 0 {
+				newVertexNormals = []*vec3.T{f.VertexNormals[0], f.VertexNormals[i], f.VertexNormals[i+1]}
+			}
+
+			newFace := Facet{
+				Vertices:        newVertices,
+				TextureVertices: newTextureVertices,
+				VertexNormals:   newVertexNormals,
+				Normal:          f.Normal,
+			}
+			facets = append(facets, &newFace)
+		}
+	} else {
+		facets = append(facets, f)
+	}
+
+	return facets
+}
+
 func (f *Facet) UpdateBounds() *Bounds {
 	bounds := NewBounds()
 	for _, vertex := range f.Vertices {
@@ -288,6 +345,7 @@ func (f *Facet) UpdateNormal() {
 		sideVector1 := vec3.Sub(f.Vertices[1], f.Vertices[0])
 		sideVector2 := vec3.Sub(f.Vertices[2], f.Vertices[0])
 		normal := vec3.Cross(&sideVector1, &sideVector2)
+		normal.Normalize()
 		f.Normal = &normal
 	}
 }
@@ -427,6 +485,10 @@ func (f *Facet) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3
 	}
 }
 
+func (f *Facet) IsMultiPointFacet() bool {
+	return len(f.Vertices) > 3
+}
+
 func (sn *SceneNode) GetAmountFacets() int {
 	amount := 0
 	for _, facetStructure := range sn.GetFacetStructures() {
@@ -529,6 +591,20 @@ type Plane struct {
 	Origin   *vec3.T
 	Normal   *vec3.T
 	Material *Material `json:"Material,omitempty"`
+}
+
+func NewPlane(v1, v2, v3 *vec3.T, name string, material *Material) *Plane {
+	a := v2.Subed(v1)
+	b := v3.Subed(v1)
+	n := vec3.Cross(&a, &b)
+	n.Normalize()
+
+	return &Plane{
+		Name:     name,
+		Origin:   v1,
+		Normal:   &n,
+		Material: material,
+	}
 }
 
 type Disc struct {

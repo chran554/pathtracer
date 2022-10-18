@@ -22,43 +22,46 @@ build:
 
 build_all: build animations
 
-animations: build_sphere_circle_rotation build_sphere_rotation_focaldistance build_cornellbox build_spherical_projection build_cylindrical_projection build_parallel_projection build_recursive_spheres build_facetobj_test build_objectfile_test gordian_knot
+animations: build_sphere_circle_rotation build_sphere_rotation_focaldistance build_cornellbox build_spherical_projection build_cylindrical_projection build_parallel_projection build_recursive_spheres build_facetobj_test build_objectfile_test build_gordian_knot build_diamondsR4ever
 
 # Build animation scenes
 # -----------------------------------
 
 build_sphere_circle_rotation: build
-	go build -o bin/sphere_circle_rotation ./cmd/sphere_circle_rotation
+	go build -o bin/sphere_circle_rotation ./cmd/scene/sphere_circle_rotation
 
 build_sphere_rotation_focaldistance: build
-	go build -o bin/animation_sphere_circle_rotation_focaldistance ./cmd/animation_sphere_circle_rotation_focaldistance
+	go build -o bin/animation_sphere_circle_rotation_focaldistance ./cmd/scene/animation_sphere_circle_rotation_focaldistance
 
 build_cornellbox: build
-	go build -o bin/cornellbox ./cmd/cornellbox
+	go build -o bin/cornellbox ./cmd/scene/cornellbox
 
 build_cylindrical_projection: build
-	go build -o bin/cylindrical_projection ./cmd/cylindrical_projection
+	go build -o bin/cylindrical_projection ./cmd/scene/test/cylindrical_projection
 
 build_spherical_projection: build
-	go build -o bin/spherical_projection ./cmd/spherical_projection
+	go build -o bin/spherical_projection ./cmd/scene/test/spherical_projection
 
 build_parallel_projection: build
-	go build -o bin/parallel_projection ./cmd/parallel_projection
+	go build -o bin/parallel_projection ./cmd/scene/test/parallel_projection
 
 build_reflective_test: build
-	go build -o bin/reflective_test ./cmd/reflective_test
+	go build -o bin/reflective_test ./cmd/scene/test/reflective_test
 
 build_refraction_test: build
-	go build -o bin/refraction_test ./cmd/refraction_test
+	go build -o bin/refraction_test ./cmd/scene/test/refraction_test
 
 build_recursive_spheres: build
-	go build -o bin/recursive_spheres ./cmd/recursive_spheres
+	go build -o bin/recursive_spheres ./cmd/scene/recursive_spheres
 
 build_facetobj_test: build
-	go build -o bin/facetobj_test ./cmd/facetobj_test
+	go build -o bin/facetobj_test ./cmd/scene/test/facetobj_test
 
 build_objectfile_test: build
-	go build -o bin/objectfile_test ./cmd/objectfile_test
+	go build -o bin/objectfile_test ./cmd/scene/test/objectfile_test
 
 build_gordian_knot: build
-	go build -o bin/gordian_knot ./cmd/gordian_knot
+	go build -o bin/gordian_knot ./cmd/scene/gordian_knot
+
+build_diamondsR4ever: build
+	go build -o bin/diamondsR4ever ./cmd/scene/diamondsR4ever

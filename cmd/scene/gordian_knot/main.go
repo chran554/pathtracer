@@ -10,45 +10,44 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-//var environmentEnvironMap = "textures/planets/environmentmap/space_fake_02_flip.png"
-//var environmentEnvironMap = "textures/equirectangular/open_grassfield_sunny_day.jpg"
+// var environmentEnvironMap = "textures/planets/environmentmap/space_fake_02_flip.png"
+// var environmentEnvironMap = "textures/equirectangular/open_grassfield_sunny_day.jpg"
 
-//var environmentEnvironMap = "textures/equirectangular/forest_sunny_day.jpg"
+var environmentEnvironMap = "textures/equirectangular/forest_sunny_day.jpg"
 
-var environmentEnvironMap = "textures/equirectangular/canyon 3200x1600.jpeg"
-var environmentRadius = 100.0 * 800.0 // 80m (if 1 unit is 1 cm)
-var environmentEmissionFactor = float32(2.0)
+// var environmentEnvironMap = "textures/equirectangular/canyon 3200x1600.jpeg"
+var environmentRadius = 100.0 * 100.0 // 100m (if 1 unit is 1 cm)
+var environmentEmissionFactor = float32(1.7)
 
 //var environmentEnvironMap = "textures/planets/environmentmap/Stellarium3.jpeg"
 //var environmentRadius = 100.0 * 80.0 // 80m (if 1 unit is 1 cm)
 
 var animationName = "gordian_knot"
 
-var amountFrames = 1
+var amountFrames = 36 * 10
 
 var imageWidth = 1280
 var imageHeight = 1024
-var magnification = 1.0
+var magnification = 0.5
 
 var renderType = scn.Pathtracing
 var amountSamples = 256
 var maxRecursion = 3
 
-var lampEmissionFactor = 2.0
-var lampDistanceFactor = 1.5
-
 var cameraDistanceFactor = 2.8
 
-var startSphereRadius = 150.0
-var maxSphereRecursionDepth = 6
-
-var circleRadius = 200.0
 var viewPlaneDistance = 800.0
 var lensRadius = 0.0
 
+var pipeLength = 0.83333
+var pipeRadius = 40.0
+var amountBalls = 75
+var scale = 100.0
+
 var sphereMaterial = scn.Material{
-	Color:      color.Color{R: 0.85, G: 0.95, B: 0.85},
-	Glossiness: 0.95,
+	Color:      color.Color{R: 0.95, G: 0.95, B: 0.95},
+	Glossiness: 0.90,
+	Roughness:  0.10,
 }
 
 func main() {
@@ -63,8 +62,10 @@ func main() {
 			Discs:   []*scn.Disc{},
 		}
 
-		// spheres := getKnotBalls(50.0, 360*4, 150)
-		// scene.Spheres = spheres
+		//ballSpeed := amountBalls / 5.0 // All balls make 1/5:th of a full loop during the whole animation
+		ballSpeed := float64(amountBalls) / pipeLength // All balls make a full loop during the whole animation
+		spheres := getKnotBalls(pipeRadius, amountBalls, scale, animationProgress, ballSpeed)
+		scene.Spheres = spheres
 
 		addEnvironmentMapping(environmentEnvironMap, &scene)
 
@@ -86,18 +87,18 @@ func main() {
 	anm.WriteAnimationToFile(animation, false)
 }
 
-func getKnotBalls(ballRadius float64, amountBalls int, scale float32) []*scn.Sphere {
+func getKnotBalls(ballRadius float64, amountBalls int, scale float64, animationProgress float64, ballSpeed float64) []*scn.Sphere {
 	spheres := make([]*scn.Sphere, 0)
-	radiansPerBall := 360.0 / float64(amountBalls)
+	radianDistanceBetweenBalls := (math.Pi * 2.0 * pipeLength) / float64(amountBalls)
 
 	for ballIndex := 0; ballIndex < amountBalls; ballIndex++ {
-		t := radiansPerBall * float64(ballIndex)
+		t := (radianDistanceBetweenBalls * float64(ballIndex)) + (animationProgress * ballSpeed * radianDistanceBetweenBalls)
 
-		x := float64(scale) * (math.Cos(t) + 2.0*math.Cos(2.0*t))
-		y := float64(scale) * (math.Sin(t) - 2.0*math.Sin(2.0*t))
-		z := float64(scale) * math.Sin(3.0*t)
+		x := scale * (math.Cos(t) + 2.0*math.Cos(2.0*t))
+		y := scale * (math.Sin(t) - 2.0*math.Sin(2.0*t))
+		z := scale * -1.0 * math.Sin(3.0*t)
 
-		sphere := getSphere(vec3.T{x, y, z}, ballRadius, fmt.Sprintf("%d", ballIndex))
+		sphere := getSphere(vec3.T{x, y, z}, ballRadius, fmt.Sprintf("sphere #%d", ballIndex))
 
 		spheres = append(spheres, &sphere)
 	}
@@ -135,33 +136,6 @@ func getSphere(origin vec3.T, radius float64, name string) scn.Sphere {
 	}
 }
 
-func addLampsToScene(scene *scn.SceneNode) {
-	lampEmission := color.Color{R: 5, G: 5, B: 5}
-	lampEmission.Multiply(float32(lampEmissionFactor))
-
-	lamp1 := scn.Sphere{
-		Name:   "Lamp 1 (right)",
-		Origin: vec3.T{lampDistanceFactor * circleRadius * 1.5, lampDistanceFactor * circleRadius * 1.0, -lampDistanceFactor * circleRadius * 1.5},
-		Radius: circleRadius * 0.75,
-		Material: &scn.Material{
-			Color:    color.Color{R: 1, G: 1, B: 1},
-			Emission: &lampEmission,
-		},
-	}
-
-	lamp2 := scn.Sphere{
-		Name:   "Lamp 2 (left)",
-		Origin: vec3.T{-lampDistanceFactor * circleRadius * 2.5, lampDistanceFactor * circleRadius * 1.5, -lampDistanceFactor * circleRadius * 2.0},
-		Radius: circleRadius * 0.75,
-		Material: &scn.Material{
-			Color:    color.Color{R: 1, G: 1, B: 1},
-			Emission: &lampEmission,
-		},
-	}
-
-	scene.Spheres = append(scene.Spheres, &lamp1, &lamp2)
-}
-
 func addEnvironmentMapping(filename string, scene *scn.SceneNode) {
 	origin := vec3.T{0, 0, 0}
 
@@ -178,7 +152,7 @@ func addEnvironmentMapping(filename string, scene *scn.SceneNode) {
 				ImageFilename:  filename,
 				Gamma:          1.5,
 				Origin:         origin,
-				U:              vec3.T{1, 0, 0},
+				U:              vec3.T{0, 0, 1},
 				V:              vec3.T{0, 1, 0},
 				RepeatU:        true,
 				RepeatV:        true,
@@ -211,16 +185,13 @@ func getCamera(magnification float64, progress float64) scn.Camera {
 	cameraOrigin := vec3.T{
 		cameraDistance * math.Cos(-math.Pi/2.0+strideAngle+degrees45),
 		cameraHeight + (cameraHeight/2.0)*math.Sin(2.0*math.Pi*2.0*progress),
-		cameraDistance * math.Sin(-math.Pi/2.0+strideAngle+degrees45),
+		cameraDistance * math.Sin(-math.Pi/2.0+strideAngle*0.5+degrees45),
 	}
-
-	// Static camera location
-	// cameraOrigin = vec3.T{0, cameraHeight, -cameraDistance}
 
 	// Point heading towards center of sphere ring (heading vector starts in camera origin)
 	heading := vec3.T{-cameraOrigin[0], -cameraOrigin[1], -cameraOrigin[2]}
 
-	focalDistance := heading.Length() - startSphereRadius - 0.3*startSphereRadius
+	focalDistance := heading.Length()
 
 	return scn.Camera{
 		Origin:            &cameraOrigin,

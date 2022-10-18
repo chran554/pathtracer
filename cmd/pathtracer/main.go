@@ -77,17 +77,17 @@ func main() {
 
 		progress := float64(frameIndex+1) / float64(len(animation.Frames))
 		fmt.Println("-----------------------------------------------")
-		fmt.Println("Frame number:     ", frameIndex+1, "of", len(animation.Frames), "   (progress "+fmt.Sprintf("%.2f", progress*100.0)+"%)")
-		fmt.Println("Frame label:      ", frame.FrameIndex)
-		fmt.Println("Frame image file: ", frame.Filename)
+		fmt.Println("Frame number:          ", frameIndex+1, "of", len(animation.Frames), "   (animation progress "+fmt.Sprintf("%.2f", progress*100.0)+"%)")
+		fmt.Println("Frame label:           ", frame.FrameIndex)
+		fmt.Println("Frame image file:      ", frame.Filename)
 		fmt.Println()
-		fmt.Println("Render algorithm: ", frame.Camera.RenderType)
-		fmt.Println("Image size:       ", strconv.Itoa(animation.Width)+"x"+strconv.Itoa(animation.Height)+mp4CreationWarning)
-		fmt.Println("Amount samples:   ", frame.Camera.Samples)
-		fmt.Println("Max recursion:    ", frame.Camera.RecursionDepth)
-		fmt.Println("Amount facets:    ", scene.GetAmountFacets())
-		fmt.Println("Amount spheres:   ", scene.GetAmountSpheres())
-		fmt.Println("Amount discs:     ", scene.GetAmountDiscs())
+		fmt.Println("Render algorithm:      ", frame.Camera.RenderType)
+		fmt.Println("Image size:            ", strconv.Itoa(animation.Width)+"x"+strconv.Itoa(animation.Height)+mp4CreationWarning)
+		fmt.Println("Amount samples/pixel:  ", frame.Camera.Samples)
+		fmt.Println("Max recursion:         ", frame.Camera.RecursionDepth)
+		fmt.Println("Amount facets:         ", scene.GetAmountFacets())
+		fmt.Println("Amount spheres:        ", scene.GetAmountSpheres())
+		fmt.Println("Amount discs:          ", scene.GetAmountDiscs())
 		fmt.Println()
 
 		fmt.Println("Initialize scene...")
@@ -131,6 +131,10 @@ func initializeScene(scene *scn.SceneNode) {
 	}
 
 	facetStructures := (*scene).GetFacetStructures()
+
+	for _, facetStructure := range facetStructures {
+		facetStructure.SplitMultiPointFacets()
+	}
 
 	// Subdivide facet structure for performance
 	for _, facetStructure := range facetStructures {
@@ -434,25 +438,25 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 				cosineNewRayAndNormal := vec3.Dot(normalAtIntersection, &newRayHeading) / (normalAtIntersection.Length() * newRayHeading.Length())
 
 				// Diffuse light contribution below
-				newRayHeading2 := getReflectionHeading(ray, 1.0, normalAtIntersection)
-				rayStartOffset2 := newRayHeading2.Scaled(epsilonDistance)
-				newRayOrigin2 := intersectionPoint.Added(&rayStartOffset2)
-				newRay2 := scn.Ray{
-					Origin:          &newRayOrigin2,
-					Heading:         &newRayHeading2,
-					RefractionIndex: newRefractionIndex,
-				}
+				//newRayHeading2 := getReflectionHeading(ray, 1.0, normalAtIntersection)
+				//rayStartOffset2 := newRayHeading2.Scaled(epsilonDistance)
+				//newRayOrigin2 := intersectionPoint.Added(&rayStartOffset2)
+				//newRay2 := scn.Ray{
+				//	Origin:          &newRayOrigin2,
+				//	Heading:         &newRayHeading2,
+				//	RefractionIndex: newRefractionIndex,
+				//}
 
-				incomingEmission2 := tracePath(&newRay2, camera, scene, currentDepth+1)
-				cosineNewRayAndNormal2 := vec3.Dot(normalAtIntersection, &newRayHeading2) / (normalAtIntersection.Length() * newRayHeading2.Length())
+				//incomingEmission2 := tracePath(&newRay2, camera, scene, currentDepth+1)
+				//cosineNewRayAndNormal2 := vec3.Dot(normalAtIntersection, &newRayHeading2) / (normalAtIntersection.Length() * newRayHeading2.Length())
 
 				outgoingEmission = color.Color{
-					R: float32(cosineNewRayAndNormal2)*incomingEmission2.R*material.Color.R*projectionColor.R*(1.0-material.Glossiness) + float32(cosineNewRayAndNormal)*incomingEmission.R*material.Glossiness,
-					G: float32(cosineNewRayAndNormal2)*incomingEmission2.G*material.Color.G*projectionColor.G*(1.0-material.Glossiness) + float32(cosineNewRayAndNormal)*incomingEmission.G*material.Glossiness,
-					B: float32(cosineNewRayAndNormal2)*incomingEmission2.B*material.Color.B*projectionColor.B*(1.0-material.Glossiness) + float32(cosineNewRayAndNormal)*incomingEmission.B*material.Glossiness,
-					// R: material.Color.R * float32(cosineNewRayAndNormal) * projectionColor.R * incomingEmission.R,
-					// G: material.Color.G * float32(cosineNewRayAndNormal) * projectionColor.G * incomingEmission.G,
-					// B: material.Color.B * float32(cosineNewRayAndNormal) * projectionColor.B * incomingEmission.B,
+					R: material.Color.R * float32(cosineNewRayAndNormal) * projectionColor.R * incomingEmission.R,
+					G: material.Color.G * float32(cosineNewRayAndNormal) * projectionColor.G * incomingEmission.G,
+					B: material.Color.B * float32(cosineNewRayAndNormal) * projectionColor.B * incomingEmission.B,
+					//R: float32(cosineNewRayAndNormal2)*incomingEmission2.R*material.Color.R*projectionColor.R*(1.0-material.Glossiness) + float32(cosineNewRayAndNormal)*incomingEmission.R*material.Glossiness,
+					//G: float32(cosineNewRayAndNormal2)*incomingEmission2.G*material.Color.G*projectionColor.G*(1.0-material.Glossiness) + float32(cosineNewRayAndNormal)*incomingEmission.G*material.Glossiness,
+					//B: float32(cosineNewRayAndNormal2)*incomingEmission2.B*material.Color.B*projectionColor.B*(1.0-material.Glossiness) + float32(cosineNewRayAndNormal)*incomingEmission.B*material.Glossiness,
 				}
 			}
 

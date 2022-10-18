@@ -99,7 +99,7 @@ func parseLines(lines []string, file *os.File) (*scene.FacetStructure, error) {
 			normals = append(normals, normal)
 		case "f":
 			face, err = parseFace(tokens[1:], vertices, normals, textureVertices)
-			triangleFacets := splitMultiPointFacetToTriangles(face)
+			triangleFacets := face.SplitMultiPointFacet()
 			currentFacetStructure.Facets = append(currentFacetStructure.Facets, triangleFacets...)
 		case "o":
 			fmt.Printf("Object at line %d: %s\n", lineNumber, line) // TODO implement
@@ -291,58 +291,6 @@ func readLines(r io.Reader) ([]string, error) {
 		lines = append(lines, scanner.Text())
 	}
 	return lines, scanner.Err()
-}
-
-// splitMultiPointFacetToTriangles maps a multipoint (> 3 points) face into a list of triangles.
-// The supplied face must have at least 3 points and be a convex face.
-func splitMultiPointFacetToTriangles(facet *scene.Facet) (facets []*scene.Facet) {
-	if len(facet.Vertices) > 3 {
-
-		// Add first triangle of facet
-		var textureVertices []*vec3.T
-		var vertexNormals []*vec3.T
-
-		if len(facet.TextureVertices) >= 3 {
-			textureVertices = []*vec3.T{facet.TextureVertices[0], facet.TextureVertices[1], facet.TextureVertices[2]}
-		}
-
-		if len(facet.VertexNormals) >= 3 {
-			vertexNormals = []*vec3.T{facet.VertexNormals[0], facet.VertexNormals[1], facet.VertexNormals[2]}
-		}
-
-		newFacet := scene.Facet{
-			Vertices:        []*vec3.T{facet.Vertices[0], facet.Vertices[1], facet.Vertices[2]},
-			TextureVertices: textureVertices,
-			VertexNormals:   vertexNormals,
-		}
-		facets = append(facets, &newFacet)
-
-		// Add consecutive triangles of facet
-		for i := 3; i < len(facet.Vertices); i++ {
-			newVertices := []*vec3.T{facet.Vertices[0], facet.Vertices[i-1], facet.Vertices[i]}
-
-			var newTextureVertices []*vec3.T
-			if len(facet.TextureVertices) > 0 {
-				newTextureVertices = []*vec3.T{facet.TextureVertices[0], facet.TextureVertices[i-1], facet.TextureVertices[i]}
-			}
-
-			var newVertexNormals []*vec3.T
-			if len(facet.VertexNormals) > 0 {
-				newVertexNormals = []*vec3.T{facet.VertexNormals[0], facet.VertexNormals[i-1], facet.VertexNormals[i]}
-			}
-
-			newFace := scene.Facet{
-				Vertices:        newVertices,
-				TextureVertices: newTextureVertices,
-				VertexNormals:   newVertexNormals,
-			}
-			facets = append(facets, &newFace)
-		}
-	} else {
-		facets = append(facets, facet)
-	}
-
-	return facets
 }
 
 func parseFace(pointTokens []string, vertices []*vec3.T, normals []*vec3.T, textureVertices []*vec3.T) (*scene.Facet, error) {
