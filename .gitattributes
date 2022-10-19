@@ -8,3 +8,5 @@
 *.mtl filter=lfs diff=lfs merge=lfs -text
 documentation/gallery/cornellbox_03.png !filter !diff !merge -text
 documentation/gallery/cornellbox_04.png !filter !diff !merge -text
+documentation/gallery/recursive_spheres_01.png !filter !diff !merge -text
+documentation/gallery/spherical_projection_01.png !filter !diff !merge -text

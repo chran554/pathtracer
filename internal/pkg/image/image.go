@@ -55,7 +55,7 @@ func (image *FloatImage) SetPixel(x, y int, color *color.Color) {
 func LoadImageData(filename string, gamma float64) *FloatImage {
 	textureImage, err := getImageFromFilePath(filename)
 	if err != nil {
-		fmt.Printf("image file \"%s\" could not be loaded\n", filename)
+		fmt.Printf("image file \"%s\" could not be loaded: %s\n", filename, err.Error())
 		os.Exit(1)
 	}
 
