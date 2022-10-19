@@ -15,7 +15,7 @@ Nope, nothing to brag about yet.... :/
 
 .The classic Cornell box. Color bleeding. Lightning fixed for raw image in post render editor.
 image::cornellbox_03.png[Cornell box]
-.Cornell box details
+.Cornell box image details
 ----
 Image size:        800x500
 Amount samples:    4096
@@ -23,6 +23,24 @@ Max recursion:     5
 Amount facets:     12
 Amount spheres:    2
 Frame render time: 14h10m18.07531675s
+----
+
+==== Image projection - Spherical
+
+Spherical projection is made from equirectangular images and allow for an image to be projected onto an object from all angles.
+
+A nifty feature is that you can place your actual scene (objects), camera and lighting within a sphere with spherical projection and you will get an environmental projection dome (sphere) as background.
+
+.Spherical projection
+image::spherical_projection_01.png[Spherical projection]
+
+.Spherical projection as environmental projection
+image::recursive_spheres_01.png[Spherical projection - environmental projection]
+.Image details
+----
+Amount samples/pixel:   1024
+Max recursion:          8
+Amount spheres:         4688
 ----
 
 === Metallic like settings "glossy" and "roughness"
