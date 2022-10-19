@@ -48,6 +48,7 @@ func main() {
 	if err != nil {
 		fmt.Printf("ouupps, something went wrong loading file: '%s'\n%s\n", cornellBoxFilenamePath, err.Error())
 	}
+	defer cornellBoxFile.Close()
 
 	scale := 100.0
 	cornellBox, err := obj.Read(cornellBoxFile)

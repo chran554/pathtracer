@@ -47,6 +47,15 @@ func Read(file *os.File) (*scene.FacetStructure, error) {
 	return facetStructure, nil
 }
 
+func Write(objFile, matFile *os.File, facetStructure *scene.FacetStructure) error {
+	writer := bufio.NewWriter(objFile)
+
+	// TODO Implement...
+
+	writer.Flush()
+	return nil
+}
+
 func parseLines(lines []string, file *os.File) (*scene.FacetStructure, error) {
 	rootFacetStructure := &scene.FacetStructure{}
 	currentFacetStructure := rootFacetStructure
@@ -171,6 +180,7 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 	if err != nil {
 		fmt.Printf("ouupps, something went wrong opening material file: '%s'\n%s\n", materialFile, err.Error())
 	}
+	defer f.Close()
 
 	reader := bufio.NewReader(f)
 	lines, err := readLines(reader)

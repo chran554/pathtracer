@@ -90,6 +90,7 @@ func main() {
 		if err != nil {
 			fmt.Printf("ouupps, something went wrong loading file: '%s'\n%s\n", filename, err.Error())
 		}
+		defer f.Close()
 
 		facetStructure, err := obj.Read(f)
 		if err != nil {

@@ -206,21 +206,22 @@ func (fs *FacetStructure) RotateX(rotationOrigin *vec3.T, angle float64) {
 func (fs *FacetStructure) RotateY(rotationOrigin *vec3.T, angle float64) {
 	rotatedPoints := make(map[*vec3.T]bool)
 	rotatedNormals := make(map[*vec3.T]bool)
+	rotatedVertexNormals := make(map[*vec3.T]bool)
 
 	rotationMatrix := mat3.T{}
 	rotationMatrix.AssignYRotation(angle)
 
-	fs.rotateY(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals)
+	fs.rotateY(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
 }
 
-func (fs *FacetStructure) rotateY(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool) {
+func (fs *FacetStructure) rotateY(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool) {
 	for _, facet := range fs.Facets {
-		facet.rotateY(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals)
+		facet.rotateY(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
 	}
 
 	if len(fs.FacetStructures) > 0 {
 		for _, facetStructure := range fs.FacetStructures {
-			facetStructure.rotateY(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals)
+			facetStructure.rotateY(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
 		}
 	}
 }
@@ -392,14 +393,15 @@ func (f *Facet) RotateX(rotationOrigin *vec3.T, angle float64) {
 func (f *Facet) RotateY(rotationOrigin *vec3.T, angle float64) {
 	rotatedPoints := make(map[*vec3.T]bool)
 	rotatedNormals := make(map[*vec3.T]bool)
+	rotatedVertexNormals := make(map[*vec3.T]bool)
 
 	rotationMatrix := mat3.T{}
 	rotationMatrix.AssignYRotation(angle)
 
-	f.rotateY(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals)
+	f.rotateY(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
 }
 
-func (f *Facet) rotateY(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool) {
+func (f *Facet) rotateY(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool) {
 	for _, vertex := range f.Vertices {
 		if rotatedPoints[vertex] {
 			// fmt.Printf("Point already rotated: %+v\n", vertex)
@@ -416,16 +418,27 @@ func (f *Facet) rotateY(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPo
 		}
 	}
 
+	if rotatedNormals[f.Normal] {
+		// fmt.Printf("Normal already rotated: %+v\n", f.Normal)
+	} else {
+		rotatedNormal := rotationMatrix.MulVec3(f.Normal)
+		f.Normal[0] = rotatedNormal[0]
+		f.Normal[1] = rotatedNormal[1]
+		f.Normal[2] = rotatedNormal[2]
+
+		rotatedNormals[f.Normal] = true
+	}
+
 	for _, vertexNormal := range f.VertexNormals {
-		if rotatedNormals[vertexNormal] {
-			// fmt.Printf("Normal already rotated: %+v\n", vertexNormal)
+		if rotatedVertexNormals[vertexNormal] {
+			// fmt.Printf("Vertex normal already rotated: %+v\n", vertexNormal)
 		} else {
 			rotatedNormal := rotationMatrix.MulVec3(vertexNormal)
 			vertexNormal[0] = rotatedNormal[0]
 			vertexNormal[1] = rotatedNormal[1]
 			vertexNormal[2] = rotatedNormal[2]
 
-			rotatedNormals[vertexNormal] = true
+			rotatedVertexNormals[vertexNormal] = true
 		}
 	}
 }
@@ -549,8 +562,8 @@ func (sn *SceneNode) GetFacetStructures() []*FacetStructure {
 type Material struct {
 	Color           color.Color      `json:"Color,omitempty"`
 	Emission        *color.Color     `json:"Emission,omitempty"`
-	Glossiness      float32          `json:"Glossiness,omitempty"` // Glossiness is the percent amount that will make out specular reflection. Values [0.0 .. 1.0] with default 0.0. Lower value the more diffuse color will appear and higher the more
-	Roughness       float32          `json:"Roughness,omitempty"`  // Roughness is the diffuse spread of the specular reflection. Values [0.0 .. 1.0] with default 0.0. Lower is like brushed metal and higher value more mirror like.
+	Glossiness      float32          `json:"Glossiness,omitempty"` // Glossiness is the percent amount that will make out specular reflection. Values [0.0 .. 1.0] with default 0.0. Lower value the more diffuse color will appear and higher value the more mirror reflection will appear.
+	Roughness       float32          `json:"Roughness,omitempty"`  // Roughness is the diffuse spread of the specular reflection. Values [0.0 .. 1.0] with default 0.0. Lower is like "brushed metal" or "foggy/hazy reflection" and higher value give a more mirror like reflection. A value of 0.0 is perfect mirror reflection and a value of 0.0 is a perfect diffuse material (no mirror at al).
 	Projection      *ImageProjection `json:"Projection,omitempty"`
 	RefractionIndex float64
 	Transparency    float64

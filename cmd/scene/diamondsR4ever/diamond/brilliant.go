@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/ungerik/go3d/float64/vec3"
 	"math"
-	"pathtracer/internal/pkg/color"
 	scn "pathtracer/internal/pkg/scene"
 )
 
@@ -19,15 +18,7 @@ import (
 //
 // Information: https://www.capediamonds.co.za/diamond-info/brilliant-cut/
 // https://www.gia.edu/diamond-cut/diamond-cut-anatomy-round-brilliant
-func GetDiamondRoundBrilliantCut(scale float64) *scn.FacetStructure {
-	diamondMaterial := scn.Material{
-		Color:           color.Color{R: 0.9, G: 0.6, B: 0.6},
-		Glossiness:      0.0,
-		Roughness:       1.0,
-		RefractionIndex: 2.42,
-		Transparency:    0.0,
-	}
-
+func GetDiamondRoundBrilliantCut(scale float64, material scn.Material) *scn.FacetStructure {
 	// The girdle diameter of the diamond is the average widest diameter of the diamond when viewed from above.
 	// The girdle diameter measurement is key as it determines the proportions of the brilliant cut diamond.
 	// Most percentage proportions of the brilliant cut round diamond are calculated as percentages of the girdle diameter.
@@ -39,6 +30,7 @@ func GetDiamondRoundBrilliantCut(scale float64) *scn.FacetStructure {
 	pavilionAngleDegrees := 40.9                   // According to Marcel Tolkowsky, the optimal pavilion angle degree is 40.75. However, unless you are looking for a super-ideal diamond cut with a pavilion angle of 40.9 degrees, opting for stone within a range of 40.6 – 41 degrees is safe, providing other parameters meet their recommended ranges.
 	lowerHalfFacetSizeRelativeGirdleRadius := 0.77 //
 	culetDiameter := 0.0                           // Do not change this from value 0.0. Culet facet is not included in 3D model. Only diamonds with "pointed" or "None" culet are created.
+	girdleHeightRelativeGirdleRadius := 0.03       // Girdle height in percent of girdle radius. At least nn percent for "razor sharp" edges. nn% = "THIN", nn% = "MEDUIM" ..
 
 	// Create crown
 
@@ -62,9 +54,29 @@ func GetDiamondRoundBrilliantCut(scale float64) *scn.FacetStructure {
 
 	amountTableCorners := 8
 	tableFacetPoints := calculateTableFacetPoints(amountTableCorners, tableRadius, crownHeight)
-	girdleBezelPoints := calculateGirdleBezelPoints(amountTableCorners, girdleDiameter, crownHeight)
-	girdleUpperHalfPoints := calculateGirdleUpperHalfPoints(amountTableCorners, girdleDiameter, crownHeight)
+	girdleBezelPoints := calculateGirdlePoints(amountTableCorners, girdleDiameter, 0.0)
+	upperHalfFacetGirdlePoints := calculateGirdleHalfPoints(amountTableCorners, girdleDiameter, 0.0)
+	lowerHalfFacetGirdlePoints := calculateGirdleHalfPoints(amountTableCorners, girdleDiameter, -girdleDiameter*girdleHeightRelativeGirdleRadius)
+	girdlePavilionMainPoints := calculateGirdlePoints(amountTableCorners, girdleDiameter, -girdleDiameter*girdleHeightRelativeGirdleRadius)
 	starTipPoints := calculateStarTipPoints(tableFacetPoints, girdleBezelPoints, tableRadius, girdleToTableLength, starSizeRelativeCrownSide, crownHeight)
+	girdleUpperPoints := make([]*vec3.T, amountTableCorners*4)
+	girdleLowerPoints := make([]*vec3.T, amountTableCorners*4)
+
+	// Update girdle upper points
+	for i, point := range girdleBezelPoints {
+		girdleUpperPoints[i*4] = point
+	}
+	for i, point := range upperHalfFacetGirdlePoints {
+		girdleUpperPoints[i*4+2] = point
+	}
+
+	// Update girdle lower points
+	for i, point := range girdlePavilionMainPoints {
+		girdleLowerPoints[i*4] = point
+	}
+	for i, point := range lowerHalfFacetGirdlePoints {
+		girdleLowerPoints[i*4+2] = point
+	}
 
 	// Crown "table"-facet (i.e. top flat facet, 8 equally sided facet)
 
@@ -107,16 +119,16 @@ func GetDiamondRoundBrilliantCut(scale float64) *scn.FacetStructure {
 	}
 
 	// Upper half facet (the triangle facets on the crown closest to the girdle)
-	var upperHalfPairFacets []*scn.Facet
-	amountUpperHalfPairFacets := amountTableCorners
-	for upperHalfPairFacetIndex := 0; upperHalfPairFacetIndex < amountUpperHalfPairFacets; upperHalfPairFacetIndex++ {
-		pb1 := girdleBezelPoints[upperHalfPairFacetIndex]
-		pb2 := girdleBezelPoints[(upperHalfPairFacetIndex+1)%amountUpperHalfPairFacets]
-		ps := starTipPoints[upperHalfPairFacetIndex]
-		p2 := girdleUpperHalfPoints[upperHalfPairFacetIndex]
+	var upperHalfFacets []*scn.Facet
+	amountUpperHalfFacetPairs := amountTableCorners
+	for upperHalfFacetPairIndex := 0; upperHalfFacetPairIndex < amountUpperHalfFacetPairs; upperHalfFacetPairIndex++ {
+		pb1 := girdleBezelPoints[upperHalfFacetPairIndex]
+		pb2 := girdleBezelPoints[(upperHalfFacetPairIndex+1)%amountUpperHalfFacetPairs]
+		ps := starTipPoints[upperHalfFacetPairIndex]
+		p2 := upperHalfFacetGirdlePoints[upperHalfFacetPairIndex]
 
-		upperHalfPairBaseAngle := (float64(upperHalfPairFacetIndex) / float64(amountUpperHalfPairFacets)) * (2.0 * math.Pi)
-		upperHalfPairSubAngleIncrement := (2.0 * math.Pi) / (float64(amountUpperHalfPairFacets) * 4.0) // 5 girdle corners for each upper half pair facets set
+		upperHalfPairBaseAngle := (float64(upperHalfFacetPairIndex) / float64(amountUpperHalfFacetPairs)) * (2.0 * math.Pi)
+		upperHalfPairSubAngleIncrement := (2.0 * math.Pi) / (float64(amountUpperHalfFacetPairs) * 4.0) // 5 girdle corners for each upper half pair facets set
 
 		plane1 := scn.NewPlane(ps, pb1, p2, "", nil)
 		gp1Angle := upperHalfPairBaseAngle + 1.0*upperHalfPairSubAngleIncrement
@@ -139,14 +151,16 @@ func GetDiamondRoundBrilliantCut(scale float64) *scn.FacetStructure {
 			Vertices: []*vec3.T{ps, p2, p3, pb2},
 		}
 
-		upperHalfPairFacets = append(upperHalfPairFacets, &upperHalfPairFacet1, &upperHalfPairFacet2)
+		girdleUpperPoints[upperHalfFacetPairIndex*4+1] = p1
+		girdleUpperPoints[upperHalfFacetPairIndex*4+3] = p3
+		upperHalfFacets = append(upperHalfFacets, &upperHalfPairFacet1, &upperHalfPairFacet2)
 	}
 
 	// Pavilion facets
 
 	pavilionPoint := &vec3.T{0, -pavilionHeight, 0}
 
-	lowerHalfTipPoints := calculateLowerHalfTipPoints(amountTableCorners, pavilionHeight, lowerHalfFacetSizeRelativeGirdleRadius, girdleDiameter, girdleBezelPoints, pavilionPoint)
+	lowerHalfTipPoints := calculateLowerHalfTipPoints(amountTableCorners, pavilionHeight, lowerHalfFacetSizeRelativeGirdleRadius, girdleDiameter, girdlePavilionMainPoints, pavilionPoint)
 
 	// Pavilion - Main facets (the kite like, 4 sided, facet of the pavilion)
 	var pavilionMainFacets []*scn.Facet
@@ -154,7 +168,7 @@ func GetDiamondRoundBrilliantCut(scale float64) *scn.FacetStructure {
 	for pavilionMainFacetIndex := 0; pavilionMainFacetIndex < amountPavilionMainFacets; pavilionMainFacetIndex++ {
 		pavilionMainFacet := scn.Facet{
 			Vertices: []*vec3.T{
-				girdleBezelPoints[pavilionMainFacetIndex],
+				girdlePavilionMainPoints[pavilionMainFacetIndex],
 				lowerHalfTipPoints[pavilionMainFacetIndex],
 				pavilionPoint,
 				lowerHalfTipPoints[(pavilionMainFacetIndex+amountPavilionMainFacets-1)%amountPavilionMainFacets],
@@ -164,52 +178,80 @@ func GetDiamondRoundBrilliantCut(scale float64) *scn.FacetStructure {
 	}
 
 	// Pavilion - Lower half pair facets
-	var lowerHalfPairFacets []*scn.Facet
+	var lowerHalfFacets []*scn.Facet
 	amountLowerHalfPairFacets := amountTableCorners
 	for lowerHalfFacetPairIndex := 0; lowerHalfFacetPairIndex < amountLowerHalfPairFacets; lowerHalfFacetPairIndex++ {
-		lowerHalfPairFacet1 := scn.Facet{
-			Vertices: []*vec3.T{
-				girdleUpperHalfPoints[lowerHalfFacetPairIndex],
-				lowerHalfTipPoints[lowerHalfFacetPairIndex],
-				girdleBezelPoints[lowerHalfFacetPairIndex],
-			},
-		}
-		lowerHalfPairFacet2 := scn.Facet{
-			Vertices: []*vec3.T{
-				girdleBezelPoints[(lowerHalfFacetPairIndex+1)%amountLowerHalfPairFacets],
-				lowerHalfTipPoints[lowerHalfFacetPairIndex],
-				girdleUpperHalfPoints[lowerHalfFacetPairIndex],
-			},
-		}
+		pb1 := girdlePavilionMainPoints[lowerHalfFacetPairIndex]
+		pb2 := girdlePavilionMainPoints[(lowerHalfFacetPairIndex+1)%amountLowerHalfPairFacets]
+		ps := lowerHalfTipPoints[lowerHalfFacetPairIndex]
+		p2 := lowerHalfFacetGirdlePoints[lowerHalfFacetPairIndex]
 
-		lowerHalfPairFacets = append(lowerHalfPairFacets, &lowerHalfPairFacet1, &lowerHalfPairFacet2)
+		lowerHalfPairBaseAngle := (float64(lowerHalfFacetPairIndex) / float64(amountLowerHalfPairFacets)) * (2.0 * math.Pi)
+		lowerHalfPairSubAngleIncrement := (2.0 * math.Pi) / (float64(amountLowerHalfPairFacets) * 4.0) // 5 girdle corners for each upper half pair facets set
+
+		plane1 := scn.NewPlane(ps, pb1, p2, "", nil)
+		gp1Angle := lowerHalfPairBaseAngle + 1.0*lowerHalfPairSubAngleIncrement
+		gp1 := &vec3.T{girdleRadius * math.Cos(gp1Angle), 0, girdleRadius * math.Sin(gp1Angle)}
+		//gp1 := vec3.Interpolate(pb1, p2, 0.5)
+		p1 := verticalLinePlaneIntersection(plane1, gp1)
+
+		plane2 := scn.NewPlane(ps, p2, pb2, "", nil)
+		gp2Angle := lowerHalfPairBaseAngle + 3.0*lowerHalfPairSubAngleIncrement
+		gp2 := &vec3.T{girdleRadius * math.Cos(gp2Angle), 0, girdleRadius * math.Sin(gp2Angle)}
+		//gp2 := vec3.Interpolate(p2, pb2, 0.5)
+		p3 := verticalLinePlaneIntersection(plane2, gp2)
+
+		lowerHalfPairFacet1 := scn.Facet{Vertices: []*vec3.T{ps, pb1, p1, p2}}
+		lowerHalfPairFacet2 := scn.Facet{Vertices: []*vec3.T{ps, p2, p3, pb2}}
+
+		girdleLowerPoints[lowerHalfFacetPairIndex*4+1] = p1
+		girdleLowerPoints[lowerHalfFacetPairIndex*4+3] = p3
+		lowerHalfFacets = append(lowerHalfFacets, &lowerHalfPairFacet1, &lowerHalfPairFacet2)
 	}
+
+	// Girdle
+	var girdleFacets []*scn.Facet
+	amountGirdleFacets := len(girdleUpperPoints)
+	for i := 0; i < amountGirdleFacets; i++ {
+		girdleFacet := scn.Facet{Vertices: []*vec3.T{girdleUpperPoints[i], girdleLowerPoints[i], girdleLowerPoints[(i+1)%amountGirdleFacets], girdleUpperPoints[(i+1)%amountGirdleFacets]}}
+		girdleFacets = append(girdleFacets, &girdleFacet)
+	}
+
+	// Diamond assembly
 
 	crown := scn.FacetStructure{
 		Name:     "Crown",
-		Material: &diamondMaterial,
+		Material: &material,
 		Facets:   []*scn.Facet{},
 	}
 
 	crown.Facets = append(crown.Facets, &table)
 	crown.Facets = append(crown.Facets, starFacets...)
 	crown.Facets = append(crown.Facets, bezelFacets...)
-	crown.Facets = append(crown.Facets, upperHalfPairFacets...)
+	crown.Facets = append(crown.Facets, upperHalfFacets...)
 
-	pavilion := scn.FacetStructure{
-		Name:     "Pavilion",
-		Material: &diamondMaterial,
+	girdle := scn.FacetStructure{
+		Name:     "Girdle",
+		Material: &material,
 		Facets:   []*scn.Facet{},
 	}
 
-	pavilion.Facets = append(pavilion.Facets, lowerHalfPairFacets...)
+	girdle.Facets = append(girdle.Facets, girdleFacets...)
+
+	pavilion := scn.FacetStructure{
+		Name:     "Pavilion",
+		Material: &material,
+		Facets:   []*scn.Facet{},
+	}
+
+	pavilion.Facets = append(pavilion.Facets, lowerHalfFacets...)
 	pavilion.Facets = append(pavilion.Facets, pavilionMainFacets...)
 
 	diamond := scn.FacetStructure{
 		Name: "Diamond",
 		//FacetStructures: []*scn.FacetStructure{&crown},
 		// FacetStructures: []*scn.FacetStructure{&pavilion},
-		FacetStructures: []*scn.FacetStructure{&crown, &pavilion},
+		FacetStructures: []*scn.FacetStructure{&crown, &pavilion, &girdle},
 	}
 
 	// Girdle thickness:
@@ -222,13 +264,14 @@ func GetDiamondRoundBrilliantCut(scale float64) *scn.FacetStructure {
 	diamond.UpdateBounds()
 
 	fmt.Printf("Crown bounds:    %+v\n", crown.Bounds)
+	fmt.Printf("Girdle bounds:   %+v\n", girdle.Bounds)
 	fmt.Printf("Pavilion bounds: %+v\n", pavilion.Bounds)
 	fmt.Printf("Diamond bounds:  %+v\n", diamond.Bounds)
 
 	return &diamond
 }
 
-func calculateLowerHalfTipPoints(amountTableCorners int, pavilionDepth float64, lowerHalfFacetSizeRelativeGirdleRadius float64, girdleDiameter float64, girdleBezelPoints []*vec3.T, pavilionPoint *vec3.T) []*vec3.T {
+func calculateLowerHalfTipPoints(amountTableCorners int, pavilionDepth float64, lowerHalfFacetSizeRelativeGirdleRadius float64, girdleDiameter float64, girdlePavilionMainPoints []*vec3.T, pavilionPoint *vec3.T) []*vec3.T {
 	var lowerHalfTipPoints []*vec3.T
 	amountPavilionMainFacets := amountTableCorners
 	for pavilionMainFacetIndex := 0; pavilionMainFacetIndex < amountPavilionMainFacets; pavilionMainFacetIndex++ {
@@ -236,7 +279,7 @@ func calculateLowerHalfTipPoints(amountTableCorners int, pavilionDepth float64, 
 		pavilionMainAngle := pavilionMainAngleProgress * 2.0 * math.Pi
 		pavilionMainSidePointAngle := pavilionMainAngle + math.Pi/8.0
 
-		girdleEdgePoint := girdleBezelPoints[pavilionMainFacetIndex]
+		girdleEdgePoint := girdlePavilionMainPoints[pavilionMainFacetIndex]
 		pavilionMainFacetPlane := pavilionMainFacetPlane(pavilionPoint, girdleEdgePoint)
 
 		girdleRadius := girdleDiameter / 2.0
@@ -279,24 +322,32 @@ func calculateStarTipPoints(tableFacetPoints []*vec3.T, girdleBezelPoints []*vec
 	return starTipPoints
 }
 
-func calculateGirdleBezelPoints(amountTableCorners int, girdleDiameter float64, crownHeight float64) []*vec3.T {
-	var girdleBezelPoints []*vec3.T
-	amountBezelFacets := amountTableCorners
-	for bezelFacetIndex := 0; bezelFacetIndex < amountBezelFacets; bezelFacetIndex++ {
-		girdleEdgePoint := girdleEdgePoint(bezelFacetIndex, amountBezelFacets, girdleDiameter, crownHeight)
-		girdleBezelPoints = append(girdleBezelPoints, &girdleEdgePoint)
+func calculateGirdlePoints(amountPoints int, girdleDiameter float64, yPosition float64) []*vec3.T {
+	var girdlePoints []*vec3.T
+	for pointIndex := 0; pointIndex < amountPoints; pointIndex++ {
+		girdleEdgePoint := girdlePoint(pointIndex, amountPoints, girdleDiameter, yPosition)
+		girdlePoints = append(girdlePoints, &girdleEdgePoint)
 	}
-	return girdleBezelPoints
+	return girdlePoints
 }
 
-func calculateGirdleUpperHalfPoints(amountTableCorners int, girdleDiameter float64, crownHeight float64) []*vec3.T {
+func girdlePoint(girdlePointIndex int, amountPoints int, girdleDiameter float64, yPosition float64) vec3.T {
+	bezelTipAngleProgress := float64(girdlePointIndex) / float64(amountPoints)
+	x3 := (girdleDiameter / 2.0) * math.Cos(bezelTipAngleProgress*2.0*math.Pi)
+	y3 := yPosition
+	z3 := (girdleDiameter / 2.0) * math.Sin(bezelTipAngleProgress*2.0*math.Pi)
+	girdleEdgePoint := vec3.T{x3, y3, z3}
+	return girdleEdgePoint
+}
+
+func calculateGirdleHalfPoints(amountTableCorners int, girdleDiameter float64, yPosition float64) []*vec3.T {
 	var girdleUpperHalfPoints []*vec3.T
 	amountBezelFacetSets := amountTableCorners
 	for girdlePointIndex := 0; girdlePointIndex < amountBezelFacetSets; girdlePointIndex++ {
 		bezelTipAngleProgress := float64(girdlePointIndex) / float64(amountBezelFacetSets)
 		pointAngle := bezelTipAngleProgress*2.0*math.Pi + math.Pi/8.0
 		x3 := (girdleDiameter / 2.0) * math.Cos(pointAngle)
-		y3 := crownHeight - crownHeight
+		y3 := yPosition
 		z3 := (girdleDiameter / 2.0) * math.Sin(pointAngle)
 		girdleEdgePoint := vec3.T{x3, y3, z3}
 
@@ -314,15 +365,6 @@ func calculateTableFacetPoints(amountTableCorners int, tableRadius float64, crow
 		tableFacetPoints = append(tableFacetPoints, &vec3.T{x, crownHeight, z})
 	}
 	return tableFacetPoints
-}
-
-func girdleEdgePoint(girdlePointIndex int, amountGirdlePoints int, girdleDiameter float64, crownHeight float64) vec3.T {
-	bezelTipAngleProgress := float64(girdlePointIndex) / float64(amountGirdlePoints)
-	x3 := (girdleDiameter / 2.0) * math.Cos(bezelTipAngleProgress*2.0*math.Pi)
-	y3 := crownHeight - crownHeight
-	z3 := (girdleDiameter / 2.0) * math.Sin(bezelTipAngleProgress*2.0*math.Pi)
-	girdleEdgePoint := vec3.T{x3, y3, z3}
-	return girdleEdgePoint
 }
 
 func verticalLinePlaneIntersection(plane *scn.Plane, linePoint *vec3.T) *vec3.T {

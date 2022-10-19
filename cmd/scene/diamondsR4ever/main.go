@@ -18,17 +18,15 @@ var animationName = "diamondsR4ever"
 var cornellBoxFilename = "cornellbox.obj"
 var cornellBoxFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/" + cornellBoxFilename
 
-var amountAnimationFrames = 1
-
-var ballRadius float64 = 60
+var amountAnimationFrames = 60
 
 var imageWidth = 800
 var imageHeight = 800
-var magnification = 1.0 // * 0.5
+var magnification = 1.0
 
 var renderType = scn.Pathtracing
 var maxRecursionDepth = 2
-var amountSamples = 128 // * 50 / 4
+var amountSamples = 128 * 8
 var lensRadius float64 = 0
 var antiAlias = true
 
@@ -46,65 +44,104 @@ func main() {
 
 	roomScale := 100.0
 	// cornellBox := getCornellBox(cornellBoxFilenamePath, 100.0)
-	diamond := diamond.GetDiamondRoundBrilliantCut(75.0)
-	diamond.UpdateBounds()
 
-	/*	environmentSphere := scn.Sphere{
-			Name:   "Environment light",
-			Origin: vec3.T{0, 0, 0},
-			Radius: roomScale * 10,
-			Material: &scn.Material{
-				Color:         color.Color{R: 1.0, G: 1.0, B: 1.0},
-				Emission:      &color.Color{R: 0.1, G: 0.1, B: 0.1},
-				RayTerminator: true,
+	environmentSphere := scn.Sphere{
+		Name:   "Environment light",
+		Origin: vec3.T{0, 0, 0},
+		Radius: 1000 * 1000 * 1000,
+		Material: &scn.Material{
+			Color:         color.Color{R: 1.0, G: 1.0, B: 1.0},
+			Emission:      &color.Color{R: 1.0, G: 1.0, B: 1.0},
+			RayTerminator: true,
+			Projection: &scn.ImageProjection{
+				ProjectionType: scn.Spherical,
+				ImageFilename:  "textures/planets/environmentmap/Stellarium3.jpeg",
+				Origin:         vec3.T{0, 0, 0},
+				U:              vec3.T{1, 0, 0},
+				V:              vec3.T{0, 1, 0},
+				RepeatU:        false,
+				RepeatV:        false,
+				FlipU:          false,
+				FlipV:          false,
+				Gamma:          0,
 			},
-		}
-	*/
+		},
+	}
+
 	lamp1 := scn.Sphere{
 		Name:   "Lamp1",
 		Origin: vec3.T{roomScale * 2.0, roomScale * 0.5, -roomScale * 1.0},
 		Radius: roomScale * 0.8,
 		Material: &scn.Material{
 			Color:         color.Color{R: 1.0, G: 1.0, B: 1.0},
-			Emission:      &color.Color{R: 15.0, G: 15.0, B: 15.0},
+			Emission:      &color.Color{R: 20.0, G: 20.0, B: 20.0},
 			RayTerminator: false,
 		},
 	}
 
 	lamp2 := scn.Sphere{
 		Name:   "Lamp2",
-		Origin: vec3.T{-roomScale * 2.0, roomScale * 2.0, -roomScale * 1.0},
+		Origin: vec3.T{-roomScale * 2.0, roomScale * 0.5, -roomScale * 1.0},
 		Radius: roomScale * 0.8,
 		Material: &scn.Material{
 			Color:         color.Color{R: 1.0, G: 1.0, B: 1.0},
-			Emission:      &color.Color{R: 3.0, G: 3.0, B: 3.0},
+			Emission:      &color.Color{R: 9.0, G: 9.0, B: 9.0},
 			RayTerminator: false,
 		},
 	}
 
-	floorLevel := diamond.Bounds.Ymin
+	diamondMaterial := scn.Material{
+		Color:           color.Color{R: 0.4, G: 0.4, B: 0.4},
+		Glossiness:      0.8,
+		Roughness:       0.005,
+		RefractionIndex: 2.42,
+		Transparency:    0.0,
+	}
+
+	diamond2 := diamond.GetDiamondRoundBrilliantCut(75.0, diamondMaterial)
+	diamond2.UpdateBounds()
+	floorLevel := diamond2.Bounds.Ymin
+
 	floor := scn.Disc{
 		Name:   "Floor",
 		Origin: &vec3.T{0, floorLevel, 0},
 		Normal: &vec3.T{0, 1, 0},
-		Radius: roomScale * 10,
+		Radius: roomScale * 1.5,
 		Material: &scn.Material{
-			Color:         color.Color{R: 0.90, G: 0.85, B: 0.95},
-			Roughness:     1.0,
+			Color:         color.Color{R: 1.5, G: 1.5, B: 1.5},
+			Roughness:     0.1,
+			Glossiness:    0.8,
 			RayTerminator: false,
+			Projection: &scn.ImageProjection{
+				ProjectionType: scn.Parallel,
+				ImageFilename:  "textures/white_marble.png",
+				Origin:         vec3.T{0, 0, 0},
+				U:              vec3.T{roomScale * 1.5 * 2, 0, 0},
+				V:              vec3.T{0, 0, roomScale * 1.5 * 2},
+				RepeatU:        true,
+				RepeatV:        true,
+				FlipU:          false,
+				FlipV:          false,
+				Gamma:          0,
+			},
 		},
 	}
 
-	scene := scn.SceneNode{
-		Spheres:         []*scn.Sphere{&lamp1, &lamp2},
-		Discs:           []*scn.Disc{&floor},
-		FacetStructures: []*scn.FacetStructure{diamond},
-	}
-
+	animationStep := 1.0 / float64(amountAnimationFrames)
 	for animationFrameIndex := 0; animationFrameIndex < amountAnimationFrames; animationFrameIndex++ {
-		animationStep := 1.0 / float64(amountAnimationFrames)
-		// animationProgress := float64(animationFrameIndex) * animationStep
-		diamond.RotateY(&vec3.Zero, animationStep*(math.Pi*2.0/8.0))
+		animationProgress := float64(animationFrameIndex) * animationStep
+
+		diamond := diamond.GetDiamondRoundBrilliantCut(75.0, diamondMaterial)
+		diamond.RotateY(&vec3.Zero, animationProgress*(math.Pi*2.0/8.0))
+		diamond.RotateZ(&vec3.Zero, -15.0*animationStep*(math.Pi*2.0/8.0))
+		diamond.RotateY(&vec3.Zero, 10.0*animationStep*(math.Pi*2.0/8.0))
+		diamond.UpdateBounds()
+
+		scene := scn.SceneNode{
+			Spheres:         []*scn.Sphere{&lamp1, &lamp2, &environmentSphere},
+			Discs:           []*scn.Disc{&floor},
+			FacetStructures: []*scn.FacetStructure{diamond},
+		}
 
 		cameraOrigin := vec3.T{20, roomScale * 0.25, -100}
 		cameraOrigin.Scale(cameraDistanceFactor)
@@ -120,7 +157,8 @@ func main() {
 		//sideAngle := maxSideAngle * -1 * math.Sin(animationProgress*2*math.Pi)
 		//rotationYMatrix := mat3.T{}
 		//rotationYMatrix.AssignYRotation(sideAngle)
-		//animatedCameraOrigin = rotationYMatrix.MulVec3(&animatedCameraOrigin)
+		//animatedCameraOrigin := rotationYMatrix.MulVec3(&cameraOrigin)
+		//animatedCameraOrigin = rotationYMatrix.MulVec3(&canimatedCameraOrigin)
 
 		camera := getCamera(&cameraOrigin, &focusPoint)
 
@@ -142,6 +180,7 @@ func getCornellBox(cornellBoxFilenamePath string, scale float64) *scn.FacetStruc
 	if err != nil {
 		fmt.Printf("ouupps, something went wrong loading file: '%s'\n%s\n", cornellBoxFilenamePath, err.Error())
 	}
+	defer cornellBoxFile.Close()
 
 	cornellBox, err := obj.Read(cornellBoxFile)
 	cornellBox.ScaleUniform(&vec3.Zero, scale)
