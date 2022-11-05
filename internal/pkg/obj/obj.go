@@ -5,10 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/scene"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -47,13 +49,147 @@ func Read(file *os.File) (*scene.FacetStructure, error) {
 	return facetStructure, nil
 }
 
-func Write(objFile, matFile *os.File, facetStructure *scene.FacetStructure) error {
-	writer := bufio.NewWriter(objFile)
+func WriteObjFile(objFile, mtlFile *os.File, facetStructure *scene.FacetStructure) error {
+	objWriter := bufio.NewWriter(objFile)
+	mtlWriter := bufio.NewWriter(mtlFile)
+	defer objWriter.Flush()
+	defer mtlWriter.Flush()
 
-	// TODO Implement...
+	vertexIndexHashMap := make(map[*vec3.T]int)
+	vertexNormalHashMap := make(map[*vec3.T]int)
+	normalHashMap := make(map[*vec3.T]int)
 
-	writer.Flush()
+	extractVectors(facetStructure, vertexIndexHashMap, vertexNormalHashMap, normalHashMap)
+
+	serializeVerticesToObjFile(objWriter, vertexIndexHashMap)
+	serializeVertexNormalsToObjFile(objWriter, vertexNormalHashMap)
+
+	if err := serializeToObjFile(objWriter, mtlWriter, vertexIndexHashMap, vertexNormalHashMap, normalHashMap, facetStructure); err != nil {
+		return fmt.Errorf("could not write obj/mtl file: %w", err)
+	}
+
 	return nil
+}
+
+func serializeVerticesToObjFile(objWriter *bufio.Writer, vertices map[*vec3.T]int) {
+	keys := make([]*vec3.T, 0, len(vertices))
+
+	for key := range vertices {
+		keys = append(keys, key)
+	}
+
+	sort.SliceStable(keys, func(i, j int) bool {
+		return vertices[keys[i]] < vertices[keys[j]]
+	})
+
+	for _, vertex := range keys {
+		// OBJ-files require right hand coordinate system (thus convert from left hand coordinate system by inverting z-axis)
+		objWriter.WriteString(fmt.Sprintf("v %f %f %f\n", vertex[0], vertex[1], -vertex[2]))
+	}
+}
+
+func serializeVertexNormalsToObjFile(objWriter *bufio.Writer, vertexNormals map[*vec3.T]int) {
+	for vertexNormal, _ := range vertexNormals {
+		// OBJ-files require right hand coordinate system (thus convert from left hand coordinate system by inverting z-axis)
+		objWriter.WriteString(fmt.Sprintf("vn %f %f %f\n", vertexNormal[0], vertexNormal[1], -vertexNormal[2]))
+	}
+}
+
+func extractVectors(facetStructure *scene.FacetStructure, vertexIndexHashMap map[*vec3.T]int, vertexNormalHashMap map[*vec3.T]int, normalHashMap map[*vec3.T]int) {
+
+	for _, facet := range facetStructure.Facets {
+
+		for _, vertex := range facet.Vertices {
+			if _, ok := vertexIndexHashMap[vertex]; !ok {
+				vertexIndexHashMap[vertex] = len(vertexIndexHashMap)
+			}
+		}
+
+		if *facet.Normal != vec3.Zero {
+			if _, ok := normalHashMap[facet.Normal]; !ok {
+				normalHashMap[facet.Normal] = len(normalHashMap)
+			}
+		}
+
+		for _, normal := range facet.VertexNormals {
+			if _, ok := vertexNormalHashMap[normal]; !ok {
+				vertexNormalHashMap[normal] = len(vertexNormalHashMap)
+			}
+		}
+	}
+
+	for _, structure := range facetStructure.FacetStructures {
+		extractVectors(structure, vertexIndexHashMap, vertexNormalHashMap, normalHashMap)
+	}
+
+}
+
+func serializeToObjFile(objWriter *bufio.Writer, mtlWriter *bufio.Writer,
+	vertexSet map[*vec3.T]int, vertexNormalSet map[*vec3.T]int, normalSet map[*vec3.T]int,
+	facetStructure *scene.FacetStructure) error {
+
+	if facetStructure.Name != "" {
+		// objWriter.WriteString(fmt.Sprintf("# Object '%s'\n", facetStructure.Name))
+		objWriter.WriteString(fmt.Sprintf("\no %s\n", normalizeName(facetStructure.Name)))
+	}
+
+	if facetStructure.SubstructureName != "" {
+		//objWriter.WriteString(fmt.Sprintf("\n# Object sub structure '%s'\n", normalizeName(facetStructure.SubstructureName)))
+		objWriter.WriteString(fmt.Sprintf("\ng %s\n", normalizeName(facetStructure.SubstructureName)))
+	}
+
+	if facetStructure.Material != nil {
+		objWriter.WriteString(fmt.Sprintf("usemtl %s\n", normalizeName(facetStructure.Material.Name)))
+		serializeMaterial(mtlWriter, facetStructure.Material)
+	}
+
+	if len(facetStructure.Facets) > 0 {
+		objWriter.WriteString("\n")
+		for _, facet := range facetStructure.Facets {
+			objWriter.WriteString("f")
+			for _, facetVertex := range facet.Vertices {
+				if vertexIndex, ok := vertexSet[facetVertex]; ok {
+					objWriter.WriteString(fmt.Sprintf(" %d", vertexIndex+1))
+				} else {
+					fmt.Println("could not find index for facet vertex")
+				}
+			}
+			objWriter.WriteString("\n")
+		}
+	}
+
+	for _, structure := range facetStructure.FacetStructures {
+		if err := serializeToObjFile(objWriter, mtlWriter, vertexSet, vertexNormalSet, normalSet, structure); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func serializeMaterial(mtlWriter *bufio.Writer, material *scene.Material) {
+	mtlWriter.WriteString(fmt.Sprintf("newmtl %s\n", normalizeName(material.Name)))
+
+	mtlWriter.WriteString(fmt.Sprintf("illum 7                           # Transparency: Refraction on; Reflection: Fresnel on and Ray trace on\n"))
+	mtlWriter.WriteString(fmt.Sprintf("Kd %1.5f %1.5f %1.5f        # diffuse color\n", material.Color.R, material.Color.G, material.Color.B))
+	if material.Transparency > 0.0 {
+		mtlWriter.WriteString(fmt.Sprintf("Tf %1.5f %1.5f %1.5f        # transparency\n", material.Transparency, material.Transparency, material.Transparency))
+	}
+
+	if material.Glossiness > 0.0 {
+		mtlWriter.WriteString(fmt.Sprintf("Ks %1.5f %1.5f %1.5f        # glossiness\n", material.Glossiness, material.Glossiness, material.Glossiness))
+		mtlWriter.WriteString(fmt.Sprintf("sharpness %d                    # roughness (inverted)\n", int(math.Round((1.0-float64(material.Roughness))*1000.0))))
+	}
+
+	if material.RefractionIndex > 0.0 {
+		mtlWriter.WriteString(fmt.Sprintf("Ni %1.5f                        # refraction index (for transparency)\n", material.RefractionIndex))
+	}
+
+	mtlWriter.WriteString("\n")
+}
+
+func normalizeName(name string) string {
+	return strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(strings.TrimSpace(name), " ", "_"), ".", "_"), "#", "_")
 }
 
 func parseLines(lines []string, file *os.File) (*scene.FacetStructure, error) {
@@ -136,7 +272,6 @@ func parseLines(lines []string, file *os.File) (*scene.FacetStructure, error) {
 			newFacetStructure := &scene.FacetStructure{}
 			newFacetStructure.Name = materialName // Material name
 			newFacetStructure.Material = materialMap[materialName]
-			// TODO set material to material from mtl-file
 			rootFacetStructure.FacetStructures = append(rootFacetStructure.FacetStructures, newFacetStructure)
 			currentFacetStructure = newFacetStructure
 		default:

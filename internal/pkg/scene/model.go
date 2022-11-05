@@ -35,10 +35,11 @@ type Animation struct {
 }
 
 type FacetStructure struct {
-	Name            string            `json:"Name,omitempty"`
-	Material        *Material         `json:"Material,omitempty"`
-	Facets          []*Facet          `json:"Facets,omitempty"`
-	FacetStructures []*FacetStructure `json:"FacetStructures,omitempty"`
+	Name             string            `json:"Name,omitempty"`
+	SubstructureName string            `json:"SubstructureName,omitempty"`
+	Material         *Material         `json:"Material,omitempty"`
+	Facets           []*Facet          `json:"Facets,omitempty"`
+	FacetStructures  []*FacetStructure `json:"FacetStructures,omitempty"`
 
 	Bounds *Bounds `json:"-"` // Calculated attribute. See UpdateBounds(). Derived from all vertices in all sub facets recursively.
 }
@@ -502,6 +503,10 @@ func (f *Facet) IsMultiPointFacet() bool {
 	return len(f.Vertices) > 3
 }
 
+func (sn *SceneNode) Initialize() {
+	// Empty by intention
+}
+
 func (sn *SceneNode) GetAmountFacets() int {
 	amount := 0
 	for _, facetStructure := range sn.GetFacetStructures() {
@@ -560,14 +565,15 @@ func (sn *SceneNode) GetFacetStructures() []*FacetStructure {
 }
 
 type Material struct {
+	Name            string           `json:"Name,omitempty"`
 	Color           color.Color      `json:"Color,omitempty"`
 	Emission        *color.Color     `json:"Emission,omitempty"`
 	Glossiness      float32          `json:"Glossiness,omitempty"` // Glossiness is the percent amount that will make out specular reflection. Values [0.0 .. 1.0] with default 0.0. Lower value the more diffuse color will appear and higher value the more mirror reflection will appear.
 	Roughness       float32          `json:"Roughness,omitempty"`  // Roughness is the diffuse spread of the specular reflection. Values [0.0 .. 1.0] with default 0.0. Lower is like "brushed metal" or "foggy/hazy reflection" and higher value give a more mirror like reflection. A value of 0.0 is perfect mirror reflection and a value of 0.0 is a perfect diffuse material (no mirror at al).
 	Projection      *ImageProjection `json:"Projection,omitempty"`
-	RefractionIndex float64
-	Transparency    float64
-	RayTerminator   bool
+	RefractionIndex float64          `json:"RefractionIndex,omitempty"`
+	Transparency    float64          `json:"Transparency,omitempty"`
+	RayTerminator   bool             `json:"RayTerminator,omitempty"`
 }
 
 type ImageProjection struct {

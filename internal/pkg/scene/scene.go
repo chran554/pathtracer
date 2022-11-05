@@ -257,10 +257,6 @@ func (imageProjection *ImageProjection) getParallelColor(point *vec3.T) *color.C
 	return imageProjection._image.GetPixel(textureX, textureY)
 }
 
-func (scene *SceneNode) Initialize() {
-	// Empty by intention
-}
-
 func (imageProjection *ImageProjection) ClearProjection() {
 	imageProjection._image = nil
 	imageProjection._invertedCoordinateSystemMatrix = mat3.Zero

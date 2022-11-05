@@ -1,0 +1,258 @@
+= 3D object - brilliant cut diamond
+
+This is a program and algorithm created to produce more precise and parameterized diamonds with a brilliant cut as 3D objects.
+
+.Images of a real (as opposed to a computer rendered) brilliant cut diamond
+[cols=">a,<a", frame=none, grid=none]
+|===
+| image::documentation/images/diamond_side_view.png[Diamond brilliant cut - side view,width=75%,height=75%]
+| image::documentation/images/diamond_top_view.png[Diamond brilliant cut - top view,width=75%,height=75%]
+|===
+
+== File format
+
+This program will produce an `obj`-file with an accompanying `mtl`-file.
+
+The diamond will have its "middle" point in (0,0,0). I.e. it will be centered in the top view on origin (0,0,0) and from the side view, origin will be located between the crown and the pavilion, just at the top of the girdle.
+
+The girdle size (diameter) will be 100% of the scale value.
+
+NOTE: This will produce a 3D brilliant cut diamond in a left-hand coordinate system. The diamond is "standing" along the y-axis.
+
+== Algorithm parameters
+
+Example parameters for an "ideal" perfect brilliant cut:
+
+[source,go]
+----
+// "Ideal" perfect brilliant cut diamond proportions
+var d = Diamond{
+	GirdleDiameter:                         1.00, // 100.0% (Can be used as % or 3D "units")
+	GirdleHeightRelativeGirdleRadius:       0.03, //   3.0%
+	CrownAngleDegrees:                      34.0, //  34.0°
+	TableFacetSizeRelativeGirdle:           0.56, //  56.0%
+	StarFacetSizeRelativeCrownSide:         0.55, //  55.0%
+	PavilionAngleDegrees:                   41.1, //  41.1°
+	LowerHalfFacetSizeRelativeGirdleRadius: 0.77, //  77.0%
+}
+----
+
+This will produce a diamond 3D object with a girdle diameter of 1.00 units (unless you use the scale parameter of course).
+
+The refractive index of diamond is 2.42 use it for your material.
+https://en.wikipedia.org/wiki/Refractive_index[Refractive index on Wikipedia]
+
+== Brilliant cut
+
+A diamond can be cut a lot of ways (not only in a round shape).
+This algorithm will produce a 3D model of the most common cut of a diamond, the _brilliant cut_.
+Almost 75% of all sold diamonds are of brilliant cut.
+
+A brilliant cut diamond can vary in sizes and proportions, but they all have 57 facets (or 58 as some diamonds have a small flat bottom facet instead of a needle tip).
+
+All the type of facets of the brilliant cut diamond have names.
+To understand the parameters to this program it is useful to know their names.
+
+image::documentation/images/anatomy.png[Anatomy of a brilliant cut,width=75%,height=75%]
+
+=== How diamond properties are specified
+
+Diamonds and their cut are described by well-defined properties. There are a couple of high renowned institutions like https://asciidoctor.org[Gemological Institute of America (GIA)], https://www.gemsociety.org[International Gem Society (IGS)], and https://www.americangemsociety.org[American Gem Society (AGS)], that issue reports on diamonds and their proportions, qualities and shortcomings/faults.
+Each of these institutions have, more or less, the same view on how to categorise diamonds, but they differ in details.
+
+Luckily they are almost united on how to specify the physical proportions of a diamond.
+
+.A quick property summary
+|===
+| Parameter | Ideal value Morse | Ideal value Tolkowsky | Ideal value GIA | Ideal value AGS | Comment
+
+| <<Girdle diameter,Girdle diameter>>     | 100% | 100% |100% | 100% | The girdle diameter is the measurement all other measurements are related to.
+| <<Table diameter,Table diameter>>     | - | 53% | 56% | 56% | The diameter of the table facet. In percent of girdle diameter.
+| <<Crown angle,Crown angle>>    | 35° | 34.5° | 34°| 33.75° | The angle of the crown slope. In degrees.
+| <<Pavilion angle,Pavilion angle>> | 41° | 40.75° | 41.2° | 41.1° | The angle of the pavilion slope. In degrees.
+| <<Star facet length,Star facet length>> | - | - | 55% | 55% | The length of the star facet relative to the crown slope length. In percent typically between 50%-60%.
+| <<Lower half facet length,Lower half facet length>> | - | - | 77.5% | 77.5% | The length of the lower half facet relative to the girdle radius (not diameter). In percent typically between 75%-80%.
+| <<Girdle height,Girdle height>> | - | - | "thin" to "medium" | "thin" to "medium" | The height of the girdle (at hill positions, highest points). Relative to the girdle radius. In percent typically "thin" to "medium" (1%-3%).
+| <<Culet size,Culet size>> | - | - | "small" to "pointed"/"none" | "small" to "pointed"/"none" | The facet is kept to minimum if it is present at all.
+|===
+
+Property summary, listed in order of parameter importance:
+
+. Pavilion angle = 41.15°
+. Lower half facet length = 77.5%
+. Crown angle = 34°
+. Table diameter = 56%
+. Star facet Length = 55%
+. Girdle height = "thin" to "medium"
+. Culet size = "small" to "none"
+
+=== Girdle diameter
+
+The girdle is the reference measurement of the diamond.
+All other measurement values are in relation to (expressed as percentages of) the girdle diameter. (In real life an average size is used from all measurements.)
+
+image::documentation/images/table_facet_size_02.png[alt="Girdle size",width=50%, height=50%]
+
+=== Table diameter
+
+The table facet size is defined as a percentage of the girdle diameter. The table facet is measured from one corner to the opposite corner. (In real life an average size is used from all measurements.)
+
+[cols=">a,<a", frame=none, grid=none]
+|===
+|image::documentation/images/table_facet_size_01.png[alt="Table diameter"]
+|image::documentation/images/table_facet_size_02.png[alt="Table diameter"]
+|===
+
+=== Crown angle
+
+The angle between the table facet and the line from a table facet corner to the girdle (straight across bezel facet).
+
+image::documentation/images/crown_angle.png[alt="Crown angle", width=50%, height=50%]
+
+According to Marcel Tolkowsky, the ideal angle is 34.5 degrees.
+A steep crown angle is 35 degrees and a shallow crown angle is 34 degrees.
+
+The more shallow crown angles the lesser the fire of the diamond.
+But the light spread is better with a shallow crown angle.
+
+Shallow crown angle is <33.5 degrees.
+
+Very shallow crown angles are <32.5 degrees.
+
+=== Pavilion angle
+
+The angle between the table facet and a line along (straight across) a pavilion main facet.
+
+image::documentation/images/pavilion_angle.png[alt="Pavilion angle", width=50%, height=50%]
+
+Diamond researchers have discovered that the ideal pavilion angle for diamonds is between the ranges of 40.6 degrees to 41.0 degrees.
+This is the range that gives the diamond the utmost brilliance.
+
+According to Marcel Tolkowsky, the ideal pavilion angle of a diamond is 40.75 degrees and the ideal crown angle is 34.5 degrees.
+
+==== Pavilion angle vs Crown angle
+
+The ideal pavilion and crown angles for diamonds are 40.75 and 34.5 respectively.
+
+For a steep pavilion angle of 41 degrees, the corresponding crown angle is 34 degrees.
+
+For a shallow pavilion angle of 40.6 degrees, the corresponding crown angle is 35 degrees.
+
+=== Star facet length
+
+The length of the star facets. It is expressed as percentage of the length of the side of the crown.
+
+image::documentation/images/star_facet_length.png[alt="Star facet length",width=50%,height=50%]
+
+=== Lower half facet length
+
+The length of the lower half facets. It is expressed as percentage of the girdle radius (not diameter).
+
+image::documentation/images/lower_half_facet_length.png[alt="Lower half facet length",width=50%,height=50%]
+
+=== Culet size
+
+The culet facet has been minimized or eliminated in the modern round brilliant.
+
+=== Girdle height
+
+The girdle height (or girdle thickness) is measured along the girdle at the "hill" positions. I.e. the places where the girdle is at its thickest. The hill positions occur repeatedly along the girdle. In a perfect cut the hill positions are all the same height (given no "painting" nor "digging out"). Hill positions occur where bezel facet meet pavilion main facet and that distance equals the hill positions where upper and lower half facet edges meet.
+
+The girdle height (hill position thickness) is specified as a percentage of the girdle diameter.
+
+In evaluations girdle thickness is reported in category names (and acronyms) like "Extremely Thin","Very Thin","Thin","Medium","Slightly Thick","Thick","Very Thick", and "Extremely Thick".
+
+The girdle thickness is kept thin to medium for two reasons.
+Any less thickness increases the vulnerability to chipping, and any greater thickness causes the diamond’s apparent size (which the trade calls ‘spread’) to appear noticeably smaller than would be expected for its weight.
+
+A diamond with no girdle is said to have a "knife edge" girdle.
+
+To make it all less intuitive, the categorization of the thickness seem to be a non-linear but rather perceived declaration. As thickness percentages of girdle diameter differ for different sizes of diamonds (or as I have interpreted a strange bar graph on the internet).
+
+.Example of girdle thickness percentages (a rule of thumb)
+|===
+| Thin     | <1%
+| Medium   | 1%-3%
+| Thick    | >4%
+|===
+
+Other categories for a girdle can be "faceted" vs "smooth", and "Polished" vs "bruted".
+
+NOTE: The 3D object girdle will be "faceted" and "polished" as a default appearance. It can, however, be rendered smooth by interpolating recalculated and averaged vertex normals. Bruted appearance can be accomplished by changing girdle material.
+Perhaps this will be settings and extra material references in mtr-file in later versions but not for the moment.
+
+NOTE: The girdle effects such as "painting" and "digging out" is not supported. Nor will they ever be.
+
+NOTE: The setting for thickness is defined for "hill positions" which means that thickness in "valley positions" can be mathematically negative if hill position thickness is set too thin. No sanity checks are made. Check your 3D object after construction. Perhaps a sanity check with warning/error will be implemented in future versions.
+
+== Proportion ratings according to AGS and GIA
+
+Both GIA and AGS have tables for each table size (in percent) where you can find classification in a 2D table with crown and pavilion angle on each axis.
+
+It is known that the table facet size of 56% provide the highest amount of top grades for different crown and pavilion angles for both AGS and GIA.
+
+.Number of combinations of crown and pavilion main angles for each table facet size percentage that may attain the top cut grade.
+image::documentation/images/diagram_amount_top_grades_per_table_facet_size.png[Number of potential top grades for each table facet percentage,width=50%,height=50%]
+
+.GIA cut grade estimation for a 56% table. The "sweet-spot" of potential ‘Excellent’ combinations of crown and pavilion angles is outlined in red. It has as its centre a pavilion main angle of 41.2° and a crown main angle of 34.0° (red spot) compared to the Tolkowsky angles of 40.75° and 34.5° (cyan spot) and the Morse angles of 41° and 35° (green spot).
+image::documentation/images/diagram_cut_grade_GIA.png[GIA cut grades at table facet 56%]
+
+.AGS cut grade estimation for a 56% table. The "sweet-spot" of potential AGS 0 and 1 combinations of crown and pavilion angles is outlined in blue. It has as its centre a pavilion main angle of 41.1° and a crown main angle of 33.75° compared to the Tolkowsky angles of 40.75° and 34.5° and the Morse angles of 41° and 35°. Note that the y-axis (pavilion axis) is reversed to other diagrams.
+image::documentation/images/diagram_cut_grade_AGS.png[]
+
+.A comparison of the AGS ‘Ideal 1 and 0’ (blue) "sweet-spot" with that of the GIA ‘Excellent’ red showing their overlap and the close agreement of the "sweet-spot" centres.
+image::documentation/images/diagram_cut_grade_sweetspot_summary.png[Sweet spot summary for 56% table size]
+
+== History
+
+https://youtu.be/QLa2VW2rrys
+
+
+=== Henry D. Morse (1826-1888)
+
+image::documentation/images/Henry_D_Morse.png[alt="Henry D. Morse",width=50%]
+
+The father of the American diamond cutting industry, invented the modern diamond cutting machine in Boston, United States.
+
+Credit for the first round brilliant cut was attributed to Henry Morse in the 1860’s.
+Morse, who once said, “Shopping for diamonds by the carat is like buying a racehorse by the pound,” emphasized the cut of a stone and the brilliance that resulted. He invented a gauge to measure crown and pavilion angles, and devised his own set of best proportions. He also helped develop mechanical bruting, which increased the production of round-cut diamonds.
+
+During Henry Morse’s re-cutting of Old European Cut diamonds, he is thought to have set them to a one-degree range of 41.0 degrees and a crown angle as close to 35 degrees as possible.
+
+Charles M. Field, the foreman in the Henry D. Morse company and the actual inventor of the modern diamond cutting machine, acquired a patent for his creation in Boston on April 4, 1876.
+
+=== Marcel Tolkowsky (1899–1991)
+
+image::documentation/images/Marcel_Tolkowsky.png[alt="Marcel Tolkowsky",width=50%]
+
+According to Marcel Tolkowsky’s thesis in 1919, titled “diamond design, a study of the reflection and refraction of light in a diamond” the following are parameters that a diamond must have for it to have an excellent light performance and be considered a brilliant diamond.
+
+.Perfect proportions according to Marcel Tolkowsky (1919)
+|===
+| Table size     | 53%
+| Crown height   | 16.2%
+| Crown angle    | 34.5 degrees
+| Pavilion depth | 43.1%
+| Pavilion angle | 40.75 degrees
+|===
+
+A diamond with the following cut parameters proposed by Tolkowsky will ultimately be beautiful and have an excellent light performance.
+Till date, these parameters are still very valid for a beautiful diamond.
+
+Although reputable grading laboratories like the GIA and AGS have carried out further studies into the ideal proportions for a diamond and have discovered that there is a specific range for the different proportions that a diamond can have to be beautiful with excellent light performance.
+Most times, this is due to the tradeoff between the fire of a diamond and its brilliance.
+This trade-off depends mainly on the measurements of crown angles and pavilion angles.
+It is therefore important to strike balance between the fire and brilliance of a diamond.
+Ordinarily, the more brilliant a diamond is, the lesser the fire of the diamond.
+
+== References
+
+An incomplete list of references:
+
+* https://acagemlab.com/wp-content/uploads/2019/10/JoG07305.pdf
+* https://www.capediamonds.co.za/diamond-info/brilliant-cut/
+* http://www.wtocd.be/nl/DiamondInfo/articlesPDF/The_Brilliant_Cut.pdf
+* https://www.gia.edu/diamond-cut/diamond-cut-anatomy-round-brilliant#
+* https://beyond4cs.com/grading/girdle-thickness/
+* https://beyond4cs.com/shapes/round/ideal-proportions/
+* https://ia800201.us.archive.org/14/items/H.D.MorseFirstDiamondCuttersInAmerC.MFieldModernDiamondCutting/H.D.MorseFirstDiamondCuttersInAmerC.MFieldModernDiamondCuttingMach.Pdf.pdf

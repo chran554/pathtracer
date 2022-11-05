@@ -4,61 +4,71 @@ import (
 	"fmt"
 	"github.com/ungerik/go3d/float64/vec3"
 	"math"
+	"os"
 	scn "pathtracer/internal/pkg/scene"
 )
 
+type Diamond struct {
+	GirdleDiameter                     float64 // GirdleDiameter is the diameter of the round diamond as seen from above. All facet sizes of a diamond are given in percentage of the girdle (diamond) width. Thus, we set girdle size as 100%.
+	GirdleHeightRelativeGirdleDiameter float64 // GirdleHeightRelativeGirdleDiameter is girdle height in percent of girdle radius. The height is measured at the girdle highest point (i.e. at the point where bezel facets and pavilion main facets point to each other). At least nn percent for "razor sharp" edges. nn% = "THIN", nn% = "MEDUIM" ..
+
+	CrownAngleDegrees              float64 // CrownAngleDegrees is the angle of the crown side, from the girdle to the table, as when you see the diamond from the side. (value is typically 33 degrees - 35 degrees). According to Marcel Tolkowsky, a 40.75-degree pavilion angle gets perfectly paired with a 34.5-degree crown angle. The recommended crown angle ranges from 34 to 35 degrees.
+	TableFacetSizeRelativeGirdle   float64 // TableFacetSizeRelativeGirdle is the size of the tablet. It is expressed as a percentage of the Girdle diameter (value is typically 53%-58%, 56% might be a good start)
+	StarFacetSizeRelativeCrownSide float64 // StarFacetSizeRelativeCrownSide is the size of the star facets. It is expressed as percentage of the length of the side of the crown. <crown side width> = (<girdle width> - <table width>)/2.0 (value is typically 50%-60%)
+
+	PavilionAngleDegrees                   float64 // PavilionAngleDegrees According to Marcel Tolkowsky, the optimal pavilion angle degree is 40.75. However, unless you are looking for a super-ideal diamond cut with a pavilion angle of 40.9 degrees, opting for stone within a range of 40.6 – 41 degrees is safe, providing other parameters meet their recommended ranges.
+	LowerHalfFacetSizeRelativeGirdleRadius float64 // // LowerHalfFacetSizeRelativeGirdleRadius is the size of the lower half facets. It is expressed as percentage of the length of the side of the pavilion.
+}
+
 // GetDiamondRoundBrilliantCut will return a facet structure of a round, brilliant cut, diamond.
 // The diamond is a 57 facet, brilliant cut, diamond.
-// It has a girdle. It has no culet (no 58:th facet), and is a "pointed" or "None" culet.
-// The girdle itself consist of 32 facets. Two facets per each "upper"/"lower" half pair.
 //
+// It has a faceted girdle. The facets of the girdle is not included in the 57 facet count.
 // The girdle is neither "dug out" nor "painted" but "normal".
-// I.e. the distance in the girdle between crown and pavilion at hill positions
-// where bezel facet meet pavilion main facet are equal to the positions where upper and lower half facet edges meet.
+// (The girdle itself consist of 32 facets. Two girdle facets per each "upper"/"lower" half pair facet.)
 //
-// Information: https://www.capediamonds.co.za/diamond-info/brilliant-cut/
-// https://www.gia.edu/diamond-cut/diamond-cut-anatomy-round-brilliant
-func GetDiamondRoundBrilliantCut(scale float64, material scn.Material) *scn.FacetStructure {
+// It has no culet (no 58:th facet), at the bottom of the diamond, but is a "pointed" or "None" culet cut.
+func NewDiamondRoundBrilliantCut(d Diamond, scale float64, material scn.Material) *scn.FacetStructure {
 	// The girdle diameter of the diamond is the average widest diameter of the diamond when viewed from above.
 	// The girdle diameter measurement is key as it determines the proportions of the brilliant cut diamond.
 	// Most percentage proportions of the brilliant cut round diamond are calculated as percentages of the girdle diameter.
 
-	girdleDiameter := 1.0                          // girdleDiameter The diameter of the round diamond as seen from above. All facet sizes of a diamond are given in percentage of the girdle (diamond) width. Thus, we set girdle size as 100%.
-	crownAngleDegrees := 34.0                      // crownAngleDegrees The angle of the crown side, from the girdle to the table, as when you see the diamond from the side. (value is typically 33 degrees - 35 degrees). According to Marcel Tolkowsky, a 40.75-degree pavilion angle gets perfectly paired with a 34.5-degree crown angle. The recommended crown angle ranges from 34 to 35 degrees.
-	tableFacetSizeRelativeGirdle := 0.56           // tableFacetSizeRelativeGirdle is the size of the tablet. It is expressed as a percentage of the Girdle diameter (value is typically 53%-58%, 56% might be a good start)
-	starSizeRelativeCrownSide := 0.55              // starSizeRelativeCrownSide is the size of the star facets. It is expressed as percentage of the length of the side of the crown. <crown side width> = (<girdle width> - <table width>)/2.0 (value is typically 50%-60%)
-	pavilionAngleDegrees := 40.9                   // According to Marcel Tolkowsky, the optimal pavilion angle degree is 40.75. However, unless you are looking for a super-ideal diamond cut with a pavilion angle of 40.9 degrees, opting for stone within a range of 40.6 – 41 degrees is safe, providing other parameters meet their recommended ranges.
-	lowerHalfFacetSizeRelativeGirdleRadius := 0.77 //
-	culetDiameter := 0.0                           // Do not change this from value 0.0. Culet facet is not included in 3D model. Only diamonds with "pointed" or "None" culet are created.
-	girdleHeightRelativeGirdleRadius := 0.03       // Girdle height in percent of girdle radius. At least nn percent for "razor sharp" edges. nn% = "THIN", nn% = "MEDUIM" ..
+	// girdleDiameter := 1.0                          // girdleDiameter is the diameter of the round diamond as seen from above. All facet sizes of a diamond are given in percentage of the girdle (diamond) width. Thus, we set girdle size as 100%.
+	// crownAngleDegrees := 34.0                      // crownAngleDegrees is the angle of the crown side, from the girdle to the table, as when you see the diamond from the side. (value is typically 33 degrees - 35 degrees). According to Marcel Tolkowsky, a 40.75-degree pavilion angle gets perfectly paired with a 34.5-degree crown angle. The recommended crown angle ranges from 34 to 35 degrees.
+	// tableFacetSizeRelativeGirdle := 0.56           // tableFacetSizeRelativeGirdle is the size of the tablet. It is expressed as a percentage of the Girdle diameter (value is typically 53%-58%, 56% might be a good start)
+	// starFacetSizeRelativeCrownSide := 0.55         // starFacetSizeRelativeCrownSide is the size of the star facets. It is expressed as percentage of the length of the side of the crown. <crown side width> = (<girdle width> - <table width>)/2.0 (value is typically 50%-60%)
+	// pavilionAngleDegrees := 40.9                   // According to Marcel Tolkowsky, the optimal pavilion angle degree is 40.75. However, unless you are looking for a super-ideal diamond cut with a pavilion angle of 40.9 degrees, opting for stone within a range of 40.6 – 41 degrees is safe, providing other parameters meet their recommended ranges.
+	// lowerHalfFacetSizeRelativeGirdleRadius := 0.77 //
+	// girdleHeightRelativeGirdleRadius := 0.03       // Girdle height in percent of girdle radius. At least nn percent for "razor sharp" edges. Thin is less than 1%=0.01, Medium is between 1%-3% and Thick is more 4%<
+	culetDiameter := 0.0 // Do not change this from value 0.0. Culet facet is not included in 3D model. Only diamonds with "pointed" or "None" culet are created.
 
 	// Create crown
 
 	// Pre calculations
-	girdleRadius := girdleDiameter / 2.0
+	girdleRadius := d.GirdleDiameter / 2.0
 	culetRadius := culetDiameter / 2.0
-	tableRadius := girdleRadius * tableFacetSizeRelativeGirdle
+	tableRadius := girdleRadius * d.TableFacetSizeRelativeGirdle
 	girdleToTableLength := girdleRadius - tableRadius
-	crownSideLength := girdleToTableLength / math.Cos(deg2rad(crownAngleDegrees))
-	crownHeight := crownSideLength * math.Sin(deg2rad(crownAngleDegrees))
+	crownSideLength := girdleToTableLength / math.Cos(deg2rad(d.CrownAngleDegrees))
+	crownHeight := crownSideLength * math.Sin(deg2rad(d.CrownAngleDegrees))
 
 	girdleToCuletLength := girdleRadius - culetRadius
-	pavilionSideLength := girdleToCuletLength / math.Cos(deg2rad(pavilionAngleDegrees))
-	pavilionHeight := pavilionSideLength * math.Sin(deg2rad(pavilionAngleDegrees))
+	pavilionSideLength := girdleToCuletLength / math.Cos(deg2rad(d.PavilionAngleDegrees))
+	pavilionHeight := pavilionSideLength * math.Sin(deg2rad(d.PavilionAngleDegrees))
 
-	fmt.Printf("Table diameter:  %.2f\n", tableRadius*2.0)
-	fmt.Printf("Girdle diameter: %.2f\n", girdleDiameter)
+	fmt.Printf("Girdle diameter: %.2f\n", d.GirdleDiameter)
+	fmt.Printf("Table diameter:  %.2f%%\n", tableRadius*2.0*100)
 	fmt.Printf("Crown height:    %.2f\n", crownHeight)
 	fmt.Printf("Pavilion height: %.2f\n", pavilionHeight)
-	fmt.Printf("Total height:    %.2f\n", pavilionHeight+crownHeight)
+	fmt.Printf("Total height:    %.2f\n", pavilionHeight+crownHeight+(d.GirdleHeightRelativeGirdleDiameter*d.GirdleDiameter))
 
 	amountTableCorners := 8
 	tableFacetPoints := calculateTableFacetPoints(amountTableCorners, tableRadius, crownHeight)
-	girdleBezelPoints := calculateGirdlePoints(amountTableCorners, girdleDiameter, 0.0)
-	upperHalfFacetGirdlePoints := calculateGirdleHalfPoints(amountTableCorners, girdleDiameter, 0.0)
-	lowerHalfFacetGirdlePoints := calculateGirdleHalfPoints(amountTableCorners, girdleDiameter, -girdleDiameter*girdleHeightRelativeGirdleRadius)
-	girdlePavilionMainPoints := calculateGirdlePoints(amountTableCorners, girdleDiameter, -girdleDiameter*girdleHeightRelativeGirdleRadius)
-	starTipPoints := calculateStarTipPoints(tableFacetPoints, girdleBezelPoints, tableRadius, girdleToTableLength, starSizeRelativeCrownSide, crownHeight)
+	girdleBezelPoints := calculateGirdlePoints(amountTableCorners, d.GirdleDiameter, 0.0)
+	upperHalfFacetGirdlePoints := calculateGirdleHalfPoints(amountTableCorners, d.GirdleDiameter, 0.0)
+	lowerHalfFacetGirdlePoints := calculateGirdleHalfPoints(amountTableCorners, d.GirdleDiameter, -d.GirdleDiameter*d.GirdleHeightRelativeGirdleDiameter)
+	girdlePavilionMainPoints := calculateGirdlePoints(amountTableCorners, d.GirdleDiameter, -d.GirdleDiameter*d.GirdleHeightRelativeGirdleDiameter)
+	starTipPoints := calculateStarTipPoints(tableFacetPoints, girdleBezelPoints, tableRadius, girdleToTableLength, d.StarFacetSizeRelativeCrownSide, crownHeight)
 	girdleUpperPoints := make([]*vec3.T, amountTableCorners*4)
 	girdleLowerPoints := make([]*vec3.T, amountTableCorners*4)
 
@@ -76,6 +86,15 @@ func GetDiamondRoundBrilliantCut(scale float64, material scn.Material) *scn.Face
 	}
 	for i, point := range lowerHalfFacetGirdlePoints {
 		girdleLowerPoints[i*4+2] = point
+	}
+
+	// Check that valley position heights on girdle is still positive lengths.
+	// Report to std out the valley position heights (and hill heights) in percent of girdle size.
+	girdleHeightAtValleyPosition := (upperHalfFacetGirdlePoints[0][1] - lowerHalfFacetGirdlePoints[0][1]) / d.GirdleDiameter
+	fmt.Printf("Girdle height at hill position %.2f%% and height at valley positions %.2f%%.\n", d.GirdleHeightRelativeGirdleDiameter*100.0, girdleHeightAtValleyPosition*100.0)
+	if girdleHeightAtValleyPosition < 0.0 {
+		fmt.Printf("Girdle height at valley positions %.3f%% is negative, physically impossible. Increase girdle height.\n", girdleHeightAtValleyPosition)
+		os.Exit(1)
 	}
 
 	// Crown "table"-facet (i.e. top flat facet, 8 equally sided facet)
@@ -158,9 +177,9 @@ func GetDiamondRoundBrilliantCut(scale float64, material scn.Material) *scn.Face
 
 	// Pavilion facets
 
-	pavilionPoint := &vec3.T{0, -pavilionHeight, 0}
+	pavilionTipPoint := &vec3.T{0, -pavilionHeight, 0}
 
-	lowerHalfTipPoints := calculateLowerHalfTipPoints(amountTableCorners, pavilionHeight, lowerHalfFacetSizeRelativeGirdleRadius, girdleDiameter, girdlePavilionMainPoints, pavilionPoint)
+	lowerHalfTipPoints := calculateLowerHalfTipPoints(amountTableCorners, pavilionHeight, d.LowerHalfFacetSizeRelativeGirdleRadius, d.GirdleDiameter, girdlePavilionMainPoints, pavilionTipPoint)
 
 	// Pavilion - Main facets (the kite like, 4 sided, facet of the pavilion)
 	var pavilionMainFacets []*scn.Facet
@@ -169,9 +188,9 @@ func GetDiamondRoundBrilliantCut(scale float64, material scn.Material) *scn.Face
 		pavilionMainFacet := scn.Facet{
 			Vertices: []*vec3.T{
 				girdlePavilionMainPoints[pavilionMainFacetIndex],
-				lowerHalfTipPoints[pavilionMainFacetIndex],
-				pavilionPoint,
 				lowerHalfTipPoints[(pavilionMainFacetIndex+amountPavilionMainFacets-1)%amountPavilionMainFacets],
+				pavilionTipPoint,
+				lowerHalfTipPoints[pavilionMainFacetIndex],
 			},
 		}
 		pavilionMainFacets = append(pavilionMainFacets, &pavilionMainFacet)
@@ -192,17 +211,15 @@ func GetDiamondRoundBrilliantCut(scale float64, material scn.Material) *scn.Face
 		plane1 := scn.NewPlane(ps, pb1, p2, "", nil)
 		gp1Angle := lowerHalfPairBaseAngle + 1.0*lowerHalfPairSubAngleIncrement
 		gp1 := &vec3.T{girdleRadius * math.Cos(gp1Angle), 0, girdleRadius * math.Sin(gp1Angle)}
-		//gp1 := vec3.Interpolate(pb1, p2, 0.5)
 		p1 := verticalLinePlaneIntersection(plane1, gp1)
 
 		plane2 := scn.NewPlane(ps, p2, pb2, "", nil)
 		gp2Angle := lowerHalfPairBaseAngle + 3.0*lowerHalfPairSubAngleIncrement
 		gp2 := &vec3.T{girdleRadius * math.Cos(gp2Angle), 0, girdleRadius * math.Sin(gp2Angle)}
-		//gp2 := vec3.Interpolate(p2, pb2, 0.5)
 		p3 := verticalLinePlaneIntersection(plane2, gp2)
 
-		lowerHalfPairFacet1 := scn.Facet{Vertices: []*vec3.T{ps, pb1, p1, p2}}
-		lowerHalfPairFacet2 := scn.Facet{Vertices: []*vec3.T{ps, p2, p3, pb2}}
+		lowerHalfPairFacet1 := scn.Facet{Vertices: []*vec3.T{ps, p2, p1, pb1}}
+		lowerHalfPairFacet2 := scn.Facet{Vertices: []*vec3.T{ps, pb2, p3, p2}}
 
 		girdleLowerPoints[lowerHalfFacetPairIndex*4+1] = p1
 		girdleLowerPoints[lowerHalfFacetPairIndex*4+3] = p3
@@ -220,9 +237,8 @@ func GetDiamondRoundBrilliantCut(scale float64, material scn.Material) *scn.Face
 	// Diamond assembly
 
 	crown := scn.FacetStructure{
-		Name:     "Crown",
-		Material: &material,
-		Facets:   []*scn.Facet{},
+		SubstructureName: "Crown",
+		Facets:           []*scn.Facet{},
 	}
 
 	crown.Facets = append(crown.Facets, &table)
@@ -231,26 +247,23 @@ func GetDiamondRoundBrilliantCut(scale float64, material scn.Material) *scn.Face
 	crown.Facets = append(crown.Facets, upperHalfFacets...)
 
 	girdle := scn.FacetStructure{
-		Name:     "Girdle",
-		Material: &material,
-		Facets:   []*scn.Facet{},
+		SubstructureName: "Girdle",
+		Facets:           []*scn.Facet{},
 	}
 
 	girdle.Facets = append(girdle.Facets, girdleFacets...)
 
 	pavilion := scn.FacetStructure{
-		Name:     "Pavilion",
-		Material: &material,
-		Facets:   []*scn.Facet{},
+		SubstructureName: "Pavilion",
+		Facets:           []*scn.Facet{},
 	}
 
 	pavilion.Facets = append(pavilion.Facets, lowerHalfFacets...)
 	pavilion.Facets = append(pavilion.Facets, pavilionMainFacets...)
 
 	diamond := scn.FacetStructure{
-		Name: "Diamond",
-		//FacetStructures: []*scn.FacetStructure{&crown},
-		// FacetStructures: []*scn.FacetStructure{&pavilion},
+		Name:            "Diamond",
+		Material:        &material,
 		FacetStructures: []*scn.FacetStructure{&crown, &pavilion, &girdle},
 	}
 

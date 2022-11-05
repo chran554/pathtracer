@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 	"os"
-	"pathtracer/cmd/scene/diamondsR4ever/diamond"
+	"pathtracer/cmd/obj/diamond/pkg/diamond"
 	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj"
@@ -98,7 +98,17 @@ func main() {
 		Transparency:    0.0,
 	}
 
-	diamond2 := diamond.GetDiamondRoundBrilliantCut(75.0, diamondMaterial)
+	d := diamond.Diamond{
+		GirdleDiameter:                         1.00, // 100.0%
+		GirdleHeightRelativeGirdleDiameter:     0.03, //   3.0%
+		CrownAngleDegrees:                      34.0, //  34.0°
+		TableFacetSizeRelativeGirdle:           0.56, //  56.0%
+		StarFacetSizeRelativeCrownSide:         0.55, //  55.0%
+		PavilionAngleDegrees:                   41.1, //  41.1°
+		LowerHalfFacetSizeRelativeGirdleRadius: 0.77, //  77.0%
+	}
+
+	diamond2 := diamond.NewDiamondRoundBrilliantCut(d, 75.0, diamondMaterial)
 	diamond2.UpdateBounds()
 	floorLevel := diamond2.Bounds.Ymin
 
@@ -131,7 +141,7 @@ func main() {
 	for animationFrameIndex := 0; animationFrameIndex < amountAnimationFrames; animationFrameIndex++ {
 		animationProgress := float64(animationFrameIndex) * animationStep
 
-		diamond := diamond.GetDiamondRoundBrilliantCut(75.0, diamondMaterial)
+		diamond := diamond.NewDiamondRoundBrilliantCut(d, 75.0, diamondMaterial)
 		diamond.RotateY(&vec3.Zero, animationProgress*(math.Pi*2.0/8.0))
 		diamond.RotateZ(&vec3.Zero, -15.0*animationStep*(math.Pi*2.0/8.0))
 		diamond.RotateY(&vec3.Zero, 10.0*animationStep*(math.Pi*2.0/8.0))
