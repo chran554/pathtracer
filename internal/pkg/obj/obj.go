@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -49,11 +50,25 @@ func Read(file *os.File) (*scene.FacetStructure, error) {
 	return facetStructure, nil
 }
 
-func WriteObjFile(objFile, mtlFile *os.File, facetStructure *scene.FacetStructure) error {
+func WriteObjFile(objFile, mtlFile *os.File, facetStructure *scene.FacetStructure, comment []string) error {
 	objWriter := bufio.NewWriter(objFile)
 	mtlWriter := bufio.NewWriter(mtlFile)
 	defer objWriter.Flush()
 	defer mtlWriter.Flush()
+
+	objWriter.WriteString(fmt.Sprintf("# Original OBJ-file '%s' created at %s\n\n", objFile.Name(), time.Now().String()))
+	mtlWriter.WriteString(fmt.Sprintf("# Original MTL-file '%s' created at %s\n\n", mtlFile.Name(), time.Now().String()))
+	for _, textLine := range comment {
+		if strings.TrimSpace(textLine) != "" {
+			objWriter.WriteString("# " + textLine + "\n")
+			mtlWriter.WriteString("# " + textLine + "\n")
+		} else {
+			objWriter.WriteString("\n")
+			mtlWriter.WriteString("\n")
+		}
+	}
+	objWriter.WriteString("\n")
+	mtlWriter.WriteString("\n")
 
 	vertexIndexHashMap := make(map[*vec3.T]int)
 	vertexNormalHashMap := make(map[*vec3.T]int)

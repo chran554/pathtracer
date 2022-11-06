@@ -17,7 +17,7 @@ The diamond will have its "middle" point in (0,0,0). I.e. it will be centered in
 
 The girdle size (diameter) will be 100% of the scale value.
 
-NOTE: This will produce a 3D brilliant cut diamond in a left-hand coordinate system. The diamond is "standing" along the y-axis.
+NOTE: This will produce a 3D brilliant cut diamond in a right-hand coordinate system (all obj-files are). The diamond is "standing" along the y-axis.
 
 == Algorithm parameters
 

@@ -1,15 +1,20 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"pathtracer/cmd/obj/diamond/pkg/diamond"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj"
 	scn "pathtracer/internal/pkg/scene"
+	"strings"
 )
 
 func main() {
+	scale := 100.0
+
 	d := diamond.Diamond{
 		GirdleDiameter:                         1.00, // 100.0%
 		GirdleHeightRelativeGirdleDiameter:     0.03, //   3.0%
@@ -29,16 +34,38 @@ func main() {
 		Transparency:    1.0,
 	}
 
-	diamond := diamond.NewDiamondRoundBrilliantCut(d, 100.0, m)
+	diamond := diamond.NewDiamondRoundBrilliantCut(d, scale, m)
+
+	comments := []string{
+		"Brilliant cut diamond 3D OBJ-file was created using algorithm from https://github.com/chran554/pathtracer/",
+		"The following parameters were used creating these files:",
+		"",
+		fmt.Sprintf("Global scale of diamond: %.2f", scale),
+		"",
+	}
+	comments = append(comments, "Diamond:")
+	comments = append(comments, prettyPrintedStruct(d)...)
+	comments = append(comments, "")
+	comments = append(comments, "Diamond material")
+	comments = append(comments, prettyPrintedStruct(m)...)
 
 	objFile := createFile("diamond.obj")
 	defer objFile.Close()
 	mtlFile := createFile("diamond.mtl")
 	defer mtlFile.Close()
 
-	obj.WriteObjFile(objFile, mtlFile, diamond)
+	obj.WriteObjFile(objFile, mtlFile, diamond, comments)
 
 	fmt.Printf("Created diamond obj-file: %s\n", objFile.Name())
+}
+
+func prettyPrintedStruct(anyStruct any) []string {
+	empJSON, err := json.MarshalIndent(anyStruct, "", "  ")
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+
+	return strings.Split(string(empJSON), "\n")
 }
 
 func createFile(name string) *os.File {
