@@ -138,7 +138,7 @@ func initializeScene(scene *scn.SceneNode) {
 
 	// Subdivide facet structure for performance
 	for _, facetStructure := range facetStructures {
-		subdivideFacetStructure(facetStructure, 50)
+		subdivideFacetStructure(facetStructure, 25)
 	}
 
 	// Initialize facet structures (calculate bounds etc)

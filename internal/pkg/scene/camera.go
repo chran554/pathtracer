@@ -10,7 +10,7 @@ import (
 )
 
 func CreateCameraRay(x int, y int, width int, height int, camera *Camera, sampleIndex int) *Ray {
-	rayOrigin := camera.Origin
+	rayOrigin := *camera.Origin
 
 	cameraCoordinateSystem := camera.GetCameraCoordinateSystem()
 
@@ -52,7 +52,7 @@ func CreateCameraRay(x int, y int, width int, height int, camera *Camera, sample
 	headingInSceneCoordinateSystem.Normalize()
 
 	return &Ray{
-		Origin:          rayOrigin,
+		Origin:          &rayOrigin,
 		Heading:         &headingInSceneCoordinateSystem,
 		RefractionIndex: 1.000273, // Refraction index of air (at 20 degrees Celsius, STP)
 	}

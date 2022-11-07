@@ -121,6 +121,17 @@ func (fs *FacetStructure) UpdateBounds() *Bounds {
 	return fs.Bounds
 }
 
+// UpdateMaterials propagates parent materials down in facet structure hierarchy to sub structures without explicit own material
+func (fs *FacetStructure) UpdateMaterials() {
+	for _, facetStructure := range fs.FacetStructures {
+		if facetStructure.Material == nil {
+			facetStructure.Material = fs.Material
+		}
+
+		facetStructure.UpdateMaterials()
+	}
+}
+
 func (fs *FacetStructure) InitializeProjection() {
 	for _, facetStructure := range fs.FacetStructures {
 		facetStructure.InitializeProjection()
@@ -189,6 +200,7 @@ func (fs *FacetStructure) String() string {
 func (fs *FacetStructure) Initialize() {
 	fs.UpdateNormals()
 	fs.UpdateBounds()
+	fs.UpdateMaterials()
 	fs.InitializeProjection()
 }
 
