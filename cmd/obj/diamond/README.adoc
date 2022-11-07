@@ -48,7 +48,7 @@ A diamond can be cut a lot of ways (not only in a round shape).
 This algorithm will produce a 3D model of the most common cut of a diamond, the _brilliant cut_.
 Almost 75% of all sold diamonds are of brilliant cut.
 
-A brilliant cut diamond can vary in sizes and proportions, but they all have 57 facets (or 58 as some diamonds have a small flat bottom facet instead of a needle tip).
+A brilliant cut diamond can vary in sizes and proportions, but they all have 57 facets (or 58 as some diamonds have a small flat bottom facet called "culet" instead of a needle tip).
 
 All the type of facets of the brilliant cut diamond have names.
 To understand the parameters to this program it is useful to know their names.
@@ -64,7 +64,7 @@ Luckily they are almost united on how to specify the physical proportions of a d
 
 .A quick property summary
 |===
-| Parameter | Ideal value Morse | Ideal value Tolkowsky | Ideal value GIA | Ideal value AGS | Comment
+| Parameter | Ideal value <<_henry_d_morse,Morse>> | Ideal value <<_marcel_tolkowsky,Tolkowsky>> | Ideal value GIA | Ideal value AGS | Comment
 
 | <<Girdle diameter,Girdle diameter>>     | 100% | 100% |100% | 100% | The girdle diameter is the measurement all other measurements are related to.
 | <<Table diameter,Table diameter>>     | - | 53% | 56% | 56% | The diameter of the table facet. In percent of girdle diameter.
@@ -76,7 +76,7 @@ Luckily they are almost united on how to specify the physical proportions of a d
 | <<Culet size,Culet size>> | - | - | "small" to "pointed"/"none" | "small" to "pointed"/"none" | The facet is kept to minimum if it is present at all.
 |===
 
-Property summary, listed in order of parameter importance:
+Property summary, listed in order of parameter importance (importance as in: if you have to choose, prioritize a good value on this parameter rather than that and chances are that you end up with a "better" brilliant cut diamond):
 
 . Pavilion angle = 41.15°
 . Lower half facet length = 77.5%
@@ -208,8 +208,9 @@ image::documentation/images/diagram_cut_grade_sweetspot_summary.png[Sweet spot s
 https://youtu.be/QLa2VW2rrys
 
 
-=== Henry D. Morse (1826-1888)
+=== Henry D. Morse
 
+.Henry D. Morse (1826-1888)
 image::documentation/images/Henry_D_Morse.png[alt="Henry D. Morse",width=50%]
 
 The father of the American diamond cutting industry, invented the modern diamond cutting machine in Boston, United States.
@@ -221,8 +222,9 @@ During Henry Morse’s re-cutting of Old European Cut diamonds, he is thought to
 
 Charles M. Field, the foreman in the Henry D. Morse company and the actual inventor of the modern diamond cutting machine, acquired a patent for his creation in Boston on April 4, 1876.
 
-=== Marcel Tolkowsky (1899–1991)
+=== Marcel Tolkowsky
 
+.Marcel Tolkowsky (1899–1991)
 image::documentation/images/Marcel_Tolkowsky.png[alt="Marcel Tolkowsky",width=50%]
 
 According to Marcel Tolkowsky’s thesis in 1919, titled “diamond design, a study of the reflection and refraction of light in a diamond” the following are parameters that a diamond must have for it to have an excellent light performance and be considered a brilliant diamond.
@@ -231,9 +233,9 @@ According to Marcel Tolkowsky’s thesis in 1919, titled “diamond design, a st
 |===
 | Table size     | 53%
 | Crown height   | 16.2%
-| Crown angle    | 34.5 degrees
+| Crown angle    | 34.5°
 | Pavilion depth | 43.1%
-| Pavilion angle | 40.75 degrees
+| Pavilion angle | 40.75°
 |===
 
 A diamond with the following cut parameters proposed by Tolkowsky will ultimately be beautiful and have an excellent light performance.

@@ -20,7 +20,7 @@ type Diamond struct {
 	LowerHalfFacetSizeRelativeGirdleRadius float64 // // LowerHalfFacetSizeRelativeGirdleRadius is the size of the lower half facets. It is expressed as percentage of the length of the side of the pavilion.
 }
 
-// GetDiamondRoundBrilliantCut will return a facet structure of a round, brilliant cut, diamond.
+// NewDiamondRoundBrilliantCut will return a facet structure of a round, brilliant cut, diamond.
 // The diamond is a 57 facet, brilliant cut, diamond.
 //
 // It has a faceted girdle. The facets of the girdle is not included in the 57 facet count.
