@@ -88,15 +88,6 @@ func NewDiamondRoundBrilliantCut(d Diamond, scale float64, material scn.Material
 		girdleLowerPoints[i*4+2] = point
 	}
 
-	// Check that valley position heights on girdle is still positive lengths.
-	// Report to std out the valley position heights (and hill heights) in percent of girdle size.
-	girdleHeightAtValleyPosition := (upperHalfFacetGirdlePoints[0][1] - lowerHalfFacetGirdlePoints[0][1]) / d.GirdleDiameter
-	fmt.Printf("Girdle height at hill position %.2f%% and height at valley positions %.2f%%.\n", d.GirdleHeightRelativeGirdleDiameter*100.0, girdleHeightAtValleyPosition*100.0)
-	if girdleHeightAtValleyPosition < 0.0 {
-		fmt.Printf("Girdle height at valley positions %.3f%% is negative, physically impossible. Increase girdle height.\n", girdleHeightAtValleyPosition)
-		os.Exit(1)
-	}
-
 	// Crown "table"-facet (i.e. top flat facet, 8 equally sided facet)
 
 	// The table of the diamond is the largest facet, the flat part on top of the diamond.
@@ -234,6 +225,23 @@ func NewDiamondRoundBrilliantCut(d Diamond, scale float64, material scn.Material
 		girdleFacets = append(girdleFacets, &girdleFacet)
 	}
 
+	// Check that valley position heights on girdle is still positive lengths.
+	// Report to std out the valley position heights (and hill heights) in percent of girdle size.
+	girdleHeightAtHillPosition := girdleFacets[0].Vertices[0][1] - girdleFacets[0].Vertices[1][1]
+	girdleHeightAtValleyPosition := girdleFacets[0].Vertices[3][1] - girdleFacets[0].Vertices[2][1]
+	girdleRelativeHeightAtHillPosition := girdleHeightAtHillPosition / d.GirdleDiameter
+	girdleRelativeHeightAtValleyPosition := girdleHeightAtValleyPosition / d.GirdleDiameter
+	minimGirdleHeight := girdleHeightAtHillPosition - girdleHeightAtValleyPosition
+	minimGirdleRelativeHeight := minimGirdleHeight / d.GirdleDiameter
+	fmt.Println()
+	fmt.Printf("Girdle height at hill position %.2f%% (and height at valley positions %.2f%%).\n", girdleRelativeHeightAtHillPosition*100.0, girdleRelativeHeightAtValleyPosition*100.0)
+	fmt.Printf("Minimum girdle height for a diamond with these propprtions is %.3f%% (at hill positions).\n", minimGirdleRelativeHeight*100.0)
+
+	if girdleHeightAtValleyPosition < 0.0 {
+		fmt.Printf("Resulting girdle height at valley positions %.3f%% is negative, which physically impossible. Increase girdle height to at least %.3f%%.\n", girdleRelativeHeightAtValleyPosition*100.0, minimGirdleRelativeHeight*100.0)
+		os.Exit(1)
+	}
+
 	// Diamond assembly
 
 	crown := scn.FacetStructure{
@@ -276,10 +284,10 @@ func NewDiamondRoundBrilliantCut(d Diamond, scale float64, material scn.Material
 	diamond.ScaleUniform(&vec3.Zero, scale)
 	diamond.UpdateBounds()
 
-	fmt.Printf("Crown bounds:    %+v\n", crown.Bounds)
-	fmt.Printf("Girdle bounds:   %+v\n", girdle.Bounds)
-	fmt.Printf("Pavilion bounds: %+v\n", pavilion.Bounds)
-	fmt.Printf("Diamond bounds:  %+v\n", diamond.Bounds)
+	// fmt.Printf("Crown bounds:    %+v\n", crown.Bounds)
+	// fmt.Printf("Girdle bounds:   %+v\n", girdle.Bounds)
+	// fmt.Printf("Pavilion bounds: %+v\n", pavilion.Bounds)
+	// fmt.Printf("Diamond bounds:  %+v\n", diamond.Bounds)
 
 	return &diamond
 }

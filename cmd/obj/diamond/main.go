@@ -36,6 +36,19 @@ func main() {
 
 	diamond := diamond.NewDiamondRoundBrilliantCut(d, scale, m)
 
+	comments := fileComments(scale, d, m, diamond.Bounds)
+
+	objFile := createFile("diamond.obj")
+	defer objFile.Close()
+	mtlFile := createFile("diamond.mtl")
+	defer mtlFile.Close()
+
+	obj.WriteObjFile(objFile, mtlFile, diamond, comments)
+
+	fmt.Printf("\nCreated diamond obj-file: %s\n", objFile.Name())
+}
+
+func fileComments(scale float64, d diamond.Diamond, m scn.Material, b *scn.Bounds) []string {
 	comments := []string{
 		"Brilliant cut diamond 3D OBJ-file was created using algorithm from https://github.com/chran554/pathtracer/",
 		"The following parameters were used creating these files:",
@@ -48,15 +61,10 @@ func main() {
 	comments = append(comments, "")
 	comments = append(comments, "Diamond material")
 	comments = append(comments, prettyPrintedStruct(m)...)
-
-	objFile := createFile("diamond.obj")
-	defer objFile.Close()
-	mtlFile := createFile("diamond.mtl")
-	defer mtlFile.Close()
-
-	obj.WriteObjFile(objFile, mtlFile, diamond, comments)
-
-	fmt.Printf("Created diamond obj-file: %s\n", objFile.Name())
+	comments = append(comments, "")
+	comments = append(comments, "Diamond bounds")
+	comments = append(comments, prettyPrintedStruct(b)...)
+	return comments
 }
 
 func prettyPrintedStruct(anyStruct any) []string {
