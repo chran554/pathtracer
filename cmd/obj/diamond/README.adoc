@@ -39,8 +39,8 @@ var d = Diamond{
 
 This will produce a diamond 3D object with a girdle diameter of 1.00 units (unless you use the scale parameter of course).
 
-The refractive index of diamond is 2.42 use it for your material.
-https://en.wikipedia.org/wiki/Refractive_index[Refractive index on Wikipedia]
+The refractive index of diamond is `2.42` use it for your material.
+https://en.wikipedia.org/wiki/List_of_refractive_indices[Refractive index for materials on Wikipedia]
 
 == Brilliant cut
 

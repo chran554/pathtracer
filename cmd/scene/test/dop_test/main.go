@@ -19,7 +19,7 @@ var renderType = scn.Pathtracing
 
 var maxRecursionDepth = 4
 var amountSamples = 128 * 4 * 4
-var lensRadius = 15.0
+var lensRadius = 7.0 // 15.0
 var antiAlias = true
 
 var viewPlaneDistance = 2000.0
@@ -66,9 +66,11 @@ func main() {
 			Origin: vec3.T{positionOffsetX, ballRadius, positionOffsetZ},
 			Radius: ballRadius,
 			Material: &scn.Material{
-				Color:      color.Color{R: 0.70, G: 0.95, B: 0.60},
-				Glossiness: 0.80,
-				Roughness:  0.00,
+				Color:           color.Color{R: 0.85, G: 0.95, B: 0.80},
+				Glossiness:      0.90,
+				Roughness:       0.00,
+				Transparency:    0.95,
+				RefractionIndex: 1.52,
 			},
 		}
 		scene.Spheres = append(scene.Spheres, &sphere)
