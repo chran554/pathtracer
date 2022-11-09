@@ -73,8 +73,17 @@ func (camera *Camera) GetCameraCoordinateSystem() *mat3.T {
 }
 
 func getCameraLensPoint(radius float64, amountSamples int, sample int) vec3.T {
-	xOffset, yOffset := sunflower(amountSamples, 1.0, sample, true)
+	xOffset, yOffset := roundAperture(amountSamples, sample)
+	// xOffset, yOffset := heartAperture()
 	return vec3.T{radius * xOffset, radius * yOffset, 0}
+}
+
+func heartAperture() (float64, float64) {
+	return 0.0, 0.0
+}
+
+func roundAperture(amountSamples int, sample int) (float64, float64) {
+	return sunflower(amountSamples, 1.0, sample, true)
 }
 
 func getCameraRayIntersectionWithFocalPlane(camera *Camera, perfectHeading *vec3.T) *vec3.T {

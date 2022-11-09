@@ -267,7 +267,7 @@ func parallelPixelRendering(renderedPixelData *image.FloatImage, camera *scn.Cam
 		for sampleIndex := 0; sampleIndex < amountSamples; sampleIndex++ {
 			cameraRay := scn.CreateCameraRay(x+renderPass.Dx, y+renderPass.Dy, width, height, camera, sampleIndex)
 			col := tracePath(cameraRay, camera, scene, 0)
-			renderedPixelData.GetPixel(x+renderPass.Dx, y+renderPass.Dy).Add(col)
+			renderedPixelData.GetPixel(x+renderPass.Dx, y+renderPass.Dy).ChannelAdd(&col)
 
 			progressbar.Add(1)
 		}
@@ -455,14 +455,14 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 					//G: material.Color.G * projectionColor.G * (incomingEmission.G * float32(cosineNewRayAndNormal)*material.Glossiness),
 					//B: material.Color.B * projectionColor.B * (incomingEmission.B * float32(cosineNewRayAndNormal)*material.Glossiness),
 
-					//R: float32(cosineNewRayAndNormalDiffuse)*incomingEmissionDiffuse.R*material.Color.R*projectionColor.R*(1.0-material.Glossiness) + float32(cosineNewRayAndNormal)*incomingEmission.R*material.Glossiness,
-					//G: float32(cosineNewRayAndNormalDiffuse)*incomingEmissionDiffuse.G*material.Color.G*projectionColor.G*(1.0-material.Glossiness) + float32(cosineNewRayAndNormal)*incomingEmission.G*material.Glossiness,
-					//B: float32(cosineNewRayAndNormalDiffuse)*incomingEmissionDiffuse.B*material.Color.B*projectionColor.B*(1.0-material.Glossiness) + float32(cosineNewRayAndNormal)*incomingEmission.B*material.Glossiness,
+					R: float32(cosineNewRayAndNormalDiffuse)*incomingEmissionDiffuse.R*material.Color.R*projectionColor.R*(1.0-material.Glossiness) + float32(cosineNewRayAndNormal)*incomingEmission.R*material.Glossiness,
+					G: float32(cosineNewRayAndNormalDiffuse)*incomingEmissionDiffuse.G*material.Color.G*projectionColor.G*(1.0-material.Glossiness) + float32(cosineNewRayAndNormal)*incomingEmission.G*material.Glossiness,
+					B: float32(cosineNewRayAndNormalDiffuse)*incomingEmissionDiffuse.B*material.Color.B*projectionColor.B*(1.0-material.Glossiness) + float32(cosineNewRayAndNormal)*incomingEmission.B*material.Glossiness,
 
 					// The multiplication by 0.5 is actually a division by 2, to normalize the added light as there are two light rays fired and added together.
-					R: 0.5 * (float32(cosineNewRayAndNormalDiffuse)*incomingEmissionDiffuse.R*material.Color.R*projectionColor.R + float32(cosineNewRayAndNormal)*incomingEmission.R*material.Glossiness),
-					G: 0.5 * (float32(cosineNewRayAndNormalDiffuse)*incomingEmissionDiffuse.G*material.Color.G*projectionColor.G + float32(cosineNewRayAndNormal)*incomingEmission.G*material.Glossiness),
-					B: 0.5 * (float32(cosineNewRayAndNormalDiffuse)*incomingEmissionDiffuse.B*material.Color.B*projectionColor.B + float32(cosineNewRayAndNormal)*incomingEmission.B*material.Glossiness),
+					// R: 0.5 * (float32(cosineNewRayAndNormalDiffuse)*incomingEmissionDiffuse.R*material.Color.R*projectionColor.R + float32(cosineNewRayAndNormal)*incomingEmission.R*material.Glossiness),
+					// G: 0.5 * (float32(cosineNewRayAndNormalDiffuse)*incomingEmissionDiffuse.G*material.Color.G*projectionColor.G + float32(cosineNewRayAndNormal)*incomingEmission.G*material.Glossiness),
+					// B: 0.5 * (float32(cosineNewRayAndNormalDiffuse)*incomingEmissionDiffuse.B*material.Color.B*projectionColor.B + float32(cosineNewRayAndNormal)*incomingEmission.B*material.Glossiness),
 				}
 			}
 

@@ -308,6 +308,16 @@ func (fs *FacetStructure) GetFirstObjectByName(objectName string) *FacetStructur
 	return nil
 }
 
+func (fs *FacetStructure) ClearMaterials() {
+	fs.Material = nil
+
+	if len(fs.FacetStructures) > 0 {
+		for _, facetStructure := range fs.FacetStructures {
+			facetStructure.ClearMaterials()
+		}
+	}
+}
+
 // SplitMultiPointFacet maps a multipoint (> 3 points) face into a list of triangles.
 // The supplied face must have at least 3 points and be a convex face.
 func (f *Facet) SplitMultiPointFacet() []*Facet {

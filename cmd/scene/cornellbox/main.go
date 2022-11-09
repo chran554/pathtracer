@@ -36,7 +36,7 @@ func main() {
 		WriteRawImageFile: true,
 	}
 
-	openBox := getBoxWalls()
+	openBox := getCornellBox()
 	openBox.Scale(&vec3.Zero, &vec3.T{2 * ballRadius * 3, roofHeight, 3 * ballRadius * 3})
 	openBox.Translate(&vec3.T{-ballRadius * 3, 0, -2 * ballRadius * 3})
 
@@ -120,7 +120,7 @@ func getCamera() scn.Camera {
 	}
 }
 
-func getBoxWalls() *scn.FacetStructure {
+func getCornellBox() *scn.FacetStructure {
 	//roofTexture := scn.NewParallelImageProjection("textures/uv.png", vec3.T{0, ballRadius * 6, 0}, vec3.T{ballRadius, 0, 0}, vec3.T{0, 0, ballRadius})
 	//floorTexture := scn.NewParallelImageProjection("textures/uv.png", vec3.T{0, 0, 0}, vec3.T{ballRadius, 0, 0}, vec3.T{0, 0, ballRadius})
 

@@ -7,15 +7,22 @@ var (
 
 type Color struct{ R, G, B float32 }
 
-func (c *Color) Copy() Color {
+func (c *Color) Copy() *Color {
 	color := *c
-	return color
+	return &color
 }
 
-func (c *Color) Add(color Color) *Color {
+func (c *Color) ChannelAdd(color *Color) *Color {
 	c.R += color.R
 	c.G += color.G
 	c.B += color.B
+	return c
+}
+
+func (c *Color) ChannelMultiply(color *Color) *Color {
+	c.R *= color.R
+	c.G *= color.G
+	c.B *= color.B
 	return c
 }
 
