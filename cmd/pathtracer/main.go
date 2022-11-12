@@ -359,7 +359,7 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 						intersectionPoint = tempIntersectionPoint // Save the intersection point of the closest intersection
 						shortestDistance = distance               // Save the shortest intersection distance
 						material = disc.Material
-						normalAtIntersection = disc.Normal // Should be normalized from initialization
+						*normalAtIntersection = *disc.Normal // Should be normalized from initialization
 
 						// Flip normal if it is pointing away from the incoming ray
 						if vectorCosinePositive(normalAtIntersection, ray.Heading) {
@@ -393,7 +393,21 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 	}
 
 	if intersection {
-		projectionColor := &color.White
+		if material == nil {
+			// Default material if not specified is matte diffuse white
+			material = &scn.Material{
+				Color:           color.White,
+				Emission:        &color.Black,
+				Glossiness:      0.0,
+				Roughness:       1.0,
+				Projection:      nil,
+				RefractionIndex: 0,
+				Transparency:    0.0,
+				RayTerminator:   false,
+			}
+		}
+
+		projectionColor := &color.White // Default value if no projection is applied
 		if material.Projection != nil {
 			projectionColor = material.Projection.GetColor(intersectionPoint)
 		}

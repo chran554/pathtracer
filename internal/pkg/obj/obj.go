@@ -46,6 +46,8 @@ func Read(file *os.File) (*scene.FacetStructure, error) {
 	if facetStructure, err = parseLines(lines, file); err != nil {
 		return nil, err
 	}
+	facetStructure.UpdateBounds()
+	facetStructure.UpdateNormals()
 
 	return facetStructure, nil
 }

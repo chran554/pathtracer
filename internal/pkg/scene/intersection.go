@@ -10,6 +10,7 @@ func negative(t1 float64) bool {
 	return math.Signbit(t1)
 }
 
+/*
 func GetLinePlaneIntersectionPoint(line *Ray, plane *Plane) (*vec3.T, bool) {
 	WarningNone := 0
 	WarningNoIntersect := 1
@@ -47,7 +48,7 @@ func GetLinePlaneIntersectionPoint(line *Ray, plane *Plane) (*vec3.T, bool) {
 
 	return &vec3.T{0, 0, 0}, false
 }
-
+*/
 // GetLinePlaneIntersectionPoint2 gets the intersection point of a line with a plane
 // http://paulbourke.net/geometry/pointlineplane/   ("Intersection of a plane and a line")
 func GetLinePlaneIntersectionPoint2(line *Ray, plane *Plane) (*vec3.T, bool) {
@@ -87,6 +88,7 @@ func BoundsIntersection(line *Ray, bounds *Bounds) (intersection bool) {
 	return BoundingBoxIntersection2(line, bounds)
 }
 
+/*
 func FacetIntersection(line *Ray, facet *Facet) (intersection bool, intersectionPoint *vec3.T, intersectionNormal *vec3.T) {
 	if BoundsIntersection(line, facet.Bounds) {
 		// https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/moller-trumbore-ray-triangle-intersection
@@ -121,6 +123,7 @@ func FacetIntersection(line *Ray, facet *Facet) (intersection bool, intersection
 
 	return false, nil, nil
 }
+*/
 
 /*
 bool rayTriangleIntersect(
@@ -218,6 +221,7 @@ func isPointWithinTriangleFacet(point *vec3.T, facet *Facet) (isWithin bool, ver
 	return (a >= 0) && (b >= 0) && (c >= 0), &vec3.T{c, a, b}
 }
 
+/*
 func isPointWithinTriangle2(point *vec3.T, facet *Facet) (isWithin bool, vertexWeights *vec3.T) {
 	// https://math.stackexchange.com/questions/4322/check-whether-a-point-is-within-a-3d-triangle
 	// https://answers.unity.com/questions/383804/calculate-uv-coordinates-of-3d-point-on-plane-of-m.html
@@ -250,6 +254,7 @@ func isPointWithinTriangle2(point *vec3.T, facet *Facet) (isWithin bool, vertexW
 		(0 <= gamma) && (gamma <= 1) &&
 		(delta-1.0+0.0000001) <= 2*0.0000001, &vec3.T{alpha, beta, gamma}
 }
+*/
 
 func FacetStructureIntersection(line *Ray, facetStructure *FacetStructure) (intersection bool, intersectionPoint *vec3.T, intersectionNormal *vec3.T, intersectionMaterial *Material) {
 	if BoundsIntersection(line, facetStructure.Bounds) {
@@ -295,12 +300,7 @@ func FacetStructureIntersection(line *Ray, facetStructure *FacetStructure) (inte
 }
 
 func DiscIntersection(line *Ray, disc *Disc) (*vec3.T, bool) {
-	plane := Plane{
-		Origin:   disc.Origin,
-		Normal:   disc.Normal,
-		Material: disc.Material,
-	}
-
+	plane := Plane{Origin: disc.Origin, Normal: disc.Normal}
 	intersectionPoint, intersection := GetLinePlaneIntersectionPoint2(line, &plane)
 
 	if intersection {

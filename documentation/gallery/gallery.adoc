@@ -37,6 +37,15 @@ The depth of field depends on both aperture size (radius) and focal length.
 |image::dop_02.png[alt="Depth of field"]
 |===
 
+.DOP Image details
+----
+Image size:             800x400
+Amount samples/pixel:   2048
+Max recursion:          4
+Amount spheres:         6
+Frame render time: 3h46m48.561010458s
+----
+
 ==== Image projection - Spherical
 
 Spherical projection is made from equirectangular images and allow for an image to be projected onto an object from all angles.

@@ -205,15 +205,14 @@ func (fs *FacetStructure) Initialize() {
 }
 
 func (fs *FacetStructure) RotateX(rotationOrigin *vec3.T, angle float64) {
-	for _, facet := range fs.Facets {
-		facet.RotateX(rotationOrigin, angle)
-	}
+	rotatedPoints := make(map[*vec3.T]bool)
+	rotatedNormals := make(map[*vec3.T]bool)
+	rotatedVertexNormals := make(map[*vec3.T]bool)
 
-	if len(fs.FacetStructures) > 0 {
-		for _, facetStructure := range fs.FacetStructures {
-			facetStructure.RotateX(rotationOrigin, angle)
-		}
-	}
+	rotationMatrix := mat3.T{}
+	rotationMatrix.AssignXRotation(angle)
+
+	fs.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
 }
 
 func (fs *FacetStructure) RotateY(rotationOrigin *vec3.T, angle float64) {
@@ -224,29 +223,28 @@ func (fs *FacetStructure) RotateY(rotationOrigin *vec3.T, angle float64) {
 	rotationMatrix := mat3.T{}
 	rotationMatrix.AssignYRotation(angle)
 
-	fs.rotateY(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
-}
-
-func (fs *FacetStructure) rotateY(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool) {
-	for _, facet := range fs.Facets {
-		facet.rotateY(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
-	}
-
-	if len(fs.FacetStructures) > 0 {
-		for _, facetStructure := range fs.FacetStructures {
-			facetStructure.rotateY(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
-		}
-	}
+	fs.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
 }
 
 func (fs *FacetStructure) RotateZ(rotationOrigin *vec3.T, angle float64) {
+	rotatedPoints := make(map[*vec3.T]bool)
+	rotatedNormals := make(map[*vec3.T]bool)
+	rotatedVertexNormals := make(map[*vec3.T]bool)
+
+	rotationMatrix := mat3.T{}
+	rotationMatrix.AssignZRotation(angle)
+
+	fs.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
+}
+
+func (fs *FacetStructure) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool) {
 	for _, facet := range fs.Facets {
-		facet.RotateZ(rotationOrigin, angle)
+		facet.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
 	}
 
 	if len(fs.FacetStructures) > 0 {
 		for _, facetStructure := range fs.FacetStructures {
-			facetStructure.RotateZ(rotationOrigin, angle)
+			facetStructure.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
 		}
 	}
 }
@@ -393,24 +391,14 @@ func (f *Facet) Center() *vec3.T {
 }
 
 func (f *Facet) RotateX(rotationOrigin *vec3.T, angle float64) {
+	rotatedPoints := make(map[*vec3.T]bool)
+	rotatedNormals := make(map[*vec3.T]bool)
+	rotatedVertexNormals := make(map[*vec3.T]bool)
+
 	rotationMatrix := mat3.T{}
 	rotationMatrix.AssignXRotation(angle)
 
-	for i := range f.Vertices {
-		newVertex := f.Vertices[i].Subed(rotationOrigin)
-		rotatedVertex := rotationMatrix.MulVec3(&newVertex)
-		rotatedVertex.Add(rotationOrigin)
-
-		f.Vertices[i] = &rotatedVertex
-	}
-
-	for i := range f.VertexNormals {
-		vertexNormal := f.VertexNormals[i]
-		rotatedVertex := rotationMatrix.MulVec3(vertexNormal)
-		rotatedVertex.Add(rotationOrigin)
-
-		f.Vertices[i] = &rotatedVertex
-	}
+	f.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
 }
 
 func (f *Facet) RotateY(rotationOrigin *vec3.T, angle float64) {
@@ -421,16 +409,29 @@ func (f *Facet) RotateY(rotationOrigin *vec3.T, angle float64) {
 	rotationMatrix := mat3.T{}
 	rotationMatrix.AssignYRotation(angle)
 
-	f.rotateY(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
+	f.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
 }
 
-func (f *Facet) rotateY(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool) {
+func (f *Facet) RotateZ(rotationOrigin *vec3.T, angle float64) {
+	rotatedPoints := make(map[*vec3.T]bool)
+	rotatedNormals := make(map[*vec3.T]bool)
+	rotatedVertexNormals := make(map[*vec3.T]bool)
+
+	rotationMatrix := mat3.T{}
+	rotationMatrix.AssignZRotation(angle)
+
+	f.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
+}
+
+func (f *Facet) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool) {
 	for _, vertex := range f.Vertices {
 		if rotatedPoints[vertex] {
 			// fmt.Printf("Point already rotated: %+v\n", vertex)
 		} else {
 			newVertex := vertex.Subed(rotationOrigin)
+			newVertex[2] *= -1 // Convert to right hand coordinate system before rotation matrix
 			rotatedVertex := rotationMatrix.MulVec3(&newVertex)
+			rotatedVertex[2] *= -1 // Convert back to left hand coordinate system after rotation matrix
 			rotatedVertex.Add(rotationOrigin)
 
 			vertex[0] = rotatedVertex[0]
@@ -444,7 +445,10 @@ func (f *Facet) rotateY(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPo
 	if rotatedNormals[f.Normal] {
 		// fmt.Printf("Normal already rotated: %+v\n", f.Normal)
 	} else {
-		rotatedNormal := rotationMatrix.MulVec3(f.Normal)
+		normal := *f.Normal
+		normal[2] *= -1 // Convert to right hand coordinate system before rotation matrix
+		rotatedNormal := rotationMatrix.MulVec3(&normal)
+		rotatedNormal[2] *= -1 // Convert back to left hand coordinate system after rotation matrix
 		f.Normal[0] = rotatedNormal[0]
 		f.Normal[1] = rotatedNormal[1]
 		f.Normal[2] = rotatedNormal[2]
@@ -456,34 +460,16 @@ func (f *Facet) rotateY(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPo
 		if rotatedVertexNormals[vertexNormal] {
 			// fmt.Printf("Vertex normal already rotated: %+v\n", vertexNormal)
 		} else {
-			rotatedNormal := rotationMatrix.MulVec3(vertexNormal)
+			normal := *vertexNormal
+			normal[2] *= -1 // Convert to right hand coordinate system before rotation matrix
+			rotatedNormal := rotationMatrix.MulVec3(&normal)
+			rotatedNormal[2] *= -1 // Convert back to left hand coordinate system after rotation matrix
 			vertexNormal[0] = rotatedNormal[0]
 			vertexNormal[1] = rotatedNormal[1]
 			vertexNormal[2] = rotatedNormal[2]
 
 			rotatedVertexNormals[vertexNormal] = true
 		}
-	}
-}
-
-func (f *Facet) RotateZ(rotationOrigin *vec3.T, angle float64) {
-	rotationMatrix := mat3.T{}
-	rotationMatrix.AssignZRotation(angle)
-
-	for i := range f.Vertices {
-		newVertex := f.Vertices[i].Subed(rotationOrigin)
-		rotatedVertex := rotationMatrix.MulVec3(&newVertex)
-		rotatedVertex.Add(rotationOrigin)
-
-		f.Vertices[i] = &rotatedVertex
-	}
-
-	for i := range f.VertexNormals {
-		vertexNormal := f.VertexNormals[i]
-		rotatedVertex := rotationMatrix.MulVec3(vertexNormal)
-		rotatedVertex.Add(rotationOrigin)
-
-		f.Vertices[i] = &rotatedVertex
 	}
 }
 
@@ -601,16 +587,16 @@ type Material struct {
 type ImageProjection struct {
 	ProjectionType                  ProjectionType `json:"ProjectionType"`
 	ImageFilename                   string         `json:"ImageFilename"`
+	Origin                          vec3.T         `json:"Origin"`
+	U                               vec3.T         `json:"U"`
+	V                               vec3.T         `json:"V"`
+	RepeatU                         bool           `json:"RepeatU,omitempty"`
+	RepeatV                         bool           `json:"RepeatV,omitempty"`
+	FlipU                           bool           `json:"FlipU,omitempty"`
+	FlipV                           bool           `json:"FlipV,omitempty"`
+	Gamma                           float64        `json:"Gamma,omitempty"`
 	_image                          *image.FloatImage
 	_invertedCoordinateSystemMatrix mat3.T
-	Origin                          vec3.T  `json:"Origin"`
-	U                               vec3.T  `json:"U"`
-	V                               vec3.T  `json:"V"`
-	RepeatU                         bool    `json:"RepeatU,omitempty"`
-	RepeatV                         bool    `json:"RepeatV,omitempty"`
-	FlipU                           bool    `json:"FlipU,omitempty"`
-	FlipV                           bool    `json:"FlipV,omitempty"`
-	Gamma                           float64 `json:"Gamma,omitempty"`
 }
 
 type Ray struct {
@@ -656,11 +642,15 @@ type Disc struct {
 	Material *Material `json:"Material,omitempty"`
 }
 
-func (sphere Sphere) Initialize() {
+func (sphere *Sphere) Initialize() {
 	projection := sphere.Material.Projection
 	if projection != nil {
 		projection.Initialize()
 	}
+}
+
+func (sphere *Sphere) Translate(translation *vec3.T) {
+	sphere.Origin.Add(translation)
 }
 
 func (disc *Disc) Initialize() {
@@ -670,4 +660,53 @@ func (disc *Disc) Initialize() {
 	if projection != nil {
 		projection.Initialize()
 	}
+}
+
+func (disc *Disc) Translate(translation *vec3.T) {
+	disc.Origin.Add(translation)
+}
+
+func (disc *Disc) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T) {
+	normal := *disc.Normal
+	normal[2] *= -1 // Change to right hand coordinate system from left hand coordinate system
+	rotatedNormal := rotationMatrix.MulVec3(&normal)
+	rotatedNormal[2] *= -1 // Change back from right hand coordinate system to left hand coordinate system
+	disc.Normal[0] = rotatedNormal[0]
+	disc.Normal[1] = rotatedNormal[1]
+	disc.Normal[2] = rotatedNormal[2]
+
+	origin := *disc.Origin
+	origin.Sub(rotationOrigin)
+	origin[2] *= -1 // Change to right hand coordinate system from left hand coordinate system
+	rotatedOrigin := rotationMatrix.MulVec3(&origin)
+	rotatedOrigin[2] *= -1 // Change back from right hand coordinate system to left hand coordinate system
+	rotatedOrigin.Add(rotationOrigin)
+
+	disc.Origin[0] = rotatedOrigin[0]
+	disc.Origin[1] = rotatedOrigin[1]
+	disc.Origin[2] = rotatedOrigin[2]
+}
+
+func (disc *Disc) RotateY(rotationOrigin *vec3.T, angle float64) {
+	// A matrix m of type mat3.T is addressed as: m[columnIndex][rowIndex]
+	rotationMatrix := mat3.T{}
+	rotationMatrix.AssignYRotation(angle)
+
+	disc.rotate(rotationOrigin, rotationMatrix)
+}
+
+func (disc *Disc) RotateX(rotationOrigin *vec3.T, angle float64) {
+	// A matrix m of type mat3.T is addressed as: m[columnIndex][rowIndex]
+	rotationMatrix := mat3.T{}
+	rotationMatrix.AssignXRotation(angle)
+
+	disc.rotate(rotationOrigin, rotationMatrix)
+}
+
+func (disc *Disc) RotateZ(rotationOrigin *vec3.T, angle float64) {
+	// A matrix m of type mat3.T is addressed as: m[columnIndex][rowIndex]
+	rotationMatrix := mat3.T{}
+	rotationMatrix.AssignZRotation(angle)
+
+	disc.rotate(rotationOrigin, rotationMatrix)
 }
