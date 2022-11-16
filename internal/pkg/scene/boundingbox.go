@@ -20,21 +20,24 @@ func (b *Bounds) Center() *vec3.T {
 	}
 }
 
+func (b *Bounds) SizeX() float64 {
+	return b.Xmax - b.Xmin
+}
+
+func (b *Bounds) SizeY() float64 {
+	return b.Ymax - b.Ymin
+}
+
+func (b *Bounds) SizeZ() float64 {
+	return b.Zmax - b.Zmin
+}
+
 func (b *Bounds) Max() float64 {
 	return math.Max(b.Xmax, math.Max(b.Ymax, b.Zmax))
 }
 
 func (b *Bounds) Min() float64 {
 	return math.Min(b.Xmax, math.Min(b.Ymax, b.Zmax))
-}
-
-func (b *Bounds) AddSphereBounds(s *Sphere) {
-	b.Xmin = math.Min(b.Xmin, s.Origin[0]-s.Radius)
-	b.Xmax = math.Max(b.Xmax, s.Origin[0]+s.Radius)
-	b.Ymin = math.Min(b.Ymin, s.Origin[1]-s.Radius)
-	b.Ymax = math.Max(b.Ymax, s.Origin[1]+s.Radius)
-	b.Zmin = math.Min(b.Zmin, s.Origin[2]-s.Radius)
-	b.Zmax = math.Max(b.Zmax, s.Origin[2]+s.Radius)
 }
 
 func (b *Bounds) AddDiscBounds(d *Disc) {

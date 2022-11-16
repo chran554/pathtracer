@@ -26,7 +26,6 @@ var renderType = scn.Pathtracing
 var maxRecursionDepth = 2 * 2
 var amountSamples = 128 * 4
 var lensRadius float64 = 0
-var antiAlias = true
 
 var viewPlaneDistance = 1000.0
 var cameraDistanceFactor = 1.0
@@ -72,18 +71,18 @@ func main() {
 
 	sphere1 := scn.Sphere{
 		Name:   "Right sphere",
-		Origin: vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0},
+		Origin: &vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0},
 		Radius: ballRadius,
 		Material: &scn.Material{
-			Color:      color.Color{R: 0.9, G: 0.9, B: 0.9},
+			Color:      &color.Color{R: 0.9, G: 0.9, B: 0.9},
 			Glossiness: 0.1,
 			Roughness:  0.2,
 			Projection: &scn.ImageProjection{
 				ProjectionType: scn.Spherical,
 				ImageFilename:  "textures/equirectangular/football.png",
-				Origin:         vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0},
-				U:              vec3.T{1, 0, 0},
-				V:              vec3.T{0, 1, 0},
+				Origin:         &vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0},
+				U:              &vec3.T{1, 0, 0},
+				V:              &vec3.T{0, 1, 0},
 				RepeatU:        false,
 				RepeatV:        false,
 				FlipU:          false,
@@ -95,19 +94,19 @@ func main() {
 
 	sphere2 := scn.Sphere{
 		Name:   "Left sphere",
-		Origin: vec3.T{-(ballRadius + (ballRadius / 2)), ballRadius, 0},
+		Origin: &vec3.T{-(ballRadius + (ballRadius / 2)), ballRadius, 0},
 		Radius: ballRadius,
 		Material: &scn.Material{
-			Color: color.Color{R: 0.9, G: 0.9, B: 0.9},
+			Color: &color.Color{R: 0.9, G: 0.9, B: 0.9},
 		},
 	}
 
 	mirrorSphere1 := scn.Sphere{
 		Name:   "Mirror sphere on floor",
-		Origin: vec3.T{0, ballRadius / 1.5, ballRadius * 1.5},
+		Origin: &vec3.T{0, ballRadius / 1.5, ballRadius * 1.5},
 		Radius: ballRadius / 1.5,
 		Material: &scn.Material{
-			Color:      color.Color{R: 0.8, G: 0.85, B: 0.9},
+			Color:      &color.Color{R: 0.8, G: 0.85, B: 0.9},
 			Roughness:  0.20,
 			Glossiness: 0.95,
 		},
@@ -117,10 +116,10 @@ func main() {
 
 	mirrorSphere2 := scn.Sphere{
 		Name:   "Mirror sphere on wall left",
-		Origin: vec3.T{-(scale*2 + mirrorSphereRadius*0.25), scale + mirrorSphereRadius, scale*2 + mirrorSphereRadius*0.25},
+		Origin: &vec3.T{-(scale*2 + mirrorSphereRadius*0.25), scale + mirrorSphereRadius, scale*2 + mirrorSphereRadius*0.25},
 		Radius: mirrorSphereRadius,
 		Material: &scn.Material{
-			Color:      color.Color{R: 0.9, G: 0.9, B: 0.95},
+			Color:      &color.Color{R: 0.9, G: 0.9, B: 0.95},
 			Roughness:  0.02,
 			Glossiness: 0.95,
 		},
@@ -128,10 +127,10 @@ func main() {
 
 	mirrorSphere3 := scn.Sphere{
 		Name:   "Mirror sphere on wall right",
-		Origin: vec3.T{scale*2 + mirrorSphereRadius*0.25, scale + mirrorSphereRadius, scale*2 + mirrorSphereRadius*0.25},
+		Origin: &vec3.T{scale*2 + mirrorSphereRadius*0.25, scale + mirrorSphereRadius, scale*2 + mirrorSphereRadius*0.25},
 		Radius: mirrorSphereRadius,
 		Material: &scn.Material{
-			Color:      color.Color{R: 0.9, G: 0.9, B: 0.95},
+			Color:      &color.Color{R: 0.9, G: 0.9, B: 0.95},
 			Roughness:  0.02,
 			Glossiness: 0.95,
 		},
@@ -179,7 +178,7 @@ func main() {
 func setObjectMaterial(openBox *scn.FacetStructure, objectName string, color *color.Color, emission *color.Color, rayTerminator bool, glossiness float32, roughness float32) {
 	object := openBox.GetFirstObjectByName(objectName)
 	if object != nil {
-		object.Material.Color = *color
+		object.Material.Color = color
 		object.Material.Emission = emission
 		object.Material.RayTerminator = rayTerminator
 		object.Material.Glossiness = glossiness
@@ -196,9 +195,9 @@ func setObjectProjection1(openBox *scn.FacetStructure, objectName string) {
 		object.Material.Projection = &scn.ImageProjection{
 			ProjectionType: scn.Parallel,
 			ImageFilename:  "textures/white_marble.png",
-			Origin:         vec3.Zero,
-			U:              vec3.T{200 * 2, 0, 0},
-			V:              vec3.T{0, 0, 200 * 2},
+			Origin:         &vec3.Zero,
+			U:              &vec3.T{200 * 2, 0, 0},
+			V:              &vec3.T{0, 0, 200 * 2},
 			RepeatU:        true,
 			RepeatV:        true,
 			FlipU:          false,
@@ -220,10 +219,10 @@ func getCamera(cameraOrigin, focusPoint *vec3.T) scn.Camera {
 		Heading:           &heading,
 		ViewUp:            &vec3.T{0, 1, 0},
 		ViewPlaneDistance: viewPlaneDistance,
-		LensRadius:        lensRadius,
-		FocalDistance:     focalDistance,
+		ApertureSize:      lensRadius,
+		FocusDistance:     focalDistance,
 		Samples:           amountSamples,
-		AntiAlias:         antiAlias,
+		AntiAlias:         true,
 		Magnification:     magnification,
 		RenderType:        renderType,
 		RecursionDepth:    maxRecursionDepth,

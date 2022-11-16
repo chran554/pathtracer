@@ -28,7 +28,6 @@ var renderType = scn.Pathtracing
 var maxRecursionDepth = 2
 var amountSamples = 128 * 8
 var lensRadius float64 = 0
-var antiAlias = true
 
 var viewPlaneDistance = 1000.0
 var cameraDistanceFactor = 1.0
@@ -47,18 +46,18 @@ func main() {
 
 	environmentSphere := scn.Sphere{
 		Name:   "Environment light",
-		Origin: vec3.T{0, 0, 0},
+		Origin: &vec3.T{0, 0, 0},
 		Radius: 1000 * 1000 * 1000,
 		Material: &scn.Material{
-			Color:         color.Color{R: 1.0, G: 1.0, B: 1.0},
+			Color:         &color.Color{R: 1.0, G: 1.0, B: 1.0},
 			Emission:      &color.Color{R: 1.0, G: 1.0, B: 1.0},
 			RayTerminator: true,
 			Projection: &scn.ImageProjection{
 				ProjectionType: scn.Spherical,
 				ImageFilename:  "textures/planets/environmentmap/Stellarium3.jpeg",
-				Origin:         vec3.T{0, 0, 0},
-				U:              vec3.T{1, 0, 0},
-				V:              vec3.T{0, 1, 0},
+				Origin:         &vec3.T{0, 0, 0},
+				U:              &vec3.T{1, 0, 0},
+				V:              &vec3.T{0, 1, 0},
 				RepeatU:        false,
 				RepeatV:        false,
 				FlipU:          false,
@@ -70,10 +69,10 @@ func main() {
 
 	lamp1 := scn.Sphere{
 		Name:   "Lamp1",
-		Origin: vec3.T{roomScale * 2.0, roomScale * 0.5, -roomScale * 1.0},
+		Origin: &vec3.T{roomScale * 2.0, roomScale * 0.5, -roomScale * 1.0},
 		Radius: roomScale * 0.8,
 		Material: &scn.Material{
-			Color:         color.Color{R: 1.0, G: 1.0, B: 1.0},
+			Color:         &color.Color{R: 1.0, G: 1.0, B: 1.0},
 			Emission:      &color.Color{R: 20.0, G: 20.0, B: 20.0},
 			RayTerminator: false,
 		},
@@ -81,17 +80,17 @@ func main() {
 
 	lamp2 := scn.Sphere{
 		Name:   "Lamp2",
-		Origin: vec3.T{-roomScale * 2.0, roomScale * 0.5, -roomScale * 1.0},
+		Origin: &vec3.T{-roomScale * 2.0, roomScale * 0.5, -roomScale * 1.0},
 		Radius: roomScale * 0.8,
 		Material: &scn.Material{
-			Color:         color.Color{R: 1.0, G: 1.0, B: 1.0},
+			Color:         &color.Color{R: 1.0, G: 1.0, B: 1.0},
 			Emission:      &color.Color{R: 9.0, G: 9.0, B: 9.0},
 			RayTerminator: false,
 		},
 	}
 
 	diamondMaterial := scn.Material{
-		Color:           color.Color{R: 0.4, G: 0.4, B: 0.4},
+		Color:           &color.Color{R: 0.4, G: 0.4, B: 0.4},
 		Glossiness:      0.8,
 		Roughness:       0.005,
 		RefractionIndex: 2.42,
@@ -118,16 +117,16 @@ func main() {
 		Normal: &vec3.T{0, 1, 0},
 		Radius: roomScale * 1.5,
 		Material: &scn.Material{
-			Color:         color.Color{R: 1.5, G: 1.5, B: 1.5},
+			Color:         &color.Color{R: 1.5, G: 1.5, B: 1.5},
 			Roughness:     0.1,
 			Glossiness:    0.8,
 			RayTerminator: false,
 			Projection: &scn.ImageProjection{
 				ProjectionType: scn.Parallel,
 				ImageFilename:  "textures/white_marble.png",
-				Origin:         vec3.T{0, 0, 0},
-				U:              vec3.T{roomScale * 1.5 * 2, 0, 0},
-				V:              vec3.T{0, 0, roomScale * 1.5 * 2},
+				Origin:         &vec3.T{0, 0, 0},
+				U:              &vec3.T{roomScale * 1.5 * 2, 0, 0},
+				V:              &vec3.T{0, 0, roomScale * 1.5 * 2},
 				RepeatU:        true,
 				RepeatV:        true,
 				FlipU:          false,
@@ -217,7 +216,7 @@ func getCornellBox(cornellBoxFilenamePath string, scale float64) *scn.FacetStruc
 func setObjectMaterial(openBox *scn.FacetStructure, objectName string, color *color.Color, emission *color.Color, rayTerminator bool, glossiness float32, roughness float32) {
 	object := openBox.GetFirstObjectByName(objectName)
 	if object != nil {
-		object.Material.Color = *color
+		object.Material.Color = color
 		object.Material.Emission = emission
 		object.Material.RayTerminator = rayTerminator
 		object.Material.Glossiness = glossiness
@@ -234,9 +233,9 @@ func setObjectProjection1(openBox *scn.FacetStructure, objectName string) {
 		object.Material.Projection = &scn.ImageProjection{
 			ProjectionType: scn.Parallel,
 			ImageFilename:  "textures/white_marble.png",
-			Origin:         vec3.Zero,
-			U:              vec3.T{200 * 2, 0, 0},
-			V:              vec3.T{0, 0, 200 * 2},
+			Origin:         &vec3.Zero,
+			U:              &vec3.T{200 * 2, 0, 0},
+			V:              &vec3.T{0, 0, 200 * 2},
 			RepeatU:        true,
 			RepeatV:        true,
 			FlipU:          false,
@@ -258,10 +257,10 @@ func getCamera(cameraOrigin, focusPoint *vec3.T) scn.Camera {
 		Heading:           &heading,
 		ViewUp:            &vec3.T{0, 1, 0},
 		ViewPlaneDistance: viewPlaneDistance,
-		LensRadius:        lensRadius,
-		FocalDistance:     focalDistance,
+		ApertureSize:      lensRadius,
+		FocusDistance:     focalDistance,
 		Samples:           amountSamples,
-		AntiAlias:         antiAlias,
+		AntiAlias:         true,
 		Magnification:     magnification,
 		RenderType:        renderType,
 		RecursionDepth:    maxRecursionDepth,

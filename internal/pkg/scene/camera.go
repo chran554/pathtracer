@@ -3,6 +3,9 @@ package scene
 import (
 	"math"
 	"math/rand"
+	"pathtracer/internal/pkg/color"
+	img "pathtracer/internal/pkg/image"
+	"strings"
 
 	"github.com/ungerik/go3d/float64/mat3"
 	"github.com/ungerik/go3d/float64/vec2"
@@ -35,8 +38,8 @@ func CreateCameraRay(x int, y int, width int, height int, camera *Camera, sample
 
 	var headingInCameraCoordinateSystem *vec3.T
 
-	if camera.LensRadius > 0 && camera.Samples > 0 {
-		cameraPointOffset := getCameraLensPoint(camera.LensRadius, camera.Samples, sampleIndex+1)
+	if camera.ApertureSize > 0 && camera.Samples > 0 {
+		cameraPointOffset := getCameraLensPoint(camera.ApertureSize, camera.ApertureShape, camera.Samples, sampleIndex+1)
 		focalPointInCameraCoordinateSystem := getCameraRayIntersectionWithFocalPlane(camera, perfectHeadingInCameraCoordinateSystem)
 
 		headingInCameraCoordinateSystem = focalPointInCameraCoordinateSystem
@@ -72,17 +75,40 @@ func (camera *Camera) GetCameraCoordinateSystem() *mat3.T {
 	return camera._coordinateSystem
 }
 
-func getCameraLensPoint(radius float64, amountSamples int, sample int) vec3.T {
-	xOffset, yOffset := roundAperture(amountSamples, sample)
-	// xOffset, yOffset := heartAperture()
+func getCameraLensPoint(radius float64, apertureShapeImageFilepath string, amountSamples int, sample int) vec3.T {
+	xOffset := 0.0
+	yOffset := 0.0
+
+	if strings.TrimSpace(apertureShapeImageFilepath) != "" {
+		apertureShapeImage := img.GetCachedImage(apertureShapeImageFilepath, 1.0)
+		xOffset, yOffset = shapedApertureOffset(apertureShapeImage)
+	} else {
+		xOffset, yOffset = roundApertureOffset(amountSamples, sample)
+	}
+
 	return vec3.T{radius * xOffset, radius * yOffset, 0}
 }
 
-func heartAperture() (float64, float64) {
-	return 0.0, 0.0
+func shapedApertureOffset(image *img.FloatImage) (float64, float64) {
+	maxSize := math.Max(float64(image.Width), float64(image.Height))
+
+	offsetX := 0.0
+	offsetY := 0.0
+
+	for c := color.Black; c != color.White; { // TODO be smarter than re-iterating until we hit a white pixel...
+		x := rand.Intn(image.Width)
+		y := rand.Intn(image.Height)
+
+		offsetX = (float64(x)/maxSize)*2 - (float64(image.Width) / maxSize)
+		offsetY = (float64(y)/maxSize)*2 - (float64(image.Height) / maxSize)
+
+		c = *image.GetPixel(x, (image.Height-1)-y)
+	}
+
+	return offsetX, offsetY
 }
 
-func roundAperture(amountSamples int, sample int) (float64, float64) {
+func roundApertureOffset(amountSamples int, sample int) (float64, float64) {
 	return sunflower(amountSamples, 1.0, sample, true)
 }
 
@@ -93,7 +119,7 @@ func getCameraRayIntersectionWithFocalPlane(camera *Camera, perfectHeading *vec3
 	}
 
 	focalPlane := &Plane{
-		Origin: &vec3.T{0, 0, camera.FocalDistance},
+		Origin: &vec3.T{0, 0, camera.FocusDistance},
 		Normal: &vec3.T{0, 0, 1},
 	}
 

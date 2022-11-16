@@ -3,18 +3,19 @@ package image
 import (
 	"fmt"
 	"strings"
+	"sync"
 )
 
-var globalImageCache = ImageCache{}
+type Cache map[string]*FloatImage
 
-type ImageCache map[string]*FloatImage
+var globalImageCacheLock = &sync.Mutex{}
+var globalImageCache = Cache{}
 
 func GetCachedImage(filename string, gamma float64) *FloatImage {
-	return globalImageCache.GetImage(filename, gamma)
-}
+	globalImageCacheLock.Lock()
+	defer globalImageCacheLock.Unlock()
 
-func (cache ImageCache) GetImage(filename string, gamma float64) *FloatImage {
-	image := cache[filename]
+	image := globalImageCache[filename]
 
 	if image != nil {
 		return image
@@ -24,7 +25,7 @@ func (cache ImageCache) GetImage(filename string, gamma float64) *FloatImage {
 		fmt.Println("Scene image cache loading file:", filename)
 		image = LoadImageData(filename, gamma)
 		fmt.Println("Scene image cache loading file:", filename, "... done")
-		cache[filename] = image
+		globalImageCache[filename] = image
 	}
 
 	return image

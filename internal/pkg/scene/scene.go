@@ -42,14 +42,14 @@ func (stack *SceneNodeStack) PushAll(sceneNodes []*SceneNode) {
 func (stack *SceneNodeStack) Pop() (*SceneNode, bool) {
 	if stack.IsEmpty() {
 		return nil, false
-	} else {
-		topIndex := len(*stack) - 1     // Get the topIndex of the top most element.
-		sceneNode := (*stack)[topIndex] // Index into the slice and obtain the element.
-		(*stack)[topIndex] = nil        // Erase top element entry (write zero value)
-		*stack = (*stack)[:topIndex]    // Remove it from the stack by slicing it off.
-
-		return sceneNode, true
 	}
+
+	topIndex := len(*stack) - 1     // Get the topIndex of the top most element.
+	sceneNode := (*stack)[topIndex] // Index into the slice and obtain the element.
+	(*stack)[topIndex] = nil        // Erase top element entry (write zero value)
+	*stack = (*stack)[:topIndex]    // Remove it from the stack by slicing it off.
+
+	return sceneNode, true
 }
 
 func NewParallelImageProjection(textureFilename string, origin vec3.T, u vec3.T, v vec3.T) ImageProjection {
@@ -68,9 +68,9 @@ func NewImageProjection(projectionType ProjectionType, textureFilename string, o
 	return ImageProjection{
 		ProjectionType: projectionType,
 		ImageFilename:  textureFilename,
-		Origin:         origin,
-		U:              u,
-		V:              v,
+		Origin:         &origin,
+		U:              &u,
+		V:              &v,
 		RepeatU:        repeatU,
 		RepeatV:        repeatV,
 		FlipU:          flipU,
@@ -94,7 +94,7 @@ func (imageProjection *ImageProjection) GetColor(point *vec3.T) *color.Color {
 
 func (imageProjection *ImageProjection) getSphericalColor2(point *vec3.T) *color.Color {
 	translatedPoint := *point
-	translatedPoint.Sub(&imageProjection.Origin)
+	translatedPoint.Sub(imageProjection.Origin)
 
 	p := imageProjection._invertedCoordinateSystemMatrix.MulVec3(&translatedPoint)
 
@@ -134,7 +134,7 @@ func (imageProjection *ImageProjection) getSphericalColor(point *vec3.T) *color.
 
 func (imageProjection *ImageProjection) getSphericalXY(point *vec3.T) vec2.T {
 	translatedPoint := *point
-	translatedPoint.Sub(&imageProjection.Origin)
+	translatedPoint.Sub(imageProjection.Origin)
 
 	p := imageProjection._invertedCoordinateSystemMatrix.MulVec3(&translatedPoint)
 	pxzLength := math.Sqrt(p[0]*p[0] + p[2]*p[2])
@@ -168,7 +168,7 @@ func (imageProjection *ImageProjection) getSphericalXY(point *vec3.T) vec2.T {
 }
 
 func (imageProjection *ImageProjection) getCylindricalColor(point *vec3.T) *color.Color {
-	translatedPoint := point.Subed(&imageProjection.Origin)
+	translatedPoint := point.Subed(imageProjection.Origin)
 
 	uvPoint := imageProjection._invertedCoordinateSystemMatrix.MulVec3(&translatedPoint)
 
@@ -220,7 +220,7 @@ func (imageProjection *ImageProjection) getCylindricalColor(point *vec3.T) *colo
 
 func (imageProjection *ImageProjection) getParallelColor(point *vec3.T) *color.Color {
 	translatedPoint := *point
-	translatedPoint.Sub(&imageProjection.Origin)
+	translatedPoint.Sub(imageProjection.Origin)
 
 	pointInUV := imageProjection._invertedCoordinateSystemMatrix.MulVec3(&translatedPoint)
 	u := pointInUV[0]
@@ -259,7 +259,7 @@ func (imageProjection *ImageProjection) getParallelColor(point *vec3.T) *color.C
 
 func (imageProjection *ImageProjection) ClearProjection() {
 	imageProjection._image = nil
-	imageProjection._invertedCoordinateSystemMatrix = mat3.Zero
+	imageProjection._invertedCoordinateSystemMatrix = nil
 }
 
 func (imageProjection *ImageProjection) Initialize() {
@@ -286,9 +286,9 @@ func (imageProjection *ImageProjection) Initialize() {
 }
 
 func (imageProjection *ImageProjection) initializeParallellProjection() {
-	if imageProjection._invertedCoordinateSystemMatrix == mat3.Zero {
-		W := vec3.Cross(&imageProjection.U, &imageProjection.V)
-		imageProjection._invertedCoordinateSystemMatrix = mat3.T{imageProjection.U, imageProjection.V, W}
+	if imageProjection._invertedCoordinateSystemMatrix == nil || *imageProjection._invertedCoordinateSystemMatrix == mat3.Zero {
+		W := vec3.Cross(imageProjection.U, imageProjection.V)
+		imageProjection._invertedCoordinateSystemMatrix = &mat3.T{*imageProjection.U, *imageProjection.V, W}
 		if _, err := imageProjection._invertedCoordinateSystemMatrix.Invert(); err != nil {
 			fmt.Println("could not initialize parallel projection as invert matrix for uv system could not be created.", imageProjection.ImageFilename, imageProjection.U, imageProjection.V, imageProjection.Origin)
 			os.Exit(1)
@@ -297,12 +297,12 @@ func (imageProjection *ImageProjection) initializeParallellProjection() {
 }
 
 func (imageProjection *ImageProjection) initializeCylindricalProjection() {
-	if imageProjection._invertedCoordinateSystemMatrix == mat3.Zero {
+	if imageProjection._invertedCoordinateSystemMatrix == nil || *imageProjection._invertedCoordinateSystemMatrix == mat3.Zero {
 		Un := imageProjection.U.Normalized()
 		Vn := imageProjection.V.Normalized()
 		W := vec3.Cross(&Un, &Vn)
 		U := vec3.Cross(&Vn, &W)
-		imageProjection._invertedCoordinateSystemMatrix = mat3.T{U, imageProjection.V, W}
+		imageProjection._invertedCoordinateSystemMatrix = &mat3.T{U, *imageProjection.V, W}
 		if _, err := imageProjection._invertedCoordinateSystemMatrix.Invert(); err != nil {
 			fmt.Println("could not initialize cylindrical projection as inverted matrix for uv system could not be created.", imageProjection.ImageFilename, imageProjection.U, imageProjection.V, imageProjection.Origin)
 			os.Exit(1)
@@ -311,12 +311,12 @@ func (imageProjection *ImageProjection) initializeCylindricalProjection() {
 }
 
 func (imageProjection *ImageProjection) initializeSphericalProjection() {
-	if imageProjection._invertedCoordinateSystemMatrix == mat3.Zero {
+	if imageProjection._invertedCoordinateSystemMatrix == nil || *imageProjection._invertedCoordinateSystemMatrix == mat3.Zero {
 		Un := imageProjection.U.Normalized()
 		Vn := imageProjection.V.Normalized()
 		Wn := vec3.Cross(&Un, &Vn)
 		//U := vec3.Cross(&Vn, &W)
-		imageProjection._invertedCoordinateSystemMatrix = mat3.T{Un, Vn, Wn}
+		imageProjection._invertedCoordinateSystemMatrix = &mat3.T{Un, Vn, Wn}
 		if _, err := imageProjection._invertedCoordinateSystemMatrix.Invert(); err != nil {
 			fmt.Println("could not initialize spherical projection as inverted matrix for uv system could not be created.", imageProjection.ImageFilename, imageProjection.U, imageProjection.V, imageProjection.Origin)
 			os.Exit(1)

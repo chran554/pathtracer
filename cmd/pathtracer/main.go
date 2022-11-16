@@ -120,17 +120,28 @@ func main() {
 }
 
 func initializeScene(scene *scn.SceneNode) {
-	discs := (*scene).GetDiscs()
+	// fmt.Printf("Scene: %+v\n", scene)
+
+	discs := scene.GetDiscs()
 	for _, disc := range discs {
 		disc.Initialize()
 	}
 
-	spheres := (*scene).GetSpheres()
-	for _, sphere := range spheres {
-		sphere.Initialize()
+	spheres := scene.GetSpheres()
+	if len(spheres) < 25 {
+		for _, sphere := range spheres {
+			sphere.Initialize()
+		}
+	} else {
+		subSceneNodeStructures := subdivideSpheres(spheres)
+
+		if len(subSceneNodeStructures) > 1 {
+			scene.ChildNodes = append(scene.ChildNodes, subSceneNodeStructures...)
+			scene.Spheres = nil
+		}
 	}
 
-	facetStructures := (*scene).GetFacetStructures()
+	facetStructures := scene.GetFacetStructures()
 
 	for _, facetStructure := range facetStructures {
 		facetStructure.SplitMultiPointFacets()
@@ -145,6 +156,56 @@ func initializeScene(scene *scn.SceneNode) {
 	for _, facetStructure := range facetStructures {
 		facetStructure.Initialize()
 	}
+
+	for _, sceneNode := range scene.ChildNodes {
+		initializeScene(sceneNode)
+	}
+}
+
+func subdivideSpheres(spheres []*scn.Sphere) []*scn.SceneNode {
+	bounds := scn.NewBounds()
+	for _, sphere := range spheres {
+		bounds.AddBounds(sphere.Bounds())
+	}
+
+	center := bounds.Center()
+	subSceneNodeStructures := make([]*scn.SceneNode, 8)
+
+	for _, sphere := range spheres {
+		substructureIndex := 0
+
+		if sphere.Origin[0] >= center[0] {
+			substructureIndex |= 0b001
+		}
+		if sphere.Origin[1] >= center[1] {
+			substructureIndex |= 0b010
+		}
+		if sphere.Origin[2] >= center[2] {
+			substructureIndex |= 0b100
+		}
+
+		if subSceneNodeStructures[substructureIndex] == nil {
+			subSceneNodeStructures[substructureIndex] = &scn.SceneNode{}
+		}
+
+		//fmt.Printf("Substructure: %d   Center: %+v   Bounds:%+v\n", substructureIndex, center, bounds)
+
+		subSceneNodeStructures[substructureIndex].Spheres = append(subSceneNodeStructures[substructureIndex].Spheres, sphere)
+	}
+
+	for i := 0; i < len(subSceneNodeStructures); {
+		if subSceneNodeStructures[i] == nil {
+			subSceneNodeStructures = append(subSceneNodeStructures[:i], subSceneNodeStructures[i+1:]...)
+		} else {
+			i++
+		}
+	}
+
+	// for i := 0; i < len(subSceneNodeStructures); i++ {
+	// 	fmt.Printf("Substructure %d (of %d) has %d spheres (total amount spheres %d).\n", i+1, len(subSceneNodeStructures), len(subSceneNodeStructures[i].Spheres), len(spheres))
+	// }
+
+	return subSceneNodeStructures
 }
 
 func subdivideFacetStructure(facetStructure *scn.FacetStructure, maxFacets int) {
@@ -339,7 +400,7 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 						shortestDistance = distance               // Save the shortest intersection distance
 						material = sphere.Material
 
-						normal := intersectionPoint.Subed(&sphere.Origin)
+						normal := intersectionPoint.Subed(sphere.Origin)
 						normalAtIntersection = normal.Normalize()
 
 						// Flip normal if it is pointing away from the incoming ray
@@ -396,7 +457,7 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 		if material == nil {
 			// Default material if not specified is matte diffuse white
 			material = &scn.Material{
-				Color:           color.White,
+				Color:           &color.White,
 				Emission:        &color.Black,
 				Glossiness:      0.0,
 				Roughness:       1.0,

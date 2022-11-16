@@ -22,7 +22,21 @@ build:
 
 build_all: build animations
 
-animations: build_sphere_circle_rotation build_sphere_rotation_focaldistance build_cornellbox build_spherical_projection build_cylindrical_projection build_parallel_projection build_recursive_spheres build_facetobj_test build_objectfile_test build_gordian_knot build_diamondsR4ever build_dop_test build_primitive_display
+animations: build_sphere_circle_rotation \
+	build_sphere_rotation_focaldistance \
+	build_cornellbox \
+	build_spherical_projection \
+	build_cylindrical_projection \
+	build_parallel_projection \
+	build_recursive_spheres \
+	build_facetobj_test \
+	build_objectfile_test \
+	build_gordian_knot \
+	build_diamondsR4ever \
+	build_dop_test \
+	build_primitive_display \
+	build_aperture_shape_test \
+	build_aperture_shape_test2
 
 # Build animation scenes
 # -----------------------------------
@@ -71,3 +85,9 @@ build_dop_test: build
 
 build_primitive_display: build
 	go build -o bin/primitive_display ./cmd/scene/primitive_display
+
+build_aperture_shape_test: build
+	go build -o bin/aperture_shape_test ./cmd/scene/test/aperture_shape_test
+
+build_aperture_shape_test2: build
+	go build -o bin/aperture_shape_test2 ./cmd/scene/test/aperture_shape_test2

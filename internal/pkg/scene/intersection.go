@@ -49,6 +49,7 @@ func GetLinePlaneIntersectionPoint(line *Ray, plane *Plane) (*vec3.T, bool) {
 	return &vec3.T{0, 0, 0}, false
 }
 */
+
 // GetLinePlaneIntersectionPoint2 gets the intersection point of a line with a plane
 // http://paulbourke.net/geometry/pointlineplane/   ("Intersection of a plane and a line")
 func GetLinePlaneIntersectionPoint2(line *Ray, plane *Plane) (*vec3.T, bool) {

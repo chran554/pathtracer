@@ -175,8 +175,8 @@ func getCamera(aimPoint *vec3.T, yRotationAngle float64, heightFactor float64) s
 		Heading:           &heading,
 		ViewUp:            &vec3.T{0, 1, 0},
 		ViewPlaneDistance: viewPlaneDistance,
-		LensRadius:        lensRadius,
-		FocalDistance:     focalDistance,
+		ApertureSize:      lensRadius,
+		FocusDistance:     focalDistance,
 		Samples:           amountSamples,
 		AntiAlias:         true,
 		Magnification:     magnification,
@@ -188,10 +188,10 @@ func getCamera(aimPoint *vec3.T, yRotationAngle float64, heightFactor float64) s
 func addLights(scene *scn.SceneNode) {
 	sphere := scn.Sphere{
 		Name:   "Light",
-		Origin: lightOrigin,
+		Origin: &lightOrigin,
 		Radius: lightRadius,
 		Material: &scn.Material{
-			Color:         lightColor,
+			Color:         &lightColor,
 			Emission:      &color.Color{R: lightColor.R * lightEmissionFactor, G: lightColor.G * lightEmissionFactor, B: lightColor.B * lightEmissionFactor},
 			RayTerminator: true,
 		},
@@ -205,19 +205,19 @@ func addEnvironmentMapping(filename string, scene *scn.SceneNode) {
 
 	sphere := scn.Sphere{
 		Name:   "Environment mapping",
-		Origin: origin,
+		Origin: &origin,
 		Radius: environmentRadius,
 		Material: &scn.Material{
-			Color:         color.Color{R: 1.0, G: 1.0, B: 1.0},
+			Color:         &color.Color{R: 1.0, G: 1.0, B: 1.0},
 			Emission:      &color.Color{R: 1.0 * environmentEmissionFactor, G: 1.0 * environmentEmissionFactor, B: 1.0 * environmentEmissionFactor},
 			RayTerminator: false, // TODO true,
 			Projection: &scn.ImageProjection{
 				ProjectionType: scn.Spherical,
 				ImageFilename:  filename,
 				Gamma:          1.5,
-				Origin:         origin,
-				U:              vec3.T{0, 0, 1},
-				V:              vec3.T{0, 1, 0},
+				Origin:         &origin,
+				U:              &vec3.T{0, 0, 1},
+				V:              &vec3.T{0, 1, 0},
 				RepeatU:        true,
 				RepeatV:        true,
 				FlipU:          false,

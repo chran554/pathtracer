@@ -47,7 +47,7 @@ var viewPlaneDistance = 500.0
 var lensRadius = 0.0
 
 var sphereMaterial = scn.Material{
-	Color:      color.Color{R: 0.85, G: 0.95, B: 0.85},
+	Color:      &color.Color{R: 0.85, G: 0.95, B: 0.85},
 	Glossiness: 0.95,
 }
 
@@ -99,7 +99,7 @@ func updateBoundingBoxes(sceneNode *scn.SceneNode) *scn.Bounds {
 	bb := scn.NewBounds()
 
 	for _, sphere := range sceneNode.Spheres {
-		bb.AddSphereBounds(sphere)
+		bb.AddBounds(sphere.Bounds())
 	}
 
 	for _, disc := range sceneNode.Discs {
@@ -175,7 +175,7 @@ func _getRecursiveBalls(parentSphere scn.Sphere, maxRecursionDepth int, takenSid
 func getSphere(origin vec3.T, radius float64, name string) scn.Sphere {
 	return scn.Sphere{
 		Name:     name,
-		Origin:   origin,
+		Origin:   &origin,
 		Radius:   radius,
 		Material: &sphereMaterial,
 	}
@@ -187,20 +187,20 @@ func addLampsToScene(scene *scn.SceneNode) {
 
 	lamp1 := scn.Sphere{
 		Name:   "Lamp 1 (right)",
-		Origin: vec3.T{lampDistanceFactor * circleRadius * 1.5, lampDistanceFactor * circleRadius * 1.0, -lampDistanceFactor * circleRadius * 1.5},
+		Origin: &vec3.T{lampDistanceFactor * circleRadius * 1.5, lampDistanceFactor * circleRadius * 1.0, -lampDistanceFactor * circleRadius * 1.5},
 		Radius: circleRadius * 0.75,
 		Material: &scn.Material{
-			Color:    color.Color{R: 1, G: 1, B: 1},
+			Color:    &color.Color{R: 1, G: 1, B: 1},
 			Emission: &lampEmission,
 		},
 	}
 
 	lamp2 := scn.Sphere{
 		Name:   "Lamp 2 (left)",
-		Origin: vec3.T{-lampDistanceFactor * circleRadius * 2.5, lampDistanceFactor * circleRadius * 1.5, -lampDistanceFactor * circleRadius * 2.0},
+		Origin: &vec3.T{-lampDistanceFactor * circleRadius * 2.5, lampDistanceFactor * circleRadius * 1.5, -lampDistanceFactor * circleRadius * 2.0},
 		Radius: circleRadius * 0.75,
 		Material: &scn.Material{
-			Color:    color.Color{R: 1, G: 1, B: 1},
+			Color:    &color.Color{R: 1, G: 1, B: 1},
 			Emission: &lampEmission,
 		},
 	}
@@ -213,19 +213,19 @@ func addEnvironmentMapping(filename string, scene *scn.SceneNode) {
 
 	sphere := scn.Sphere{
 		Name:   "Environment mapping",
-		Origin: origin,
+		Origin: &origin,
 		Radius: environmentRadius,
 		Material: &scn.Material{
-			Color:         color.Color{R: 1.0, G: 1.0, B: 1.0},
+			Color:         &color.Color{R: 1.0, G: 1.0, B: 1.0},
 			Emission:      &color.Color{R: 1.0 * environmentEmissionFactor, G: 1.0 * environmentEmissionFactor, B: 1.0 * environmentEmissionFactor},
 			RayTerminator: true,
 			Projection: &scn.ImageProjection{
 				ProjectionType: scn.Spherical,
 				ImageFilename:  filename,
 				Gamma:          1.5,
-				Origin:         origin,
-				U:              vec3.T{1, 0, 0},
-				V:              vec3.T{0, 1, 0},
+				Origin:         &origin,
+				U:              &vec3.T{1, 0, 0},
+				V:              &vec3.T{0, 1, 0},
 				RepeatU:        true,
 				RepeatV:        true,
 				FlipU:          false,
@@ -273,8 +273,8 @@ func getCamera(magnification float64, progress float64) scn.Camera {
 		Heading:           &heading,
 		ViewUp:            &vec3.T{0, 1, 0},
 		ViewPlaneDistance: viewPlaneDistance,
-		LensRadius:        lensRadius,
-		FocalDistance:     focalDistance,
+		ApertureSize:      lensRadius,
+		FocusDistance:     focalDistance,
 		Samples:           amountSamples,
 		AntiAlias:         true,
 		Magnification:     magnification,

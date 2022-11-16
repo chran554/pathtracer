@@ -25,10 +25,8 @@ var magnification = 1.0
 
 var maxRecursionDepth = 4
 var amountSamples = 256 * 4 * 2
-var antiAlias = true
 
 var cameraOrigin = vec3.T{0, 150, -800}
-var cameraFocus = vec3.T{0, 80, 0}
 var cameraDistanceFactor = 0.8
 var viewPlaneDistance = 600.0
 var cameraAperture = 10.0
@@ -59,8 +57,8 @@ func main() {
 	gopher.RotateY(&vec3.Zero, math.Pi*5.0/6.0)
 	gopher.Translate(&vec3.T{800, 0, 800})
 
-	gopherLightMaterial := scn.Material{Color: color.White, Emission: &color.Color{R: 6, G: 5.3, B: 4.5}, Glossiness: 0.0, Roughness: 1.0, RayTerminator: true}
-	gopherLight := scn.Sphere{Name: "Gopher light", Origin: vec3.T{850, 50, 600}, Radius: 70.0, Material: &gopherLightMaterial}
+	gopherLightMaterial := scn.Material{Color: &color.White, Emission: &color.Color{R: 6, G: 5.3, B: 4.5}, Glossiness: 0.0, Roughness: 1.0, RayTerminator: true}
+	gopherLight := scn.Sphere{Name: "Gopher light", Origin: &vec3.T{850, 50, 600}, Radius: 70.0, Material: &gopherLightMaterial}
 
 	// Diamond
 
@@ -70,7 +68,7 @@ func main() {
 	diamond.RotateY(&vec3.Zero, -math.Pi*3.0/6.0)
 	diamond.Translate(&vec3.T{600, 0, 700})
 	//diamond.Translate(&vec3.T{0, 0, -200})
-	diamond.Material = &scn.Material{Color: color.Color{R: 0.85, G: 0.85, B: 0.75}, Emission: &color.Color{R: 0.1, G: 0.08, B: 0.05}, Glossiness: 0.05, Roughness: 0.0, Transparency: 0.0}
+	diamond.Material = &scn.Material{Color: &color.Color{R: 0.85, G: 0.85, B: 0.75}, Emission: &color.Color{R: 0.1, G: 0.08, B: 0.05}, Glossiness: 0.05, Roughness: 0.0, Transparency: 0.0}
 
 	podiumHeight := 30.0
 	podiumWidth := 200.0
@@ -84,7 +82,7 @@ func main() {
 	triangleLocation := vec3.T{interPodiumDistance, 0, 0}
 	discLocation := vec3.T{0, 0, 0}
 
-	podiumMaterial := scn.Material{Color: color.Color{R: 0.9, G: 0.9, B: 0.9}, Roughness: 1.0}
+	podiumMaterial := scn.Material{Color: &color.Color{R: 0.9, G: 0.9, B: 0.9}, Roughness: 1.0}
 
 	// Sphere
 
@@ -166,13 +164,13 @@ func main() {
 
 func spherePrimitive(sphereRadius float64) scn.Sphere {
 	material := scn.Material{
-		Color:      color.Color{R: 0.80, G: 1.00, B: 0.80},
+		Color:      &color.Color{R: 0.80, G: 1.00, B: 0.80},
 		Glossiness: 0.3,
 		Roughness:  0.2,
 	}
 	sphere := scn.Sphere{
 		Name:     "Sphere primitive",
-		Origin:   vec3.T{0, 0, 0},
+		Origin:   &vec3.T{0, 0, 0},
 		Radius:   sphereRadius,
 		Material: &material,
 	}
@@ -181,7 +179,7 @@ func spherePrimitive(sphereRadius float64) scn.Sphere {
 
 func trianglePrimitive() *scn.FacetStructure {
 	material := scn.Material{
-		Color:      color.Color{R: 0.80, G: 0.80, B: 1.00},
+		Color:      &color.Color{R: 0.80, G: 0.80, B: 1.00},
 		Glossiness: 0.05,
 		Roughness:  0.1,
 	}
@@ -206,7 +204,7 @@ func trianglePrimitive() *scn.FacetStructure {
 
 func discPrimitive(discRadius float64) scn.Disc {
 	material := scn.Material{
-		Color:      color.Color{R: 1.00, G: 0.80, B: 0.80},
+		Color:      &color.Color{R: 1.00, G: 0.80, B: 0.80},
 		Glossiness: 0.05,
 		Roughness:  0.1,
 	}
@@ -238,13 +236,13 @@ func GetCornellBox(scale *vec3.T, lightIntensityFactor float32) *scn.FacetStruct
 
 	cornellBox.Material = &scn.Material{
 		Name:  "Cornell box default material",
-		Color: color.Color{R: 0.95, G: 0.95, B: 0.95},
+		Color: &color.Color{R: 0.95, G: 0.95, B: 0.95},
 		//Roughness: 0.0,
 	}
 
 	lampMaterial := scn.Material{
 		Name:          "Lamp",
-		Color:         color.Color{R: 1.0, G: 1.0, B: 1.0},
+		Color:         &color.Color{R: 1.0, G: 1.0, B: 1.0},
 		Emission:      (&color.Color{R: 1.0, G: 1.0, B: 1.0}).Multiply(lightIntensityFactor),
 		RayTerminator: true,
 	}
@@ -343,10 +341,10 @@ func getCamera(animationProgress float64, focusHeight float64) scn.Camera {
 		Heading:           &heading,
 		ViewUp:            &vec3.T{0, 1, 0},
 		ViewPlaneDistance: viewPlaneDistance,
-		LensRadius:        cameraAperture,
-		FocalDistance:     focalDistance,
+		ApertureSize:      cameraAperture,
+		FocusDistance:     focalDistance,
 		Samples:           amountSamples,
-		AntiAlias:         antiAlias,
+		AntiAlias:         true,
 		Magnification:     magnification,
 		RenderType:        renderType,
 		RecursionDepth:    maxRecursionDepth,

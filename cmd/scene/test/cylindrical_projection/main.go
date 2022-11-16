@@ -12,7 +12,6 @@ var ballRadius float64 = 30
 
 var amountSamples = 5
 var lensRadius float64 = 0
-var antiAlias = true
 var viewPlaneDistance = 1600.0
 
 func main() {
@@ -41,10 +40,10 @@ func main() {
 
 	sphere1 := scn.Sphere{
 		Name:   "Textured sphere",
-		Origin: sphereOrigin,
+		Origin: &sphereOrigin,
 		Radius: ballRadius,
 		Material: &scn.Material{
-			Color:      color.Color{R: 1, G: 1, B: 1},
+			Color:      &color.Color{R: 1, G: 1, B: 1},
 			Emission:   &color.Black,
 			Projection: &projection,
 		},
@@ -77,9 +76,9 @@ func getCamera() scn.Camera {
 		Heading:           &heading,
 		ViewUp:            &vec3.T{0, 1, 0},
 		ViewPlaneDistance: viewPlaneDistance,
-		LensRadius:        lensRadius,
-		FocalDistance:     focalDistance,
+		ApertureSize:      lensRadius,
+		FocusDistance:     focalDistance,
 		Samples:           amountSamples,
-		AntiAlias:         antiAlias,
+		AntiAlias:         true,
 	}
 }

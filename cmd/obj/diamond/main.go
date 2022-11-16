@@ -27,7 +27,7 @@ func main() {
 
 	m := scn.Material{
 		Name:            "Diamond",
-		Color:           color.Color{R: 1.00, G: 0.98, B: 0.95}, // Slightly yellowish color
+		Color:           &color.Color{R: 1.00, G: 0.98, B: 0.95}, // Slightly yellowish color
 		Glossiness:      0.98,
 		Roughness:       0.0,
 		RefractionIndex: 2.42, // Refraction index of diamond material

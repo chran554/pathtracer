@@ -78,13 +78,7 @@ func main() {
 
 		addReflectiveCenterBall(&scene)
 
-		// addSphericalProjectionCenterBall(&scene)
-
-		// addOriginCoordinateSpheres(&scene)
-
 		// addLampsToScene(&scene)
-
-		// addBottomDisc(&scene)
 
 		addEnvironmentMapping(environmentEnvironMap, &scene)
 
@@ -103,46 +97,15 @@ func main() {
 	anm.WriteAnimationToFile(animation, false)
 }
 
-func addBottomDisc(scene *scn.SceneNode) {
-	scene.Discs = append(scene.Discs, getBottomPlate())
-}
-
 func addReflectiveCenterBall(scene *scn.SceneNode) {
 	mirrorSphereRadius := ballRadius * 3.0
 	sphere := scn.Sphere{
 		Name:   "Mirror sphere",
-		Origin: vec3.T{0, mirrorSphereRadius * 1, 0},
+		Origin: &vec3.T{0, mirrorSphereRadius * 1, 0},
 		Radius: mirrorSphereRadius,
 		Material: &scn.Material{
-			Color:      color.Color{R: 0.90, G: 0.90, B: 0.90},
+			Color:      &color.Color{R: 0.90, G: 0.90, B: 0.90},
 			Glossiness: 0.975,
-		},
-	}
-
-	scene.Spheres = append(scene.Spheres, &sphere)
-}
-
-func addSphericalProjectionCenterBall(scene *scn.SceneNode) {
-	projectionSphereRadius := ballRadius * 3.0
-	projectionSphereOrigin := vec3.T{0, projectionSphereRadius * 3, 0}
-
-	projectionOrigin := projectionSphereOrigin
-
-	projection := scn.NewSphericalImageProjection(
-		"textures/checkered 360x180.png",
-		//"textures/uv.png",
-		projectionOrigin,
-		//vec3.T{0, 0, -projectionSphereRadius},
-		vec3.T{projectionSphereRadius, 0, 0},
-		vec3.T{0, projectionSphereRadius, 0})
-
-	sphere := scn.Sphere{
-		Name:   "Spherical projected",
-		Origin: projectionSphereOrigin,
-		Radius: projectionSphereRadius,
-		Material: &scn.Material{
-			Color:      color.Color{R: 1, G: 1, B: 1},
-			Projection: &projection,
 		},
 	}
 
@@ -155,20 +118,20 @@ func addLampsToScene(scene *scn.SceneNode) {
 
 	lamp1 := scn.Sphere{
 		Name:   "Lamp 1 (right)",
-		Origin: vec3.T{lampDistanceFactor * circleRadius * 1.5, lampDistanceFactor * circleRadius * 1.0, -lampDistanceFactor * circleRadius * 1.5},
+		Origin: &vec3.T{lampDistanceFactor * circleRadius * 1.5, lampDistanceFactor * circleRadius * 1.0, -lampDistanceFactor * circleRadius * 1.5},
 		Radius: circleRadius * 0.75,
 		Material: &scn.Material{
-			Color:    color.Color{R: 1, G: 1, B: 1},
+			Color:    &color.Color{R: 1, G: 1, B: 1},
 			Emission: &lampEmission,
 		},
 	}
 
 	lamp2 := scn.Sphere{
 		Name:   "Lamp 2 (left)",
-		Origin: vec3.T{-lampDistanceFactor * circleRadius * 1.5, lampDistanceFactor * circleRadius * 1.5, -lampDistanceFactor * circleRadius * 1.5},
+		Origin: &vec3.T{-lampDistanceFactor * circleRadius * 1.5, lampDistanceFactor * circleRadius * 1.5, -lampDistanceFactor * circleRadius * 1.5},
 		Radius: circleRadius * 0.75,
 		Material: &scn.Material{
-			Color:    color.Color{R: 1, G: 1, B: 1},
+			Color:    &color.Color{R: 1, G: 1, B: 1},
 			Emission: &lampEmission,
 		},
 	}
@@ -182,18 +145,18 @@ func addEnvironmentMapping(filename string, scene *scn.SceneNode) {
 	origin := vec3.T{0, 0, 0}
 
 	sphere := scn.Sphere{
-		Origin: origin,
+		Origin: &origin,
 		Radius: environmentRadius,
 		Material: &scn.Material{
-			Color:         color.Color{R: 1.0, G: 1.0, B: 1.0},
+			Color:         &color.Color{R: 1.0, G: 1.0, B: 1.0},
 			Emission:      &color.Color{R: 1.0, G: 1.0, B: 1.0},
 			RayTerminator: true,
 			Projection: &scn.ImageProjection{
 				ProjectionType: scn.Spherical,
 				ImageFilename:  filename,
-				Origin:         origin,
-				U:              vec3.T{1, 0, 0},
-				V:              vec3.T{0, 1, 0},
+				Origin:         &origin,
+				U:              &vec3.T{1, 0, 0},
+				V:              &vec3.T{0, 1, 0},
 				RepeatU:        true,
 				RepeatV:        true,
 				FlipU:          false,
@@ -203,28 +166,6 @@ func addEnvironmentMapping(filename string, scene *scn.SceneNode) {
 	}
 
 	scene.Spheres = append(scene.Spheres, &sphere)
-}
-
-func addOriginCoordinateSpheres(scene *scn.SceneNode) {
-	sphereOrigin := scn.Sphere{
-		Origin:   vec3.T{0, ballRadius, 0},
-		Radius:   ballRadius / 2,
-		Material: &scn.Material{Color: color.Color{R: 0.1, G: 0.1, B: 0.1}},
-	}
-	sphereX := scn.Sphere{
-		Origin:   vec3.T{ballRadius / 2, ballRadius, 0},
-		Radius:   ballRadius / 2,
-		Material: &scn.Material{Color: color.Color{R: 1, G: 1, B: 0}},
-	}
-	sphereZ := scn.Sphere{
-		Origin:   vec3.T{0, ballRadius, ballRadius / 2},
-		Radius:   ballRadius / 2,
-		Material: &scn.Material{Color: color.Color{R: 0, G: 1, B: 1}},
-	}
-
-	scene.Spheres = append(scene.Spheres, &sphereOrigin)
-	scene.Spheres = append(scene.Spheres, &sphereX)
-	scene.Spheres = append(scene.Spheres, &sphereZ)
 }
 
 func addBallsToScene(deltaBallAngle float64, projectionAngle float64, projectionData []projection, scene *scn.SceneNode) {
@@ -248,18 +189,18 @@ func addBallsToScene(deltaBallAngle float64, projectionAngle float64, projection
 		projectionV := math.Sin(projectionAngle)
 
 		sphere := scn.Sphere{
-			Origin: ballOrigin,
+			Origin: &ballOrigin,
 			Radius: ballRadius,
 			Material: &scn.Material{
-				Color:         color.Color{R: 1, G: 1, B: 1},
+				Color:         &color.Color{R: 1, G: 1, B: 1},
 				Emission:      projectionData[projectionTextureIndex].emission,
 				RayTerminator: projectionData[projectionTextureIndex].rayTerminator,
 				Projection: &scn.ImageProjection{
 					ProjectionType: scn.Spherical,
 					ImageFilename:  projectionData[projectionTextureIndex].filename,
-					Origin:         ballOrigin,
-					U:              vec3.T{projectionU, 0, projectionV},
-					V:              vec3.T{0, 1, 0},
+					Origin:         &ballOrigin,
+					U:              &vec3.T{projectionU, 0, projectionV},
+					V:              &vec3.T{0, 1, 0},
 					RepeatU:        true,
 					RepeatV:        true,
 					FlipU:          false,
@@ -292,14 +233,14 @@ func getBottomPlate() *scn.Disc {
 		Normal: &normal,
 		Radius: circleRadius * 2,
 		Material: &scn.Material{
-			Color:    color.Color{R: 1, G: 1, B: 1},
+			Color:    &color.Color{R: 1, G: 1, B: 1},
 			Emission: nil,
 			Projection: &scn.ImageProjection{
 				ProjectionType: scn.Parallel,
 				ImageFilename:  "textures/rock_wall.png",
-				Origin:         origin,
-				U:              vec3.T{textureScale, 0, 0},
-				V:              vec3.T{0, 0, textureScale},
+				Origin:         &origin,
+				U:              &vec3.T{textureScale, 0, 0},
+				V:              &vec3.T{0, 0, textureScale},
 				RepeatU:        true,
 				RepeatV:        true,
 				FlipU:          false,
@@ -334,8 +275,8 @@ func getCamera(magnification float64, progress float64) scn.Camera {
 		Heading:           &heading,
 		ViewUp:            &vec3.T{0, 1, 0},
 		ViewPlaneDistance: viewPlaneDistance,
-		LensRadius:        lensRadius,
-		FocalDistance:     focalDistance,
+		ApertureSize:      lensRadius,
+		FocusDistance:     focalDistance,
 		Samples:           amountSamples,
 		AntiAlias:         true,
 		Magnification:     magnification,

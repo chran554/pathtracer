@@ -21,7 +21,6 @@ var renderType = scn.Pathtracing
 var maxRecursionDepth = 5
 var amountSamples = 10 * 1024
 var lensRadius float64 = 2
-var antiAlias = true
 
 var viewPlaneDistance = 4000.0
 var cameraDistanceFactor = 2.0
@@ -54,10 +53,10 @@ func main() {
 		reflectiveness := float32(i) / float32(amountSpheres)
 		sphere := scn.Sphere{
 			Name:   "Sphere with reflectiveness of " + strconv.Itoa(i),
-			Origin: vec3.T{-sphereSpread/2.0 + float64(i)*sphereCC, ballRadius, 0},
+			Origin: &vec3.T{-sphereSpread/2.0 + float64(i)*sphereCC, ballRadius, 0},
 			Radius: ballRadius,
 			Material: &scn.Material{
-				Color:      color.Color{R: 1, G: 1, B: 1},
+				Color:      &color.Color{R: 1, G: 1, B: 1},
 				Glossiness: reflectiveness,
 			},
 		}
@@ -68,31 +67,31 @@ func main() {
 	lampEmission.Multiply(float32(lampEmissionFactor))
 	lampLeft := scn.Sphere{
 		Name:   "Lamp left",
-		Origin: vec3.T{-0.3333 * sphereSpread, ballRadius*3 + ballRadius*2*0.75, -ballRadius * 3},
+		Origin: &vec3.T{-0.3333 * sphereSpread, ballRadius*3 + ballRadius*2*0.75, -ballRadius * 3},
 		Radius: ballRadius * 2,
 		Material: &scn.Material{
-			Color:    color.Color{R: 1, G: 1, B: 1},
-			Emission: &lampEmission,
+			Color:    &color.Color{R: 1, G: 1, B: 1},
+			Emission: lampEmission,
 		},
 	}
 
 	lampMiddle := scn.Sphere{
 		Name:   "Lamp middle",
-		Origin: vec3.T{0.0, ballRadius*3 + ballRadius*2*0.75, -ballRadius * 3},
+		Origin: &vec3.T{0.0, ballRadius*3 + ballRadius*2*0.75, -ballRadius * 3},
 		Radius: ballRadius * 2,
 		Material: &scn.Material{
-			Color:    color.Color{R: 1, G: 1, B: 1},
-			Emission: &lampEmission,
+			Color:    &color.Color{R: 1, G: 1, B: 1},
+			Emission: lampEmission,
 		},
 	}
 
 	lampRight := scn.Sphere{
 		Name:   "Lamp right",
-		Origin: vec3.T{0.3333 * sphereSpread, ballRadius*3 + ballRadius*2*0.75, -ballRadius * 3},
+		Origin: &vec3.T{0.3333 * sphereSpread, ballRadius*3 + ballRadius*2*0.75, -ballRadius * 3},
 		Radius: ballRadius * 2,
 		Material: &scn.Material{
-			Color:    color.Color{R: 1, G: 1, B: 1},
-			Emission: &lampEmission,
+			Color:    &color.Color{R: 1, G: 1, B: 1},
+			Emission: lampEmission,
 		},
 	}
 
@@ -138,10 +137,10 @@ func getCamera() scn.Camera {
 		Heading:           &heading,
 		ViewUp:            &vec3.T{0, 1, 0},
 		ViewPlaneDistance: viewPlaneDistance,
-		LensRadius:        lensRadius,
-		FocalDistance:     focalDistance,
+		ApertureSize:      lensRadius,
+		FocusDistance:     focalDistance,
 		Samples:           amountSamples,
-		AntiAlias:         antiAlias,
+		AntiAlias:         true,
 		Magnification:     magnification,
 		RenderType:        renderType,
 		RecursionDepth:    maxRecursionDepth,
@@ -158,7 +157,7 @@ func getBoxWalls() []*scn.Disc {
 		Normal: &vec3.T{0, 1, 0},
 		Radius: 600,
 		Material: &scn.Material{
-			Color:      color.Color{R: 1, G: 1, B: 1},
+			Color:      &color.Color{R: 1, G: 1, B: 1},
 			Projection: &floorTexture,
 		},
 	}
@@ -169,7 +168,7 @@ func getBoxWalls() []*scn.Disc {
 		Normal: &vec3.T{0, -1, 0},
 		Radius: 600,
 		Material: &scn.Material{
-			Color: color.Color{R: 0.9, G: 1, B: 0.95},
+			Color: &color.Color{R: 0.9, G: 1, B: 0.95},
 			//			Projection: &roofTexture,
 		},
 	}
@@ -185,7 +184,7 @@ func getBoxWalls() []*scn.Disc {
 		Normal: &vec3.T{0, 0, -1},
 		Radius: 600,
 		Material: &scn.Material{
-			Color:      color.Color{R: 1, G: 1, B: 1},
+			Color:      &color.Color{R: 1, G: 1, B: 1},
 			Projection: &backWallTexture,
 		},
 	}

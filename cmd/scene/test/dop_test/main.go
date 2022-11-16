@@ -23,7 +23,6 @@ var renderType = scn.Pathtracing
 var maxRecursionDepth = 4
 var amountSamples = 128 * 4 * 4
 var lensRadius = 12.0 // 7.0 // 15.0
-var antiAlias = true
 
 var viewPlaneDistance = 2000.0
 var cameraDistanceFactor = 1.0
@@ -53,7 +52,7 @@ func main() {
 	sphereCC := sphereSpread / float64(amountSpheres)
 
 	sphereMaterial := scn.Material{
-		Color:      color.Color{R: 0.85, G: 0.95, B: 0.80},
+		Color:      &color.Color{R: 0.85, G: 0.95, B: 0.80},
 		Glossiness: 0.40,
 		Roughness:  0.05,
 	}
@@ -64,7 +63,7 @@ func main() {
 
 		sphere := scn.Sphere{
 			Name:     "Glass sphere with transparency " + strconv.Itoa(i),
-			Origin:   vec3.T{positionOffsetX, ballRadius, positionOffsetZ},
+			Origin:   &vec3.T{positionOffsetX, ballRadius, positionOffsetZ},
 			Radius:   ballRadius,
 			Material: &sphereMaterial,
 		}
@@ -117,13 +116,13 @@ func GetCornellBox(scale *vec3.T, lightIntensityFactor float32) *scn.FacetStruct
 
 	cornellBox.Material = &scn.Material{
 		Name:  "Cornell box default material",
-		Color: color.Color{R: 0.95, G: 0.95, B: 0.95},
+		Color: &color.Color{R: 0.95, G: 0.95, B: 0.95},
 		//Roughness: 0.0,
 	}
 
 	lampMaterial := scn.Material{
 		Name:          "Lamp",
-		Color:         color.Color{R: 1.0, G: 1.0, B: 1.0},
+		Color:         &color.Color{R: 1.0, G: 1.0, B: 1.0},
 		Emission:      (&color.Color{R: 1.0, G: 1.0, B: 1.0}).Multiply(lightIntensityFactor),
 		RayTerminator: true,
 	}
@@ -165,10 +164,10 @@ func getCamera() scn.Camera {
 		Heading:           &heading,
 		ViewUp:            &vec3.T{0, 1, 0},
 		ViewPlaneDistance: viewPlaneDistance,
-		LensRadius:        lensRadius,
-		FocalDistance:     focalDistance,
+		ApertureSize:      lensRadius,
+		FocusDistance:     focalDistance,
 		Samples:           amountSamples,
-		AntiAlias:         antiAlias,
+		AntiAlias:         true,
 		Magnification:     magnification,
 		RenderType:        renderType,
 		RecursionDepth:    maxRecursionDepth,

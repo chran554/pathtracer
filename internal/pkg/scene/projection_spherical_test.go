@@ -16,13 +16,13 @@ func Test_SphericalProjection(t *testing.T) {
 		origin vec3.T
 		u, v   vec3.T
 	}{
-		{origin: vec3.Zero, u: vec3.T{1, 0, 0}, v: vec3.T{0, 1, 0}, name: "projection at world origin, parallell to world"},
-		{origin: vec3.T{100, 0, 0}, u: vec3.T{1, 0, 0}, v: vec3.T{0, 1, 0}, name: "projection with positive X offset to world origin, parallell to world"},
-		{origin: vec3.T{0, 100, 0}, u: vec3.T{1, 0, 0}, v: vec3.T{0, 1, 0}, name: "projection with positive Y offset to world origin, parallell to world"},
-		{origin: vec3.T{0, 0, 100}, u: vec3.T{1, 0, 0}, v: vec3.T{0, 1, 0}, name: "projection with positive Z offset to world origin, parallell to world"},
-		{origin: vec3.T{-100, 0, 0}, u: vec3.T{1, 0, 0}, v: vec3.T{0, 1, 0}, name: "projection with negative X offset to world origin, parallell to world"},
-		{origin: vec3.T{0, -100, 0}, u: vec3.T{1, 0, 0}, v: vec3.T{0, 1, 0}, name: "projection with negative Y offset to world origin, parallell to world"},
-		{origin: vec3.T{0, 0, -100}, u: vec3.T{1, 0, 0}, v: vec3.T{0, 1, 0}, name: "projection with negative Z offset to world origin, parallell to world"},
+		{origin: vec3.Zero, u: vec3.T{1, 0, 0}, v: vec3.T{0, 1, 0}, name: "projection at world origin, parallel to world"},
+		{origin: vec3.T{100, 0, 0}, u: vec3.T{1, 0, 0}, v: vec3.T{0, 1, 0}, name: "projection with positive X offset to world origin, parallel to world"},
+		{origin: vec3.T{0, 100, 0}, u: vec3.T{1, 0, 0}, v: vec3.T{0, 1, 0}, name: "projection with positive Y offset to world origin, parallel to world"},
+		{origin: vec3.T{0, 0, 100}, u: vec3.T{1, 0, 0}, v: vec3.T{0, 1, 0}, name: "projection with positive Z offset to world origin, parallel to world"},
+		{origin: vec3.T{-100, 0, 0}, u: vec3.T{1, 0, 0}, v: vec3.T{0, 1, 0}, name: "projection with negative X offset to world origin, parallel to world"},
+		{origin: vec3.T{0, -100, 0}, u: vec3.T{1, 0, 0}, v: vec3.T{0, 1, 0}, name: "projection with negative Y offset to world origin, parallel to world"},
+		{origin: vec3.T{0, 0, -100}, u: vec3.T{1, 0, 0}, v: vec3.T{0, 1, 0}, name: "projection with negative Z offset to world origin, parallel to world"},
 	}
 
 	pointScaleSetups := []float64{0.5, 1.0, 100.0, 200.0}
@@ -99,7 +99,7 @@ func Test_SphericalProjection2(t *testing.T) {
 		origin vec3.T
 		u, v   vec3.T
 	}{
-		{origin: vec3.Zero, u: vec3.T{1, 0, 0}, v: vec3.T{0, 1, 0}, name: "projection at world origin, parallell to world"},
+		{origin: vec3.Zero, u: vec3.T{1, 0, 0}, v: vec3.T{0, 1, 0}, name: "projection at world origin, parallel to world"},
 	}
 
 	pointScaleSetups := []float64{100.0}

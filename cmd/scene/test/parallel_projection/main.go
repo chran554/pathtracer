@@ -12,7 +12,6 @@ var discRadius float64 = 30
 
 var amountSamples = 64
 var lensRadius float64 = 0
-var antiAlias = true
 var viewPlaneDistance = 1600.0
 var magnification = 2.0
 
@@ -45,7 +44,7 @@ func main() {
 		Radius: discRadius,
 		Normal: &vec3.T{0, 0, -1},
 		Material: &scn.Material{
-			Color:      color.Color{R: 1, G: 1, B: 1},
+			Color:      &color.Color{R: 1, G: 1, B: 1},
 			Emission:   &color.Black,
 			Projection: &projection,
 		},
@@ -78,10 +77,10 @@ func getCamera() scn.Camera {
 		Heading:           &heading,
 		ViewUp:            &vec3.T{0, 1, 0},
 		ViewPlaneDistance: viewPlaneDistance,
-		LensRadius:        lensRadius,
-		FocalDistance:     focalDistance,
+		ApertureSize:      lensRadius,
+		FocusDistance:     focalDistance,
 		Samples:           amountSamples,
-		AntiAlias:         antiAlias,
+		AntiAlias:         true,
 		Magnification:     magnification,
 	}
 }

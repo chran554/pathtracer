@@ -45,7 +45,7 @@ var amountBalls = 75
 var scale = 100.0
 
 var sphereMaterial = scn.Material{
-	Color:      color.Color{R: 0.95, G: 0.95, B: 0.95},
+	Color:      &color.Color{R: 0.95, G: 0.95, B: 0.95},
 	Glossiness: 0.90,
 	Roughness:  0.10,
 }
@@ -110,7 +110,7 @@ func updateBoundingBoxes(sceneNode *scn.SceneNode) *scn.Bounds {
 	bb := scn.NewBounds()
 
 	for _, sphere := range sceneNode.Spheres {
-		bb.AddSphereBounds(sphere)
+		bb.AddBounds(sphere.Bounds())
 	}
 
 	for _, disc := range sceneNode.Discs {
@@ -130,7 +130,7 @@ func updateBoundingBoxes(sceneNode *scn.SceneNode) *scn.Bounds {
 func getSphere(origin vec3.T, radius float64, name string) scn.Sphere {
 	return scn.Sphere{
 		Name:     name,
-		Origin:   origin,
+		Origin:   &origin,
 		Radius:   radius,
 		Material: &sphereMaterial,
 	}
@@ -141,19 +141,19 @@ func addEnvironmentMapping(filename string, scene *scn.SceneNode) {
 
 	sphere := scn.Sphere{
 		Name:   "Environment mapping",
-		Origin: origin,
+		Origin: &origin,
 		Radius: environmentRadius,
 		Material: &scn.Material{
-			Color:         color.Color{R: 1.0, G: 1.0, B: 1.0},
+			Color:         &color.Color{R: 1.0, G: 1.0, B: 1.0},
 			Emission:      &color.Color{R: 1.0 * environmentEmissionFactor, G: 1.0 * environmentEmissionFactor, B: 1.0 * environmentEmissionFactor},
 			RayTerminator: true,
 			Projection: &scn.ImageProjection{
 				ProjectionType: scn.Spherical,
 				ImageFilename:  filename,
 				Gamma:          1.5,
-				Origin:         origin,
-				U:              vec3.T{0, 0, 1},
-				V:              vec3.T{0, 1, 0},
+				Origin:         &origin,
+				U:              &vec3.T{0, 0, 1},
+				V:              &vec3.T{0, 1, 0},
 				RepeatU:        true,
 				RepeatV:        true,
 				FlipU:          false,
@@ -198,8 +198,8 @@ func getCamera(magnification float64, progress float64) scn.Camera {
 		Heading:           &heading,
 		ViewUp:            &vec3.T{0, 1, 0},
 		ViewPlaneDistance: viewPlaneDistance,
-		LensRadius:        lensRadius,
-		FocalDistance:     focalDistance,
+		ApertureSize:      lensRadius,
+		FocusDistance:     focalDistance,
 		Samples:           amountSamples,
 		AntiAlias:         true,
 		Magnification:     magnification,

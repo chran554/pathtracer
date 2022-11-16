@@ -16,7 +16,6 @@ var cameraOrigin = vec3.T{0, 200, -200} // Looking straight on, slightly from ab
 
 var amountSamples = 256
 var lensRadius float64 = 0
-var antiAlias = true
 var viewPlaneDistance = 1600.0
 var magnification = 1.5
 
@@ -51,10 +50,10 @@ func main() {
 
 	sphere1 := scn.Sphere{
 		Name:   "Textured sphere - Earth",
-		Origin: sphere1Origin,
+		Origin: &sphere1Origin,
 		Radius: ballRadius,
 		Material: &scn.Material{
-			Color:      color.Color{R: 1, G: 1, B: 1},
+			Color:      &color.Color{R: 1, G: 1, B: 1},
 			Emission:   &color.Black,
 			Projection: &projection1,
 		},
@@ -62,10 +61,10 @@ func main() {
 
 	sphere2 := scn.Sphere{
 		Name:   "Textured sphere - checkered",
-		Origin: sphere2Origin,
+		Origin: &sphere2Origin,
 		Radius: ballRadius,
 		Material: &scn.Material{
-			Color:      color.Color{R: 1, G: 1, B: 1},
+			Color:      &color.Color{R: 1, G: 1, B: 1},
 			Emission:   &color.Black,
 			Projection: &projection2,
 		},
@@ -73,10 +72,10 @@ func main() {
 
 	sphere3 := scn.Sphere{
 		Name:   "Textured sphere - Tissot's_Indicatrices_of_Distortion",
-		Origin: sphere3Origin,
+		Origin: &sphere3Origin,
 		Radius: ballRadius,
 		Material: &scn.Material{
-			Color:      color.Color{R: 1, G: 1, B: 1},
+			Color:      &color.Color{R: 1, G: 1, B: 1},
 			Emission:   &color.Black,
 			Projection: &projection3,
 		},
@@ -108,10 +107,10 @@ func getCamera() scn.Camera {
 		Heading:           &heading,
 		ViewUp:            &vec3.T{0, 1, 0},
 		ViewPlaneDistance: viewPlaneDistance,
-		LensRadius:        lensRadius,
-		FocalDistance:     focalDistance,
+		ApertureSize:      lensRadius,
+		FocusDistance:     focalDistance,
 		Samples:           amountSamples,
-		AntiAlias:         antiAlias,
+		AntiAlias:         true,
 		Magnification:     magnification,
 	}
 }

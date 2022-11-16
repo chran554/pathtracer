@@ -16,7 +16,6 @@ var renderType = scn.Pathtracing
 var maxRecursionDepth = 5
 var amountSamples = 256 * 16
 var lensRadius float64 = 0
-var antiAlias = true
 
 var viewPlaneDistance = 1500.0
 var cameraDistanceFactor = 1.0
@@ -64,19 +63,19 @@ func main() {
 
 	sphere1 := scn.Sphere{
 		Name:   "Right sphere",
-		Origin: vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0},
+		Origin: &vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0},
 		Radius: ballRadius,
 		Material: &scn.Material{
-			Color: color.Color{R: 0.9, G: 0.9, B: 0.9},
+			Color: &color.Color{R: 0.9, G: 0.9, B: 0.9},
 		},
 	}
 
 	sphere2 := scn.Sphere{
 		Name:   "Left sphere",
-		Origin: vec3.T{-(ballRadius + (ballRadius / 2)), ballRadius, 0},
+		Origin: &vec3.T{-(ballRadius + (ballRadius / 2)), ballRadius, 0},
 		Radius: ballRadius,
 		Material: &scn.Material{
-			Color: color.Color{R: 0.9, G: 0.9, B: 0.9},
+			Color: &color.Color{R: 0.9, G: 0.9, B: 0.9},
 		},
 	}
 
@@ -110,10 +109,10 @@ func getCamera() scn.Camera {
 		Heading:           &heading,
 		ViewUp:            &vec3.T{0, 1, 0},
 		ViewPlaneDistance: viewPlaneDistance,
-		LensRadius:        lensRadius,
-		FocalDistance:     focalDistance,
+		ApertureSize:      lensRadius,
+		FocusDistance:     focalDistance,
 		Samples:           amountSamples,
-		AntiAlias:         antiAlias,
+		AntiAlias:         true,
 		Magnification:     magnification,
 		RenderType:        renderType,
 		RecursionDepth:    maxRecursionDepth,
@@ -134,15 +133,15 @@ func getCornellBox() *scn.FacetStructure {
 	boxP8 := vec3.T{0, 0, 0} // Bottom left close       8----------5
 
 	boxMaterial := scn.Material{
-		Color: color.Color{R: 0.90, G: 0.90, B: 0.90},
+		Color: &color.Color{R: 0.90, G: 0.90, B: 0.90},
 	}
 
 	leftWallMaterial := scn.Material{
-		Color: color.Color{R: 0.85, G: 0.20, B: 0.20},
+		Color: &color.Color{R: 0.85, G: 0.20, B: 0.20},
 	}
 
 	rightWallMaterial := scn.Material{
-		Color: color.Color{R: 0.20, G: 0.20, B: 0.85},
+		Color: &color.Color{R: 0.20, G: 0.20, B: 0.85},
 	}
 
 	box := scn.FacetStructure{
