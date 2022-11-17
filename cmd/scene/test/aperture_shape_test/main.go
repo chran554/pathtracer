@@ -92,12 +92,22 @@ func main() {
 		ChildNodes:      []*scn.SceneNode{{Spheres: spheres}},
 	}
 
+	startAngle := math.Pi / 2.0
+	xPosMax := 300.0
+	yPosMax := gopher.Bounds.SizeY() * 0.75
+	yPosMin := gopher.Bounds.SizeY() * 0.15
+
 	var frames []scn.Frame
 	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
-		// animationProgress := float64(frameIndex) / float64(amountFrames)
+		animationProgress := float64(frameIndex) / float64(amountFrames)
 
 		focusPoint := vec3.T{0, gopher.Bounds.SizeY() * 0.75, 0}
-		cameraPosition := vec3.T{0, gopher.Bounds.SizeY() * 0.75, -600}
+
+		angle := animationProgress * 2.0 * math.Pi
+		xPos := xPosMax * math.Cos(angle+startAngle)
+		yPos := yPosMin + (yPosMax-yPosMin)*(math.Sin(angle+startAngle)+1.0)/2.0
+		cameraPosition := vec3.T{xPos, yPos, -600}
+
 		camera := getCamera(magnification, cameraPosition, focusPoint)
 
 		frame := scn.Frame{
@@ -115,7 +125,7 @@ func main() {
 		Frames:            frames,
 		Width:             int(float64(imageWidth) * magnification),
 		Height:            int(float64(imageHeight) * magnification),
-		WriteRawImageFile: true,
+		WriteRawImageFile: false,
 	}
 
 	anm.WriteAnimationToFile(animation, false)
