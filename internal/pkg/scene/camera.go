@@ -89,18 +89,20 @@ func getCameraLensPoint(radius float64, apertureShapeImageFilepath string, amoun
 	return vec3.T{radius * xOffset, radius * yOffset, 0}
 }
 
+// shapedApertureOffset gives a xy-offset, where both x and y are in the range [-1,1]
+// https://blog.demofox.org/2018/07/04/pathtraced-depth-of-field-bokeh/
 func shapedApertureOffset(image *img.FloatImage) (float64, float64) {
 	maxSize := math.Max(float64(image.Width), float64(image.Height))
 
 	offsetX := 0.0
 	offsetY := 0.0
 
-	for c := color.Black; c != color.White; { // TODO be smarter than re-iterating until we hit a white pixel...
+	for c := color.Black; c != color.White; { // TODO be smarter than re-iterating until we randomly hit a white pixel...
 		x := rand.Intn(image.Width)
 		y := rand.Intn(image.Height)
 
-		offsetX = (float64(x)/maxSize)*2 - (float64(image.Width) / maxSize)
-		offsetY = (float64(y)/maxSize)*2 - (float64(image.Height) / maxSize)
+		offsetX = (float64(x)/(maxSize-1))*2 - (float64(image.Width) / maxSize)
+		offsetY = (float64(y)/(maxSize-1))*2 - (float64(image.Height) / maxSize)
 
 		c = *image.GetPixel(x, (image.Height-1)-y)
 	}
