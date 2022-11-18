@@ -70,3 +70,14 @@ func (disc *Disc) RotateZ(rotationOrigin *vec3.T, angle float64) {
 
 	disc.rotate(rotationOrigin, rotationMatrix)
 }
+
+func (disc *Disc) Bounds() *Bounds {
+	return &Bounds{
+		Xmin: disc.Origin[0] - disc.Radius,
+		Xmax: disc.Origin[0] + disc.Radius,
+		Ymin: disc.Origin[1] - disc.Radius,
+		Ymax: disc.Origin[1] + disc.Radius,
+		Zmin: disc.Origin[2] - disc.Radius,
+		Zmax: disc.Origin[2] + disc.Radius,
+	}
+}

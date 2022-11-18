@@ -34,9 +34,23 @@ func (sphere *Sphere) Translate(translation *vec3.T) {
 	sphere.Origin.Add(translation)
 }
 
+func (sphere *Sphere) RotateX(rotationOrigin *vec3.T, angle float64) {
+	rotationMatrix := mat3.T{}
+	rotationMatrix.AssignXRotation(angle)
+
+	sphere.rotate(rotationOrigin, rotationMatrix)
+}
+
 func (sphere *Sphere) RotateY(rotationOrigin *vec3.T, angle float64) {
 	rotationMatrix := mat3.T{}
 	rotationMatrix.AssignYRotation(angle)
+
+	sphere.rotate(rotationOrigin, rotationMatrix)
+}
+
+func (sphere *Sphere) RotateZ(rotationOrigin *vec3.T, angle float64) {
+	rotationMatrix := mat3.T{}
+	rotationMatrix.AssignZRotation(angle)
 
 	sphere.rotate(rotationOrigin, rotationMatrix)
 }

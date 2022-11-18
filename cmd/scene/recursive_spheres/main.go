@@ -10,19 +10,11 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-//var environmentEnvironMap = "textures/planets/environmentmap/space_fake_02_flip.png"
-//var environmentEnvironMap = "textures/equirectangular/open_grassfield_sunny_day.jpg"
-
-//var environmentEnvironMap = "textures/equirectangular/forest_sunny_day.jpg"
-
-var environmentEnvironMap = "textures/equirectangular/canyon 3200x1600.jpeg"
-var environmentRadius = 100.0 * 800.0 // 80m (if 1 unit is 1 cm)
-var environmentEmissionFactor = float32(2.0)
-
-//var environmentEnvironMap = "textures/planets/environmentmap/Stellarium3.jpeg"
-//var environmentRadius = 100.0 * 80.0 // 80m (if 1 unit is 1 cm)
-
 var animationName = "recursive_spheres"
+
+var environmentEnvironMap = "textures/equirectangular/sunset horizon 2800x1400.jpg"
+var environmentRadius = 100.0 * 1000.0
+var environmentEmissionFactor = float32(1.0)
 
 var amountFrames = 1
 
@@ -31,24 +23,22 @@ var imageHeight = 1024
 var magnification = 1.0
 
 var renderType = scn.Pathtracing
-var amountSamples = 1024
-var maxRecursion = 8
+var amountSamples = 2000
+var maxRecursion = 4
 
-var lampEmissionFactor = 2.0
-var lampDistanceFactor = 1.5
-
-var cameraDistanceFactor = 2.8
+var ballsLightEmissionFactor float32 = 2
 
 var startSphereRadius = 150.0
 var maxSphereRecursionDepth = 6
 
-var circleRadius = 200.0
-var viewPlaneDistance = 500.0
-var lensRadius = 0.0
+var viewPlaneDistance = 800.0
+var apertureSize = 5.0
 
 var sphereMaterial = scn.Material{
-	Color:      &color.Color{R: 0.85, G: 0.95, B: 0.85},
-	Glossiness: 0.95,
+	Color:      (&color.Color{R: 0.85, G: 0.95, B: 0.85}).Multiply(0.50),
+	Glossiness: 0.85,
+	Roughness:  0.01,
+	Emission:   (&color.Color{R: 0.85, G: 0.95, B: 0.85}).Multiply(0.05),
 }
 
 func main() {
@@ -58,29 +48,49 @@ func main() {
 	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
 
-		scene := scn.SceneNode{
-			Spheres: []*scn.Sphere{},
-			Discs:   []*scn.Disc{},
+		recursiveBalls := getRecursiveBalls(startSphereRadius, maxSphereRecursionDepth)
+		ballsBounds := recursiveBalls.UpdateBounds()
+		recursiveBalls.Translate(&vec3.T{0, -ballsBounds.Ymin, 0})
+		recursiveBalls.RotateY(&vec3.Zero, math.Pi/10)
+		recursiveBalls.RotateX(&vec3.Zero, math.Pi/12)
+		ballsBounds = recursiveBalls.UpdateBounds()
+		fmt.Printf("Balls bounds: %+v   (center: %+v)\n", ballsBounds, ballsBounds.Center())
+
+		ballsLightDistanceFactor := 400.0
+		ballsLightPosition := ballsBounds.Center().Add(&vec3.T{-ballsLightDistanceFactor, ballsLightDistanceFactor, -2.0 * ballsLightDistanceFactor})
+		ballsLightEmission := (&color.Color{R: 15, G: 14.0, B: 12.0}).Multiply(ballsLightEmissionFactor)
+		ballsLightMaterial := scn.Material{Color: &color.White, Emission: ballsLightEmission, Glossiness: 0.0, Roughness: 1.0, RayTerminator: true}
+		ballsLight := scn.Sphere{Name: "Balls light", Origin: ballsLightPosition, Radius: 200.0, Material: &ballsLightMaterial}
+
+		environmentSphere := addEnvironmentMapping(environmentEnvironMap)
+
+		// Ground
+
+		groundProjection := scn.NewParallelImageProjection("textures/ground/soil-cracked.png", vec3.Zero, vec3.UnitX.Scaled(250*2), vec3.UnitZ.Scaled(250*2))
+		ground := scn.Disc{
+			Name:   "Ground",
+			Origin: &vec3.Zero,
+			Normal: &vec3.UnitY,
+			Radius: environmentRadius,
+			Material: &scn.Material{
+				Name:       "Ground material",
+				Color:      &color.White,
+				Emission:   &color.Black,
+				Glossiness: 0.0,
+				Roughness:  1.0,
+				Projection: &groundProjection,
+			},
 		}
 
-		getRecursiveBalls(startSphereRadius, maxSphereRecursionDepth, &scene)
+		cameraFocusPoint := ballsBounds.Center().Add(&vec3.T{0, ballsBounds.SizeZ() / 10.0, -ballsBounds.SizeZ() / 2.0 * 0.8})
+		cameraOrigin := ballsBounds.Center().Add(&vec3.T{0, ballsBounds.SizeZ() * 2.0 / 10.0, -800})
+		camera := getCamera(magnification, animationProgress, cameraOrigin, cameraFocusPoint)
 
-		// addReflectiveCenterBall(&scene)
-
-		// addSphericalProjectionCenterBall(&scene)
-
-		// addOriginCoordinateSpheres(&scene)
-
-		//addLampsToScene(&scene)
-
-		// addBottomDisc(&scene)
-
-		addEnvironmentMapping(environmentEnvironMap, &scene)
-
-		camera := getCamera(magnification, animationProgress)
-
-		updateBoundingBoxes(&scene)
-		scene.Bounds = nil
+		scene := scn.SceneNode{
+			Spheres:    []*scn.Sphere{&environmentSphere, &ballsLight},
+			Discs:      []*scn.Disc{&ground},
+			ChildNodes: []*scn.SceneNode{recursiveBalls},
+		}
 
 		frame := scn.Frame{
 			Filename:   animation.AnimationName + "_" + fmt.Sprintf("%06d", frameIndex),
@@ -95,32 +105,14 @@ func main() {
 	anm.WriteAnimationToFile(animation, false)
 }
 
-func updateBoundingBoxes(sceneNode *scn.SceneNode) *scn.Bounds {
-	bb := scn.NewBounds()
+func getRecursiveBalls(middleSphereRadius float64, maxRecursionDepth int) *scn.SceneNode {
+	scene := scn.SceneNode{}
 
-	for _, sphere := range sceneNode.Spheres {
-		bb.AddBounds(sphere.Bounds())
-	}
-
-	for _, disc := range sceneNode.Discs {
-		bb.AddDiscBounds(disc)
-	}
-
-	for _, childNode := range sceneNode.ChildNodes {
-		childBb := updateBoundingBoxes(childNode)
-		bb.AddBounds(childBb)
-	}
-
-	sceneNode.Bounds = &bb
-
-	return &bb
-}
-
-func getRecursiveBalls(middleSphereRadius float64, maxRecursionDepth int, scene *scn.SceneNode) {
 	middleSphere := getSphere(vec3.T{0, 0, 0}, middleSphereRadius, "0")
-
 	scene.Spheres = append(scene.Spheres, &middleSphere)
-	_getRecursiveBalls(middleSphere, maxRecursionDepth, 0, scene)
+	_getRecursiveBalls(middleSphere, maxRecursionDepth, 0, &scene)
+
+	return &scene
 }
 
 func _getRecursiveBalls(parentSphere scn.Sphere, maxRecursionDepth int, takenSide int, scene *scn.SceneNode) {
@@ -181,60 +173,37 @@ func getSphere(origin vec3.T, radius float64, name string) scn.Sphere {
 	}
 }
 
-func addLampsToScene(scene *scn.SceneNode) {
-	lampEmission := color.Color{R: 5, G: 5, B: 5}
-	lampEmission.Multiply(float32(lampEmissionFactor))
-
-	lamp1 := scn.Sphere{
-		Name:   "Lamp 1 (right)",
-		Origin: &vec3.T{lampDistanceFactor * circleRadius * 1.5, lampDistanceFactor * circleRadius * 1.0, -lampDistanceFactor * circleRadius * 1.5},
-		Radius: circleRadius * 0.75,
-		Material: &scn.Material{
-			Color:    &color.Color{R: 1, G: 1, B: 1},
-			Emission: &lampEmission,
-		},
-	}
-
-	lamp2 := scn.Sphere{
-		Name:   "Lamp 2 (left)",
-		Origin: &vec3.T{-lampDistanceFactor * circleRadius * 2.5, lampDistanceFactor * circleRadius * 1.5, -lampDistanceFactor * circleRadius * 2.0},
-		Radius: circleRadius * 0.75,
-		Material: &scn.Material{
-			Color:    &color.Color{R: 1, G: 1, B: 1},
-			Emission: &lampEmission,
-		},
-	}
-
-	scene.Spheres = append(scene.Spheres, &lamp1, &lamp2)
-}
-
-func addEnvironmentMapping(filename string, scene *scn.SceneNode) {
+func addEnvironmentMapping(filename string) scn.Sphere {
 	origin := vec3.T{0, 0, 0}
 
-	sphere := scn.Sphere{
-		Name:   "Environment mapping",
-		Origin: &origin,
-		Radius: environmentRadius,
-		Material: &scn.Material{
-			Color:         &color.Color{R: 1.0, G: 1.0, B: 1.0},
-			Emission:      &color.Color{R: 1.0 * environmentEmissionFactor, G: 1.0 * environmentEmissionFactor, B: 1.0 * environmentEmissionFactor},
-			RayTerminator: true,
-			Projection: &scn.ImageProjection{
-				ProjectionType: scn.Spherical,
-				ImageFilename:  filename,
-				Gamma:          1.5,
-				Origin:         &origin,
-				U:              &vec3.T{1, 0, 0},
-				V:              &vec3.T{0, 1, 0},
-				RepeatU:        true,
-				RepeatV:        true,
-				FlipU:          false,
-				FlipV:          false,
-			},
-		},
+	projection := scn.ImageProjection{
+		ProjectionType: scn.Spherical,
+		ImageFilename:  filename,
+		Gamma:          1.0,
+		Origin:         &origin,
+		U:              &vec3.T{-0.2, 0, -1},
+		V:              &vec3.T{0, 1, 0},
+		RepeatU:        true,
+		RepeatV:        true,
+		FlipU:          false,
+		FlipV:          false,
 	}
 
-	scene.Spheres = append(scene.Spheres, &sphere)
+	material := scn.Material{
+		Color:         &color.Color{R: 1.0, G: 1.0, B: 1.0},
+		Emission:      &color.Color{R: 1.0 * environmentEmissionFactor, G: 1.0 * environmentEmissionFactor, B: 1.0 * environmentEmissionFactor},
+		RayTerminator: true,
+		Projection:    &projection,
+	}
+
+	sphere := scn.Sphere{
+		Name:     "Environment mapping",
+		Origin:   &origin,
+		Radius:   environmentRadius,
+		Material: &material,
+	}
+
+	return sphere
 }
 
 func getAnimation(width int, height int) scn.Animation {
@@ -248,33 +217,20 @@ func getAnimation(width int, height int) scn.Animation {
 	return animation
 }
 
-func getCamera(magnification float64, progress float64) scn.Camera {
-	degrees45 := math.Pi / 4.0
-	strideAngle := degrees45 * math.Sin(2.0*math.Pi*progress)
-	cameraDistance := 200.0 * cameraDistanceFactor
-	cameraHeight := 75.0 * cameraDistanceFactor
-
-	cameraOrigin := vec3.T{
-		cameraDistance * math.Cos(-math.Pi/2.0+strideAngle+degrees45),
-		cameraHeight + (cameraHeight/2.0)*math.Sin(2.0*math.Pi*2.0*progress),
-		cameraDistance * math.Sin(-math.Pi/2.0+strideAngle+degrees45),
-	}
-
-	// Static camera location
-	// cameraOrigin = vec3.T{0, cameraHeight, -cameraDistance}
+func getCamera(magnification float64, progress float64, cameraOrigin *vec3.T, cameraFocusPoint *vec3.T) scn.Camera {
 
 	// Point heading towards center of sphere ring (heading vector starts in camera origin)
-	heading := vec3.T{-cameraOrigin[0], -cameraOrigin[1], -cameraOrigin[2]}
+	heading := cameraFocusPoint.Subed(cameraOrigin)
 
-	focalDistance := heading.Length() - startSphereRadius - 0.3*startSphereRadius
+	focusDistance := heading.Length()
 
 	return scn.Camera{
-		Origin:            &cameraOrigin,
+		Origin:            cameraOrigin,
 		Heading:           &heading,
 		ViewUp:            &vec3.T{0, 1, 0},
 		ViewPlaneDistance: viewPlaneDistance,
-		ApertureSize:      lensRadius,
-		FocusDistance:     focalDistance,
+		ApertureSize:      apertureSize,
+		FocusDistance:     focusDistance,
 		Samples:           amountSamples,
 		AntiAlias:         true,
 		Magnification:     magnification,
