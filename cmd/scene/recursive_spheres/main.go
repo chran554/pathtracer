@@ -51,10 +51,14 @@ func main() {
 		recursiveBalls := getRecursiveBalls(startSphereRadius, maxSphereRecursionDepth)
 		ballsBounds := recursiveBalls.UpdateBounds()
 		recursiveBalls.Translate(&vec3.T{0, -ballsBounds.Ymin, 0})
-		recursiveBalls.RotateY(&vec3.Zero, math.Pi/10)
-		recursiveBalls.RotateX(&vec3.Zero, math.Pi/12)
 		ballsBounds = recursiveBalls.UpdateBounds()
 		fmt.Printf("Balls bounds: %+v   (center: %+v)\n", ballsBounds, ballsBounds.Center())
+
+		animationAngle := animationProgress * (math.Pi / 2.0)
+		recursiveBalls.RotateY(&vec3.Zero, animationAngle)
+
+		recursiveBalls.RotateX(&vec3.Zero, math.Pi/12)
+		recursiveBalls.RotateY(&vec3.Zero, math.Pi/8)
 
 		ballsLightDistanceFactor := 400.0
 		ballsLightPosition := ballsBounds.Center().Add(&vec3.T{-ballsLightDistanceFactor, ballsLightDistanceFactor, -2.0 * ballsLightDistanceFactor})
@@ -82,8 +86,8 @@ func main() {
 			},
 		}
 
-		cameraFocusPoint := ballsBounds.Center().Add(&vec3.T{0, ballsBounds.SizeZ() / 10.0, -ballsBounds.SizeZ() / 2.0 * 0.8})
-		cameraOrigin := ballsBounds.Center().Add(&vec3.T{0, ballsBounds.SizeZ() * 2.0 / 10.0, -800})
+		cameraFocusPoint := ballsBounds.Center().Add(&vec3.T{0, ballsBounds.SizeY() / 10.0, -ballsBounds.SizeZ() / 2.0 * 0.8})
+		cameraOrigin := ballsBounds.Center().Add(&vec3.T{0, ballsBounds.SizeY() * 1.5 / 10.0, -800})
 		camera := getCamera(magnification, animationProgress, cameraOrigin, cameraFocusPoint)
 
 		scene := scn.SceneNode{
