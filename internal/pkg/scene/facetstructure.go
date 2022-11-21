@@ -232,6 +232,24 @@ func (fs *FacetStructure) GetFirstObjectByName(objectName string) *FacetStructur
 	return nil
 }
 
+func (fs *FacetStructure) GetFirstObjectBySubstructureName(objectName string) *FacetStructure {
+	if fs.SubstructureName == objectName {
+		return fs
+	}
+
+	if len(fs.FacetStructures) > 0 {
+		for _, facetStructure := range fs.FacetStructures {
+			object := facetStructure.GetFirstObjectBySubstructureName(objectName)
+
+			if object != nil {
+				return object
+			}
+		}
+	}
+
+	return nil
+}
+
 func (fs *FacetStructure) ClearMaterials() {
 	fs.Material = nil
 

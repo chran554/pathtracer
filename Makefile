@@ -36,7 +36,8 @@ animations: build_sphere_circle_rotation \
 	build_dop_test \
 	build_primitive_display \
 	build_aperture_shape_test \
-	build_aperture_shape_test2
+	build_aperture_shape_test2 \
+	build_ply_file_test
 
 # Build animation scenes
 # -----------------------------------
@@ -91,3 +92,6 @@ build_aperture_shape_test: build
 
 build_aperture_shape_test2: build
 	go build -o bin/aperture_shape_test2 ./cmd/scene/test/aperture_shape_test2
+
+build_ply_file_test: build
+	go build -o bin/ply_file_test ./cmd/scene/test/ply_file_test

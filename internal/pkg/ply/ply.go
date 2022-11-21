@@ -293,6 +293,20 @@ func getValueType(dataType string) ValueType {
 	case "double":
 		return Float // Map data types to float (float64) in internal handling
 
+	case "int32": // Unspecified int data type by specification
+		fallthrough
+	case "uint32": // Unspecified int data type by specification
+		fallthrough
+	case "int64": // Unspecified int data type by specification
+		fallthrough
+	case "uint64": // Unspecified int data type by specification
+		return Int
+
+	case "float32": // Unspecified float data types by specification
+		fallthrough
+	case "float64": // Unspecified float data types by specification
+		return Float
+
 	default:
 		fmt.Printf("unknown data type: '%s'\n", dataType)
 		return Unknown
