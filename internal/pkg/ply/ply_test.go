@@ -8,6 +8,7 @@ import (
 
 func Test_ReadPly(t *testing.T) {
 	plyFilenamePath := "/Users/christian/projects/code/go/pathtracer/objects/ply/dart.ply"
+	//plyFilenamePath := "/Users/christian/projects/code/go/pathtracer/objects/ply/icosahedron.ply"
 
 	plyFile, err := os.Open(plyFilenamePath)
 	if err != nil {
@@ -15,10 +16,13 @@ func Test_ReadPly(t *testing.T) {
 	}
 	defer plyFile.Close()
 
-	facetStructure, err := ReadPly(plyFile)
+	facetStructure, err := ReadPlyFile(plyFile)
 	if err != nil {
 		fmt.Printf("could not test read ply file '%s': %s\n", plyFilenamePath, err.Error())
 	}
+
+	facetStructure.UpdateNormals()
+	facetStructure.UpdateVertexNormals()
 
 	expectedFacetStructureName := "dart"
 	if facetStructure.Name != expectedFacetStructureName {

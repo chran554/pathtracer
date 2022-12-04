@@ -259,3 +259,98 @@ func (fs *FacetStructure) ClearMaterials() {
 		}
 	}
 }
+
+// UpdateVertexNormals
+// https://iquilezles.org/articles/normals/
+// https://computergraphics.stackexchange.com/questions/4031/programmatically-generating-vertex-normals
+func (fs *FacetStructure) UpdateVertexNormals() {
+	fs.UpdateNormals()
+	vertexToFacetMap := fs.getVertexToFacetMap()
+
+	for vertex, vertexFacets := range vertexToFacetMap {
+		// Calculate vertex normal
+		vertexNormal := vec3.T{0.0, 0.0, 0.0}
+		for _, facet := range vertexFacets {
+			vertexNormal.Add(facet.Normal) // Naive, non-weighted, average vertex normal
+		}
+		vertexNormal.Normalize()
+
+		// Set vertex normal to the vertex of each facet
+		for _, facet := range vertexFacets {
+			if (facet.VertexNormals == nil) || (len(facet.VertexNormals) != len(facet.Vertices)) {
+				facet.VertexNormals = make([]*vec3.T, len(facet.Vertices))
+				for i := 0; i < len(facet.VertexNormals); i++ {
+					facet.VertexNormals[i] = facet.Normal
+				}
+			}
+
+			for i, facetVertex := range facet.Vertices {
+				if facetVertex == vertex {
+					facet.VertexNormals[i] = &vertexNormal
+				}
+			}
+		}
+	}
+	// fmt.Println()
+}
+
+func (fs *FacetStructure) getVertexToFacetMap() map[*vec3.T][]*Facet {
+	vertexToFacetMap := make(map[*vec3.T][]*Facet, 0)
+
+	if len(fs.FacetStructures) > 0 {
+		for _, facetStructure := range fs.FacetStructures {
+			childVerticesToFacetMap := facetStructure.getVertexToFacetMap()
+
+			for vertex, vertexFacets := range childVerticesToFacetMap {
+				vertexToFacetMap[vertex] = append(vertexToFacetMap[vertex], vertexFacets...)
+			}
+		}
+	}
+
+	for _, facet := range fs.Facets {
+		for _, facetVertex := range facet.Vertices {
+			vertexToFacetMap[facetVertex] = append(vertexToFacetMap[facetVertex], facet)
+		}
+	}
+
+	return vertexToFacetMap
+}
+
+//connectedFacetGroups groups a bunch of unordered facets into set of facets that are connected.
+/*func connectedFacetGroups(facets []*Facet) [][]*Facet {
+	var connectedFacets map[*Facet][]*Facet // connectedFacets is a mapping from each facet to a group of directly connected facets
+
+	// find directly connected facets to each facet
+	for _, keyFacet := range facets {
+		connectedFacets[keyFacet] = make([]*Facet, 0)
+		for _, testFacet := range facets {
+			if (testFacet != keyFacet) && areTrianglesEdgeConnected(testFacet, keyFacet) {
+				connectedFacets[keyFacet] = append(connectedFacets[keyFacet], testFacet)
+			}
+		}
+	}
+
+	return orderedFacets
+}
+*/
+// areTrianglesEdgeConnected return if two facets are "connected" by a common edge (side).
+func areTrianglesEdgeConnected(facet1, facet2 *Facet) bool {
+	// A facet is connected to another facet if they share a common edge.
+	// They share a common edge if they share two vertices.
+	// The vertices must, in this implementation, be equal by reference not only by value
+	// (as equal by value is still considered two different vertices).
+
+	var facet2VertexSet map[*vec3.T]bool
+	for _, vertex := range facet2.Vertices {
+		facet2VertexSet[vertex] = true
+	}
+
+	amountCommonVertices := 0
+	for _, vertex := range facet1.Vertices {
+		if facet2VertexSet[vertex] {
+			amountCommonVertices++
+		}
+	}
+
+	return amountCommonVertices >= 2
+}

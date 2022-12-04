@@ -374,7 +374,7 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 			materialName := strings.Join(tokens[1:], " ")
 			//fmt.Printf("New material at line %d: %s\n", lineNumber, line)
 			newMaterial := &scene.Material{
-				Color:           color.White,
+				Color:           &color.White,
 				Emission:        nil,
 				Glossiness:      0.0,
 				Roughness:       0.0,
@@ -401,7 +401,7 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 			// "Ambient color" [[0.0 .. 1.0] [0.0 .. 1.0] [0.0 .. 1.0]]
 		case "Kd":
 			// "Diffuse color" [[0.0 .. 1.0] [0.0 .. 1.0] [0.0 .. 1.0]]
-			color := color.Color{
+			color := &color.Color{
 				R: parseFloat32(tokens[1]),
 				G: parseFloat32(tokens[2]),
 				B: parseFloat32(tokens[3]),

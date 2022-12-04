@@ -185,7 +185,7 @@ func FacetIntersection2(line *Ray, facet *Facet) (intersection bool, intersectio
 
 // interpolateTriangleFacetNormal interpolates intersection point normal from facet (triangle) vertex normals
 func interpolateTriangleFacetNormal(facet *Facet, vertexWeights *vec3.T) vec3.T {
-	normal := vec3.T{}
+	normal := vec3.T{0, 0, 0}
 	if len(facet.VertexNormals) == 3 {
 		for i := 0; i < 3; i++ {
 			weightedVertexNormal := facet.VertexNormals[i].Scaled(vertexWeights[i])
