@@ -19,7 +19,7 @@ var renderType = scn.Pathtracing
 //var renderType = scn.Raycasting
 
 var maxRecursionDepth = 3
-var amountSamples = 100 // 2500
+var amountSamples = 1024 // 2500
 var lensRadius = 5.0
 
 var viewPlaneDistance = 800.0
@@ -27,7 +27,7 @@ var cameraDistanceFactor = 1.0
 
 var imageWidth = 450
 var imageHeight = 450
-var magnification = 0.5 // 2.0
+var magnification = 2.0 // 2.0
 
 func main() {
 	width := int(float64(imageWidth) * magnification)
@@ -77,7 +77,7 @@ func main() {
 	plyFacetStructure.Translate(&vec3.T{0, boxHeight, 0})
 	plyFacetStructure.UpdateBounds()
 	plyFacetStructure.UpdateNormals()
-	plyFacetStructure.UpdateVertexNormals()
+	//plyFacetStructure.UpdateVertexNormals()
 
 	fmt.Printf("ply object bounds: %+v\n", plyFacetStructure.Bounds)
 
@@ -118,7 +118,7 @@ func main() {
 
 func GetCornellBox(scale *vec3.T, lightIntensityFactor float32) *scn.FacetStructure {
 	var cornellBoxFilename = "cornellbox.obj"
-	var cornellBoxFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/" + cornellBoxFilename
+	var cornellBoxFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + cornellBoxFilename
 
 	cornellBoxFile, err := os.Open(cornellBoxFilenamePath)
 	if err != nil {
@@ -131,9 +131,10 @@ func GetCornellBox(scale *vec3.T, lightIntensityFactor float32) *scn.FacetStruct
 	cornellBox.ClearMaterials()
 
 	cornellBox.Material = &scn.Material{
-		Name:  "Cornell box default material",
-		Color: &color.Color{R: 0.95, G: 0.95, B: 0.95},
-		//Roughness: 0.0,
+		Name:       "Cornell box default material",
+		Color:      &color.Color{R: 0.95, G: 0.95, B: 0.95},
+		Glossiness: 0.0,
+		Roughness:  1.0,
 	}
 
 	lampMaterial := scn.Material{
@@ -158,7 +159,7 @@ func GetCornellBox(scale *vec3.T, lightIntensityFactor float32) *scn.FacetStruct
 	cornellBox.GetFirstObjectByName("Wall_left").Material = &sideWallMaterial
 	cornellBox.GetFirstObjectByName("Wall_right").Material = &sideWallMaterial
 
-	floorProjection := scn.NewParallelImageProjection("textures/floor/Calacatta-Vena-French-Pattern-Architextures.jpg", vec3.Zero, vec3.UnitX.Scaled(scale[0]), vec3.UnitZ.Scaled(scale[0]))
+	floorProjection := scn.NewParallelImageProjection("textures/floor/Calacatta-Vena-French-Pattern-Architextures.jpg", vec3.Zero, vec3.UnitX.Scaled(scale[0]/2), vec3.UnitZ.Scaled(scale[0]/2))
 	floorMaterial := *cornellBox.Material
 	floorMaterial.Glossiness = 0.6
 	floorMaterial.Roughness = 0.1

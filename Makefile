@@ -38,7 +38,8 @@ animations: build_sphere_circle_rotation \
 	build_aperture_shape_test \
 	build_aperture_shape_test2 \
 	build_ply_file_test \
-	build_window_test
+	build_window_test \
+	build_lamp_post
 
 # Build animation scenes
 # -----------------------------------
@@ -99,3 +100,6 @@ build_ply_file_test: build
 
 build_window_test: build
 	go build -o bin/window_test ./cmd/scene/test/window_test
+
+build_lamp_post: build
+	go build -o bin/lamp_post ./cmd/scene/lamp_post

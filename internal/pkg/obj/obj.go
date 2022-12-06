@@ -377,7 +377,7 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 				Color:           &color.White,
 				Emission:        nil,
 				Glossiness:      0.0,
-				Roughness:       0.0,
+				Roughness:       1.0,
 				Projection:      nil,
 				RefractionIndex: 1.0,
 				Transparency:    0.0,
