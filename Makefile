@@ -39,7 +39,8 @@ animations: build_sphere_circle_rotation \
 	build_aperture_shape_test2 \
 	build_ply_file_test \
 	build_window_test \
-	build_lamp_post
+	build_lamp_post \
+	build_aoc_2022_d12
 
 # Build animation scenes
 # -----------------------------------
@@ -103,3 +104,6 @@ build_window_test: build
 
 build_lamp_post: build
 	go build -o bin/lamp_post ./cmd/scene/lamp_post
+
+build_aoc_2022_d12: build
+	go build -o bin/aoc_2022_d12 ./cmd/scene/aoc_2022_d12
