@@ -13,8 +13,8 @@ var animationName = "cornellbox"
 var ballRadius float64 = 20
 
 var renderType = scn.Pathtracing
-var maxRecursionDepth = 5
-var amountSamples = 256 * 16
+var maxRecursionDepth = 8
+var amountSamples = 256 * 8 * 3
 var lensRadius float64 = 0
 
 var viewPlaneDistance = 1500.0
@@ -22,7 +22,7 @@ var cameraDistanceFactor = 1.0
 
 var imageWidth = 800
 var imageHeight = 500
-var magnification = 1.0
+var magnification = 1.5
 
 var roofHeight = ballRadius * 3.0
 
@@ -35,17 +35,21 @@ func main() {
 		WriteRawImageFile: true,
 	}
 
+	floorMaterial := scn.NewMaterial().
+		C(color.Color{R: 0.90, G: 0.90, B: 0.90}, 1.0).
+		M(0.2, 0.5)
+
 	openBox := getCornellBox()
+	openBox.GetFirstObjectBySubstructureName("Floor").Material = floorMaterial
 	openBox.Scale(&vec3.Zero, &vec3.T{2 * ballRadius * 3, roofHeight, 3 * ballRadius * 3})
 	openBox.Translate(&vec3.T{-ballRadius * 3, 0, -2 * ballRadius * 3})
 
-	lampEmission := color.Color{R: 0.9, G: 0.9, B: 0.9}
-	lampEmission.Multiply(8.0)
+	lampEmission := (&color.Color{R: 0.9, G: 0.9, B: 0.9}).Multiply(0.7)
 	lampHeight := roofHeight - 0.1
 	lampSize := ballRadius * 2
 	lamp := scn.FacetStructure{
 		Material: &scn.Material{
-			Emission:      &lampEmission,
+			Emission:      lampEmission,
 			RayTerminator: true,
 		},
 		Facets: getFlatRectangleFacets(
@@ -65,22 +69,32 @@ func main() {
 		Name:   "Right sphere",
 		Origin: &vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0},
 		Radius: ballRadius,
-		Material: &scn.Material{
-			Color: &color.Color{R: 0.9, G: 0.9, B: 0.9},
-		},
+		Material: scn.NewMaterial().
+			C(color.Color{R: 0.90, G: 0.90, B: 0.90}, 1.0).
+			T(0.8, false, 0.0).
+			M(0.1, 0.65),
 	}
 
 	sphere2 := scn.Sphere{
 		Name:   "Left sphere",
 		Origin: &vec3.T{-(ballRadius + (ballRadius / 2)), ballRadius, 0},
 		Radius: ballRadius,
-		Material: &scn.Material{
-			Color: &color.Color{R: 0.9, G: 0.9, B: 0.9},
-		},
+		Material: scn.NewMaterial().
+			C(color.Color{R: 0.9, G: 0.9, B: 0.9}, 1.0).
+			T(0.0, false, 0.0).
+			M(0.5, 0.5),
+	}
+
+	sphere3 := scn.Sphere{
+		Name:     "Middle sphere",
+		Origin:   &vec3.T{0, ballRadius, ballRadius * 2 / 3},
+		Radius:   ballRadius,
+		Material: scn.NewMaterial().C(color.Color{R: 0.7, G: 0.9, B: 0.6}, 0.7),
 	}
 
 	scene.Spheres = append(scene.Spheres, &sphere1)
 	scene.Spheres = append(scene.Spheres, &sphere2)
+	scene.Spheres = append(scene.Spheres, &sphere3)
 
 	camera := getCamera()
 
@@ -133,44 +147,51 @@ func getCornellBox() *scn.FacetStructure {
 	boxP8 := vec3.T{0, 0, 0} // Bottom left close       8----------5
 
 	boxMaterial := scn.Material{
-		Color: &color.Color{R: 0.90, G: 0.90, B: 0.90},
+		Color:      &color.Color{R: 0.90, G: 0.90, B: 0.90},
+		Glossiness: 0.0,
+		Roughness:  1.0,
 	}
 
 	leftWallMaterial := scn.Material{
-		Color: &color.Color{R: 0.85, G: 0.20, B: 0.20},
+		Color:      &color.Color{R: 0.85, G: 0.20, B: 0.20},
+		Glossiness: 0.0,
+		Roughness:  1.0,
 	}
 
 	rightWallMaterial := scn.Material{
-		Color: &color.Color{R: 0.20, G: 0.20, B: 0.85},
+		Color:      &color.Color{R: 0.20, G: 0.20, B: 0.85},
+		Glossiness: 0.0,
+		Roughness:  1.0,
 	}
 
 	box := scn.FacetStructure{
 		Name: "Open box",
 		FacetStructures: []*scn.FacetStructure{
 			{
-				Name:     "Roof",
-				Material: &boxMaterial,
-				Facets:   getFlatRectangleFacets(&boxP1, &boxP2, &boxP3, &boxP4),
+				SubstructureName: "Roof",
+				Material:         &boxMaterial,
+				Facets:           getFlatRectangleFacets(&boxP1, &boxP2, &boxP3, &boxP4),
 			},
 			{
-				Name:     "Floor",
-				Material: &boxMaterial,
-				Facets:   getFlatRectangleFacets(&boxP8, &boxP7, &boxP6, &boxP5),
+				SubstructureName: "Floor",
+				Material:         &boxMaterial,
+				Facets:           getFlatRectangleFacets(&boxP8, &boxP7, &boxP6, &boxP5),
 			},
 			{
-				Name:     "Back wall",
-				Material: &boxMaterial,
-				Facets:   getFlatRectangleFacets(&boxP6, &boxP7, &boxP3, &boxP2),
+				SubstructureName: "Back wall",
+				Material:         &boxMaterial,
+				Facets:           getFlatRectangleFacets(&boxP6, &boxP7, &boxP3, &boxP2),
 			},
 			{
-				Name:     "Right side wall",
-				Material: &rightWallMaterial,
-				Facets:   getFlatRectangleFacets(&boxP6, &boxP2, &boxP1, &boxP5),
+				SubstructureName: "Right side wall",
+				Material:         &rightWallMaterial,
+				Facets:           getFlatRectangleFacets(&boxP6, &boxP2, &boxP1, &boxP5),
 			},
 			{
-				Name:     "Left side wall",
-				Material: &leftWallMaterial,
-				Facets:   getFlatRectangleFacets(&boxP7, &boxP8, &boxP4, &boxP3),
+				SubstructureName: "Left side wall",
+				Material:         &leftWallMaterial,
+				Facets:           getFlatRectangleFacets(&boxP7, &boxP8, &boxP4, &boxP3),
+				IgnoreBounds:     true,
 			},
 		},
 	}
