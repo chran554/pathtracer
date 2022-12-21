@@ -10,19 +10,6 @@ import (
 )
 
 // https://en.wikipedia.org/wiki/List_of_refractive_indices
-const (
-	vacuumRefractionIndex = 1.0
-	airRefractionIndex    = 1.000273
-	waterRefractionIndex  = 1.333
-	ice                   = 1.31
-	pyrexGlass            = 1.470
-	acrylicPlastic        = 1.495
-	glassRefractionIndex  = 1.50
-	windowGlass           = 1.52
-	petPlastic            = 1.5750
-	sapphire              = 1.762
-	diamond               = 2.417
-)
 
 var animationName = "refraction_test"
 
@@ -44,7 +31,7 @@ var imageWidth = 1600
 var imageHeight = 500
 var magnification = 0.25
 
-var sphereRefractionIndex = glassRefractionIndex
+var sphereRefractionIndex = scn.RefractionIndex_Glass
 
 func main() {
 	width := int(float64(imageWidth) * magnification)
