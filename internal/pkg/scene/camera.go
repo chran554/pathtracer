@@ -140,12 +140,12 @@ func sunflower(amountPoints int, alpha float64, pointNumber int, randomize bool)
 		pointIndex += rand.Float64() - 0.5
 	}
 
-	b := math.Round(float64(alpha) * math.Sqrt(float64(amountPoints))) // number of boundary points
-	phi := (math.Sqrt(5.0) + 1.0) / 2.0                                // golden ratio
-	r := sunflowerRadius(float64(pointIndex), float64(amountPoints), b)
+	b := math.Round(alpha * math.Sqrt(float64(amountPoints))) // number of boundary points
+	phi := (math.Sqrt(5.0) + 1.0) / 2.0                       // golden ratio
+	r := sunflowerRadius(pointIndex, float64(amountPoints), b)
 	theta := 2.0 * math.Pi * float64(pointIndex) / (phi * phi)
 
-	return float64(r * math.Cos(theta)), float64(r * math.Sin(theta))
+	return r * math.Cos(theta), r * math.Sin(theta)
 }
 
 func sunflowerRadius(i float64, n float64, b float64) float64 {

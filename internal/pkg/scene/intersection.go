@@ -258,7 +258,7 @@ func isPointWithinTriangle2(point *vec3.T, facet *Facet) (isWithin bool, vertexW
 */
 
 func FacetStructureIntersection(line *Ray, facetStructure *FacetStructure) (intersection bool, intersectionPoint *vec3.T, intersectionNormal *vec3.T, intersectionMaterial *Material) {
-	if BoundsIntersection(line, facetStructure.Bounds) {
+	if facetStructure.IgnoreBounds || BoundsIntersection(line, facetStructure.Bounds) {
 		var closestIntersectionDistance = math.MaxFloat64
 
 		for _, facet := range facetStructure.Facets {

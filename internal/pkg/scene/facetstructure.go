@@ -13,7 +13,8 @@ type FacetStructure struct {
 	Facets           []*Facet          `json:"Facets,omitempty"`
 	FacetStructures  []*FacetStructure `json:"FacetStructures,omitempty"`
 
-	Bounds *Bounds `json:"-"` // Calculated attribute. See UpdateBounds(). Derived from all vertices in all sub facets recursively.
+	IgnoreBounds bool    `json:"IgnoreBounds,omitempty"`
+	Bounds       *Bounds `json:"-"` // Calculated attribute. See UpdateBounds(). Derived from all vertices in all sub facets recursively.
 }
 
 func (fs *FacetStructure) Initialize() {
@@ -231,6 +232,19 @@ func (fs *FacetStructure) GetFirstObjectByName(objectName string) *FacetStructur
 
 	return nil
 }
+func (fs *FacetStructure) RemoveObjectsByName(objectName string) {
+	if len(fs.FacetStructures) > 0 {
+		for facetStructureIndex := 0; facetStructureIndex < len(fs.FacetStructures); {
+			facetStructure := fs.FacetStructures[facetStructureIndex]
+
+			if facetStructure.Name == objectName {
+				fs.FacetStructures = append(fs.FacetStructures[:facetStructureIndex], fs.FacetStructures[facetStructureIndex+1:]...)
+			} else {
+				facetStructureIndex++
+			}
+		}
+	}
+}
 
 func (fs *FacetStructure) GetFirstObjectBySubstructureName(objectName string) *FacetStructure {
 	if fs.SubstructureName == objectName {
@@ -256,6 +270,58 @@ func (fs *FacetStructure) ClearMaterials() {
 	if len(fs.FacetStructures) > 0 {
 		for _, facetStructure := range fs.FacetStructures {
 			facetStructure.ClearMaterials()
+		}
+	}
+}
+
+func (fs *FacetStructure) SubdivideFacetStructure(maxFacets int) {
+	if (fs.GetAmountFacets() > maxFacets) && (maxFacets > 2) {
+		// fmt.Printf("Subdividing %s with %d facets.\n", facetStructure.Name, facetStructure.GetAmountFacets())
+
+		if len(fs.Facets) > maxFacets {
+			fs.UpdateBounds()
+			bounds := fs.Bounds
+
+			subFacetStructures := make([]*FacetStructure, 8)
+
+			facetStructureCenter := bounds.Center()
+			for _, facet := range fs.Facets {
+				facetSubstructureIndex := 0
+
+				facetCenter := facet.Center()
+				facetRelativeStructurePosition := vec3.Sub(facetCenter, facetStructureCenter)
+
+				if facetRelativeStructurePosition[0] >= 0 {
+					facetSubstructureIndex = facetSubstructureIndex | 0b001
+				}
+				if facetRelativeStructurePosition[1] >= 0 {
+					facetSubstructureIndex = facetSubstructureIndex | 0b010
+				}
+				if facetRelativeStructurePosition[2] >= 0 {
+					facetSubstructureIndex = facetSubstructureIndex | 0b100
+				}
+
+				if subFacetStructures[facetSubstructureIndex] == nil {
+					subFacetStructures[facetSubstructureIndex] = &FacetStructure{
+						Name:     fmt.Sprintf("%s-%03b", fs.Name, facetSubstructureIndex),
+						Material: fs.Material,
+					}
+				}
+
+				subFacetStructures[facetSubstructureIndex].Facets = append(subFacetStructures[facetSubstructureIndex].Facets, facet)
+			}
+
+			// Update the content of the current facet structure
+			fs.Facets = nil
+			for _, subFacetStructure := range subFacetStructures {
+				if subFacetStructure != nil {
+					fs.FacetStructures = append(fs.FacetStructures, subFacetStructure)
+				}
+			}
+		}
+
+		for _, facetStructure := range fs.FacetStructures {
+			facetStructure.SubdivideFacetStructure(maxFacets)
 		}
 	}
 }

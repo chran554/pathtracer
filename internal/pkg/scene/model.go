@@ -5,7 +5,6 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 	_ "image/jpeg"
 	_ "image/png"
-	"pathtracer/internal/pkg/color"
 )
 
 // RenderType is the type used to define different render types
@@ -30,18 +29,6 @@ type Animation struct {
 	Width             int
 	Height            int
 	WriteRawImageFile bool
-}
-
-type Material struct {
-	Name            string           `json:"Name,omitempty"`
-	Color           *color.Color     `json:"Color,omitempty"`
-	Emission        *color.Color     `json:"Emission,omitempty"`
-	Glossiness      float32          `json:"Glossiness,omitempty"` // Glossiness is the percent amount that will make out specular reflection. Values [0.0 .. 1.0] with default 0.0. Lower value the more diffuse color will appear and higher value the more mirror reflection will appear.
-	Roughness       float32          `json:"Roughness,omitempty"`  // Roughness is the diffuse spread of the specular reflection. Values [0.0 .. 1.0] with default 0.0. Lower is like "brushed metal" or "foggy/hazy reflection" and higher value give a more mirror like reflection. A value of 0.0 is perfect mirror reflection and a value of 0.0 is a perfect diffuse material (no mirror at al).
-	Projection      *ImageProjection `json:"Projection,omitempty"`
-	RefractionIndex float64          `json:"RefractionIndex,omitempty"`
-	Transparency    float64          `json:"Transparency,omitempty"`
-	RayTerminator   bool             `json:"RayTerminator,omitempty"`
 }
 
 type Camera struct {

@@ -389,14 +389,14 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 		case "Ns":
 		case "Ks":
 			// "Specularity / Glossiness" [0.0 .. 1.0]
-			currentMaterial.Glossiness = parseFloat32(tokens[1])
+			currentMaterial.Glossiness = parseFloat64(tokens[1])
 		case "Ke":
 		case "Ni":
 		case "d":
 		case "illum":
 		case "Pr":
 			// "Roughness" [0.0 .. 1.0]
-			currentMaterial.Roughness = parseFloat32(tokens[1])
+			currentMaterial.Roughness = parseFloat64(tokens[1])
 		case "Ka":
 			// "Ambient color" [[0.0 .. 1.0] [0.0 .. 1.0] [0.0 .. 1.0]]
 		case "Kd":

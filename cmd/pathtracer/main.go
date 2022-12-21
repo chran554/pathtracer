@@ -149,7 +149,7 @@ func initializeScene(scene *scn.SceneNode) {
 
 	// Subdivide facet structure for performance
 	for _, facetStructure := range facetStructures {
-		subdivideFacetStructure(facetStructure, 25)
+		facetStructure.SubdivideFacetStructure(25)
 	}
 
 	// Initialize facet structures (calculate bounds etc)
@@ -206,58 +206,6 @@ func subdivideSpheres(spheres []*scn.Sphere) []*scn.SceneNode {
 	// }
 
 	return subSceneNodeStructures
-}
-
-func subdivideFacetStructure(facetStructure *scn.FacetStructure, maxFacets int) {
-	if (facetStructure.GetAmountFacets() > maxFacets) && (maxFacets > 2) {
-		// fmt.Printf("Subdividing %s with %d facets.\n", facetStructure.Name, facetStructure.GetAmountFacets())
-
-		if len(facetStructure.Facets) > maxFacets {
-			facetStructure.UpdateBounds()
-			bounds := facetStructure.Bounds
-
-			subFacetStructures := make([]*scn.FacetStructure, 8)
-
-			facetStructureCenter := bounds.Center()
-			for _, facet := range facetStructure.Facets {
-				facetSubstructureIndex := 0
-
-				facetCenter := facet.Center()
-				facetRelativeStructurePosition := vec3.Sub(facetCenter, facetStructureCenter)
-
-				if facetRelativeStructurePosition[0] >= 0 {
-					facetSubstructureIndex = facetSubstructureIndex | 0b001
-				}
-				if facetRelativeStructurePosition[1] >= 0 {
-					facetSubstructureIndex = facetSubstructureIndex | 0b010
-				}
-				if facetRelativeStructurePosition[2] >= 0 {
-					facetSubstructureIndex = facetSubstructureIndex | 0b100
-				}
-
-				if subFacetStructures[facetSubstructureIndex] == nil {
-					subFacetStructures[facetSubstructureIndex] = &scn.FacetStructure{
-						Name:     fmt.Sprintf("%s-%03b", facetStructure.Name, facetSubstructureIndex),
-						Material: facetStructure.Material,
-					}
-				}
-
-				subFacetStructures[facetSubstructureIndex].Facets = append(subFacetStructures[facetSubstructureIndex].Facets, facet)
-			}
-
-			// Update the content of the current facet structure
-			facetStructure.Facets = nil
-			for _, subFacetStructure := range subFacetStructures {
-				if subFacetStructure != nil {
-					facetStructure.FacetStructures = append(facetStructure.FacetStructures, subFacetStructure)
-				}
-			}
-		}
-
-		for _, facetStructure := range facetStructure.FacetStructures {
-			subdivideFacetStructure(facetStructure, maxFacets)
-		}
-	}
 }
 
 func deInitializeScene(scene *scn.SceneNode) {
@@ -339,7 +287,7 @@ func parallelPixelRendering(renderedPixelData *image.FloatImage, camera *scn.Cam
 	}
 }
 
-func getRandomHemisphereVector(hemisphereHeading *vec3.T) vec3.T {
+func getRandomHemisphereVector(hemisphereHeading *vec3.T) *vec3.T {
 	var vector vec3.T
 
 	for continueLoop := true; continueLoop; continueLoop = vector.LengthSqr() > 1.0 {
@@ -361,7 +309,7 @@ func getRandomHemisphereVector(hemisphereHeading *vec3.T) vec3.T {
 
 	vector.Normalize()
 
-	return vector
+	return &vector
 }
 
 func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDepth int) color.Color {
@@ -487,52 +435,70 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 		} else if camera.RenderType == scn.Pathtracing {
 
 			if !material.RayTerminator {
-				var newRayHeading vec3.T
+				var newRayHeading *vec3.T
 				var newRefractionIndex = ray.RefractionIndex
 
-				if (material.RefractionIndex > 0.0) && (rand.Float64() > -0.5) && false { // refraction disabled as WIP
+				transparentRay := (material.Transparency > 0.0) && (rand.Float64() < material.Transparency)
+
+				cosineNewRayAndNormal := 1.0
+
+				if material.SolidObject && transparentRay && (material.RefractionIndex > 0.0) {
 					var totalInternalReflection bool
 					newRayHeading, totalInternalReflection = getRefractionVector(normalAtIntersection, ray.Heading, ray.RefractionIndex, material.RefractionIndex)
 
 					if !totalInternalReflection {
 						newRefractionIndex = material.RefractionIndex
 					}
+
+					cosineNewRayAndNormal = 1.0
+
+				} else if !material.SolidObject && transparentRay {
+					newRayHeading = ray.Heading
+
+					cosineNewRayAndNormal = 1.0
+
 				} else {
-					newRayHeading = getReflectionHeading(ray, material.Roughness, normalAtIntersection)
+					diffuseHeading := getRandomHemisphereVector(normalAtIntersection)
+
+					specularRay := rand.Float64() < material.Glossiness
+
+					if specularRay {
+						specularHeading := getReflectionVector(normalAtIntersection, ray.Heading)
+						interpolatedHeading := vec3.Interpolate(specularHeading, diffuseHeading, material.Roughness*material.Roughness)
+
+						newRayHeading = &interpolatedHeading
+
+						cosineNewRayAndNormal = vec3.Dot(normalAtIntersection, newRayHeading) / (normalAtIntersection.Length() * newRayHeading.Length())
+
+					} else {
+						// cosine weighted hemisphere sampling
+						//diffuseHeading.Add(normalAtIntersection)
+						//diffuseHeading.Normalize()
+						//newRayHeading = diffuseHeading
+						//cosineNewRayAndNormal = 1.0 / math.Pi // remove the cosine factor as it is already included in hemisphere sampling
+
+						// random ("weighted") hemisphere sampling
+						newRayHeading = diffuseHeading
+						cosineNewRayAndNormal = vec3.Dot(normalAtIntersection, newRayHeading) / (normalAtIntersection.Length() * newRayHeading.Length())
+					}
 				}
 
 				rayStartOffset := newRayHeading.Scaled(epsilonDistance)
 				newRayOrigin := intersectionPoint.Added(&rayStartOffset)
-				newRay := scn.Ray{
-					Origin:          &newRayOrigin,
-					Heading:         &newRayHeading,
-					RefractionIndex: newRefractionIndex,
-				}
+				newRay := scn.Ray{Origin: &newRayOrigin, Heading: newRayHeading, RefractionIndex: newRefractionIndex}
 
 				incomingEmission := tracePath(&newRay, camera, scene, currentDepth+1)
-				cosineNewRayAndNormal := vec3.Dot(normalAtIntersection, &newRayHeading) / (normalAtIntersection.Length() * newRayHeading.Length())
-
-				// Diffuse light contribution below
-				newRayHeadingDiffuse := getReflectionHeading(ray, 1.0, normalAtIntersection)
-				rayStartOffsetDiffuse := newRayHeadingDiffuse.Scaled(epsilonDistance)
-				newRayOriginDiffuse := intersectionPoint.Added(&rayStartOffsetDiffuse)
-				newRay2 := scn.Ray{
-					Origin:          &newRayOriginDiffuse,
-					Heading:         &newRayHeadingDiffuse,
-					RefractionIndex: newRefractionIndex,
-				}
-
-				incomingEmissionDiffuse := tracePath(&newRay2, camera, scene, currentDepth+1)
-				cosineNewRayAndNormalDiffuse := vec3.Dot(normalAtIntersection, &newRayHeadingDiffuse) / (normalAtIntersection.Length() * newRayHeadingDiffuse.Length())
+				incomingEmissionOnSurface := incomingEmission
+				incomingEmissionOnSurface.Multiply(float32(cosineNewRayAndNormal))
 
 				outgoingEmission = color.Color{
 					//R: material.Color.R * projectionColor.R * (incomingEmission.R * float32(cosineNewRayAndNormal)*material.Glossiness),
 					//G: material.Color.G * projectionColor.G * (incomingEmission.G * float32(cosineNewRayAndNormal)*material.Glossiness),
 					//B: material.Color.B * projectionColor.B * (incomingEmission.B * float32(cosineNewRayAndNormal)*material.Glossiness),
 
-					R: float32(cosineNewRayAndNormalDiffuse)*incomingEmissionDiffuse.R*material.Color.R*projectionColor.R*(1.0-material.Glossiness) + float32(cosineNewRayAndNormal)*incomingEmission.R*material.Glossiness,
-					G: float32(cosineNewRayAndNormalDiffuse)*incomingEmissionDiffuse.G*material.Color.G*projectionColor.G*(1.0-material.Glossiness) + float32(cosineNewRayAndNormal)*incomingEmission.G*material.Glossiness,
-					B: float32(cosineNewRayAndNormalDiffuse)*incomingEmissionDiffuse.B*material.Color.B*projectionColor.B*(1.0-material.Glossiness) + float32(cosineNewRayAndNormal)*incomingEmission.B*material.Glossiness,
+					R: incomingEmissionOnSurface.R*float32(material.Glossiness) + incomingEmissionOnSurface.R*material.Color.R*projectionColor.R*float32(1.0-material.Glossiness),
+					G: incomingEmissionOnSurface.G*float32(material.Glossiness) + incomingEmissionOnSurface.G*material.Color.G*projectionColor.G*float32(1.0-material.Glossiness),
+					B: incomingEmissionOnSurface.B*float32(material.Glossiness) + incomingEmissionOnSurface.B*material.Color.B*projectionColor.B*float32(1.0-material.Glossiness),
 
 					// The multiplication by 0.5 is actually a division by 2, to normalize the added light as there are two light rays fired and added together.
 					// R: 0.5 * (float32(cosineNewRayAndNormalDiffuse)*incomingEmissionDiffuse.R*material.Color.R*projectionColor.R + float32(cosineNewRayAndNormal)*incomingEmission.R*material.Glossiness),
@@ -552,39 +518,16 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 	return outgoingEmission
 }
 
-func getReflectionHeading(ray *scn.Ray, roughness float32, normalAtIntersection *vec3.T) vec3.T {
-	var newHeading vec3.T
-
-	if roughness == 1.0 {
-		// Perfectly brushed metal like reflection
-		newHeading = getRandomHemisphereVector(normalAtIntersection)
-	} else if roughness == 0.0 {
-		// Perfect reflective (mirror)
-		newHeading = getReflectionVector(normalAtIntersection, ray.Heading)
-	} else {
-		perfectReflectionHeadingVector := getReflectionVector(normalAtIntersection, ray.Heading)
-		perfectReflectionHeadingVector.Scale(float64(1.0 - roughness))
-
-		randomHeadingVector := getRandomHemisphereVector(normalAtIntersection)
-		randomHeadingVector.Scale(float64(roughness))
-
-		perfectReflectionHeadingVector.Add(&randomHeadingVector)
-		newHeading = perfectReflectionHeadingVector
-	}
-
-	newHeading.Normalize()
-	return newHeading
-}
-
-func getReflectionVector(normal *vec3.T, incomingVector *vec3.T) vec3.T {
+func getReflectionVector(normal *vec3.T, incomingVector *vec3.T) *vec3.T {
 	tempV := normal.Scaled(2.0 * vec3.Dot(normal, incomingVector))
-	return incomingVector.Subed(&tempV)
+	reflectionVector := incomingVector.Subed(&tempV)
+	return &reflectionVector
 }
 
 // getRefractionVector according to
 // https://graphics.stanford.edu/courses/cs148-10-summer/docs/2006--degreve--reflection_refraction.pdf
-func getRefractionVector(normal *vec3.T, incomingVector *vec3.T, leavingRefractionIndex float64, enteringRefractionIndex float64) (outgoingVector vec3.T, totalInternalReflection bool) {
-	outgoingVector = *incomingVector // No refraction
+func getRefractionVector(normal *vec3.T, incomingVector *vec3.T, leavingRefractionIndex float64, enteringRefractionIndex float64) (outgoingVector *vec3.T, totalInternalReflection bool) {
+	outgoingVector = incomingVector // No refraction
 
 	refractionRatio := leavingRefractionIndex / enteringRefractionIndex
 	cosi := -vec3.Dot(incomingVector, normal)                        // Cosine for angle of incoming vector and surface normal
@@ -603,7 +546,7 @@ func getRefractionVector(normal *vec3.T, incomingVector *vec3.T, leavingRefracti
 	no := normal.Scaled(refractionRatio*cosi - cosl) // Normal vector part of outgoing (refraction) vector
 
 	io.Add(&no)
-	outgoingVector = io
+	outgoingVector = &io
 
 	return outgoingVector, false
 }
