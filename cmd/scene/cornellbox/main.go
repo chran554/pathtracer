@@ -14,7 +14,7 @@ var ballRadius float64 = 20
 
 var renderType = scn.Pathtracing
 var maxRecursionDepth = 8
-var amountSamples = 256 * 8 * 3
+var amountSamples = 64 // 256 * 8 * 3
 var lensRadius float64 = 0
 
 var viewPlaneDistance = 1500.0
@@ -22,7 +22,7 @@ var cameraDistanceFactor = 1.0
 
 var imageWidth = 800
 var imageHeight = 500
-var magnification = 1.5
+var magnification = 1.0
 
 var roofHeight = ballRadius * 3.0
 
@@ -32,7 +32,7 @@ func main() {
 		Frames:            []scn.Frame{},
 		Width:             int(float64(imageWidth) * magnification),
 		Height:            int(float64(imageHeight) * magnification),
-		WriteRawImageFile: true,
+		WriteRawImageFile: false,
 	}
 
 	floorMaterial := scn.NewMaterial().
@@ -44,7 +44,7 @@ func main() {
 	openBox.Scale(&vec3.Zero, &vec3.T{2 * ballRadius * 3, roofHeight, 3 * ballRadius * 3})
 	openBox.Translate(&vec3.T{-ballRadius * 3, 0, -2 * ballRadius * 3})
 
-	lampEmission := (&color.Color{R: 0.9, G: 0.9, B: 0.9}).Multiply(0.7)
+	lampEmission := (&color.Color{R: 0.9, G: 0.9, B: 0.9}).Multiply(5.0)
 	lampHeight := roofHeight - 0.1
 	lampSize := ballRadius * 2
 	lamp := scn.FacetStructure{
@@ -70,9 +70,7 @@ func main() {
 		Origin: &vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0},
 		Radius: ballRadius,
 		Material: scn.NewMaterial().
-			C(color.Color{R: 0.90, G: 0.90, B: 0.90}, 1.0).
-			T(0.8, false, 0.0).
-			M(0.1, 0.65),
+			C(color.Color{R: 0.90, G: 0.90, B: 0.90}, 1.0),
 	}
 
 	sphere2 := scn.Sphere{
@@ -81,7 +79,6 @@ func main() {
 		Radius: ballRadius,
 		Material: scn.NewMaterial().
 			C(color.Color{R: 0.9, G: 0.9, B: 0.9}, 1.0).
-			T(0.0, false, 0.0).
 			M(0.5, 0.5),
 	}
 

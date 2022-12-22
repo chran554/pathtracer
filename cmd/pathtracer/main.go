@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/ungerik/go3d/float64/mat3"
 	"math"
 	"math/rand"
 	"os"
@@ -13,6 +14,7 @@ import (
 	"pathtracer/internal/pkg/rendermonitor"
 	"pathtracer/internal/pkg/renderpass"
 	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/util"
 	"strconv"
 	"sync"
 	"time"
@@ -312,6 +314,40 @@ func getRandomHemisphereVector(hemisphereHeading *vec3.T) *vec3.T {
 	return &vector
 }
 
+// getRandomCosineWeightedHemispherePoint gets a unit vector in a hemisphere "facing" the direction of vector n.
+// The hemisphere is cosine weighted i.e. it gives a weighted distribution of vectors towards the "top" of the hemisphere.
+//
+// https://www.csie.ntu.edu.tw/~cyy/courses/rendering/05fall/lectures/handouts/lec10_mc_4up.pdf (page 12)
+func getRandomCosineWeightedHemisphereVector(n *vec3.T) *vec3.T {
+	x, y := util.Sunflower(1000, 1.0, rand.Intn(1000), true)
+	// ret.z = sqrtf(max(0.f,1.f - ret.x*ret.x - ret.y*ret.y));
+	z := math.Sqrt(math.Max(0.0, 1.0-x*x-y*y))
+	generatedUnitHemisphereVector := vec3.T{x, y, z}
+
+	var t vec3.T
+	a := math.Abs(n[0])
+	b := math.Abs(n[1])
+	c := math.Abs(n[2])
+
+	// Get the unit vector that is "most orthogonal" to the vector n.
+	if a <= b && a <= c {
+		t = vec3.UnitX
+	} else if b <= a && b <= c {
+		t = vec3.UnitY
+	} else {
+		t = vec3.UnitZ
+	}
+
+	u := vec3.Cross(&t, n)
+	u.Normalize()
+	v := vec3.Cross(n, &u)
+	v.Normalize()
+
+	m := mat3.T{u, v, *n}
+	hemisphereVector := m.MulVec3(&generatedUnitHemisphereVector)
+	return &hemisphereVector
+}
+
 func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDepth int) color.Color {
 	outgoingEmission := color.Black
 
@@ -458,28 +494,39 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 					cosineNewRayAndNormal = 1.0
 
 				} else {
-					diffuseHeading := getRandomHemisphereVector(normalAtIntersection)
+					// diffuseHeading := getRandomHemisphereVector(normalAtIntersection)
+					diffuseHeading := getRandomCosineWeightedHemisphereVector(normalAtIntersection)
 
-					specularRay := rand.Float64() < material.Glossiness
+					useReflectionRay := rand.Float64() < material.Glossiness
 
-					if specularRay {
-						specularHeading := getReflectionVector(normalAtIntersection, ray.Heading)
-						interpolatedHeading := vec3.Interpolate(specularHeading, diffuseHeading, material.Roughness*material.Roughness)
+					if useReflectionRay {
+						reflectionHeading := getReflectionVector(normalAtIntersection, ray.Heading)
+
+						interpolationWeight := material.Roughness * material.Roughness
+						interpolatedHeading := vec3.Interpolate(reflectionHeading, diffuseHeading, interpolationWeight)
+						interpolatedHeading.Normalize()
 
 						newRayHeading = &interpolatedHeading
 
-						cosineNewRayAndNormal = vec3.Dot(normalAtIntersection, newRayHeading) / (normalAtIntersection.Length() * newRayHeading.Length())
+						// Weight for random hemisphere sampling
+						//cosineNewRayAndNormal = vec3.Dot(normalAtIntersection, newRayHeading) / (normalAtIntersection.Length() * newRayHeading.Length())
+						//cosineNewRayAndNormal = cosineNewRayAndNormal*interpolationWeight + (1.0 - interpolationWeight) // Interpolated weight diffuse --> specular
+
+						// Weight for cosine weighted hemisphere sampling
+						cosineNewRayAndNormal = 0.5*interpolationWeight + (1.0 - interpolationWeight) // Interpolated weight diffuse --> specular
 
 					} else {
 						// cosine weighted hemisphere sampling
 						//diffuseHeading.Add(normalAtIntersection)
 						//diffuseHeading.Normalize()
-						//newRayHeading = diffuseHeading
-						//cosineNewRayAndNormal = 1.0 / math.Pi // remove the cosine factor as it is already included in hemisphere sampling
 
-						// random ("weighted") hemisphere sampling
 						newRayHeading = diffuseHeading
-						cosineNewRayAndNormal = vec3.Dot(normalAtIntersection, newRayHeading) / (normalAtIntersection.Length() * newRayHeading.Length())
+
+						// Weight for cosine weighted hemisphere sampling
+						cosineNewRayAndNormal = 0.5 // remove the cosine factor as it is already included in hemisphere sampling
+
+						// Weight for random hemisphere sampling
+						// cosineNewRayAndNormal = vec3.Dot(normalAtIntersection, newRayHeading) / (normalAtIntersection.Length() * newRayHeading.Length())
 					}
 				}
 
