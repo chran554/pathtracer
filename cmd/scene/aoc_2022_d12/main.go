@@ -3,16 +3,13 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/ungerik/go3d/float64/vec3"
 	"os"
 	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/obj"
 	scn "pathtracer/internal/pkg/scene"
 	"regexp"
 	"strconv"
-	"strings"
-
-	"github.com/ungerik/go3d/float64/vec3"
 )
 
 var animationName = "aoc_2022_d12"
@@ -29,7 +26,7 @@ var magnification = 0.25
 
 // var renderType = scn.Raycasting
 var renderType = scn.Pathtracing
-var amountSamples = 80 // 200 * 4 * 3 // 2000 * 2 * 4
+var amountSamples = 160 // 200 * 4 * 3 // 2000 * 2 * 4
 var maxRecursion = 3
 
 var viewPlaneDistance = 800.0
@@ -153,28 +150,15 @@ func main() {
 		curvePoint := &vec3.T{float64(position.x) * boxUnit, float64(karta.GetPositionHeight(position.x, position.y)) * boxUnit, float64(position.y) * boxUnit}
 		curvePoints = append(curvePoints, curvePoint)
 	}
-	pathCurve := NewSmoothCurve(curvePoints, 0.1, 10, true)
-
-	var curvePoints2 []*vec3.T
-	for _, position := range pathPositions {
-		curvePoint := &vec3.T{float64(position.x), float64(karta.GetPositionHeight(position.x, position.y)), float64(position.y)}
-		curvePoints2 = append(curvePoints2, curvePoint)
-	}
-	pathCurve00 := NewSmoothCurve(curvePoints2, 0.1, 0, true)
-	pathCurve05 := NewSmoothCurve(curvePoints2, 0.1, 5, true)
-	pathCurve10 := NewSmoothCurve(curvePoints2, 0.1, 10, true)
-	pathCurve20 := NewSmoothCurve(curvePoints2, 0.1, 20, true)
-
-	printPoints(pathCurve00.points, "0.1 00")
-	printPoints(pathCurve05.points, "0.1 05")
-	printPoints(pathCurve10.points, "0.1 10")
-	printPoints(pathCurve20.points, "0.1 20")
+	pathCurve := NewSmoothCurve(curvePoints, 0.1, 10, 0, true)
+	pathCurve.Subdivide(2)
+	pathCurve.Smooth(10)
 
 	endPosition := pathPositions[len(pathPositions)-1]
 	pathEndPoint := &vec3.T{float64(endPosition.x) * boxUnit, float64(karta.GetPositionHeight(endPosition.x, endPosition.y)) * boxUnit, float64(endPosition.y) * boxUnit}
 
 	// Actual animation
-	amountFrames = len(pathPositions) * 2
+	amountFrames = len(pathPositions) * 3
 	//headingSamples := 10
 	//amountPositionSamples := len(pathPositions)
 	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
@@ -210,76 +194,6 @@ func main() {
 	anm.WriteAnimationToFile(animation, false)
 }
 
-func printPoints(points []*vec3.T, label string) {
-	fmt.Println(label)
-	for _, point := range points {
-		fmt.Printf("(%f,%f)\n", point[0], point[2])
-	}
-}
-
-func getHeadingVector(progress float64, karta Map, positions []Pos, boxUnit float64) *vec3.T {
-	maxIndex := len(positions) - 1
-	positionProgress := progress * float64(len(positions))
-	positionIndex := int(positionProgress)
-
-	averageHeading := vec3.Zero
-
-	amountContributions := 0
-	for i := positionIndex; i < positionIndex+10; i++ {
-		pos1 := positions[Min(i, maxIndex)]
-		x1 := float64(pos1.x)
-		y1 := float64(pos1.y)
-		h1 := float64(karta.GetPositionHeight(pos1.x, pos1.y))
-
-		pos2 := positions[Min(i+1, maxIndex)]
-		x2 := float64(pos2.x)
-		y2 := float64(pos2.y)
-		h2 := float64(karta.GetPositionHeight(pos2.x, pos2.y))
-
-		p1 := &vec3.T{x1*boxUnit + boxUnit*0.5, h1*boxUnit + boxUnit*0.5, y1*boxUnit + boxUnit*0.5}
-		p2 := &vec3.T{x2*boxUnit + boxUnit*0.5, h2*boxUnit + boxUnit*0.5, y2*boxUnit + boxUnit*0.5}
-
-		headingContribution := vec3.Sub(p2, p1)
-		amountContributions++
-		averageHeading.Add(&headingContribution)
-	}
-
-	averageHeading.Normalize()
-
-	return &averageHeading
-}
-
-func getFocusPoint(progress float64, karta Map, positions []Pos, boxUnit float64) *vec3.T {
-	maxIndex := len(positions) - 1
-	positionProgress := progress * float64(len(positions))
-	positionIndex := int(positionProgress) + 10
-
-	pos := positions[Min(positionIndex, maxIndex)]
-	x := float64(pos.x)
-	y := float64(pos.y)
-
-	height := float64(karta.GetPositionHeight(pos.x, pos.y))
-	aim := &vec3.T{x*boxUnit + boxUnit*0.5, height*boxUnit + boxUnit*0.5, y*boxUnit + boxUnit*0.5}
-
-	return aim
-}
-
-func Max(i int, i2 int) int {
-	if i > i2 {
-		return i
-	} else {
-		return i2
-	}
-}
-
-func Min(i int, i2 int) int {
-	if i < i2 {
-		return i
-	} else {
-		return i2
-	}
-}
-
 func parsePath(lines []string) ([]Pos, Pos, Pos) {
 	var pathPositions []Pos
 
@@ -305,108 +219,6 @@ func parsePath(lines []string) ([]Pos, Pos, Pos) {
 	}
 
 	return pathPositions, startPos, endPos
-}
-
-func GetLampPost(lampPostScale *vec3.T) *scn.FacetStructure {
-	lampPostMaterial := scn.Material{
-		Name:          "lamp post",
-		Color:         &color.Color{R: 0.9, G: 0.4, B: 0.3},
-		Emission:      &color.Black,
-		Glossiness:    0.2,
-		Roughness:     0.3,
-		RayTerminator: false,
-	}
-
-	lampMaterial := scn.Material{
-		Name:          "lamp",
-		Color:         &color.Color{R: 1.0, G: 1.0, B: 1.0},
-		Emission:      (&color.Color{R: 10.0, G: 10.0, B: 9.0}).Multiply(3.0),
-		Glossiness:    0.0,
-		Roughness:     1.0,
-		RayTerminator: true,
-	}
-
-	lampPost := LoadLampPost(lampPostScale)
-	lampPost.ClearMaterials()
-	lampPost.Material = &lampPostMaterial
-
-	lampPost.GetFirstObjectByName("lamp_0").Material = &lampMaterial
-	lampPost.GetFirstObjectByName("lamp_1").Material = &lampMaterial
-	lampPost.GetFirstObjectByName("lamp_2").Material = &lampMaterial
-	lampPost.GetFirstObjectByName("lamp_3").Material = &lampMaterial
-	return lampPost
-}
-
-func LoadGopher(scale *vec3.T) *scn.FacetStructure {
-	var objFilename = "go_gopher_color.obj"
-	var objFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + objFilename
-
-	objFile, err := os.Open(objFilenamePath)
-	if err != nil {
-		fmt.Printf("ouupps, something went wrong loading file: '%s'\n%s\n", objFilenamePath, err.Error())
-	}
-	defer objFile.Close()
-
-	obj, err := obj.Read(objFile)
-	ymin := obj.Bounds.Ymin
-	ymax := obj.Bounds.Ymax
-	obj.Translate(&vec3.T{0.0, -ymin, 0.0})       // feet touch the ground (xz-plane)
-	obj.ScaleUniform(&vec3.Zero, 1.0/(ymax-ymin)) // resize to height == 1.0
-
-	obj.Scale(&vec3.Zero, scale)
-
-	obj.UpdateBounds()
-	fmt.Printf("Gopher bounds: %+v\n", obj.Bounds)
-
-	return obj
-}
-
-func LoadLampPost(scale *vec3.T) *scn.FacetStructure {
-	var objFilename = "lamp_post.obj"
-	var objFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + objFilename
-
-	objFile, err := os.Open(objFilenamePath)
-	if err != nil {
-		fmt.Printf("ouupps, something went wrong loading file: '%s'\n%s\n", objFilenamePath, err.Error())
-	}
-	defer objFile.Close()
-
-	obj, err := obj.Read(objFile)
-	ymin := obj.Bounds.Ymin
-	ymax := obj.Bounds.Ymax
-	obj.Translate(&vec3.T{0.0, -ymin, 0.0})       // lamp post base touch the ground (xz-plane)
-	obj.ScaleUniform(&vec3.Zero, 1.0/(ymax-ymin)) // resize to height == 1.0
-
-	obj.Scale(&vec3.Zero, scale)
-
-	obj.UpdateBounds()
-	fmt.Printf("Lamp post bounds: %+v\n", obj.Bounds)
-
-	return obj
-}
-
-func LoadKerosineLamp(scale *vec3.T) *scn.FacetStructure {
-	var objFilename = "kerosine_lamp.obj"
-	var objFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + objFilename
-
-	objFile, err := os.Open(objFilenamePath)
-	if err != nil {
-		fmt.Printf("ouupps, something went wrong loading file: '%s'\n%s\n", objFilenamePath, err.Error())
-	}
-	defer objFile.Close()
-
-	obj, err := obj.Read(objFile)
-	ymin := obj.Bounds.Ymin
-	ymax := obj.Bounds.Ymax
-	obj.Translate(&vec3.T{0.0, -ymin, 0.0})       // lamp post base touch the ground (xz-plane)
-	obj.ScaleUniform(&vec3.Zero, 1.0/(ymax-ymin)) // resize to height == 1.0
-
-	obj.Scale(&vec3.Zero, scale)
-
-	obj.UpdateBounds()
-	fmt.Printf("Kerosine lamp bounds: %+v\n", obj.Bounds)
-
-	return obj
 }
 
 func getEnvironmentMapping(filename string) scn.Sphere {
@@ -520,27 +332,6 @@ func (m Map) GetPositionHeight(x int, y int) int {
 		return 1000000
 	}
 	return m.heights[y][x]
-}
-
-func readTextFileLines(inputFilepath string, purgeEmpty bool) []string {
-	lines, err := readLines(inputFilepath)
-	if err != nil {
-		fmt.Printf("could not read file: %s\n", err.Error())
-		os.Exit(1)
-	}
-
-	for lineIndex := 0; lineIndex < len(lines); {
-		line := lines[lineIndex]
-
-		if strings.TrimSpace(line) == "" {
-			lines = append(lines[:lineIndex], lines[lineIndex+1:]...)
-			continue
-		}
-
-		lineIndex++
-	}
-
-	return lines
 }
 
 func readLines(path string) ([]string, error) {
