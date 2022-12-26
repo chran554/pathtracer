@@ -227,10 +227,10 @@ func (imageProjection *ImageProjection) getParallelColor(point *vec3.T) *color.C
 	}
 
 	if fracU < 0.0 {
-		fracU = fracU + 1.0
+		fracU += 1.0
 	}
 	if fracV < 0.0 {
-		fracV = fracV + 1.0
+		fracV += 1.0
 	}
 
 	if imageProjection.FlipU && (int(math.Abs(math.Floor(u)))%2 == 1) {
@@ -240,11 +240,19 @@ func (imageProjection *ImageProjection) getParallelColor(point *vec3.T) *color.C
 		fracV = 1.0 - fracV
 	}
 
-	textureX := int(math.Abs(fracU) * float64(imageProjection._image.Width))
-	textureY := int(math.Abs(fracV) * float64(imageProjection._image.Height))
+	textureX := min(imageProjection._image.Width-1, int(math.Abs(fracU*float64(imageProjection._image.Width))))
+	textureY := min(imageProjection._image.Height-1, int(math.Abs(fracV*float64(imageProjection._image.Height))))
 	textureY = (imageProjection._image.Height - 1) - textureY // The pixel at UV-origin should be the pixel at bottom left in image
 
 	return imageProjection._image.GetPixel(textureX, textureY)
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	} else {
+		return b
+	}
 }
 
 func (imageProjection *ImageProjection) ClearProjection() {

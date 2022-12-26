@@ -12,7 +12,7 @@ type SmoothCurve struct {
 	lockEndPoints  bool
 }
 
-func NewSmoothCurve(controlPoints []*vec3.T, smoothStrength float64, smoothLevel int, lockEndPoints bool) SmoothCurve {
+func NewSmoothCurve(controlPoints []*vec3.T, smoothStrength float64, smoothLevel int, subdivision int, lockEndPoints bool) SmoothCurve {
 	var curve SmoothCurve
 	curve.smoothStrength = smoothStrength
 	curve.lockEndPoints = lockEndPoints
@@ -23,6 +23,8 @@ func NewSmoothCurve(controlPoints []*vec3.T, smoothStrength float64, smoothLevel
 		curve.points[pointIndex] = &(*point)
 	}
 
+	curve.Subdivide(subdivision)
+
 	curve.Smooth(smoothLevel)
 	return curve
 }
@@ -32,6 +34,34 @@ func (c *SmoothCurve) Smooth(n int) {
 		c.points = c.smooth(c.points)
 	}
 	c.smoothLevel += n
+}
+
+func (c *SmoothCurve) Subdivide(n int) {
+	if n <= 0 {
+		return
+	}
+
+	amountNewPoints := len(c.points)*(n+1) - n
+	newPoints := make([]*vec3.T, amountNewPoints)
+
+	// Copy last point
+	newPoints[len(newPoints)-1] = c.points[len(c.points)-1]
+
+	m := n + 1
+	t := 1.0 / float64(m)
+	for pointIndex := 0; pointIndex <= len(c.points)-2; pointIndex++ {
+		newPoints[pointIndex*m] = c.points[pointIndex]
+		newPoints[(pointIndex+1)*m] = c.points[pointIndex+1]
+		a := newPoints[pointIndex*m]
+		b := newPoints[(pointIndex+1)*m]
+
+		for subdivision := 1; subdivision <= n; subdivision++ {
+			interpolatedPoint := vec3.Interpolate(a, b, t*float64(subdivision))
+			newPoints[pointIndex*m+subdivision] = &interpolatedPoint
+		}
+	}
+
+	c.points = newPoints
 }
 
 func (c *SmoothCurve) smooth(points []*vec3.T) []*vec3.T {
