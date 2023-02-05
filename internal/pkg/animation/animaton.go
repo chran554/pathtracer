@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-func WriteAnimationToFile(animation scene.Animation, indent bool) {
+func WriteAnimationToFile(animation *scene.Animation, indent bool) {
 	var jsonData []byte
 	var err error
 

@@ -40,7 +40,8 @@ animations: build_sphere_circle_rotation \
 	build_ply_file_test \
 	build_window_test \
 	build_lamp_post \
-	build_aoc_2022_d12
+	build_aoc_2022_d12 \
+	build_gopher
 
 # Build animation scenes
 # -----------------------------------
@@ -107,3 +108,6 @@ build_lamp_post: build
 
 build_aoc_2022_d12: build
 	go build -o bin/aoc_2022_d12 ./cmd/scene/aoc_2022_d12
+
+build_gopher: build
+	go build -o bin/gopher ./cmd/scene/test/gopher
