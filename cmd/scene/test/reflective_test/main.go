@@ -50,7 +50,7 @@ func main() {
 	sphereCC := sphereSpread / float64(amountSpheres)
 
 	for i := 0; i <= amountSpheres; i++ {
-		reflectiveness := float32(i) / float32(amountSpheres)
+		reflectiveness := float64(i) / float64(amountSpheres)
 		sphere := scn.Sphere{
 			Name:   "Sphere with reflectiveness of " + strconv.Itoa(i),
 			Origin: &vec3.T{-sphereSpread/2.0 + float64(i)*sphereCC, ballRadius, 0},

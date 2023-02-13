@@ -120,7 +120,7 @@ func main() {
 		frames = append(frames, frame)
 	}
 
-	animation := scn.Animation{
+	animation := &scn.Animation{
 		AnimationName:     animationName,
 		Frames:            frames,
 		Width:             int(float64(imageWidth) * magnification),
@@ -182,9 +182,8 @@ func addEnvironmentMapping(filename string) scn.Sphere {
 	origin := vec3.T{0, 0, 0}
 
 	projection := scn.ImageProjection{
-		ProjectionType: scn.Spherical,
+		ProjectionType: scn.ProjectionTypeSpherical,
 		ImageFilename:  filename,
-		Gamma:          1.0,
 		Origin:         &origin,
 		U:              &vec3.T{0, 0, 1},
 		V:              &vec3.T{0, 1, 0},

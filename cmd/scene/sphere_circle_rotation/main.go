@@ -152,7 +152,7 @@ func addEnvironmentMapping(filename string, scene *scn.SceneNode) {
 			Emission:      &color.Color{R: 1.0, G: 1.0, B: 1.0},
 			RayTerminator: true,
 			Projection: &scn.ImageProjection{
-				ProjectionType: scn.Spherical,
+				ProjectionType: scn.ProjectionTypeSpherical,
 				ImageFilename:  filename,
 				Origin:         &origin,
 				U:              &vec3.T{1, 0, 0},
@@ -196,7 +196,7 @@ func addBallsToScene(deltaBallAngle float64, projectionAngle float64, projection
 				Emission:      projectionData[projectionTextureIndex].emission,
 				RayTerminator: projectionData[projectionTextureIndex].rayTerminator,
 				Projection: &scn.ImageProjection{
-					ProjectionType: scn.Spherical,
+					ProjectionType: scn.ProjectionTypeSpherical,
 					ImageFilename:  projectionData[projectionTextureIndex].filename,
 					Origin:         &ballOrigin,
 					U:              &vec3.T{projectionU, 0, projectionV},
@@ -213,8 +213,8 @@ func addBallsToScene(deltaBallAngle float64, projectionAngle float64, projection
 	}
 }
 
-func getAnimation(width int, height int) scn.Animation {
-	animation := scn.Animation{
+func getAnimation(width int, height int) *scn.Animation {
+	animation := &scn.Animation{
 		AnimationName:     animationName,
 		Frames:            []scn.Frame{},
 		Width:             width,
@@ -236,7 +236,7 @@ func getBottomPlate() *scn.Disc {
 			Color:    &color.Color{R: 1, G: 1, B: 1},
 			Emission: nil,
 			Projection: &scn.ImageProjection{
-				ProjectionType: scn.Parallel,
+				ProjectionType: scn.ProjectionTypeParallel,
 				ImageFilename:  "textures/rock_wall.png",
 				Origin:         &origin,
 				U:              &vec3.T{textureScale, 0, 0},

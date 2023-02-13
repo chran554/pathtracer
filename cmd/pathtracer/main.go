@@ -24,7 +24,13 @@ import (
 )
 
 const (
-	epsilonDistance = 0.000001
+	epsilonDistance = 0.0001
+	//epsilonDistance = 0.000001
+)
+
+var (
+	debugPixel = struct{ x, y int }{x: -1, y: -1} // No debug
+	//debugPixel = struct{ x, y int }{x: 600, y: 300}
 )
 
 func main() {
@@ -86,10 +92,17 @@ func main() {
 		fmt.Println("Render algorithm:      ", frame.Camera.RenderType)
 		fmt.Println("Image size:            ", strconv.Itoa(animation.Width)+"x"+strconv.Itoa(animation.Height)+mp4CreationWarning)
 		fmt.Println("Amount samples/pixel:  ", frame.Camera.Samples)
-		fmt.Println("Max recursion:         ", frame.Camera.RecursionDepth)
-		fmt.Println("Amount facets:         ", scene.GetAmountFacets())
-		fmt.Println("Amount spheres:        ", scene.GetAmountSpheres())
-		fmt.Println("Amount discs:          ", scene.GetAmountDiscs())
+		fmt.Println("Max recursion depth:   ", frame.Camera.RecursionDepth)
+		fmt.Println()
+		if scene.GetAmountFacets() > 0 {
+			fmt.Println("Amount facets:         ", scene.GetAmountFacets())
+		}
+		if scene.GetAmountSpheres() > 0 {
+			fmt.Println("Amount spheres:        ", scene.GetAmountSpheres())
+		}
+		if scene.GetAmountDiscs() > 0 {
+			fmt.Println("Amount discs:          ", scene.GetAmountDiscs())
+		}
 		fmt.Println()
 
 		fmt.Println("Initialize scene...")
@@ -100,15 +113,7 @@ func main() {
 		fmt.Println("Rendering...")
 		render(frame.Camera, &scene, animation.Width, animation.Height, renderedPixelData, &renderMonitor)
 
-		animationDirectory := filepath.Join(".", "rendered", animation.AnimationName)
-		animationFrameFilename := filepath.Join(animationDirectory, frame.Filename+".png")
-		os.MkdirAll(animationDirectory, os.ModePerm)
-		image.WriteImage(animationFrameFilename, renderedPixelData)
-
-		if animation.WriteRawImageFile {
-			animationFrameRawFilename := filepath.Join(animationDirectory, frame.Filename+".praw")
-			image.WriteRawImage(animationFrameRawFilename, renderedPixelData)
-		}
+		writeRenderedImage(animation, frame, renderedPixelData)
 
 		deInitializeScene(&scene)
 		frame.SceneNode = nil
@@ -119,6 +124,18 @@ func main() {
 	}
 
 	fmt.Printf("Total execution time (for %d frames): %s\n", len(animation.Frames), time.Since(startTimestamp))
+}
+
+func writeRenderedImage(animation scn.Animation, frame scn.Frame, renderedPixelData *image.FloatImage) {
+	animationDirectory := filepath.Join(".", "rendered", animation.AnimationName)
+	animationFrameFilename := filepath.Join(animationDirectory, frame.Filename+".png")
+	os.MkdirAll(animationDirectory, os.ModePerm)
+	image.WriteImage(animationFrameFilename, renderedPixelData)
+
+	if animation.WriteRawImageFile {
+		animationFrameRawFilename := filepath.Join(animationDirectory, frame.Filename+".praw")
+		image.WriteRawImage(animationFrameRawFilename, renderedPixelData)
+	}
 }
 
 func initializeScene(scene *scn.SceneNode) {
@@ -151,7 +168,7 @@ func initializeScene(scene *scn.SceneNode) {
 
 	// Subdivide facet structure for performance
 	for _, facetStructure := range facetStructures {
-		facetStructure.SubdivideFacetStructure(25)
+		facetStructure.SubdivideFacetStructure(15, 0)
 	}
 
 	// Initialize facet structures (calculate bounds etc)
@@ -274,10 +291,21 @@ func parallelPixelRendering(renderedPixelData *image.FloatImage, camera *scn.Cam
 
 	defer wg.Done()
 
+	defaultRenderContext := &scn.Material{Name: "default render context", Color: &color.White, Transparency: 1.0, SolidObject: true, RefractionIndex: scn.RefractionIndex_Air}
+	rayContexts := []*scn.Material{defaultRenderContext}
+
+	// Debug ray at specified pixel
+	if debugPixel.y == y && debugPixel.x >= 0 && debugPixel.y >= 0 {
+		fmt.Printf("debugging at pixel (%d, %d)...\n", debugPixel.x, debugPixel.y)
+
+		cameraRay := scn.CreateCameraRay(debugPixel.x, debugPixel.y, width, height, camera, 1)
+		tracePath(cameraRay, camera, scene, 0, rayContexts)
+	}
+
 	for x := 0; (x + renderPass.Dx) < width; x += maxPixelWidth {
 		for sampleIndex := 0; sampleIndex < amountSamples; sampleIndex++ {
 			cameraRay := scn.CreateCameraRay(x+renderPass.Dx, y+renderPass.Dy, width, height, camera, sampleIndex)
-			col := tracePath(cameraRay, camera, scene, 0)
+			col := tracePath(cameraRay, camera, scene, 0, rayContexts)
 			renderedPixelData.GetPixel(x+renderPass.Dx, y+renderPass.Dy).ChannelAdd(&col)
 
 			progressbar.Add(1)
@@ -319,7 +347,8 @@ func getRandomHemisphereVector(hemisphereHeading *vec3.T) *vec3.T {
 //
 // https://www.csie.ntu.edu.tw/~cyy/courses/rendering/05fall/lectures/handouts/lec10_mc_4up.pdf (page 12)
 func getRandomCosineWeightedHemisphereVector(n *vec3.T) *vec3.T {
-	x, y := util.Sunflower(1000, 1.0, rand.Intn(1000), true)
+	amountPoints := 10000
+	x, y := util.Sunflower(amountPoints, 0.0, rand.Intn(amountPoints), true)
 	// ret.z = sqrtf(max(0.f,1.f - ret.x*ret.x - ret.y*ret.y));
 	z := math.Sqrt(math.Max(0.0, 1.0-x*x-y*y))
 	generatedUnitHemisphereVector := vec3.T{x, y, z}
@@ -348,7 +377,7 @@ func getRandomCosineWeightedHemisphereVector(n *vec3.T) *vec3.T {
 	return &hemisphereVector
 }
 
-func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDepth int) color.Color {
+func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDepth int, rayContexts []*scn.Material) color.Color {
 	outgoingEmission := color.Black
 
 	if currentDepth > camera.RecursionDepth {
@@ -378,19 +407,24 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 				tempIntersectionPoint, tempIntersection := scn.SphereIntersection(ray, sphere)
 				if tempIntersection {
 					distance := vec3.Distance(ray.Origin, tempIntersectionPoint)
+
+					// TODO Remove
+					//if distance < 0.000001 {
+					//	panic(fmt.Sprintf("Not a legal intersection point, no ray has less length than 0.0001. Length: %f", distance))
+					//}
+
 					if distance < shortestDistance && distance > epsilonDistance {
 						intersection = tempIntersection           // Set to true, there has been an intersection
 						intersectionPoint = tempIntersectionPoint // Save the intersection point of the closest intersection
 						shortestDistance = distance               // Save the shortest intersection distance
 						material = sphere.Material
 
-						normal := intersectionPoint.Subed(sphere.Origin)
-						normalAtIntersection = normal.Normalize()
+						normalAtIntersection = sphere.Normal(intersectionPoint)
 
 						// Flip normal if it is pointing away from the incoming ray
-						if vectorCosinePositive(normalAtIntersection, ray.Heading) {
-							normalAtIntersection.Invert()
-						}
+						//if vectorCosinePositive(normalAtIntersection, ray.Heading) {
+						//	normalAtIntersection.Invert()
+						//}
 					}
 				}
 			}
@@ -427,9 +461,9 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 						normalAtIntersection = tempIntersectionNormal // Should be normalized from initialization
 
 						// Flip normal if it is pointing away from the incoming ray
-						if vectorCosinePositive(normalAtIntersection, ray.Heading) {
-							normalAtIntersection.Invert()
-						}
+						//if vectorCosinePositive(normalAtIntersection, ray.Heading) {
+						//	normalAtIntersection.Invert()
+						//}
 					}
 				}
 			}
@@ -439,17 +473,7 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 
 	if intersection {
 		if material == nil {
-			// Default material if not specified is matte diffuse white
-			material = &scn.Material{
-				Color:           &color.White,
-				Emission:        &color.Black,
-				Glossiness:      0.0,
-				Roughness:       1.0,
-				Projection:      nil,
-				RefractionIndex: 0,
-				Transparency:    0.0,
-				RayTerminator:   false,
-			}
+			material = scn.NewMaterial() // Default material if not specified is matte diffuse white
 		}
 
 		projectionColor := &color.White // Default value if no projection is applied
@@ -457,9 +481,8 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 			projectionColor = material.Projection.GetColor(intersectionPoint)
 		}
 
-		incomingRayInverted := ray.Heading.Inverted()
-
-		if camera.RenderType == "" || camera.RenderType == scn.Raycasting {
+		if camera.RenderType == scn.Raycasting || camera.RenderType == "" {
+			incomingRayInverted := ray.Heading.Inverted()
 			cosineIncomingRayAndNormal := vectorCosine(normalAtIntersection, &incomingRayInverted)
 
 			outgoingEmission = color.Color{
@@ -472,28 +495,59 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 
 			if !material.RayTerminator {
 				var newRayHeading *vec3.T
-				var newRefractionIndex = ray.RefractionIndex
 
-				transparentRay := (material.Transparency > 0.0) && (rand.Float64() < material.Transparency)
+				useTransparencyRay := (material.Transparency > 0.0) && (rand.Float64() < material.Transparency)
 
 				cosineNewRayAndNormal := 1.0
 
-				if material.SolidObject && transparentRay && (material.RefractionIndex > 0.0) {
-					var totalInternalReflection bool
-					newRayHeading, totalInternalReflection = getRefractionVector(normalAtIntersection, ray.Heading, ray.RefractionIndex, material.RefractionIndex)
+				if useTransparencyRay && material.SolidObject && (material.RefractionIndex > 0.0) {
+					isIngoingRay := vectorCosineNegative(normalAtIntersection, ray.Heading)
 
-					if !totalInternalReflection {
-						newRefractionIndex = material.RefractionIndex
+					if isIngoingRay {
+						currentRayContext := rayContexts[len(rayContexts)-1]
+
+						var totalInternalReflection bool
+						newRayHeading, totalInternalReflection = getRefractionVector(normalAtIntersection, ray.Heading, currentRayContext.RefractionIndex, material.RefractionIndex)
+
+						if !totalInternalReflection {
+							rayContexts = append(rayContexts, material)
+						}
+					} else {
+						currentRayContext := rayContexts[len(rayContexts)-1] // Get current ray context
+						rayContexts = rayContexts[:len(rayContexts)-1]       // Pop off current ray context
+						if len(rayContexts) == 0 {
+							panic("About to access empty ray context (after popping last context)...")
+						}
+						previousRayContext := rayContexts[len(rayContexts)-1] // Get previous ray context
+
+						// Flip normal if needed, to face ray
+						if vectorCosinePositive(normalAtIntersection, ray.Heading) {
+							normalAtIntersection.Invert()
+						}
+
+						var totalInternalReflection bool
+						newRayHeading, totalInternalReflection = getRefractionVector(normalAtIntersection, ray.Heading, currentRayContext.RefractionIndex, previousRayContext.RefractionIndex)
+
+						if totalInternalReflection {
+							rayContexts = append(rayContexts, currentRayContext) // We are not leaving current ray context, due to total internal reflection
+						} else {
+							// previous ray context is already on top of stack
+						}
 					}
 
 					cosineNewRayAndNormal = 1.0
 
-				} else if !material.SolidObject && transparentRay {
+				} else if useTransparencyRay && !material.SolidObject {
 					newRayHeading = ray.Heading
 
 					cosineNewRayAndNormal = 1.0
 
 				} else {
+					// Flip normal if it is pointing away from the incoming ray
+					if vectorCosinePositive(normalAtIntersection, ray.Heading) {
+						normalAtIntersection.Invert()
+					}
+
 					// diffuseHeading := getRandomHemisphereVector(normalAtIntersection)
 					diffuseHeading := getRandomCosineWeightedHemisphereVector(normalAtIntersection)
 
@@ -530,11 +584,18 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 					}
 				}
 
-				rayStartOffset := newRayHeading.Scaled(epsilonDistance)
-				newRayOrigin := intersectionPoint.Added(&rayStartOffset)
-				newRay := scn.Ray{Origin: &newRayOrigin, Heading: newRayHeading, RefractionIndex: newRefractionIndex}
+				newRayHeading.Normalize() // TODO remove?
 
-				incomingEmission := tracePath(&newRay, camera, scene, currentDepth+1)
+				//rayStartOffset := newRayHeading.Scaled(epsilonDistance)
+				rayStartOffset := normalAtIntersection.Scaled(epsilonDistance)
+				if vectorCosineNegative(newRayHeading, normalAtIntersection) {
+					(&rayStartOffset).Invert()
+				}
+
+				newRayOrigin := intersectionPoint.Added(&rayStartOffset)
+				newRay := scn.Ray{Origin: &newRayOrigin, Heading: newRayHeading}
+
+				incomingEmission := tracePath(&newRay, camera, scene, currentDepth+1, rayContexts)
 				incomingEmissionOnSurface := incomingEmission
 				incomingEmissionOnSurface.Multiply(float32(cosineNewRayAndNormal))
 
@@ -598,14 +659,14 @@ func getRefractionVector(normal *vec3.T, incomingVector *vec3.T, leavingRefracti
 	return outgoingVector, false
 }
 
-func vectorCosine(normalAtIntersection *vec3.T, incomingRayInverted *vec3.T) float64 {
-	return vec3.Dot(normalAtIntersection, incomingRayInverted) / math.Sqrt(normalAtIntersection.LengthSqr()*incomingRayInverted.LengthSqr())
+func vectorCosine(a *vec3.T, b *vec3.T) float64 {
+	return vec3.Dot(a, b) / math.Sqrt(a.LengthSqr()*b.LengthSqr())
 }
 
-func vectorCosinePositive(normalAtIntersection *vec3.T, incomingRayInverted *vec3.T) bool {
-	return vec3.Dot(normalAtIntersection, incomingRayInverted) >= 0
+func vectorCosinePositive(a *vec3.T, b *vec3.T) bool {
+	return vec3.Dot(a, b) >= 0
 }
 
-func vectorCosineNegative(normalAtIntersection *vec3.T, incomingRayInverted *vec3.T) bool {
-	return vec3.Dot(normalAtIntersection, incomingRayInverted) < 0
+func vectorCosineNegative(a *vec3.T, b *vec3.T) bool {
+	return vec3.Dot(a, b) < 0
 }

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/ungerik/go3d/float64/mat3"
 	"github.com/ungerik/go3d/float64/vec3"
+	"math"
+	"strings"
 )
 
 type FacetStructure struct {
@@ -77,6 +79,18 @@ func (fs *FacetStructure) UpdateBounds() *Bounds {
 
 	fs.Bounds = &bounds
 	return fs.Bounds
+}
+
+// Purge removes empty substructures.
+func (fs *FacetStructure) Purge() {
+	for i := 0; i < len(fs.FacetStructures); {
+		if fs.FacetStructures[i].GetAmountFacets() == 0 {
+			fs.FacetStructures[i] = fs.FacetStructures[len(fs.FacetStructures)-1]
+			fs.FacetStructures = fs.FacetStructures[:len(fs.FacetStructures)-1]
+		} else {
+			i++
+		}
+	}
 }
 
 func (fs *FacetStructure) GetAmountFacets() int {
@@ -165,6 +179,10 @@ func (fs *FacetStructure) RotateZ(rotationOrigin *vec3.T, angle float64) {
 }
 
 func (fs *FacetStructure) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool) {
+	if fs.Material != nil && fs.Material.Projection != nil {
+		panic(fmt.Sprintf("No facet structure rotation implementation for projection type %s", fs.Material.Projection.ProjectionType))
+	}
+
 	for _, facet := range fs.Facets {
 		facet.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
 	}
@@ -178,17 +196,23 @@ func (fs *FacetStructure) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, 
 
 func (fs *FacetStructure) Translate(translation *vec3.T) {
 	translatedPoints := make(map[*vec3.T]bool)
-	fs.translate(translation, translatedPoints)
+	translatedImageProjections := make(map[*ImageProjection]bool)
+
+	fs.translate(translation, translatedPoints, translatedImageProjections)
 }
 
-func (fs *FacetStructure) translate(translation *vec3.T, translatedPoints map[*vec3.T]bool) {
+func (fs *FacetStructure) translate(translation *vec3.T, translatedPoints map[*vec3.T]bool, translatedImageProjections map[*ImageProjection]bool) {
+	if fs.Material != nil && fs.Material.Projection != nil {
+		panic(fmt.Sprintf("No facet structure translation implementation for projection type %s", fs.Material.Projection.ProjectionType))
+	}
+
 	for _, facet := range fs.Facets {
 		facet.translate(translation, translatedPoints)
 	}
 
 	if len(fs.FacetStructures) > 0 {
 		for _, facetStructure := range fs.FacetStructures {
-			facetStructure.translate(translation, translatedPoints)
+			facetStructure.translate(translation, translatedPoints, translatedImageProjections)
 		}
 	}
 }
@@ -200,19 +224,60 @@ func (fs *FacetStructure) ScaleUniform(scaleOrigin *vec3.T, scale float64) {
 
 func (fs *FacetStructure) Scale(scaleOrigin *vec3.T, scale *vec3.T) {
 	scaledPoints := make(map[*vec3.T]bool)
-	fs.scale(scaleOrigin, scale, scaledPoints)
+	scaledImageProjections := make(map[*ImageProjection]bool)
+	fs.scale(scaleOrigin, scale, scaledPoints, scaledImageProjections)
 }
 
-func (fs *FacetStructure) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool) {
+func (fs *FacetStructure) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool, scaledImageProjections map[*ImageProjection]bool) {
+	if fs.Material != nil && fs.Material.Projection != nil {
+		panic(fmt.Sprintf("No facet structure scale implementation for projection type %s", fs.Material.Projection.ProjectionType))
+	}
+
 	for _, facet := range fs.Facets {
 		facet.scale(scaleOrigin, scale, scaledPoints)
 	}
 
 	if len(fs.FacetStructures) > 0 {
 		for _, facetStructure := range fs.FacetStructures {
-			facetStructure.scale(scaleOrigin, scale, scaledPoints)
+			facetStructure.scale(scaleOrigin, scale, scaledPoints, scaledImageProjections)
 		}
 	}
+}
+
+func (fs *FacetStructure) TwistY(origin *vec3.T, anglePerYUnit float64) {
+	structureVertices := fs.getVertices()
+
+	var verticesSet = make(map[*vec3.T]bool, 0)
+	for _, vertex := range structureVertices {
+		verticesSet[vertex] = true
+	}
+
+	for vertex := range verticesSet {
+		x := vertex[0] - origin[0]
+		y := vertex[1] - origin[1]
+		z := vertex[2] - origin[2]
+
+		r := math.Sqrt(x*x + z*z) // radius in xz-plane
+
+		if r != 0.0 {
+			angle := anglePerYUnit * y
+
+			sa := z / r
+			ca := x / r
+			sb := math.Sin(angle)
+			cb := math.Cos(angle)
+
+			// sin(𝛼±𝛽)=sin𝛼cos𝛽±cos𝛼sin𝛽
+			// cos(𝛼±𝛽)=cos𝛼cos𝛽∓sin𝛼sin𝛽
+			x2 := r * (ca*cb - sa*sb)
+			z2 := r * (sa*cb + ca*sb)
+
+			vertex[0] = x2 + origin[0]
+			vertex[2] = z2 + origin[2]
+		}
+	}
+
+	fs.UpdateBounds()
 }
 
 func (fs *FacetStructure) GetFirstObjectByName(objectName string) *FacetStructure {
@@ -232,12 +297,66 @@ func (fs *FacetStructure) GetFirstObjectByName(objectName string) *FacetStructur
 
 	return nil
 }
-func (fs *FacetStructure) RemoveObjectsByName(objectName string) {
+
+func (fs *FacetStructure) GetObjectsByName(objectName string) []*FacetStructure {
+	nameMatchFunction := func(structure *FacetStructure, name string) bool {
+		return structure.Name == name
+	}
+
+	return getObjectsByName(fs, objectName, nameMatchFunction)
+}
+
+func (fs *FacetStructure) GetObjectsBySubstructureName(objectName string) []*FacetStructure {
+	nameMatchFunction := func(structure *FacetStructure, name string) bool {
+		return structure.SubstructureName == name
+	}
+
+	return getObjectsByName(fs, objectName, nameMatchFunction)
+}
+
+func (fs *FacetStructure) GetObjectsByMaterialName(materialName string) []*FacetStructure {
+	nameMatchFunction := func(structure *FacetStructure, name string) bool {
+		return (structure.Material != nil) && (structure.Material.Name == name)
+	}
+
+	return getObjectsByName(fs, materialName, nameMatchFunction)
+}
+
+func (fs *FacetStructure) ReplaceMaterial(materialName string, material *Material) []*FacetStructure {
+	objects := fs.GetObjectsByMaterialName(materialName)
+	for _, object := range objects {
+		object.Material = material
+	}
+
+	return objects
+}
+
+func getObjectsByName(fs *FacetStructure, name string, matchFunction func(*FacetStructure, string) bool) []*FacetStructure {
+	var objects []*FacetStructure
+
+	if matchFunction(fs, name) {
+		objects = append(objects, fs)
+	}
+
+	if len(fs.FacetStructures) > 0 {
+		for _, facetStructure := range fs.FacetStructures {
+			subObjects := getObjectsByName(facetStructure, name, matchFunction)
+
+			if len(subObjects) > 0 {
+				objects = append(objects, subObjects...)
+			}
+		}
+	}
+
+	return objects
+}
+
+func removeObjectsByName(fs *FacetStructure, name string, matchFunction func(*FacetStructure, string) bool) {
 	if len(fs.FacetStructures) > 0 {
 		for facetStructureIndex := 0; facetStructureIndex < len(fs.FacetStructures); {
 			facetStructure := fs.FacetStructures[facetStructureIndex]
 
-			if facetStructure.Name == objectName {
+			if matchFunction(facetStructure, name) {
 				fs.FacetStructures = append(fs.FacetStructures[:facetStructureIndex], fs.FacetStructures[facetStructureIndex+1:]...)
 			} else {
 				facetStructureIndex++
@@ -246,22 +365,28 @@ func (fs *FacetStructure) RemoveObjectsByName(objectName string) {
 	}
 }
 
-func (fs *FacetStructure) GetFirstObjectBySubstructureName(objectName string) *FacetStructure {
-	if fs.SubstructureName == objectName {
-		return fs
+func (fs *FacetStructure) RemoveObjectsByName(objectName string) {
+	nameMatchFunction := func(structure *FacetStructure, name string) bool {
+		return structure.Name == name
 	}
 
-	if len(fs.FacetStructures) > 0 {
-		for _, facetStructure := range fs.FacetStructures {
-			object := facetStructure.GetFirstObjectBySubstructureName(objectName)
+	removeObjectsByName(fs, objectName, nameMatchFunction)
+}
 
-			if object != nil {
-				return object
-			}
-		}
+func (fs *FacetStructure) RemoveObjectsBySubstructureName(objectName string) {
+	nameMatchFunction := func(structure *FacetStructure, name string) bool {
+		return structure.SubstructureName == name
 	}
 
-	return nil
+	removeObjectsByName(fs, objectName, nameMatchFunction)
+}
+
+func (fs *FacetStructure) RemoveObjectsByMaterialName(materialName string) {
+	nameMatchFunction := func(structure *FacetStructure, name string) bool {
+		return (structure.Material != nil) && (structure.Material.Name == name)
+	}
+
+	removeObjectsByName(fs, materialName, nameMatchFunction)
 }
 
 func (fs *FacetStructure) ClearMaterials() {
@@ -274,17 +399,29 @@ func (fs *FacetStructure) ClearMaterials() {
 	}
 }
 
-func (fs *FacetStructure) SubdivideFacetStructure(maxFacets int) {
+func (fs *FacetStructure) SubdivideFacetStructure(maxFacets int, level int) {
 	if (fs.GetAmountFacets() > maxFacets) && (maxFacets > 2) {
 		// fmt.Printf("Subdividing %s with %d facets.\n", facetStructure.Name, facetStructure.GetAmountFacets())
 
 		if len(fs.Facets) > maxFacets {
-			fs.UpdateBounds()
-			bounds := fs.Bounds
+
+			// Calculate dividing center of facets
+			var facetStructureCenter *vec3.T
+			if len(fs.Facets) > 0 {
+				center := &vec3.T{}
+				for _, facet := range fs.Facets {
+					center.Add(facet.Center())
+				}
+				center.Scale(1.0 / float64(len(fs.Facets)))
+				facetStructureCenter = center
+			} else {
+				fs.UpdateBounds()
+				bounds := fs.Bounds
+				facetStructureCenter = bounds.Center()
+			}
 
 			subFacetStructures := make([]*FacetStructure, 8)
 
-			facetStructureCenter := bounds.Center()
 			for _, facet := range fs.Facets {
 				facetSubstructureIndex := 0
 
@@ -311,53 +448,97 @@ func (fs *FacetStructure) SubdivideFacetStructure(maxFacets int) {
 				subFacetStructures[facetSubstructureIndex].Facets = append(subFacetStructures[facetSubstructureIndex].Facets, facet)
 			}
 
-			// Update the content of the current facet structure
-			fs.Facets = nil
+			// logSubdivision(subFacetStructures, level, fs)
+
+			amountSubstructures := 0
 			for _, subFacetStructure := range subFacetStructures {
 				if subFacetStructure != nil {
-					fs.FacetStructures = append(fs.FacetStructures, subFacetStructure)
+					amountSubstructures++
+				}
+			}
+			if amountSubstructures > 1 {
+				// Update the content of the current facet structure
+				fs.Facets = nil
+				for _, subFacetStructure := range subFacetStructures {
+					if subFacetStructure != nil {
+						fs.FacetStructures = append(fs.FacetStructures, subFacetStructure)
+					}
 				}
 			}
 		}
 
 		for _, facetStructure := range fs.FacetStructures {
-			facetStructure.SubdivideFacetStructure(maxFacets)
+			facetStructure.SubdivideFacetStructure(maxFacets, level+1)
 		}
 	}
+}
+
+func logSubdivision(subFacetStructures []*FacetStructure, level int, fs *FacetStructure) {
+	// TODO Remove
+	builder := strings.Builder{}
+	for _, subFacetStructure := range subFacetStructures {
+		if subFacetStructure == nil {
+			continue
+		}
+
+		if builder.Len() > 0 {
+			builder.WriteString(", ")
+		}
+		builder.WriteString(fmt.Sprintf("%d", len(subFacetStructure.Facets)))
+	}
+	fmt.Printf("level: %d, structures:%d, facets:%d --> %s\n", level, len(fs.FacetStructures), len(fs.Facets), builder.String())
 }
 
 // UpdateVertexNormals
 // https://iquilezles.org/articles/normals/
 // https://computergraphics.stackexchange.com/questions/4031/programmatically-generating-vertex-normals
-func (fs *FacetStructure) UpdateVertexNormals() {
+func (fs *FacetStructure) UpdateVertexNormals(keepExistingVertexNormals bool) {
 	fs.UpdateNormals()
+
 	vertexToFacetMap := fs.getVertexToFacetMap()
+	facets := fs.getFacets()
 
-	for vertex, vertexFacets := range vertexToFacetMap {
-		// Calculate vertex normal
-		vertexNormal := vec3.T{0.0, 0.0, 0.0}
-		for _, facet := range vertexFacets {
-			vertexNormal.Add(facet.Normal) // Naive, non-weighted, average vertex normal
+	for _, facet := range facets {
+		sharedFacetVertex := false
+		for _, vertex := range facet.Vertices {
+			sharedFacetVertex = sharedFacetVertex || (len(vertexToFacetMap[vertex]) > 1)
 		}
-		vertexNormal.Normalize()
 
-		// Set vertex normal to the vertex of each facet
-		for _, facet := range vertexFacets {
-			if (facet.VertexNormals == nil) || (len(facet.VertexNormals) != len(facet.Vertices)) {
+		if sharedFacetVertex {
+			originalAmountVertexNormals := len(facet.VertexNormals)
+			createVertexNormals := originalAmountVertexNormals == 0
+			if createVertexNormals {
 				facet.VertexNormals = make([]*vec3.T, len(facet.Vertices))
-				for i := 0; i < len(facet.VertexNormals); i++ {
-					facet.VertexNormals[i] = facet.Normal
-				}
 			}
 
-			for i, facetVertex := range facet.Vertices {
-				if facetVertex == vertex {
-					facet.VertexNormals[i] = &vertexNormal
+			if createVertexNormals || !keepExistingVertexNormals {
+				for vertexIndex, vertex := range facet.Vertices {
+					vertexFacets := vertexToFacetMap[vertex]
+					vertexNormal := calculateAverageNormal(vertexFacets)
+					facet.VertexNormals[vertexIndex] = vertexNormal
 				}
 			}
 		}
 	}
-	// fmt.Println()
+
+}
+
+func (fs *FacetStructure) RemoveVertexNormals() {
+	facets := fs.getFacets()
+
+	for _, facet := range facets {
+		facet.VertexNormals = nil
+	}
+}
+
+func calculateAverageNormal(facets []*Facet) *vec3.T {
+	averageNormal := vec3.T{0.0, 0.0, 0.0}
+	for _, facet := range facets {
+		averageNormal.Add(facet.Normal) // Naive, non-weighted, average normal of all facets
+	}
+	averageNormal.Normalize()
+
+	return &averageNormal
 }
 
 func (fs *FacetStructure) getVertexToFacetMap() map[*vec3.T][]*Facet {
@@ -380,6 +561,77 @@ func (fs *FacetStructure) getVertexToFacetMap() map[*vec3.T][]*Facet {
 	}
 
 	return vertexToFacetMap
+}
+
+func (fs *FacetStructure) getFacets() []*Facet {
+	var facets []*Facet = nil
+
+	for _, facetStructure := range fs.FacetStructures {
+		facets = append(facets, facetStructure.getFacets()...)
+	}
+
+	facets = append(facets, fs.Facets...)
+
+	return facets
+}
+
+func (fs *FacetStructure) CenterOn(newCenter *vec3.T) {
+	fs.UpdateBounds()
+	boundsCenter := fs.Bounds.Center()
+	boundsCenter.Invert()
+	boundsCenter.Add(newCenter)
+
+	fs.Translate(newCenter)
+	fs.UpdateBounds()
+}
+
+func (fs *FacetStructure) ChangeWindingOrder() {
+	for _, facet := range fs.Facets {
+		facet.ChangeWindingOrder()
+	}
+
+	if len(fs.FacetStructures) > 0 {
+		for _, facetStructure := range fs.FacetStructures {
+			facetStructure.ChangeWindingOrder()
+		}
+	}
+}
+
+// Tessellate subdivides any contained triangle (facet with three vertices) into four new triangle facets.
+func (fs *FacetStructure) Tessellate() {
+	if len(fs.Facets) > 0 {
+		var newFacets []*Facet = nil
+		for _, facet := range fs.Facets {
+			tessellateFacets, err := facet.Tessellate()
+			if err == nil {
+				newFacets = append(newFacets, tessellateFacets...)
+			} else {
+				newFacets = append(newFacets, facet)
+			}
+		}
+
+		fs.Facets = newFacets
+	}
+
+	if len(fs.FacetStructures) > 0 {
+		for _, facetStructure := range fs.FacetStructures {
+			facetStructure.Tessellate()
+		}
+	}
+}
+
+func (fs *FacetStructure) getVertices() []*vec3.T {
+	var vertices []*vec3.T
+
+	for _, facet := range fs.Facets {
+		vertices = append(vertices, facet.Vertices...)
+	}
+
+	for _, facetStructure := range fs.FacetStructures {
+		vertices = append(vertices, facetStructure.getVertices()...)
+	}
+
+	return vertices
 }
 
 //connectedFacetGroups groups a bunch of unordered facets into set of facets that are connected.

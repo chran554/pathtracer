@@ -80,7 +80,7 @@ func main() {
 		E(color.White, 0.05, false).
 		M(0.0, 1.0)
 
-	lavaProjection := scn.NewImageProjection(scn.Spherical, "textures/planets/sun.jpg", vec3.T{1540 / 2, -1540 / 2, 820 / 2}, vec3.UnitX.Scaled(100), vec3.UnitZ.Scaled(100), true, true, true, true)
+	lavaProjection := scn.NewImageProjection(scn.ProjectionTypeSpherical, "textures/planets/sun.jpg", vec3.T{1540 / 2, -1540 / 2, 820 / 2}, vec3.UnitX.Scaled(100), vec3.UnitZ.Scaled(100), true, true, true, true)
 	lavaMaterial := scn.NewMaterial().
 		C(color.White, 1.0).
 		E(color.White, 1.5, false).
@@ -225,9 +225,8 @@ func getEnvironmentMapping(filename string) scn.Sphere {
 	origin := vec3.T{0, 0, 0}
 
 	projection := scn.ImageProjection{
-		ProjectionType: scn.Spherical,
+		ProjectionType: scn.ProjectionTypeSpherical,
 		ImageFilename:  filename,
-		Gamma:          1.5,
 		Origin:         &origin,
 		U:              &vec3.T{-0.55, 0, -0.45},
 		V:              &vec3.T{0, 1, 0},
@@ -254,8 +253,8 @@ func getEnvironmentMapping(filename string) scn.Sphere {
 	return sphere
 }
 
-func getAnimation(width int, height int) scn.Animation {
-	animation := scn.Animation{
+func getAnimation(width int, height int) *scn.Animation {
+	animation := &scn.Animation{
 		AnimationName:     animationName,
 		Frames:            []scn.Frame{},
 		Width:             width,

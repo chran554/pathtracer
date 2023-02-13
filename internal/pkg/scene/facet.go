@@ -1,6 +1,7 @@
 package scene
 
 import (
+	"fmt"
 	"github.com/ungerik/go3d/float64/mat3"
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -14,8 +15,8 @@ type Facet struct {
 	Bounds *Bounds `json:"-"` // Calculated attribute. See UpdateBounds(). Derived from all vertices in the facet.
 }
 
-// SplitMultiPointFacet maps a multipoint (> 3 points) face into a list of triangles.
-// The supplied face must have at least 3 points and be a convex face.
+// SplitMultiPointFacet maps a multipoint (> 3 points) facet into a list of triangles.
+// The facet to split must have more than 3 points and be a convex face.
 func (f *Facet) SplitMultiPointFacet() []*Facet {
 	var facets []*Facet
 
@@ -173,9 +174,9 @@ func (f *Facet) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoi
 
 func (f *Facet) translate(translation *vec3.T, translatedPoints map[*vec3.T]bool) {
 	for _, vertex := range f.Vertices {
-		if translatedPoints[vertex] {
-			// fmt.Printf("Point already translated: %+v\n", vertex)
-		} else {
+		vertexAlreadyTranslated := translatedPoints[vertex]
+
+		if !vertexAlreadyTranslated {
 			newVertex := vertex.Added(translation)
 
 			vertex[0] = newVertex[0]
@@ -188,6 +189,7 @@ func (f *Facet) translate(translation *vec3.T, translatedPoints map[*vec3.T]bool
 }
 
 func (f *Facet) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool) {
+	// TODO scale vertex normals
 	for _, vertex := range f.Vertices {
 		if scaledPoints[vertex] {
 			// fmt.Printf("Point already scaled: %+v\n", vertex)
@@ -203,6 +205,43 @@ func (f *Facet) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3
 			scaledPoints[vertex] = true
 		}
 	}
+}
+
+func (f *Facet) ChangeWindingOrder() {
+	amountVertices := len(f.Vertices)
+	if amountVertices == 3 {
+		// Flip second and third vertex in triangle (facet) to change winding order of facet vertices
+		f.Vertices[0], f.Vertices[1], f.Vertices[2] = f.Vertices[2], f.Vertices[1], f.Vertices[0]
+	} else if amountVertices > 3 {
+		for i := 0; i < amountVertices/2; i++ {
+			f.Vertices[i], f.Vertices[amountVertices-i-1] = f.Vertices[amountVertices-i-1], f.Vertices[i]
+		}
+	}
+}
+
+// Tessellate will divide this triangle facet (facet of 3 vertices) into four triangles.
+// Returns the subdividing four facets or nil with an error if the facet is not a triangle.
+func (f *Facet) Tessellate() ([]*Facet, error) {
+	if len(f.Vertices) != 3 {
+		return nil, fmt.Errorf(fmt.Sprintf("facet is not a triangle but has %d vertices", len(f.Vertices)))
+	}
+
+	var newFacets []*Facet = nil
+
+	p1 := f.Vertices[0]
+	p2 := f.Vertices[1]
+	p3 := f.Vertices[2]
+
+	p12 := vec3.Interpolate(p1, p2, 0.5)
+	p23 := vec3.Interpolate(p2, p3, 0.5)
+	p31 := vec3.Interpolate(p3, p1, 0.5)
+
+	newFacets = append(newFacets, &Facet{Vertices: []*vec3.T{p1, &p12, &p31}})
+	newFacets = append(newFacets, &Facet{Vertices: []*vec3.T{&p12, p2, &p23}})
+	newFacets = append(newFacets, &Facet{Vertices: []*vec3.T{&p12, &p23, &p31}})
+	newFacets = append(newFacets, &Facet{Vertices: []*vec3.T{&p31, &p23, p3}})
+
+	return newFacets, nil
 }
 
 func (f *Facet) IsMultiPointFacet() bool {

@@ -181,9 +181,8 @@ func addEnvironmentMapping(filename string) scn.Sphere {
 	origin := vec3.T{0, 0, 0}
 
 	projection := scn.ImageProjection{
-		ProjectionType: scn.Spherical,
+		ProjectionType: scn.ProjectionTypeSpherical,
 		ImageFilename:  filename,
-		Gamma:          1.0,
 		Origin:         &origin,
 		U:              &vec3.T{-0.2, 0, -1},
 		V:              &vec3.T{0, 1, 0},
@@ -210,8 +209,8 @@ func addEnvironmentMapping(filename string) scn.Sphere {
 	return sphere
 }
 
-func getAnimation(width int, height int) scn.Animation {
-	animation := scn.Animation{
+func getAnimation(width int, height int) *scn.Animation {
+	animation := &scn.Animation{
 		AnimationName:     animationName,
 		Frames:            []scn.Frame{},
 		Width:             width,

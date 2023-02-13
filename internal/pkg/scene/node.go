@@ -1,13 +1,16 @@
 package scene
 
-import "github.com/ungerik/go3d/float64/vec3"
+import (
+	"github.com/ungerik/go3d/float64/mat3"
+	"github.com/ungerik/go3d/float64/vec3"
+)
 
 type SceneNode struct {
-	Spheres         []*Sphere
-	Discs           []*Disc
-	ChildNodes      []*SceneNode
-	FacetStructures []*FacetStructure
-	Bounds          *Bounds `json:"-"`
+	Spheres         []*Sphere         `json:"Spheres,omitempty"`
+	Discs           []*Disc           `json:"Discs,omitempty"`
+	ChildNodes      []*SceneNode      `json:"ChildNodes,omitempty"`
+	FacetStructures []*FacetStructure `json:"FacetStructures,omitempty"`
+	Bounds          *Bounds           `json:"-"`
 }
 
 func (sn *SceneNode) Initialize() {
@@ -94,74 +97,106 @@ func (sn *SceneNode) GetFacetStructures() []*FacetStructure {
 	return sn.FacetStructures
 }
 
-func (sn *SceneNode) Translate(translation *vec3.T) {
+func (sn *SceneNode) Scale(scaleOrigin *vec3.T, scale *vec3.T) {
+	scaledPoints := make(map[*vec3.T]bool)
+	scaledImageProjections := make(map[*ImageProjection]bool)
+
+	sn.scale(scaleOrigin, scale, scaledPoints, scaledImageProjections)
+}
+
+func (sn *SceneNode) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool, scaledImageProjections map[*ImageProjection]bool) {
 	for _, sphere := range sn.GetSpheres() {
-		sphere.Translate(translation)
+		sphere.scale(scaleOrigin, scale, scaledPoints, scaledImageProjections)
 	}
 
 	for _, disc := range sn.GetDiscs() {
-		disc.Translate(translation)
+		disc.scale(scaleOrigin, scale, scaledPoints, scaledImageProjections)
 	}
 
 	for _, facetStructure := range sn.GetFacetStructures() {
-		facetStructure.Translate(translation)
+		facetStructure.scale(scaleOrigin, scale, scaledPoints, scaledImageProjections)
 	}
 
 	for _, childNode := range sn.GetChildNodes() {
-		childNode.Translate(translation)
+		childNode.scale(scaleOrigin, scale, scaledPoints, scaledImageProjections)
+	}
+}
+
+func (sn *SceneNode) Translate(translation *vec3.T) {
+	translatedPoints := make(map[*vec3.T]bool)
+	translatedImageProjections := make(map[*ImageProjection]bool)
+
+	sn.translate(translation, translatedPoints, translatedImageProjections)
+}
+
+func (sn *SceneNode) translate(translation *vec3.T, translatedPoints map[*vec3.T]bool, translatedImageProjections map[*ImageProjection]bool) {
+	for _, sphere := range sn.GetSpheres() {
+		sphere.translate(translation, translatedPoints, translatedImageProjections)
+	}
+
+	for _, disc := range sn.GetDiscs() {
+		disc.translate(translation, translatedPoints, translatedImageProjections)
+	}
+
+	for _, facetStructure := range sn.GetFacetStructures() {
+		facetStructure.translate(translation, translatedPoints, translatedImageProjections)
+	}
+
+	for _, childNode := range sn.GetChildNodes() {
+		childNode.translate(translation, translatedPoints, translatedImageProjections)
 	}
 }
 
 func (sn *SceneNode) RotateX(rotationOrigin *vec3.T, angle float64) {
-	for _, sphere := range sn.GetSpheres() {
-		sphere.RotateX(rotationOrigin, angle)
-	}
+	rotatedPoints := make(map[*vec3.T]bool)
+	rotatedNormals := make(map[*vec3.T]bool)
+	rotatedVertexNormals := make(map[*vec3.T]bool)
+	rotatedImageProjections := make(map[*ImageProjection]bool)
 
-	for _, disc := range sn.GetDiscs() {
-		disc.RotateX(rotationOrigin, angle)
-	}
+	rotationMatrix := mat3.T{}
+	rotationMatrix.AssignXRotation(angle)
 
-	for _, facetStructure := range sn.GetFacetStructures() {
-		facetStructure.RotateX(rotationOrigin, angle)
-	}
-
-	for _, childNode := range sn.GetChildNodes() {
-		childNode.RotateX(rotationOrigin, angle)
-	}
+	sn.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals, rotatedImageProjections)
 }
 
 func (sn *SceneNode) RotateY(rotationOrigin *vec3.T, angle float64) {
-	for _, sphere := range sn.GetSpheres() {
-		sphere.RotateY(rotationOrigin, angle)
-	}
+	rotatedPoints := make(map[*vec3.T]bool)
+	rotatedNormals := make(map[*vec3.T]bool)
+	rotatedVertexNormals := make(map[*vec3.T]bool)
+	rotatedImageProjections := make(map[*ImageProjection]bool)
 
-	for _, disc := range sn.GetDiscs() {
-		disc.RotateY(rotationOrigin, angle)
-	}
+	rotationMatrix := mat3.T{}
+	rotationMatrix.AssignYRotation(angle)
 
-	for _, facetStructure := range sn.GetFacetStructures() {
-		facetStructure.RotateY(rotationOrigin, angle)
-	}
-
-	for _, childNode := range sn.GetChildNodes() {
-		childNode.RotateY(rotationOrigin, angle)
-	}
+	sn.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals, rotatedImageProjections)
 }
 
 func (sn *SceneNode) RotateZ(rotationOrigin *vec3.T, angle float64) {
+	rotatedPoints := make(map[*vec3.T]bool)
+	rotatedNormals := make(map[*vec3.T]bool)
+	rotatedVertexNormals := make(map[*vec3.T]bool)
+	rotatedImageProjections := make(map[*ImageProjection]bool)
+
+	rotationMatrix := mat3.T{}
+	rotationMatrix.AssignZRotation(angle)
+
+	sn.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals, rotatedImageProjections)
+}
+
+func (sn *SceneNode) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool, rotatedImageProjections map[*ImageProjection]bool) {
 	for _, sphere := range sn.GetSpheres() {
-		sphere.RotateZ(rotationOrigin, angle)
+		sphere.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedImageProjections)
 	}
 
 	for _, disc := range sn.GetDiscs() {
-		disc.RotateZ(rotationOrigin, angle)
+		disc.rotate(rotationOrigin, rotationMatrix)
 	}
 
 	for _, facetStructure := range sn.GetFacetStructures() {
-		facetStructure.RotateZ(rotationOrigin, angle)
+		facetStructure.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
 	}
 
 	for _, childNode := range sn.GetChildNodes() {
-		childNode.RotateZ(rotationOrigin, angle)
+		childNode.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals, rotatedImageProjections)
 	}
 }

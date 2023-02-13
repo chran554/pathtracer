@@ -18,9 +18,8 @@ const (
 )
 
 type Ray struct {
-	Origin          *vec3.T
-	Heading         *vec3.T
-	RefractionIndex float64
+	Origin  *vec3.T
+	Heading *vec3.T
 }
 
 type Animation struct {
@@ -29,22 +28,6 @@ type Animation struct {
 	Width             int
 	Height            int
 	WriteRawImageFile bool
-}
-
-type Camera struct {
-	Origin            *vec3.T
-	Heading           *vec3.T
-	ViewUp            *vec3.T
-	ViewPlaneDistance float64
-	_coordinateSystem *mat3.T
-	ApertureSize      float64 // ApertureSize is the size of the aperture opening. The wider the aperture the less focus depth. Value 0.0 is infinite focus depth.
-	ApertureShape     string  // ApertureShape file path to a black and white image where white define the aperture shape. Aperture size determine the size of the longest side (width or height) of the image. If nil then a default round aperture shape is used.
-	FocusDistance     float64
-	Samples           int
-	AntiAlias         bool
-	Magnification     float64
-	RenderType        RenderType
-	RecursionDepth    int
 }
 
 type Frame struct {

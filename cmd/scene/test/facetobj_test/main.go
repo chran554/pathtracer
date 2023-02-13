@@ -133,7 +133,7 @@ func main() {
 		frames = append(frames, frame)
 	}
 
-	animation := scene.Animation{
+	animation := &scene.Animation{
 		AnimationName:     animationName,
 		Frames:            frames,
 		Width:             imageWidth,
@@ -212,9 +212,8 @@ func addEnvironmentMapping(filename string, scene *scn.SceneNode) {
 			Emission:      &color.Color{R: 1.0 * environmentEmissionFactor, G: 1.0 * environmentEmissionFactor, B: 1.0 * environmentEmissionFactor},
 			RayTerminator: false, // TODO true,
 			Projection: &scn.ImageProjection{
-				ProjectionType: scn.Spherical,
+				ProjectionType: scn.ProjectionTypeSpherical,
 				ImageFilename:  filename,
-				Gamma:          1.5,
 				Origin:         &origin,
 				U:              &vec3.T{0, 0, 1},
 				V:              &vec3.T{0, 1, 0},

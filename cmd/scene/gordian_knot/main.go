@@ -148,9 +148,8 @@ func addEnvironmentMapping(filename string, scene *scn.SceneNode) {
 			Emission:      &color.Color{R: 1.0 * environmentEmissionFactor, G: 1.0 * environmentEmissionFactor, B: 1.0 * environmentEmissionFactor},
 			RayTerminator: true,
 			Projection: &scn.ImageProjection{
-				ProjectionType: scn.Spherical,
+				ProjectionType: scn.ProjectionTypeSpherical,
 				ImageFilename:  filename,
-				Gamma:          1.5,
 				Origin:         &origin,
 				U:              &vec3.T{0, 0, 1},
 				V:              &vec3.T{0, 1, 0},
@@ -165,8 +164,8 @@ func addEnvironmentMapping(filename string, scene *scn.SceneNode) {
 	scene.Spheres = append(scene.Spheres, &sphere)
 }
 
-func getAnimation(width int, height int) scn.Animation {
-	animation := scn.Animation{
+func getAnimation(width int, height int) *scn.Animation {
+	animation := &scn.Animation{
 		AnimationName:     animationName,
 		Frames:            []scn.Frame{},
 		Width:             width,

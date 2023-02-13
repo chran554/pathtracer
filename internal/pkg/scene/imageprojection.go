@@ -22,9 +22,9 @@ const (
 type ProjectionType string
 
 const (
-	Parallel    ProjectionType = "Parallel"
-	Cylindrical ProjectionType = "Cylindrical"
-	Spherical   ProjectionType = "Spherical"
+	ProjectionTypeParallel    ProjectionType = "Parallel"
+	ProjectionTypeCylindrical ProjectionType = "Cylindrical"
+	ProjectionTypeSpherical   ProjectionType = "Spherical"
 )
 
 type ImageProjection struct {
@@ -37,21 +37,20 @@ type ImageProjection struct {
 	RepeatV                         bool           `json:"RepeatV,omitempty"`
 	FlipU                           bool           `json:"FlipU,omitempty"`
 	FlipV                           bool           `json:"FlipV,omitempty"`
-	Gamma                           float64        `json:"Gamma,omitempty"`
 	_image                          *image.FloatImage
 	_invertedCoordinateSystemMatrix *mat3.T
 }
 
 func NewParallelImageProjection(textureFilename string, origin vec3.T, u vec3.T, v vec3.T) ImageProjection {
-	return NewImageProjection(Parallel, textureFilename, origin, u, v, true, true, false, false)
+	return NewImageProjection(ProjectionTypeParallel, textureFilename, origin, u, v, true, true, false, false)
 }
 
 func NewCylindricalImageProjection(textureFilename string, origin vec3.T, u vec3.T, v vec3.T) ImageProjection {
-	return NewImageProjection(Cylindrical, textureFilename, origin, u, v, false, true, false, false)
+	return NewImageProjection(ProjectionTypeCylindrical, textureFilename, origin, u, v, false, true, false, false)
 }
 
 func NewSphericalImageProjection(textureFilename string, origin vec3.T, u vec3.T, v vec3.T) ImageProjection {
-	return NewImageProjection(Spherical, textureFilename, origin, u, v, false, true, false, false)
+	return NewImageProjection(ProjectionTypeSpherical, textureFilename, origin, u, v, false, true, false, false)
 }
 
 func NewImageProjection(projectionType ProjectionType, textureFilename string, origin vec3.T, u vec3.T, v vec3.T, repeatU bool, repeatV bool, flipU bool, flipV bool) ImageProjection {
@@ -69,13 +68,13 @@ func NewImageProjection(projectionType ProjectionType, textureFilename string, o
 }
 
 func (imageProjection *ImageProjection) GetColor(point *vec3.T) *color.Color {
-	if imageProjection.ProjectionType == Parallel {
+	if imageProjection.ProjectionType == ProjectionTypeParallel {
 		return imageProjection.getParallelColor(point)
 	}
-	if imageProjection.ProjectionType == Cylindrical {
+	if imageProjection.ProjectionType == ProjectionTypeCylindrical {
 		return imageProjection.getCylindricalColor(point)
 	}
-	if imageProjection.ProjectionType == Spherical {
+	if imageProjection.ProjectionType == ProjectionTypeSpherical {
 		return imageProjection.getSphericalColor(point)
 	}
 
@@ -262,20 +261,17 @@ func (imageProjection *ImageProjection) ClearProjection() {
 
 func (imageProjection *ImageProjection) Initialize() {
 	if imageProjection._image == nil || !imageProjection._image.ContainImageData() {
-		if imageProjection.Gamma == 0.0 {
-			imageProjection.Gamma = 1.0 // No gamma correction
-		}
-		imageProjection._image = image.GetCachedImage(imageProjection.ImageFilename, imageProjection.Gamma)
+		imageProjection._image = image.GetCachedImage(imageProjection.ImageFilename)
 	}
 
 	switch imageProjection.ProjectionType {
-	case Spherical:
+	case ProjectionTypeSpherical:
 		imageProjection.initializeSphericalProjection()
 
-	case Cylindrical:
+	case ProjectionTypeCylindrical:
 		imageProjection.initializeCylindricalProjection()
 
-	case Parallel:
+	case ProjectionTypeParallel:
 		imageProjection.initializeParallellProjection()
 
 	default:

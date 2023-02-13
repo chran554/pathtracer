@@ -41,6 +41,9 @@ animations: build_sphere_circle_rotation \
 	build_window_test \
 	build_lamp_post \
 	build_aoc_2022_d12 \
+	build_tessellated_sphere \
+	build_tessellated_sphere_transform \
+	build_experiment \
 	build_gopher
 
 # Build animation scenes
@@ -108,6 +111,15 @@ build_lamp_post: build
 
 build_aoc_2022_d12: build
 	go build -o bin/aoc_2022_d12 ./cmd/scene/aoc_2022_d12
+
+build_tessellated_sphere: build
+	go build -o bin/tessellated_sphere ./cmd/scene/test/tessellated_sphere
+
+build_tessellated_sphere_transform: build
+	go build -o bin/tessellated_sphere_transform ./cmd/scene/test/tessellated_sphere_transform
+
+build_experiment: build
+	go build -o bin/experiment ./cmd/scene/test/experiment
 
 build_gopher: build
 	go build -o bin/gopher ./cmd/scene/test/gopher
