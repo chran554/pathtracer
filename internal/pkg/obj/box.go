@@ -1,6 +1,9 @@
-package scene
+package obj
 
-import "github.com/ungerik/go3d/float64/vec3"
+import (
+	"github.com/ungerik/go3d/float64/vec3"
+	scn "pathtracer/internal/pkg/scene"
+)
 
 type BoxType int
 
@@ -13,7 +16,7 @@ const (
 // NewBox return a box which sides all have the unit length 1.
 // It is placed with one corner ni origin (0, 0, 0) and opposite corner in (1, 1, 1).
 // Side normals point outwards from each side.
-func NewBox(boxType BoxType) *FacetStructure {
+func NewBox(boxType BoxType) *scn.FacetStructure {
 	p1 := vec3.T{1, 1, 0} // Top right close            3----------2
 	p2 := vec3.T{1, 1, 1} // Top right away            /          /|
 	p3 := vec3.T{0, 1, 1} // Top left away            /          / |
@@ -23,8 +26,8 @@ func NewBox(boxType BoxType) *FacetStructure {
 	p7 := vec3.T{0, 0, 1} // Bottom left away        |          |/
 	p8 := vec3.T{0, 0, 0} // Bottom left close       8----------5
 
-	box := FacetStructure{
-		FacetStructures: []*FacetStructure{
+	box := scn.FacetStructure{
+		FacetStructures: []*scn.FacetStructure{
 			{Facets: GetRectangleFacets(&p1, &p2, &p3, &p4), SubstructureName: "ymax"},
 			{Facets: GetRectangleFacets(&p8, &p7, &p6, &p5), SubstructureName: "ymin"},
 			{Facets: GetRectangleFacets(&p4, &p8, &p5, &p1), SubstructureName: "zmin"},
@@ -51,7 +54,7 @@ func NewBox(boxType BoxType) *FacetStructure {
 // The result is two triangles side by side (p1,p2,p4) and (p4,p2,p3).
 // Normal direction is calculated as pointing towards observer if the points are listed in counter-clockwise order.
 // No test nor calculation is made that the points are exactly in the same plane.
-func GetRectangleFacets(p1, p2, p3, p4 *vec3.T) []*Facet {
+func GetRectangleFacets(p1, p2, p3, p4 *vec3.T) []*scn.Facet {
 	//       p1
 	//       *
 	//      / \
@@ -74,7 +77,7 @@ func GetRectangleFacets(p1, p2, p3, p4 *vec3.T) []*Facet {
 	normal2 := vec3.Cross(&n2v1, &n2v2)
 	normal2.Normalize()
 
-	return []*Facet{
+	return []*scn.Facet{
 		{Vertices: []*vec3.T{p1, p2, p4}, Normal: &normal1},
 		{Vertices: []*vec3.T{p4, p2, p3}, Normal: &normal2},
 	}

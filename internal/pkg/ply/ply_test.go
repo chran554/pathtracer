@@ -22,7 +22,7 @@ func Test_ReadPly(t *testing.T) {
 	}
 
 	facetStructure.UpdateNormals()
-	facetStructure.UpdateVertexNormals()
+	facetStructure.UpdateVertexNormals(false)
 
 	expectedFacetStructureName := "dart"
 	if facetStructure.Name != expectedFacetStructureName {

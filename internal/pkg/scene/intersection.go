@@ -186,15 +186,16 @@ func FacetIntersection2(line *Ray, facet *Facet) (intersection bool, intersectio
 // interpolateTriangleFacetNormal interpolates intersection point normal from facet (triangle) vertex normals
 func interpolateTriangleFacetNormal(facet *Facet, vertexWeights *vec3.T) vec3.T {
 	normal := vec3.T{0, 0, 0}
-	if len(facet.VertexNormals) == 3 {
-		for i := 0; i < 3; i++ {
+	amountVertexNormals := len(facet.VertexNormals)
+	if (amountVertexNormals > 0) && (amountVertexNormals <= len(vertexWeights)) {
+		for i := 0; i < amountVertexNormals; i++ {
 			weightedVertexNormal := facet.VertexNormals[i].Scaled(vertexWeights[i])
 			normal.Add(&weightedVertexNormal)
 		}
+		normal.Normalize()
 	} else {
 		normal = *facet.Normal
 	}
-	normal.Normalize()
 	return normal
 }
 
@@ -314,7 +315,8 @@ func DiscIntersection(line *Ray, disc *Disc) (*vec3.T, bool) {
 	return nil, false
 }
 
-func SphereIntersection(line *Ray, sphere *Sphere) (*vec3.T, bool) {
+// SphereIntersection finds the closest ray intersection point (in positive direction from ray origin point) with sphere.
+func SphereIntersection(line *Ray, sphere *Sphere) (intersectionPoint *vec3.T, intersected bool) {
 	WarningNone := 0
 	WarningNoIntersection := 1
 	WarningInside := 2

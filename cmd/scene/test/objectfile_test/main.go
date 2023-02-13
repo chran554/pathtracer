@@ -35,7 +35,7 @@ var imageHeight = 500
 var magnification = 0.5
 
 func main() {
-	animation := scn.Animation{
+	animation := &scn.Animation{
 		AnimationName:     animationName,
 		Frames:            []scn.Frame{},
 		Width:             int(float64(imageWidth) * magnification),
@@ -78,7 +78,7 @@ func main() {
 			Glossiness: 0.1,
 			Roughness:  0.2,
 			Projection: &scn.ImageProjection{
-				ProjectionType: scn.Spherical,
+				ProjectionType: scn.ProjectionTypeSpherical,
 				ImageFilename:  "textures/equirectangular/football.png",
 				Origin:         &vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0},
 				U:              &vec3.T{1, 0, 0},
@@ -87,7 +87,6 @@ func main() {
 				RepeatV:        false,
 				FlipU:          false,
 				FlipV:          false,
-				Gamma:          0,
 			},
 		},
 	}
@@ -175,7 +174,7 @@ func main() {
 	anm.WriteAnimationToFile(animation, false)
 }
 
-func setObjectMaterial(openBox *scn.FacetStructure, objectName string, color *color.Color, emission *color.Color, rayTerminator bool, glossiness float32, roughness float32) {
+func setObjectMaterial(openBox *scn.FacetStructure, objectName string, color *color.Color, emission *color.Color, rayTerminator bool, glossiness float64, roughness float64) {
 	object := openBox.GetFirstObjectByName(objectName)
 	if object != nil {
 		object.Material.Color = color
@@ -193,7 +192,7 @@ func setObjectProjection1(openBox *scn.FacetStructure, objectName string) {
 	object := openBox.GetFirstObjectByName(objectName)
 	if object != nil {
 		object.Material.Projection = &scn.ImageProjection{
-			ProjectionType: scn.Parallel,
+			ProjectionType: scn.ProjectionTypeParallel,
 			ImageFilename:  "textures/white_marble.png",
 			Origin:         &vec3.Zero,
 			U:              &vec3.T{200 * 2, 0, 0},
@@ -202,7 +201,6 @@ func setObjectProjection1(openBox *scn.FacetStructure, objectName string) {
 			RepeatV:        true,
 			FlipU:          false,
 			FlipV:          false,
-			Gamma:          0,
 		}
 	} else {
 		fmt.Printf("No " + objectName + " found")

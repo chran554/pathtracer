@@ -11,7 +11,7 @@ type Cache map[string]*FloatImage
 var globalImageCacheLock = &sync.Mutex{}
 var globalImageCache = Cache{}
 
-func GetCachedImage(filename string, gamma float64) *FloatImage {
+func GetCachedImage(filename string) *FloatImage {
 	globalImageCacheLock.Lock()
 	defer globalImageCacheLock.Unlock()
 
@@ -23,7 +23,7 @@ func GetCachedImage(filename string, gamma float64) *FloatImage {
 
 	if strings.TrimSpace(filename) != "" {
 		fmt.Println("Scene image cache loading file:", filename)
-		image = LoadImageData(filename, gamma)
+		image = LoadImageData(filename)
 		fmt.Println("Scene image cache loading file:", filename, "... done")
 		globalImageCache[filename] = image
 	}
