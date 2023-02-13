@@ -14,6 +14,11 @@ import (
 	"strconv"
 )
 
+var (
+	GammaSRGB    = 2.2
+	GammaDefault = GammaSRGB
+)
+
 type FloatImage struct {
 	name   string
 	pixels []color.Color
@@ -52,7 +57,7 @@ func (image *FloatImage) SetPixel(x, y int, color *color.Color) {
 	image.pixels[y*image.Width+x] = *color
 }
 
-func LoadImageData(filename string, gamma float64) *FloatImage {
+func LoadImageData(filename string) *FloatImage {
 	textureImage, err := getImageFromFilePath(filename)
 	if err != nil {
 		fmt.Printf("image file \"%s\" could not be loaded: %s\n", filename, err.Error())
@@ -69,14 +74,16 @@ func LoadImageData(filename string, gamma float64) *FloatImage {
 			r, g, b, _ := textureImage.At(x, y).RGBA()
 
 			c := color.Color{
-				R: float32(math.Pow(float64(r)*colorNormalizationFactor, gamma)),
-				G: float32(math.Pow(float64(g)*colorNormalizationFactor, gamma)),
-				B: float32(math.Pow(float64(b)*colorNormalizationFactor, gamma)),
+				R: float32(float64(r) * colorNormalizationFactor),
+				G: float32(float64(g) * colorNormalizationFactor),
+				B: float32(float64(b) * colorNormalizationFactor),
 			}
 
 			image.SetPixel(x, y, &c)
 		}
 	}
+
+	image.GammaDecode(GammaDefault)
 
 	return image
 }
@@ -94,6 +101,8 @@ func getImageFromFilePath(filePath string) (img.Image, error) {
 func WriteImage(filename string, floatImage *FloatImage) {
 	width := floatImage.Width
 	height := floatImage.Height
+
+	floatImage.GammaEncode(GammaDefault)
 
 	image := img.NewRGBA(img.Rect(0, 0, width, height))
 
@@ -193,4 +202,60 @@ func ByteCountIEC(b int64) string {
 		exp++
 	}
 	return fmt.Sprintf("%.1f %ciB", float64(b)/float64(div), "KMGTPE"[exp])
+}
+
+// GammaEncode (or gamma compression) converts an image with values in linear space to an image with values in gamma space.
+//
+// https://blog.johnnovak.net/2016/09/21/what-every-coder-should-know-about-gamma/
+func (image *FloatImage) GammaEncode(gamma float64) {
+	for y := 0; y < image.Height; y++ {
+		for x := 0; x < image.Width; x++ {
+			linearPixelValue := image.GetPixel(x, y)
+			gammaPixelValue := GammaEncodeColor(linearPixelValue, gamma)
+			image.SetPixel(x, y, &gammaPixelValue)
+		}
+	}
+}
+
+// GammaDecode (or gamma expansion) converts an image with values in gamma space to an image with values in linear space.
+//
+// https://blog.johnnovak.net/2016/09/21/what-every-coder-should-know-about-gamma/
+func (image *FloatImage) GammaDecode(gamma float64) {
+	for y := 0; y < image.Height; y++ {
+		for x := 0; x < image.Width; x++ {
+			gammaPixelValue := image.GetPixel(x, y)
+			linearPixelValue := GammaDecodeColor(gammaPixelValue, gamma)
+			image.SetPixel(x, y, &linearPixelValue)
+		}
+	}
+}
+
+// GammaEncodeColor (or gamma compression) converts a color with values in linear space to a color with values in gamma space.
+//
+// https://blog.johnnovak.net/2016/09/21/what-every-coder-should-know-about-gamma/
+func GammaEncodeColor(linearColor *color.Color, gamma float64) color.Color {
+	invGamma := 1.0 / gamma
+	gammaColor := color.Color{
+		R: gammaCalculation(linearColor.R, invGamma),
+		G: gammaCalculation(linearColor.G, invGamma),
+		B: gammaCalculation(linearColor.B, invGamma),
+	}
+
+	return gammaColor
+}
+
+// GammaDecodeColor (or gamma expansion) converts a color with values in gamma space to a color with values in linear space.
+//
+// https://blog.johnnovak.net/2016/09/21/what-every-coder-should-know-about-gamma/
+func GammaDecodeColor(gammaColor *color.Color, gamma float64) color.Color {
+	linearColor := color.Color{
+		R: gammaCalculation(gammaColor.R, gamma),
+		G: gammaCalculation(gammaColor.G, gamma),
+		B: gammaCalculation(gammaColor.B, gamma),
+	}
+	return linearColor
+}
+
+func gammaCalculation(value float32, gamma float64) float32 {
+	return float32(math.Pow(float64(value), gamma))
 }
