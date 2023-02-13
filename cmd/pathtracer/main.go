@@ -504,6 +504,7 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 					isIngoingRay := vectorCosineNegative(normalAtIntersection, ray.Heading)
 
 					if isIngoingRay {
+						// Ingoing ray to a solid object with refraction index
 						currentRayContext := rayContexts[len(rayContexts)-1]
 
 						var totalInternalReflection bool
@@ -513,6 +514,7 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 							rayContexts = append(rayContexts, material)
 						}
 					} else {
+						// Outgoing ray from a solid object with refraction index
 						currentRayContext := rayContexts[len(rayContexts)-1] // Get current ray context
 						rayContexts = rayContexts[:len(rayContexts)-1]       // Pop off current ray context
 						if len(rayContexts) == 0 {
