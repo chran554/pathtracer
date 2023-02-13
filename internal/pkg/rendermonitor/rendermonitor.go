@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/image"
 	"sync"
 	"time"
 )
@@ -76,10 +77,14 @@ func getMessage(imageGroup string, imageName string,
 	x int, y int, pixelWidth int, pixelHeight int, color *color.Color,
 	amountSamples int) []byte {
 
-	w := 255.0 / float64(amountSamples)
-	r := uint8(clamp(0, 255, math.Round(float64(color.R)*w)))
-	g := uint8(clamp(0, 255, math.Round(float64(color.G)*w)))
-	b := uint8(clamp(0, 255, math.Round(float64(color.B)*w)))
+	c := *color
+	c.Multiply(1.0 / float32(amountSamples))
+	c = image.GammaEncodeColor(&c, image.GammaDefault)
+	c.Multiply(255.0)
+
+	r := uint8(clamp(0, 255, math.Round(float64(c.R))))
+	g := uint8(clamp(0, 255, math.Round(float64(c.G))))
+	b := uint8(clamp(0, 255, math.Round(float64(c.B))))
 
 	rawColor := [3]uint8{r, g, b}
 
