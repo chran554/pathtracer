@@ -7,6 +7,7 @@ import (
 	"os"
 	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/obj"
 	scn "pathtracer/internal/pkg/scene"
 	"regexp"
 	"strconv"
@@ -16,50 +17,39 @@ var animationName = "aoc_2022_d12"
 
 var environmentEnvironMap = "textures/equirectangular/sunset horizon 2800x1400.jpg"
 var environmentRadius = 500.0 * 1000.0
-var environmentEmissionFactor = float32(1.5)
+var environmentEmissionFactor = 0.8
 
 var amountFrames = 1
 
-var imageWidth = 800
-var imageHeight = 800
+var imageWidth = 1000
+var imageHeight = 1000
 var magnification = 0.25
 
 // var renderType = scn.Raycasting
-var renderType = scn.Pathtracing
-var amountSamples = 160 // 200 * 4 * 3 // 2000 * 2 * 4
-var maxRecursion = 3
+var amountSamples = 200 // 200 * 4 * 3 // 2000 * 2 * 4
 
-var viewPlaneDistance = 800.0
-var apertureSize = 3.0 // 2.0
+var apertureSize = 3.0
 
 func main() {
-	animation := getAnimation(int(float64(imageWidth)*magnification), int(float64(imageHeight)*magnification))
-	animation.WriteRawImageFile = false
+	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false)
 
-	environmentSphere := getEnvironmentMapping(environmentEnvironMap)
+	skyDomeOrigin := &vec3.T{0, 0, 0}
+	skyDomeMaterial := scn.NewMaterial().
+		E(color.White, environmentEmissionFactor, true).
+		SP(environmentEnvironMap, skyDomeOrigin, vec3.T{-0.55, 0, -0.45}, vec3.T{0, 1, 0})
+	skyDome := scn.NewSphere(skyDomeOrigin, environmentRadius, skyDomeMaterial).N("sky dome")
 
-	moon := &scn.Sphere{Name: "moon", Origin: &vec3.T{-400, 500, -400}, Radius: 200}
-	moonColor := color.Color{R: 0.9, G: 0.9, B: 1.0}
-	moon.Material = scn.NewMaterial().
-		C(moonColor, 1.0).
-		E(moonColor, 8.0, true)
+	//moonColor := color.Color{R: 0.9, G: 0.9, B: 1.0}
+	//moonMaterial := scn.NewMaterial().C(moonColor).E(moonColor, 8.0, true)
+	//moon := scn.NewSphere(&vec3.T{-400, 500, -400}, 200, moonMaterial).N("moon")
 
-	sun := &scn.Sphere{Name: "sun", Origin: &vec3.T{3000, 600, 1600}, Radius: 400}
-	sunColor := color.Color{R: 1.0, G: 1.0, B: 0.8}
-	sun.Material = scn.NewMaterial().
-		C(sunColor, 1.0).
-		E(sunColor, 12.0, true)
+	//sunColor := color.Color{R: 1.0, G: 0.97, B: 0.8}
+	//sunMaterial := scn.NewMaterial().C(sunColor).E(sunColor, 10.0, true)
+	//sun := scn.NewSphere(&vec3.T{3000, 600, 1600}, 400, sunMaterial).N("sun")
 
 	// Ground
-
-	groundProjection := scn.NewParallelImageProjection("textures/ground/soil-cracked.png", vec3.Zero, vec3.UnitX.Scaled(150*3), vec3.UnitZ.Scaled(150*3))
-	ground := scn.Disc{
-		Name:     "Ground",
-		Origin:   &vec3.Zero,
-		Normal:   &vec3.UnitY,
-		Radius:   environmentRadius,
-		Material: &scn.Material{Name: "Ground material", Color: &color.White, Emission: &color.Black, Glossiness: 0.0, Roughness: 1.0, Projection: &groundProjection},
-	}
+	groundMaterial := scn.NewMaterial().N("Ground material").PP("textures/ground/soil-cracked.png", &vec3.Zero, vec3.UnitX.Scaled(150*3), vec3.UnitZ.Scaled(150*3))
+	ground := scn.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
 
 	mapTextLines, _ := readLines("cmd/scene/aoc_2022_d12/resources/map.txt")
 	karta := parseMap(mapTextLines)
@@ -76,50 +66,51 @@ func main() {
 	pathEmissionFactor := 0.75
 
 	boxMaterial := scn.NewMaterial().
-		C(boxColor, 1.0).
-		E(color.White, 0.05, false).
-		M(0.0, 1.0)
+		C(boxColor).
+		E(color.White, 0.02, false)
 
-	lavaProjection := scn.NewImageProjection(scn.ProjectionTypeSpherical, "textures/planets/sun.jpg", vec3.T{1540 / 2, -1540 / 2, 820 / 2}, vec3.UnitX.Scaled(100), vec3.UnitZ.Scaled(100), true, true, true, true)
 	lavaMaterial := scn.NewMaterial().
-		C(color.White, 1.0).
+		C(color.White).
 		E(color.White, 1.5, false).
 		M(0.2, 0.3).
-		P(&lavaProjection)
+		SP("textures/planets/sun.jpg", &vec3.T{1540 / 2, -1540 / 2, 820 / 2}, vec3.UnitX.Scaled(100), vec3.UnitZ.Scaled(100))
 
 	pathMaterial := scn.NewMaterial().
-		C(pathColor, 1.0).
+		C(pathColor).
 		E(pathColor, 2.0*pathEmissionFactor, false).
 		M(0.3, 0.1)
 
 	startMaterial := scn.NewMaterial().
-		C(startColor, 1.0).
+		C(startColor).
 		E(startColor, 3.0*pathEmissionFactor, false).
 		M(0.3, 0.1)
 
 	endMaterial := scn.NewMaterial().
-		C(endColor, 1.0).
+		C(endColor).
 		E(endColor, 3.0*pathEmissionFactor, false).
 		M(0.3, 0.1)
 
 	for yPos := 0; yPos < karta.GetHeight(); yPos++ {
 		for xPos := 0; xPos < karta.GetWidth(); xPos++ {
-			box := getBox(fmt.Sprintf("%d,%d", xPos, yPos))
+			box := obj.NewBox(obj.BoxPositive)
+			box.Name = fmt.Sprintf("ground (%d,%d)", xPos, yPos)
 			height := karta.GetPositionHeight(xPos, yPos)
+			box.Scale(&vec3.Zero, &vec3.T{boxUnit, boxUnit * float64(height), boxUnit})
+			box.Translate(&vec3.T{float64(xPos) * boxUnit, 0, float64(yPos) * boxUnit})
+
 			if height == 1 && xPos > 0 {
 				box.Material = lavaMaterial
 			} else {
 				box.Material = boxMaterial
 			}
-			box.Scale(&vec3.Zero, &vec3.T{boxUnit, boxUnit * float64(height), boxUnit})
-			box.Translate(&vec3.T{float64(xPos) * boxUnit, 0, float64(yPos) * boxUnit})
 
 			landscape.FacetStructures = append(landscape.FacetStructures, box)
 		}
 	}
 
-	for _, stepPos := range pathPositions {
-		stepMarkerBox := getBox(fmt.Sprintf("%d,%d", stepPos.x, stepPos.y))
+	for stepIndex, stepPos := range pathPositions {
+		stepMarkerBox := obj.NewBox(obj.BoxPositive)
+		stepMarkerBox.Name = fmt.Sprintf("step %d: (%d,%d)", stepIndex, stepPos.x, stepPos.y)
 		stepMarkerBox.Scale(&vec3.Zero, &vec3.T{boxUnit * 0.5, boxUnit, boxUnit * 0.5})
 		stepMarkerBox.Translate(&vec3.T{float64(stepPos.x)*boxUnit + boxUnit*0.25, float64(karta.GetPositionHeight(stepPos.x, stepPos.y)) * boxUnit, float64(stepPos.y)*boxUnit + boxUnit*0.25})
 
@@ -137,13 +128,7 @@ func main() {
 
 	//fmt.Printf("%+v\n", landscape.Bounds)
 
-	scene := scn.SceneNode{
-		Spheres: []*scn.Sphere{&environmentSphere, sun},
-		//Spheres:         []*scn.Sphere{&environmentSphere, moon, sun},
-		Discs:           []*scn.Disc{&ground},
-		ChildNodes:      []*scn.SceneNode{},
-		FacetStructures: []*scn.FacetStructure{landscape},
-	}
+	scene := scn.NewSceneNode().S(skyDome /*, sun*/ /*, moon*/).D(ground).FS(landscape)
 
 	var curvePoints []*vec3.T
 	for _, position := range pathPositions {
@@ -158,10 +143,10 @@ func main() {
 	pathEndPoint := &vec3.T{float64(endPosition.x) * boxUnit, float64(karta.GetPositionHeight(endPosition.x, endPosition.y)) * boxUnit, float64(endPosition.y) * boxUnit}
 
 	// Actual animation
-	amountFrames = len(pathPositions) * 3
+	amountFrames = len(pathPositions) * 4
 	//headingSamples := 10
 	//amountPositionSamples := len(pathPositions)
-	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
+	for frameIndex := 470; frameIndex < amountFrames; frameIndex++ {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
 
 		focusPoint, _ := pathCurve.GetPoint(animationProgress)
@@ -177,18 +162,11 @@ func main() {
 		cameraOrigin.Add(&vec3.T{mountainCameraOffset[0], 0.0, mountainCameraOffset[2]}) // Move camera in xz-plane
 
 		cameraOrigin.Add(&vec3.T{0.0, 100.0, 0.0}) // Raise the camera above the focus point
-
 		cameraFocusPoint := focusPoint
-		camera := getCamera(magnification, animationProgress, &cameraOrigin, cameraFocusPoint)
+		camera := scn.NewCamera(&cameraOrigin, cameraFocusPoint, amountSamples, magnification).A(apertureSize, "")
 
-		frame := scn.Frame{
-			Filename:   animation.AnimationName + "_" + fmt.Sprintf("%06d", frameIndex),
-			FrameIndex: frameIndex,
-			Camera:     &camera,
-			SceneNode:  &scene,
-		}
-
-		animation.Frames = append(animation.Frames, frame)
+		frame := scn.NewFrame(animationName, frameIndex, camera, scene)
+		animation.AddFrame(frame)
 	}
 
 	anm.WriteAnimationToFile(animation, false)
@@ -219,71 +197,6 @@ func parsePath(lines []string) ([]Pos, Pos, Pos) {
 	}
 
 	return pathPositions, startPos, endPos
-}
-
-func getEnvironmentMapping(filename string) scn.Sphere {
-	origin := vec3.T{0, 0, 0}
-
-	projection := scn.ImageProjection{
-		ProjectionType: scn.ProjectionTypeSpherical,
-		ImageFilename:  filename,
-		Origin:         &origin,
-		U:              &vec3.T{-0.55, 0, -0.45},
-		V:              &vec3.T{0, 1, 0},
-		RepeatU:        true,
-		RepeatV:        true,
-		FlipU:          false,
-		FlipV:          false,
-	}
-
-	material := scn.Material{
-		Color:         &color.Color{R: 1.0, G: 1.0, B: 1.0},
-		Emission:      (&color.Color{R: 1.0, G: 1.0, B: 1.0}).Multiply(environmentEmissionFactor),
-		RayTerminator: true,
-		Projection:    &projection,
-	}
-
-	sphere := scn.Sphere{
-		Name:     "Environment mapping",
-		Origin:   &origin,
-		Radius:   environmentRadius,
-		Material: &material,
-	}
-
-	return sphere
-}
-
-func getAnimation(width int, height int) *scn.Animation {
-	animation := &scn.Animation{
-		AnimationName:     animationName,
-		Frames:            []scn.Frame{},
-		Width:             width,
-		Height:            height,
-		WriteRawImageFile: false,
-	}
-	return animation
-}
-
-func getCamera(magnification float64, progress float64, cameraOrigin *vec3.T, cameraFocusPoint *vec3.T) scn.Camera {
-
-	// Point heading towards center of sphere ring (heading vector starts in camera origin)
-	heading := cameraFocusPoint.Subed(cameraOrigin)
-
-	focusDistance := heading.Length()
-
-	return scn.Camera{
-		Origin:            cameraOrigin,
-		Heading:           &heading,
-		ViewUp:            &vec3.T{0, 1, 0},
-		ViewPlaneDistance: viewPlaneDistance,
-		ApertureSize:      apertureSize,
-		FocusDistance:     focusDistance,
-		Samples:           amountSamples,
-		AntiAlias:         true,
-		Magnification:     magnification,
-		RenderType:        renderType,
-		RecursionDepth:    maxRecursion,
-	}
 }
 
 func parseMap(lines []string) Map {
@@ -347,48 +260,4 @@ func readLines(path string) ([]string, error) {
 	}
 
 	return lines, scanner.Err()
-}
-
-func getBox(name string) *scn.FacetStructure {
-	//roofTexture := scn.NewParallelImageProjection("textures/uv.png", vec3.T{0, ballRadius * 6, 0}, vec3.T{ballRadius, 0, 0}, vec3.T{0, 0, ballRadius})
-	//floorTexture := scn.NewParallelImageProjection("textures/uv.png", vec3.T{0, 0, 0}, vec3.T{ballRadius, 0, 0}, vec3.T{0, 0, ballRadius})
-
-	boxP1 := vec3.T{1, 1, 0} // Top right close            3----------2
-	boxP2 := vec3.T{1, 1, 1} // Top right away            /          /|
-	boxP3 := vec3.T{0, 1, 1} // Top left away            /          / |
-	boxP4 := vec3.T{0, 1, 0} // Top left close          4----------1  |
-	boxP5 := vec3.T{1, 0, 0} // Bottom right close      | (7)      |  6
-	boxP6 := vec3.T{1, 0, 1} // Bottom right away       |          | /
-	boxP7 := vec3.T{0, 0, 1} // Bottom left away        |          |/
-	boxP8 := vec3.T{0, 0, 0} // Bottom left close       8----------5
-
-	box := scn.FacetStructure{Name: name}
-
-	roof := getFlatRectangleFacets(&boxP1, &boxP2, &boxP3, &boxP4)
-	floor := getFlatRectangleFacets(&boxP8, &boxP7, &boxP6, &boxP5)
-	back := getFlatRectangleFacets(&boxP6, &boxP7, &boxP3, &boxP2)
-	front := getFlatRectangleFacets(&boxP5, &boxP1, &boxP4, &boxP8)
-	right := getFlatRectangleFacets(&boxP6, &boxP2, &boxP1, &boxP5)
-	left := getFlatRectangleFacets(&boxP7, &boxP8, &boxP4, &boxP3)
-
-	box.Facets = append(box.Facets, front...)
-	box.Facets = append(box.Facets, back...)
-	box.Facets = append(box.Facets, roof...)
-	box.Facets = append(box.Facets, floor...)
-	box.Facets = append(box.Facets, right...)
-	box.Facets = append(box.Facets, left...)
-
-	return &box
-}
-
-func getFlatRectangleFacets(p1, p2, p3, p4 *vec3.T) []*scn.Facet {
-	v1 := p2.Subed(p1)
-	v2 := p3.Subed(p1)
-	normal := vec3.Cross(&v1, &v2)
-	normal.Normalize()
-
-	return []*scn.Facet{
-		{Vertices: []*vec3.T{p1, p2, p4}, Normal: &normal},
-		{Vertices: []*vec3.T{p4, p2, p3}, Normal: &normal},
-	}
 }

@@ -7,19 +7,27 @@ var (
 
 type Color struct{ R, G, B float32 }
 
-func (c *Color) Copy() *Color {
-	color := *c
-	return &color
+func NewColor(r, g, b float64) Color {
+	return Color{R: float32(r), G: float32(g), B: float32(b)}
 }
 
-func (c *Color) ChannelAdd(color *Color) *Color {
+func NewColorGrey(greyIntensity float64) Color {
+	return NewColor(greyIntensity, greyIntensity, greyIntensity)
+}
+
+func (c *Color) Copy() Color {
+	color := *c
+	return color
+}
+
+func (c *Color) ChannelAdd(color Color) *Color {
 	c.R += color.R
 	c.G += color.G
 	c.B += color.B
 	return c
 }
 
-func (c *Color) ChannelMultiply(color *Color) *Color {
+func (c *Color) ChannelMultiply(color Color) *Color {
 	c.R *= color.R
 	c.G *= color.G
 	c.B *= color.B

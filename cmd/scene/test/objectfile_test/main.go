@@ -16,16 +16,15 @@ import (
 var animationName = "objectfile_test"
 
 var cornellBoxFilename = "cornellbox.obj"
-var cornellBoxFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/" + cornellBoxFilename
+var cornellBoxFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + cornellBoxFilename
 
 var amountAnimationFrames = 90
 
 var ballRadius float64 = 60
 
 var renderType = scn.Pathtracing
-var maxRecursionDepth = 2 * 2
+var maxRecursionDepth = 6
 var amountSamples = 128 * 4
-var lensRadius float64 = 0
 
 var viewPlaneDistance = 1000.0
 var cameraDistanceFactor = 1.0
@@ -35,17 +34,12 @@ var imageHeight = 500
 var magnification = 0.5
 
 func main() {
-	animation := &scn.Animation{
-		AnimationName:     animationName,
-		Frames:            []scn.Frame{},
-		Width:             int(float64(imageWidth) * magnification),
-		Height:            int(float64(imageHeight) * magnification),
-		WriteRawImageFile: true,
-	}
+	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true)
 
 	cornellBoxFile, err := os.Open(cornellBoxFilenamePath)
 	if err != nil {
-		fmt.Printf("ouupps, something went wrong loading file: '%s'\n%s\n", cornellBoxFilenamePath, err.Error())
+		message := fmt.Sprintf("ouupps, something went wrong loading file: '%s'\n%s\n", cornellBoxFilenamePath, err.Error())
+		panic(message)
 	}
 	defer cornellBoxFile.Close()
 
@@ -64,81 +58,27 @@ func main() {
 
 	lampEmission := color.Color{R: 9.0, G: 9.0, B: 9.0}
 	lampColor := color.Color{R: 1.0, G: 1.0, B: 1.0}
-	setObjectMaterial(cornellBox, "Lamp_1", &lampColor, &lampEmission, true, 0.0, 0)
-	setObjectMaterial(cornellBox, "Lamp_2", &lampColor, &lampEmission, true, 0.0, 0)
-	setObjectMaterial(cornellBox, "Lamp_3", &lampColor, &lampEmission, true, 0.0, 0)
-	setObjectMaterial(cornellBox, "Lamp_4", &lampColor, &lampEmission, true, 0.0, 0)
+	setObjectMaterial(cornellBox, "Lamp_1", &lampColor, &lampEmission, true, 0.0, 1.0)
+	setObjectMaterial(cornellBox, "Lamp_2", &lampColor, &lampEmission, true, 0.0, 1.0)
+	setObjectMaterial(cornellBox, "Lamp_3", &lampColor, &lampEmission, true, 0.0, 1.0)
+	setObjectMaterial(cornellBox, "Lamp_4", &lampColor, &lampEmission, true, 0.0, 1.0)
 
-	sphere1 := scn.Sphere{
-		Name:   "Right sphere",
-		Origin: &vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0},
-		Radius: ballRadius,
-		Material: &scn.Material{
-			Color:      &color.Color{R: 0.9, G: 0.9, B: 0.9},
-			Glossiness: 0.1,
-			Roughness:  0.2,
-			Projection: &scn.ImageProjection{
-				ProjectionType: scn.ProjectionTypeSpherical,
-				ImageFilename:  "textures/equirectangular/football.png",
-				Origin:         &vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0},
-				U:              &vec3.T{1, 0, 0},
-				V:              &vec3.T{0, 1, 0},
-				RepeatU:        false,
-				RepeatV:        false,
-				FlipU:          false,
-				FlipV:          false,
-			},
-		},
-	}
+	sphere1Material := scn.NewMaterial().C(color.NewColorGrey(0.9)).M(0.1, 0.2).SP("textures/equirectangular/football.png", &vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+	sphere1 := scn.NewSphere(&vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0}, ballRadius, sphere1Material).N("Right sphere")
 
-	sphere2 := scn.Sphere{
-		Name:   "Left sphere",
-		Origin: &vec3.T{-(ballRadius + (ballRadius / 2)), ballRadius, 0},
-		Radius: ballRadius,
-		Material: &scn.Material{
-			Color: &color.Color{R: 0.9, G: 0.9, B: 0.9},
-		},
-	}
+	sphere2Material := scn.NewMaterial().C(color.NewColorGrey(0.9))
+	sphere2 := scn.NewSphere(&vec3.T{-(ballRadius + (ballRadius / 2)), ballRadius, 0}, ballRadius, sphere2Material).N("Left sphere")
 
-	mirrorSphere1 := scn.Sphere{
-		Name:   "Mirror sphere on floor",
-		Origin: &vec3.T{0, ballRadius / 1.5, ballRadius * 1.5},
-		Radius: ballRadius / 1.5,
-		Material: &scn.Material{
-			Color:      &color.Color{R: 0.8, G: 0.85, B: 0.9},
-			Roughness:  0.20,
-			Glossiness: 0.95,
-		},
-	}
+	mirrorSphereMaterial := scn.NewMaterial().C(color.NewColor(0.8, 0.85, 0.9)).M(0.95, 0.2)
+	mirrorSphere1 := scn.NewSphere(&vec3.T{0, ballRadius / 1.5, ballRadius * 1.5}, ballRadius/1.5, mirrorSphereMaterial).N("Mirror sphere on floor")
 
 	mirrorSphereRadius := scale * 0.75
 
-	mirrorSphere2 := scn.Sphere{
-		Name:   "Mirror sphere on wall left",
-		Origin: &vec3.T{-(scale*2 + mirrorSphereRadius*0.25), scale + mirrorSphereRadius, scale*2 + mirrorSphereRadius*0.25},
-		Radius: mirrorSphereRadius,
-		Material: &scn.Material{
-			Color:      &color.Color{R: 0.9, G: 0.9, B: 0.95},
-			Roughness:  0.02,
-			Glossiness: 0.95,
-		},
-	}
+	wallMirrorMaterial := scn.NewMaterial().C(color.NewColor(0.9, 0.9, 0.95)).M(0.95, 0.02)
+	mirrorSphere2 := scn.NewSphere(&vec3.T{-(scale*2 + mirrorSphereRadius*0.25), scale + mirrorSphereRadius, scale*2 + mirrorSphereRadius*0.25}, mirrorSphereRadius, wallMirrorMaterial).N("Mirror sphere on wall left")
+	mirrorSphere3 := scn.NewSphere(&vec3.T{scale*2 + mirrorSphereRadius*0.25, scale + mirrorSphereRadius, scale*2 + mirrorSphereRadius*0.25}, mirrorSphereRadius, wallMirrorMaterial).N("Mirror sphere on wall right")
 
-	mirrorSphere3 := scn.Sphere{
-		Name:   "Mirror sphere on wall right",
-		Origin: &vec3.T{scale*2 + mirrorSphereRadius*0.25, scale + mirrorSphereRadius, scale*2 + mirrorSphereRadius*0.25},
-		Radius: mirrorSphereRadius,
-		Material: &scn.Material{
-			Color:      &color.Color{R: 0.9, G: 0.9, B: 0.95},
-			Roughness:  0.02,
-			Glossiness: 0.95,
-		},
-	}
-
-	scene := scn.SceneNode{
-		Spheres:         []*scn.Sphere{&sphere1, &sphere2, &mirrorSphere1, &mirrorSphere2, &mirrorSphere3},
-		FacetStructures: []*scn.FacetStructure{cornellBox},
-	}
+	scene := scn.NewSceneNode().S(sphere1, sphere2, mirrorSphere1, mirrorSphere2, mirrorSphere3).FS(cornellBox)
 
 	for animationFrameIndex := 0; animationFrameIndex < amountAnimationFrames; animationFrameIndex++ {
 		animationProgress := float64(animationFrameIndex) / float64(amountAnimationFrames)
@@ -159,16 +99,10 @@ func main() {
 		rotationYMatrix.AssignYRotation(sideAngle)
 		animatedCameraOrigin = rotationYMatrix.MulVec3(&animatedCameraOrigin)
 
-		camera := getCamera(&animatedCameraOrigin, &focusPoint)
+		camera := scn.NewCamera(&animatedCameraOrigin, &focusPoint, amountSamples, magnification).V(viewPlaneDistance)
 
-		frame := scn.Frame{
-			Filename:   animation.AnimationName + "_" + fmt.Sprintf("%06d", animationFrameIndex),
-			FrameIndex: animationFrameIndex,
-			Camera:     &camera,
-			SceneNode:  &scene,
-		}
-
-		animation.Frames = append(animation.Frames, frame)
+		frame := scn.NewFrame(animation.AnimationName, animationFrameIndex, camera, scene)
+		animation.AddFrame(frame)
 	}
 
 	anm.WriteAnimationToFile(animation, false)
@@ -183,7 +117,7 @@ func setObjectMaterial(openBox *scn.FacetStructure, objectName string, color *co
 		object.Material.Glossiness = glossiness
 		object.Material.Roughness = roughness
 	} else {
-		fmt.Printf("No " + objectName + " found")
+		fmt.Printf("No " + objectName + " object with material found")
 		os.Exit(1)
 	}
 }
@@ -191,38 +125,10 @@ func setObjectMaterial(openBox *scn.FacetStructure, objectName string, color *co
 func setObjectProjection1(openBox *scn.FacetStructure, objectName string) {
 	object := openBox.GetFirstObjectByName(objectName)
 	if object != nil {
-		object.Material.Projection = &scn.ImageProjection{
-			ProjectionType: scn.ProjectionTypeParallel,
-			ImageFilename:  "textures/white_marble.png",
-			Origin:         &vec3.Zero,
-			U:              &vec3.T{200 * 2, 0, 0},
-			V:              &vec3.T{0, 0, 200 * 2},
-			RepeatU:        true,
-			RepeatV:        true,
-			FlipU:          false,
-			FlipV:          false,
-		}
+		projection := scn.NewParallelImageProjection("textures/white_marble.png", &vec3.T{0, 0, 0}, vec3.T{200 * 2, 0, 0}, vec3.T{0, 0, 200 * 2})
+		object.Material.Projection = &projection
 	} else {
 		fmt.Printf("No " + objectName + " found")
 		os.Exit(1)
-	}
-}
-
-func getCamera(cameraOrigin, focusPoint *vec3.T) scn.Camera {
-	heading := focusPoint.Subed(cameraOrigin)
-	focalDistance := heading.Length()
-
-	return scn.Camera{
-		Origin:            cameraOrigin,
-		Heading:           &heading,
-		ViewUp:            &vec3.T{0, 1, 0},
-		ViewPlaneDistance: viewPlaneDistance,
-		ApertureSize:      lensRadius,
-		FocusDistance:     focalDistance,
-		Samples:           amountSamples,
-		AntiAlias:         true,
-		Magnification:     magnification,
-		RenderType:        renderType,
-		RecursionDepth:    maxRecursionDepth,
 	}
 }

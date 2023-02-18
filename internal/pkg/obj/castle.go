@@ -13,7 +13,7 @@ func NewCastle(scale *vec3.T) *scn.FacetStructure {
 	object.Purge()
 
 	stainedGlassMaterial := scn.NewMaterial().N("stained_glass").
-		C(color.Color{R: 0.95, G: 0.90, B: 0.60}, 1.0).
+		C(color.Color{R: 0.95, G: 0.90, B: 0.60}).
 		T(0.8, false, 0.0).
 		M(0.95, 0.3)
 	stainedGlassObjects := object.GetObjectsByMaterialName("colored_glass")
@@ -22,14 +22,14 @@ func NewCastle(scale *vec3.T) *scn.FacetStructure {
 	}
 
 	roofMaterial := scn.NewMaterial().N("roof").
-		C(color.Color{R: 0.90, G: 0.80, B: 0.50}, 0.3)
+		C(color.Color{R: 0.30, G: 0.25, B: 0.10})
 	roofObjects := object.GetObjectsByMaterialName("erroded_cupper")
 	for _, roofObject := range roofObjects {
 		roofObject.Material = roofMaterial
 	}
 
 	glassMaterial := scn.NewMaterial().N("glass").
-		C(color.Color{R: 0.93, G: 0.93, B: 0.95}, 1.0).
+		C(color.Color{R: 0.93, G: 0.93, B: 0.95}).
 		T(0.8, false, 0.0).
 		M(0.95, 0.1)
 	glassObjects := object.GetObjectsByMaterialName("glass")

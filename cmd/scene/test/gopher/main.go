@@ -13,15 +13,9 @@ import (
 
 var animationName = "gopher"
 
-var renderType = scn.Pathtracing
-
 var amountFrames = 1
 
-var maxRecursionDepth = 3
 var amountSamples = 1024 * 4 * 3
-var apertureRadius = 0.0
-
-var viewPlaneDistance = 800.0
 
 var imageWidth = 400
 var imageHeight = 500
@@ -40,14 +34,14 @@ func main() {
 	}
 
 	// Sky
-	groundProjection := scn.NewParallelImageProjection("textures/floor/Calacatta-Vena-French-Pattern-Architextures.jpg", vec3.Zero, vec3.UnitX.Scaled(150), vec3.UnitZ.Scaled(150))
-	groundMaterial := scn.Material{Color: &color.White, Glossiness: 0.0, Roughness: 1.0, Projection: &groundProjection}
-	ground := &scn.Disc{Name: "ground", Origin: &vec3.Zero, Normal: &vec3.UnitY, Radius: 5000.0, Material: &groundMaterial}
+	groundMaterial := scn.NewMaterial().PP("textures/floor/Calacatta-Vena-French-Pattern-Architextures.jpg", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(150), vec3.UnitZ.Scaled(150))
+	ground := &scn.Disc{Name: "ground", Origin: &vec3.T{0, 0, 0}, Normal: &vec3.UnitY, Radius: 5000.0, Material: groundMaterial}
 
 	// Sky
-	skyProjection := scn.NewSphericalImageProjection("textures/equirectangular/wirebox 6192x3098.png", vec3.Zero, vec3.UnitX, vec3.UnitY)
-	skyMaterial := scn.Material{Color: &color.White, Emission: (&color.White).Multiply(0.5), Glossiness: 0.0, Roughness: 1.0, Projection: &skyProjection}
-	skyDome := &scn.Sphere{Name: "sky dome", Origin: &vec3.Zero, Radius: 5000.0, Material: &skyMaterial}
+	skyMaterial := scn.NewMaterial().
+		E(color.White, 0.5, true).
+		SP("textures/equirectangular/wirebox 6192x3098.png", &vec3.T{0, 0, 0}, vec3.UnitX, vec3.UnitY)
+	skyDome := scn.NewSphere(&vec3.T{0, 0, 0}, 5000, skyMaterial).N("sky dome")
 
 	// Gopher
 	gopher := GetGopher(&vec3.T{1, 1, 1})
@@ -57,66 +51,40 @@ func main() {
 	gopher.Translate(&vec3.T{0, 0, 0})
 	gopher.UpdateBounds()
 
-	gopherLightMaterial := scn.Material{Color: &color.White, Emission: (&color.Color{R: 6.0, G: 5.3, B: 4.5}).Multiply(20), Glossiness: 0.0, Roughness: 1.0, RayTerminator: true}
-	gopherLight := &scn.Sphere{Name: "Gopher light", Origin: &vec3.T{-150, 250, -175}, Radius: 15.0, Material: &gopherLightMaterial}
+	gopherLightMaterial := scn.NewMaterial().E(color.Color{R: 6.0, G: 5.3, B: 4.5}, 20, true)
+	gopherLight := scn.NewSphere(&vec3.T{-150, 250, -175}, 15.0, gopherLightMaterial).N("Gopher light")
 
-	scene := &scn.SceneNode{
-		FacetStructures: []*scn.FacetStructure{gopher},
-		Spheres:         []*scn.Sphere{gopherLight, skyDome},
-		Discs:           []*scn.Disc{ground},
-	}
+	scene := scn.NewSceneNode().
+		S(gopherLight, skyDome).
+		D(ground).
+		FS(gopher)
 
-	animation := &scn.Animation{
-		AnimationName:     animationName,
-		Frames:            []scn.Frame{},
-		Width:             width,
-		Height:            height,
-		WriteRawImageFile: false,
-	}
+	animation := scn.NewAnimation(animationName, width, height, magnification, false)
 
 	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
 
 		camera := getCamera(animationProgress)
-
-		frame := scn.Frame{
-			Filename:   animationName + "_" + fmt.Sprintf("%06d", frameIndex),
-			FrameIndex: 0,
-			Camera:     camera,
-			SceneNode:  scene,
-		}
-
-		animation.Frames = append(animation.Frames, frame)
+		frame := scn.NewFrame(animationName, -1, camera, scene)
+		animation.AddFrame(frame)
 	}
 
 	anm.WriteAnimationToFile(animation, false)
 }
 
 func getCamera(animationProgress float64) *scn.Camera {
-	cameraOrigin := vec3.T{0, 200, -800}
-	focusPoint := vec3.T{0, 150, 0}
+	cameraOrigin := &vec3.T{0, 200, -800}
+	focusPoint := &vec3.T{0, 150, 0}
 
 	// Animation
 	angle := (math.Pi / 2.0) * animationProgress
-	scn.RotateY(&cameraOrigin, &vec3.Zero, angle)
-	scn.RotateY(&focusPoint, &vec3.Zero, angle)
+	scn.RotateY(cameraOrigin, &vec3.Zero, angle)
+	scn.RotateY(focusPoint, &vec3.Zero, angle)
 
-	heading := focusPoint.Subed(&cameraOrigin)
-	focalDistance := heading.Length() * 1.75
+	heading := focusPoint.Subed(cameraOrigin)
+	focusDistance := heading.Length() * 1.75
 
-	return &scn.Camera{
-		Origin:            &cameraOrigin,
-		Heading:           &heading,
-		ViewUp:            &vec3.T{0, 1, 0},
-		ViewPlaneDistance: viewPlaneDistance,
-		ApertureSize:      apertureRadius,
-		FocusDistance:     focalDistance,
-		Samples:           amountSamples,
-		AntiAlias:         true,
-		Magnification:     magnification,
-		RenderType:        renderType,
-		RecursionDepth:    maxRecursionDepth,
-	}
+	return scn.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).F(focusDistance)
 }
 
 func GetGopher(scale *vec3.T) *scn.FacetStructure {
@@ -125,7 +93,8 @@ func GetGopher(scale *vec3.T) *scn.FacetStructure {
 
 	objFile, err := os.Open(objFilenamePath)
 	if err != nil {
-		fmt.Printf("ouupps, something went wrong loading file: '%s'\n%s\n", objFilenamePath, err.Error())
+		message := fmt.Sprintf("ouupps, something went wrong loading file: '%s'\n%s\n", objFilenamePath, err.Error())
+		panic(message)
 	}
 	defer objFile.Close()
 

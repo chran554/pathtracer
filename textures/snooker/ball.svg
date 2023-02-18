@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="20mm"
+   height="20mm"
+   viewBox="0 0 20 20"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.2.1 (9c6d41e, 2022-07-14)"
+   sodipodi:docname="ball.svg"
+   inkscape:export-filename="15.png"
+   inkscape:export-xdpi="1524"
+   inkscape:export-ydpi="1524"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="true"
+     inkscape:zoom="7.34108"
+     inkscape:cx="33.646275"
+     inkscape:cy="44.611964"
+     inkscape:window-width="1689"
+     inkscape:window-height="973"
+     inkscape:window-x="0"
+     inkscape:window-y="38"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer2">
+    <inkscape:grid
+       type="xygrid"
+       id="grid132"
+       units="mm"
+       spacingx="0.99999997"
+       spacingy="0.99999997"
+       empspacing="10" />
+  </sodipodi:namedview>
+  <defs
+     id="defs2" />
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="colors"
+     style="display:inline"
+     sodipodi:insensitive="true">
+    <rect
+       style="display:none;fill:#fff3de;fill-opacity:1;stroke-width:0.264583"
+       id="rect14204"
+       width="19.999998"
+       height="19.999998"
+       x="0"
+       y="0"
+       inkscape:label="white"
+       sodipodi:insensitive="true" />
+    <rect
+       style="display:inline;fill:#111111;fill-opacity:1;stroke-width:0.264583"
+       id="rect14194"
+       width="19.999998"
+       height="19.999998"
+       x="0"
+       y="0"
+       inkscape:label="black 8"
+       sodipodi:insensitive="true" />
+    <rect
+       style="display:none;fill:#511100;fill-opacity:1;stroke-width:0.264583"
+       id="rect14082"
+       width="19.999998"
+       height="19.999998"
+       x="0"
+       y="0"
+       inkscape:label="brown 7, 15" />
+    <rect
+       style="display:none;fill:#005100;fill-opacity:1;stroke-width:0.264583"
+       id="rect12402"
+       width="19.999998"
+       height="19.999998"
+       x="0"
+       y="0"
+       inkscape:label="green 6, 14"
+       sodipodi:insensitive="true" />
+    <rect
+       style="display:none;fill:#c14e00;fill-opacity:1;stroke-width:0.264583"
+       id="rect13242"
+       width="19.999998"
+       height="19.999998"
+       x="0"
+       y="0"
+       inkscape:label="orange 5, 13"
+       sodipodi:insensitive="true" />
+    <rect
+       style="display:none;fill:#370b38;fill-opacity:1;stroke-width:0.264583"
+       id="rect6932"
+       width="19.999998"
+       height="19.999998"
+       x="0"
+       y="0"
+       inkscape:label="purple 4, 12"
+       sodipodi:insensitive="true" />
+    <rect
+       style="display:none;fill:#aa0000;fill-opacity:1;stroke-width:0.264583"
+       id="rect5811"
+       width="19.999998"
+       height="19.999998"
+       x="0"
+       y="0"
+       inkscape:label="red 3, 11"
+       sodipodi:insensitive="true" />
+    <rect
+       style="display:none;fill:#210b61;fill-opacity:1;stroke-width:0.264583"
+       id="rect408"
+       width="19.999998"
+       height="19.999998"
+       x="0"
+       y="0"
+       inkscape:label="blue 2, 10"
+       sodipodi:insensitive="true" />
+    <rect
+       style="display:none;fill:#f1b800;fill-opacity:1;stroke-width:0.264583"
+       id="rect5921"
+       width="19.999998"
+       height="19.999998"
+       x="0"
+       y="0"
+       inkscape:label="yellow 1, 9"
+       sodipodi:insensitive="true" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer3"
+     inkscape:label="stripe 9, 10, 11, 12, 13, 14, 15"
+     style="display:none"
+     sodipodi:insensitive="true">
+    <rect
+       style="fill:#fff3de;fill-opacity:1;stroke-width:0.23665"
+       id="rect1059"
+       width="19.999998"
+       height="3.9999998"
+       x="0"
+       y="0" />
+    <rect
+       style="fill:#fff3de;fill-opacity:1;stroke-width:0.23665"
+       id="rect1061"
+       width="19.999998"
+       height="4"
+       x="0"
+       y="15.999999" />
+  </g>
+  <g
+     inkscape:label="numbers and underline"
+     inkscape:groupmode="layer"
+     id="layer1"
+     style="display:inline"
+     sodipodi:insensitive="true">
+    <circle
+       style="display:inline;fill:#fff3de;fill-opacity:1;stroke-width:0.0955436"
+       id="path298"
+       cx="10"
+       cy="10"
+       inkscape:label="number disc"
+       r="3.25"
+       sodipodi:insensitive="true" />
+    <path
+       id="path1074"
+       style="display:none;fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.6;stroke-linecap:round;stroke-dasharray:none"
+       inkscape:label="underline"
+       d="M 11.82906,11.999881 A 2.7101631,2.7101631 0 0 1 10,12.710163 2.7101631,2.7101631 0 0 1 8.1709401,11.999881"
+       sodipodi:insensitive="true" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;display:none;fill:none;fill-opacity:1;stroke-width:0.264583"
+       x="10.061685"
+       y="11.940101"
+       id="text14086"
+       inkscape:label="15"
+       sodipodi:insensitive="true"><tspan
+         sodipodi:role="line"
+         id="tspan14084"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;fill:#000000;stroke-width:0.264583"
+         x="10.061685"
+         y="11.940101">15</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;display:none;fill:none;fill-opacity:1;stroke-width:0.264583"
+       x="10.013706"
+       y="11.955093"
+       id="text13138"
+       inkscape:label="14"
+       sodipodi:insensitive="true"><tspan
+         sodipodi:role="line"
+         id="tspan13136"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;fill:#000000;stroke-width:0.264583"
+         x="0"
+         y="0">14</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;display:none;fill:none;fill-opacity:1;stroke-width:0.264583"
+       x="10.076675"
+       y="11.956705"
+       id="text14080"
+       inkscape:label="13"
+       sodipodi:insensitive="true"><tspan
+         sodipodi:role="line"
+         id="tspan14078"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;fill:#000000;stroke-width:0.264583"
+         x="0"
+         y="0">13</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;display:none;fill:none;fill-opacity:1;stroke-width:0.264583"
+       x="10.067681"
+       y="11.970087"
+       id="text12400"
+       inkscape:label="12"
+       sodipodi:insensitive="true"><tspan
+         sodipodi:role="line"
+         id="tspan12398"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;fill:#000000;stroke-width:0.264583"
+         x="0"
+         y="0">12</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;display:none;fill:none;fill-opacity:1;stroke-width:0.264583"
+       x="10.175632"
+       y="11.955093"
+       id="text14257"
+       inkscape:label="11"
+       sodipodi:insensitive="true"><tspan
+         sodipodi:role="line"
+         id="tspan14255"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;fill:#000000;stroke-width:0.264583"
+         x="0"
+         y="0">11</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;display:none;fill:none;fill-opacity:1;stroke-width:0.264583"
+       x="10.09167"
+       y="11.955093"
+       id="text1229"
+       inkscape:label="10"
+       sodipodi:insensitive="true"><tspan
+         sodipodi:role="line"
+         id="tspan1227"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;fill:#000000;stroke-width:0.264583"
+         x="0"
+         y="0">10</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;display:none;fill:none;fill-opacity:1;stroke-width:0.264583"
+       x="10.023986"
+       y="11.954494"
+       id="text5815"
+       inkscape:label="9"
+       sodipodi:insensitive="true"><tspan
+         sodipodi:role="line"
+         id="tspan5813"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;fill:#000000;stroke-width:0.264583"
+         x="0"
+         y="0">9</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;display:inline;fill:none;fill-opacity:1;stroke-width:0.264583"
+       x="9.9999962"
+       y="11.958093"
+       id="text14202"
+       inkscape:label="8"
+       sodipodi:insensitive="true"><tspan
+         sodipodi:role="line"
+         id="tspan14200"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;fill:#000000;stroke-width:0.264583"
+         x="0"
+         y="0">8</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;display:none;fill:none;fill-opacity:1;stroke-width:0.264583"
+       x="9.9400244"
+       y="11.955446"
+       id="text14090"
+       inkscape:label="7"
+       sodipodi:insensitive="true"><tspan
+         sodipodi:role="line"
+         id="tspan14088"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;fill:#000000;stroke-width:0.264583"
+         x="9.9400244"
+         y="11.955446">7</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;display:none;fill:none;fill-opacity:1;stroke-width:0.264583"
+       x="9.9760084"
+       y="11.955665"
+       id="text13134"
+       inkscape:label="6"
+       sodipodi:insensitive="true"><tspan
+         sodipodi:role="line"
+         id="tspan13132"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;fill:#000000;stroke-width:0.264583"
+         x="0"
+         y="0">6</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;display:none;fill:none;fill-opacity:1;stroke-width:0.264583"
+       x="9.9895926"
+       y="11.940101"
+       id="text13974"
+       inkscape:label="5"
+       sodipodi:insensitive="true"><tspan
+         sodipodi:role="line"
+         id="tspan13972"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;fill:#000000;stroke-width:0.264583"
+         x="0"
+         y="0">5</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;display:none;fill:none;fill-opacity:1;stroke-width:0.264583"
+       x="10.026986"
+       y="11.955093"
+       id="text12346"
+       inkscape:label="4"
+       sodipodi:insensitive="true"><tspan
+         sodipodi:role="line"
+         id="tspan12344"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;fill:#000000;stroke-width:0.264583"
+         x="0"
+         y="0">4</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;display:none;fill:none;fill-opacity:1;stroke-width:0.264583"
+       x="10.040665"
+       y="11.956705"
+       id="text6926"
+       inkscape:label="3"
+       sodipodi:insensitive="true"><tspan
+         sodipodi:role="line"
+         id="tspan6924"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;fill:#000000;stroke-width:0.264583"
+         x="0"
+         y="0">3</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;display:none;fill:none;fill-opacity:1;stroke-width:0.264583"
+       x="10.005995"
+       y="11.98508"
+       id="text5809"
+       inkscape:label="2"
+       sodipodi:insensitive="true"><tspan
+         sodipodi:role="line"
+         id="tspan5807"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;fill:#000000;stroke-width:0.264583"
+         x="0"
+         y="0">2</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;display:none;fill:none;fill-opacity:1;stroke-width:0.264583"
+       x="10.175632"
+       y="11.955093"
+       id="text6930"
+       inkscape:label="1"
+       sodipodi:insensitive="true"><tspan
+         sodipodi:role="line"
+         id="tspan6928"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.99722px;font-family:'Sofia Pro Soft';-inkscape-font-specification:'Sofia Pro Soft, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;fill:#000000;stroke-width:0.264583"
+         x="10.175632"
+         y="11.955093">1</tspan></text>
+  </g>
+</svg>

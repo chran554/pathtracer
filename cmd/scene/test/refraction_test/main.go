@@ -17,32 +17,15 @@ var animationName = "refraction_test"
 
 var ballRadius float64 = 30
 
-var renderType = scn.Pathtracing
-
-// var renderType = scn.Raycasting
-
 var maxRecursionDepth = 8
-var amountSamples = 512 * 5 * 2 // * 4
-var lensRadius = 2.0            // 0.25
+var amountSamples = 512 * 2 // * 5 // * 4
+var lensRadius = 2.0        // 0.25
 
-var cameraDistanceFactor = 1.0
-
-var imageWidth = 800
+var imageWidth = 500
 var imageHeight = 400
 var magnification = 1.5
 
 func main() {
-	width := int(float64(imageWidth) * magnification)
-	height := int(float64(imageHeight) * magnification)
-
-	// Keep image proportions to an even amount of pixel for mp4 encoding
-	if width%2 == 1 {
-		width++
-	}
-	if height%2 == 1 {
-		height++
-	}
-
 	cornellBox := GetCornellBox(&vec3.T{300, 300, 300}, 10.0) // cm, as units. I.e. a 5x3x5m room
 
 	spheres := GetSpheres(1, &vec3.T{-40, 0, 0})
@@ -63,44 +46,29 @@ func main() {
 	//pixarBall.RotateY(pixarBallOrigin, 0.0)
 	pixarBall.RotateY(pixarBallOrigin, math.Pi/4.0)
 
-	scene := scn.SceneNode{
-		Spheres:         spheres,
-		FacetStructures: []*scn.FacetStructure{cornellBox /*glassPokal, glassSkoja*/, utahTeapot},
-	}
-	scene.Spheres = append(scene.Spheres, pixarBall)
+	scene := scn.NewSceneNode().
+		S(spheres...).
+		S(pixarBall).
+		FS(cornellBox /*glassPokal, glassSkoja*/, utahTeapot)
 
 	origin := &vec3.T{0, 70, -200}
-	focusPoint := spheres[0].Origin.Added(&vec3.T{0, 0, -ballRadius / 3.0})
-	camera := scn.NewCamera(origin, &focusPoint).S(amountSamples).D(maxRecursionDepth).A(lensRadius, "").M(magnification)
+	focusPoint := spheres[0].Origin.Added(&vec3.T{ballRadius / 2, 0, -ballRadius / 3.0})
+	camera := scn.NewCamera(origin, &focusPoint, amountSamples, magnification).D(maxRecursionDepth).A(lensRadius, "")
 
-	animation := &scn.Animation{
-		AnimationName:     animationName,
-		Frames:            []scn.Frame{},
-		Width:             width,
-		Height:            height,
-		WriteRawImageFile: false,
-	}
+	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false)
 
-	frame := scn.Frame{
-		Filename:   animation.AnimationName,
-		FrameIndex: 0,
-		Camera:     camera,
-		SceneNode:  &scene,
-	}
+	frame := scn.NewFrame(animation.AnimationName, -1, camera, scene)
 
-	animation.Frames = append(animation.Frames, frame)
+	animation.AddFrame(frame)
 
 	anm.WriteAnimationToFile(animation, false)
 }
 
 func GetSpheres(amountSpheres int, translation *vec3.T) []*scn.Sphere {
-	//sphereSpread := ballRadius * 2.0 * (float64(amountSpheres) + 1)
-	//sphereCC := sphereSpread / float64(amountSpheres)
-
 	var spheres []*scn.Sphere
 	sphereMaterial := scn.NewMaterial().
 		N("glass sphere").
-		C(color.Color{R: 0.95, G: 0.95, B: 0.99}, 1.0).
+		C(color.Color{R: 0.95, G: 0.95, B: 0.99}).
 		M(0.5, 0.05).
 		T(0.94, true, scn.RefractionIndex_Glass)
 
@@ -109,17 +77,14 @@ func GetSpheres(amountSpheres int, translation *vec3.T) []*scn.Sphere {
 		positionOffsetZ := 0.0 // (-sphereSpread/2.0 + float64(i)*sphereCC) * 1.0
 
 		groundOffset := 0.02 // ballRadius / 2.0 // Raise the sphere above the ground
-		sphere := scn.Sphere{
-			Name:     "Glass sphere #" + strconv.Itoa(i),
-			Origin:   &vec3.T{positionOffsetX, ballRadius + groundOffset, positionOffsetZ},
-			Radius:   ballRadius,
-			Material: sphereMaterial,
-		}
+		sphereOrigin := vec3.T{positionOffsetX, ballRadius + groundOffset, positionOffsetZ}
+		sphere := scn.NewSphere(&sphereOrigin, ballRadius, sphereMaterial).N("Glass sphere #" + strconv.Itoa(i))
 
 		sphere.Translate(translation)
 
-		spheres = append(spheres, &sphere)
+		spheres = append(spheres, sphere)
 	}
+
 	return spheres
 }
 
@@ -129,7 +94,8 @@ func GetCornellBox(scale *vec3.T, lightIntensityFactor float64) *scn.FacetStruct
 
 	cornellBoxFile, err := os.Open(cornellBoxFilenamePath)
 	if err != nil {
-		fmt.Printf("ouupps, something went wrong loading file: '%s'\n%s\n", cornellBoxFilenamePath, err.Error())
+		message := fmt.Sprintf("ouupps, something went wrong loading file: '%s'\n%s\n", cornellBoxFilenamePath, err.Error())
+		panic(message)
 	}
 	defer cornellBoxFile.Close()
 
@@ -139,17 +105,17 @@ func GetCornellBox(scale *vec3.T, lightIntensityFactor float64) *scn.FacetStruct
 
 	cornellBox.Material = scn.NewMaterial().
 		N("Cornell box material").
-		C(color.Color{R: 0.95, G: 0.95, B: 0.95}, 1.0)
+		C(color.Color{R: 0.95, G: 0.95, B: 0.95})
 
 	backWallMaterial := cornellBox.Material.Copy().
-		PP("textures/wallpaper/anemone-rose-flower-eucalyptus-leaves-pampas-grass.png", vec3.Zero, vec3.UnitX.Scaled(scale[0]), vec3.UnitY.Scaled(scale[0]*0.66))
+		PP("textures/wallpaper/anemone-rose-flower-eucalyptus-leaves-pampas-grass.png", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale[0]), vec3.UnitY.Scaled(scale[0]*0.66))
 	sideWallMaterial := cornellBox.Material.Copy().
-		PP("textures/wallpaper/anemone-rose-flower-eucalyptus-leaves-pampas-grass.png", vec3.Zero, vec3.UnitZ.Scaled(scale[0]), vec3.UnitY.Scaled(scale[0]*0.66))
+		PP("textures/wallpaper/anemone-rose-flower-eucalyptus-leaves-pampas-grass.png", &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(scale[0]), vec3.UnitY.Scaled(scale[0]*0.66))
 	floorMaterial := cornellBox.Material.Copy().
-		PP("textures/floor/7451-diffuse 02 low contrast.png", vec3.Zero, vec3.UnitX.Scaled(scale[0]*0.25), vec3.UnitZ.Scaled(scale[0]*0.25))
+		PP("textures/floor/7451-diffuse 02 low contrast.png", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale[0]*0.25), vec3.UnitZ.Scaled(scale[0]*0.25))
 
 	lampMaterial := scn.NewMaterial().N("Lamp").
-		C(color.White, 1.0).
+		C(color.White).
 		E(color.White, lightIntensityFactor, true)
 
 	cornellBox.GetFirstObjectByName("Lamp_1").Material = lampMaterial

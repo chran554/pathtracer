@@ -13,25 +13,20 @@ import (
 
 var animationName = "primitive_display"
 
-var renderType = scn.Pathtracing
-
-// var renderType = scn.Raycasting
-
-var amountAnimationFrames = 72 // * 2
+var amountAnimationFrames = 72 * 2
 
 var imageWidth = 800
 var imageHeight = 200
 var magnification = 1.0
 
-var maxRecursionDepth = 4
-var amountSamples = 256 * 4 * 2
+var amountSamples = 256 * 2
 
 var cameraOrigin = vec3.T{0, 150, -800}
 var cameraDistanceFactor = 0.8
 var viewPlaneDistance = 600.0
 var cameraAperture = 10.0
 
-var lightIntensityFactor = 7.0 // 6.0
+var lightIntensityFactor = 5.0
 
 func main() {
 	width := int(float64(imageWidth) * magnification)
@@ -47,7 +42,7 @@ func main() {
 
 	// Cornell box
 
-	cornellBox := GetCornellBox(&vec3.T{500, 300, 500}, float32(lightIntensityFactor)) // cm, as units. I.e. a 5x3x5m room
+	cornellBox := GetCornellBox(&vec3.T{500, 300, 500}, lightIntensityFactor) // cm, as units. I.e. a 5x3x5m room
 
 	// Gopher
 
@@ -57,8 +52,8 @@ func main() {
 	gopher.RotateY(&vec3.Zero, math.Pi*5.0/6.0)
 	gopher.Translate(&vec3.T{800, 0, 800})
 
-	gopherLightMaterial := scn.Material{Color: &color.White, Emission: &color.Color{R: 6, G: 5.3, B: 4.5}, Glossiness: 0.0, Roughness: 1.0, RayTerminator: true}
-	gopherLight := scn.Sphere{Name: "Gopher light", Origin: &vec3.T{850, 50, 600}, Radius: 70.0, Material: &gopherLightMaterial}
+	gopherLightMaterial := scn.NewMaterial().E(color.Color{R: 6, G: 5.3, B: 4.5}, 1.0, true)
+	gopherLight := scn.NewSphere(&vec3.T{850, 50, 600}, 70.0, gopherLightMaterial).N("Gopher light")
 
 	// Diamond
 
@@ -86,21 +81,20 @@ func main() {
 
 	// Sphere
 
-	spherePodium := getBox()
+	spherePodium := obj.NewBox(obj.BoxCenteredYPositive)
 	spherePodium.Material = &podiumMaterial
-	spherePodium.Translate(&vec3.T{-0.5, 0, -0.5}) // Center podium around origin
 	spherePodium.Scale(&vec3.Zero, &vec3.T{podiumWidth, podiumHeight, podiumWidth})
 	spherePodium.Translate(&sphereLocation)
 
-	sphere := spherePrimitive(sphereRadius)
+	sphereMaterial := scn.NewMaterial().C(color.Color{R: 0.80, G: 1.00, B: 0.80}).M(0.3, 0.2)
+	sphere := scn.NewSphere(&vec3.T{0, 0, 0}, sphereRadius, sphereMaterial).N("Sphere primitive")
 	sphere.Translate(&vec3.T{0.0, podiumHeight + sphereRadius, 0.0})
 	sphere.Translate(&sphereLocation)
 
 	// Triangle
 
-	trianglePodium := getBox()
+	trianglePodium := obj.NewBox(obj.BoxCenteredYPositive)
 	trianglePodium.Material = &podiumMaterial
-	trianglePodium.Translate(&vec3.T{-0.5, 0, -0.5}) // Center podium around origin
 	trianglePodium.Scale(&vec3.Zero, &vec3.T{podiumWidth, podiumHeight, podiumWidth})
 	trianglePodium.Translate(&triangleLocation)
 
@@ -113,68 +107,38 @@ func main() {
 
 	// Disc
 
-	discPodium := getBox()
+	discPodium := obj.NewBox(obj.BoxCenteredYPositive)
 	discPodium.Material = &podiumMaterial
-	discPodium.Translate(&vec3.T{-0.5, 0, -0.5}) // Center podium around origin
 	discPodium.Scale(&vec3.Zero, &vec3.T{podiumWidth, podiumHeight, podiumWidth})
 	discPodium.Translate(&discLocation) // Move podium to location
 
-	disc := discPrimitive(sphereRadius)
+	discMaterial := scn.NewMaterial().C(color.Color{R: 1.00, G: 0.80, B: 0.80}).M(0.05, 0.1)
+	disc := scn.NewDisc(&vec3.T{0, 0, 0}, &vec3.T{0, 0, -1}, discRadius, discMaterial).N("Disc primitive")
 	disc.RotateX(&vec3.Zero, -math.Pi/8.0)
 	disc.RotateY(&vec3.Zero, -math.Pi/8.0)
 	disc.Translate(&vec3.T{0.0, podiumHeight + discRadius, 0.0})
 	disc.Translate(&discLocation) // Move disc to location
 
-	scene := scn.SceneNode{
-		Spheres:         []*scn.Sphere{&sphere, &gopherLight},
-		Discs:           []*scn.Disc{&disc},
-		FacetStructures: []*scn.FacetStructure{cornellBox, triangle, spherePodium, discPodium, trianglePodium, gopher, diamond},
-	}
+	scene := scn.NewSceneNode().
+		S(sphere, gopherLight).
+		D(disc).
+		FS(cornellBox, triangle, spherePodium, discPodium, trianglePodium, gopher, diamond)
 
 	animationStartIndex := 0
 	animationEndIndex := amountAnimationFrames - 1
 
-	var animationFrames []scn.Frame
+	animation := scn.NewAnimation(animationName, width, height, magnification, false)
 
 	for frameIndex := animationStartIndex; frameIndex <= animationEndIndex; frameIndex++ {
 		animationProgress := float64(frameIndex) / float64(amountAnimationFrames)
 
 		camera := getCamera(animationProgress, sphereRadius+podiumHeight)
 
-		frame := scn.Frame{
-			Filename:   animationName + "_" + fmt.Sprintf("%06d", frameIndex),
-			FrameIndex: 0,
-			Camera:     &camera,
-			SceneNode:  &scene,
-		}
-
-		animationFrames = append(animationFrames, frame)
-	}
-
-	animation := scn.Animation{
-		AnimationName:     animationName,
-		Frames:            animationFrames,
-		Width:             width,
-		Height:            height,
-		WriteRawImageFile: false,
+		frame := scn.NewFrame(animationName, frameIndex, camera, scene)
+		animation.AddFrame(frame)
 	}
 
 	anm.WriteAnimationToFile(animation, false)
-}
-
-func spherePrimitive(sphereRadius float64) scn.Sphere {
-	material := scn.Material{
-		Color:      &color.Color{R: 0.80, G: 1.00, B: 0.80},
-		Glossiness: 0.3,
-		Roughness:  0.2,
-	}
-	sphere := scn.Sphere{
-		Name:     "Sphere primitive",
-		Origin:   &vec3.T{0, 0, 0},
-		Radius:   sphereRadius,
-		Material: &material,
-	}
-	return sphere
 }
 
 func trianglePrimitive() *scn.FacetStructure {
@@ -202,29 +166,14 @@ func trianglePrimitive() *scn.FacetStructure {
 	return &facetStructure
 }
 
-func discPrimitive(discRadius float64) scn.Disc {
-	material := scn.Material{
-		Color:      &color.Color{R: 1.00, G: 0.80, B: 0.80},
-		Glossiness: 0.05,
-		Roughness:  0.1,
-	}
-	disc := scn.Disc{
-		Name:     "Disc primitive",
-		Normal:   &vec3.T{0, 0, -1},
-		Origin:   &vec3.T{0, 0, 0},
-		Radius:   discRadius,
-		Material: &material,
-	}
-	return disc
-}
-
-func GetCornellBox(scale *vec3.T, lightIntensityFactor float32) *scn.FacetStructure {
+func GetCornellBox(scale *vec3.T, lightIntensityFactor float64) *scn.FacetStructure {
 	var cornellBoxFilename = "cornellbox.obj"
-	var cornellBoxFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/" + cornellBoxFilename
+	var cornellBoxFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + cornellBoxFilename
 
 	cornellBoxFile, err := os.Open(cornellBoxFilenamePath)
 	if err != nil {
-		fmt.Printf("ouupps, something went wrong loading file: '%s'\n%s\n", cornellBoxFilenamePath, err.Error())
+		message := fmt.Sprintf("ouupps, something went wrong loading file: '%s'\n%s\n", cornellBoxFilenamePath, err.Error())
+		panic(message)
 	}
 	defer cornellBoxFile.Close()
 
@@ -232,24 +181,18 @@ func GetCornellBox(scale *vec3.T, lightIntensityFactor float32) *scn.FacetStruct
 	cornellBox.Scale(&vec3.Zero, scale)
 	cornellBox.ClearMaterials()
 	cornellBox.UpdateBounds()
-	fmt.Printf("Cornell box bounds: %+v", cornellBox.Bounds)
+	fmt.Printf("Cornell box bounds: %+v\n", cornellBox.Bounds)
 
-	cornellBox.Material = &scn.Material{
-		Name:  "Cornell box default material",
-		Color: &color.Color{R: 0.95, G: 0.95, B: 0.95},
-		//Roughness: 0.0,
-	}
+	cornellBox.Material = scn.NewMaterial().N("Cornell box default material").
+		C(color.Color{R: 0.95, G: 0.95, B: 0.95})
 
-	lampMaterial := scn.Material{
-		Name:          "Lamp",
-		Color:         &color.Color{R: 1.0, G: 1.0, B: 1.0},
-		Emission:      (&color.Color{R: 1.0, G: 1.0, B: 1.0}).Multiply(lightIntensityFactor),
-		RayTerminator: true,
-	}
-	cornellBox.GetFirstObjectByName("Lamp_1").Material = &lampMaterial
-	cornellBox.GetFirstObjectByName("Lamp_2").Material = &lampMaterial
-	cornellBox.GetFirstObjectByName("Lamp_3").Material = &lampMaterial
-	cornellBox.GetFirstObjectByName("Lamp_4").Material = &lampMaterial
+	lampMaterial := scn.NewMaterial().N("Lamp").
+		E(color.White, lightIntensityFactor, true)
+
+	cornellBox.GetFirstObjectByName("Lamp_1").Material = lampMaterial
+	cornellBox.GetFirstObjectByName("Lamp_2").Material = lampMaterial
+	cornellBox.GetFirstObjectByName("Lamp_3").Material = lampMaterial
+	cornellBox.GetFirstObjectByName("Lamp_4").Material = lampMaterial
 
 	//backWallProjection := scn.NewParallelImageProjection("textures/wallpaper/anemone-rose-flower-eucalyptus-leaves-pampas-grass.png", vec3.Zero, vec3.UnitX.Scaled(scale[0]), vec3.UnitY.Scaled(scale[0]*0.66))
 	//backWallMaterial := *cornellBox.Material
@@ -267,18 +210,19 @@ func GetCornellBox(scale *vec3.T, lightIntensityFactor float32) *scn.FacetStruct
 	floorMaterial.Glossiness = 0.2
 	floorMaterial.Roughness = 0.2
 	//floorMaterial.Projection = &floorProjection
-	cornellBox.GetFirstObjectByName("Floor_2").Material = &floorMaterial
+	cornellBox.ReplaceMaterial("Floor_2", &floorMaterial)
 
 	return cornellBox
 }
 
 func GetGopher(scale *vec3.T) *scn.FacetStructure {
 	var objFilename = "go_gopher_color.obj"
-	var objFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/" + objFilename
+	var objFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + objFilename
 
 	objFile, err := os.Open(objFilenamePath)
 	if err != nil {
-		fmt.Printf("ouupps, something went wrong loading file: '%s'\n%s\n", objFilenamePath, err.Error())
+		message := fmt.Sprintf("ouupps, something went wrong loading file: '%s'\n%s\n", objFilenamePath, err.Error())
+		panic(message)
 	}
 	defer objFile.Close()
 
@@ -293,7 +237,7 @@ func GetGopher(scale *vec3.T) *scn.FacetStructure {
 
 func GetDiamond(scale *vec3.T) *scn.FacetStructure {
 	var objFilename = "diamond.obj"
-	var objFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/" + objFilename
+	var objFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + objFilename
 
 	objFile, err := os.Open(objFilenamePath)
 	if err != nil {
@@ -310,7 +254,7 @@ func GetDiamond(scale *vec3.T) *scn.FacetStructure {
 	return obj
 }
 
-func getCamera(animationProgress float64, focusHeight float64) scn.Camera {
+func getCamera(animationProgress float64, focusHeight float64) *scn.Camera {
 	var cameraOrigin = cameraOrigin // vec3.T{0, 150, -800}
 	var cameraFocus = vec3.T{0, focusHeight, 0}
 
@@ -333,80 +277,6 @@ func getCamera(animationProgress float64, focusHeight float64) scn.Camera {
 	cameraFocus.Add(&cameraFocusAnimationTranslation)
 
 	origin := cameraOrigin.Scaled(cameraDistanceFactor)
-	heading := cameraFocus.Subed(&origin)
-	focalDistance := heading.Length()
 
-	return scn.Camera{
-		Origin:            &origin,
-		Heading:           &heading,
-		ViewUp:            &vec3.T{0, 1, 0},
-		ViewPlaneDistance: viewPlaneDistance,
-		ApertureSize:      cameraAperture,
-		FocusDistance:     focalDistance,
-		Samples:           amountSamples,
-		AntiAlias:         true,
-		Magnification:     magnification,
-		RenderType:        renderType,
-		RecursionDepth:    maxRecursionDepth,
-	}
-}
-
-// getBox return a box which sides all have the unit length 1.
-// It is placed with one corner ni origin (0, 0, 0) and opposite corner in (1, 1, 1).
-// Side normals point outwards from each side.
-func getBox() *scn.FacetStructure {
-	boxP1 := vec3.T{1, 1, 0} // Top right close            3----------2
-	boxP2 := vec3.T{1, 1, 1} // Top right away            /          /|
-	boxP3 := vec3.T{0, 1, 1} // Top left away            /          / |
-	boxP4 := vec3.T{0, 1, 0} // Top left close          4----------1  |
-	boxP5 := vec3.T{1, 0, 0} // Bottom right close      | (7)      |  6
-	boxP6 := vec3.T{1, 0, 1} // Bottom right away       |          | /
-	boxP7 := vec3.T{0, 0, 1} // Bottom left away        |          |/
-	boxP8 := vec3.T{0, 0, 0} // Bottom left close       8----------5
-
-	box := scn.FacetStructure{
-		FacetStructures: []*scn.FacetStructure{
-			{Facets: getRectangleFacets(&boxP1, &boxP2, &boxP3, &boxP4), Name: "ymax"},
-			{Facets: getRectangleFacets(&boxP8, &boxP7, &boxP6, &boxP5), Name: "ymin"},
-			{Facets: getRectangleFacets(&boxP4, &boxP8, &boxP5, &boxP1), Name: "zmin"},
-			{Facets: getRectangleFacets(&boxP6, &boxP7, &boxP3, &boxP2), Name: "zmax"},
-			{Facets: getRectangleFacets(&boxP6, &boxP2, &boxP1, &boxP5), Name: "xmax"},
-			{Facets: getRectangleFacets(&boxP7, &boxP8, &boxP4, &boxP3), Name: "xmin"},
-		},
-	}
-
-	return &box
-}
-
-// Creates a "four corner facet" using four points (p1,p2,p3,p4).
-// The result is two triangles side by side (p1,p2,p4) and (p4,p2,p3).
-// Normal direction is calculated as pointing towards observer if the points are listed in counter-clockwise order.
-// No test nor calculation is made that the points are exactly in the same plane.
-func getRectangleFacets(p1, p2, p3, p4 *vec3.T) []*scn.Facet {
-	//       p1
-	//       *
-	//      / \
-	//     /   \
-	// p2 *-----* p4
-	//     \   /
-	//      \ /
-	//       *
-	//      p3
-	//
-	// (Normal calculated for each sub-triangle and s aimed towards observer.)
-
-	n1v1 := p2.Subed(p1)
-	n1v2 := p4.Subed(p1)
-	normal1 := vec3.Cross(&n1v1, &n1v2)
-	normal1.Normalize()
-
-	n2v1 := p4.Subed(p3)
-	n2v2 := p2.Subed(p3)
-	normal2 := vec3.Cross(&n2v1, &n2v2)
-	normal2.Normalize()
-
-	return []*scn.Facet{
-		{Vertices: []*vec3.T{p1, p2, p4}, Normal: &normal1},
-		{Vertices: []*vec3.T{p4, p2, p3}, Normal: &normal2},
-	}
+	return scn.NewCamera(&origin, &cameraFocus, amountSamples, magnification).V(viewPlaneDistance).A(cameraAperture, "")
 }

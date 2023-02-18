@@ -10,16 +10,16 @@ import (
 
 func NewKerosineLamp(kerosineScale *vec3.T) *scn.FacetStructure {
 	kerosineLamp := loadKerosineLamp(kerosineScale)
-	brassMaterial := scn.NewMaterial().N("brass").C(color.Color{R: 0.8, G: 0.7, B: 0.15}, 1.0).M(0.8, 0.3)
+	brassMaterial := scn.NewMaterial().N("brass").C(color.Color{R: 0.8, G: 0.7, B: 0.15}).M(0.8, 0.3)
 	kerosineLamp.GetFirstObjectByName("base").Material = brassMaterial
 	kerosineLamp.GetFirstObjectByName("handle").Material = brassMaterial
 	kerosineLamp.GetFirstObjectByName("knob").Material = brassMaterial
 	kerosineLamp.GetFirstObjectByName("wick_holder").Material = brassMaterial
 	kerosineLamp.GetFirstObjectByName("flame").Material = scn.NewMaterial().
-		C(color.Color{R: 1.0, G: 0.9, B: 0.7}, 1.0).
+		C(color.Color{R: 1.0, G: 0.9, B: 0.7}).
 		E(color.Color{R: 1.0, G: 0.9, B: 0.7}, 70.0, true)
 	kerosineLamp.GetFirstObjectByName("glass").Material = scn.NewMaterial().
-		C(color.Color{R: 0.93, G: 0.93, B: 0.93}, 1.0).
+		C(color.Color{R: 0.93, G: 0.93, B: 0.93}).
 		T(0.8, false, 0.0).
 		M(0.95, 0.1)
 	return kerosineLamp

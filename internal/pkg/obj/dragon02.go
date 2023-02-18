@@ -38,11 +38,11 @@ func NewDragon02(scale float64, includeDragon bool, includePillar bool) *scn.Fac
 	object.UpdateBounds()
 
 	skinMaterial := scn.NewMaterial().N("skin").
-		C(color.Color{R: 0.6, G: 0.5, B: 0.2}, 1.0).
+		C(color.Color{R: 0.6, G: 0.5, B: 0.2}).
 		M(0.3, 0.2)
 
 	pillarMaterial := scn.NewMaterial().N("pillar").
-		C(color.Color{R: 0.8, G: 0.85, B: 0.7}, 1.0).
+		C(color.Color{R: 0.8, G: 0.85, B: 0.7}).
 		M(0.2, 0.6)
 
 	object.ReplaceMaterial("skin", skinMaterial)

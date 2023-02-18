@@ -28,7 +28,7 @@ func NewStanfordBunny(scale float64) *scn.FacetStructure {
 	object.UpdateBounds()
 
 	skinMaterial := scn.NewMaterial().N("stanford_bunny").
-		C(color.Color{R: 0.9, G: 0.85, B: 0.6}, 1.0).
+		C(color.Color{R: 0.9, G: 0.85, B: 0.6}).
 		M(0.3, 0.6)
 
 	object.ReplaceMaterial("stanford_bunny", skinMaterial)

@@ -41,23 +41,23 @@ type ImageProjection struct {
 	_invertedCoordinateSystemMatrix *mat3.T
 }
 
-func NewParallelImageProjection(textureFilename string, origin vec3.T, u vec3.T, v vec3.T) ImageProjection {
+func NewParallelImageProjection(textureFilename string, origin *vec3.T, u vec3.T, v vec3.T) ImageProjection {
 	return NewImageProjection(ProjectionTypeParallel, textureFilename, origin, u, v, true, true, false, false)
 }
 
-func NewCylindricalImageProjection(textureFilename string, origin vec3.T, u vec3.T, v vec3.T) ImageProjection {
+func NewCylindricalImageProjection(textureFilename string, origin *vec3.T, u vec3.T, v vec3.T) ImageProjection {
 	return NewImageProjection(ProjectionTypeCylindrical, textureFilename, origin, u, v, false, true, false, false)
 }
 
-func NewSphericalImageProjection(textureFilename string, origin vec3.T, u vec3.T, v vec3.T) ImageProjection {
+func NewSphericalImageProjection(textureFilename string, origin *vec3.T, u vec3.T, v vec3.T) ImageProjection {
 	return NewImageProjection(ProjectionTypeSpherical, textureFilename, origin, u, v, false, true, false, false)
 }
 
-func NewImageProjection(projectionType ProjectionType, textureFilename string, origin vec3.T, u vec3.T, v vec3.T, repeatU bool, repeatV bool, flipU bool, flipV bool) ImageProjection {
+func NewImageProjection(projectionType ProjectionType, textureFilename string, origin *vec3.T, u vec3.T, v vec3.T, repeatU bool, repeatV bool, flipU bool, flipV bool) ImageProjection {
 	return ImageProjection{
 		ProjectionType: projectionType,
 		ImageFilename:  textureFilename,
-		Origin:         &origin,
+		Origin:         origin,
 		U:              &u,
 		V:              &v,
 		RepeatU:        repeatU,

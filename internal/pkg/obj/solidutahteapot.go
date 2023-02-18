@@ -27,7 +27,7 @@ func NewSolidUtahTeapot(scale float64) *scn.FacetStructure {
 
 	porcelainMaterial := scn.NewMaterial().
 		N("Porcelain material").
-		C(color.Color{R: 0.88, G: 0.96, B: 0.96}, 1.0).
+		C(color.Color{R: 0.88, G: 0.96, B: 0.96}).
 		M(0.1, 0.1)
 
 	// glassMaterial := scn.NewMaterial().

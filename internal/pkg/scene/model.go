@@ -1,6 +1,7 @@
 package scene
 
 import (
+	"fmt"
 	"github.com/ungerik/go3d/float64/mat3"
 	"github.com/ungerik/go3d/float64/vec3"
 	_ "image/jpeg"
@@ -24,10 +25,35 @@ type Ray struct {
 
 type Animation struct {
 	AnimationName     string
-	Frames            []Frame
+	Frames            []*Frame
 	Width             int
 	Height            int
 	WriteRawImageFile bool
+}
+
+func NewAnimation(name string, pixelWidth int, pixelHeight int, magnification float64, rawFile bool) *Animation {
+	width := int(float64(pixelWidth) * magnification)
+	height := int(float64(pixelHeight) * magnification)
+
+	// Keep image proportions to an even amount of pixel for mp4 encoding
+	if width%2 == 1 {
+		width++
+	}
+	if height%2 == 1 {
+		height++
+	}
+
+	return &Animation{
+		AnimationName:     name,
+		Width:             width,
+		Height:            height,
+		WriteRawImageFile: rawFile,
+	}
+}
+
+func (a *Animation) AddFrame(frame *Frame) *Animation {
+	a.Frames = append(a.Frames, frame)
+	return a
 }
 
 type Frame struct {
@@ -35,6 +61,20 @@ type Frame struct {
 	FrameIndex int
 	Camera     *Camera
 	SceneNode  *SceneNode
+}
+
+func NewFrame(fileName string, frameIndex int, camera *Camera, scene *SceneNode) *Frame {
+	frameFileName := fileName
+	if frameIndex != -1 {
+		frameFileName += "_" + fmt.Sprintf("%06d", frameIndex)
+	}
+
+	return &Frame{
+		Filename:   frameFileName,
+		FrameIndex: frameIndex,
+		Camera:     camera,
+		SceneNode:  scene,
+	}
 }
 
 type Plane struct {

@@ -28,11 +28,11 @@ func NewDrWhoAngel(scale float64) *scn.FacetStructure {
 	object.UpdateBounds()
 
 	statueMaterial := scn.NewMaterial().N("angel").
-		C(color.Color{R: 0.9, G: 0.9, B: 0.9}, 1.0).
+		C(color.Color{R: 0.9, G: 0.9, B: 0.9}).
 		M(0.3, 0.6)
 
 	pillarMaterial := scn.NewMaterial().N("pillar").
-		C(color.Color{R: 0.8, G: 0.8, B: 0.8}, 1.0).
+		C(color.Color{R: 0.8, G: 0.8, B: 0.8}).
 		M(0.1, 0.8)
 
 	object.ReplaceMaterial("angel", statueMaterial)

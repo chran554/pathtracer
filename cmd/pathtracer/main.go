@@ -126,7 +126,7 @@ func main() {
 	fmt.Printf("Total execution time (for %d frames): %s\n", len(animation.Frames), time.Since(startTimestamp))
 }
 
-func writeRenderedImage(animation scn.Animation, frame scn.Frame, renderedPixelData *image.FloatImage) {
+func writeRenderedImage(animation scn.Animation, frame *scn.Frame, renderedPixelData *image.FloatImage) {
 	animationDirectory := filepath.Join(".", "rendered", animation.AnimationName)
 	animationFrameFilename := filepath.Join(animationDirectory, frame.Filename+".png")
 	os.MkdirAll(animationDirectory, os.ModePerm)
@@ -306,7 +306,7 @@ func parallelPixelRendering(renderedPixelData *image.FloatImage, camera *scn.Cam
 		for sampleIndex := 0; sampleIndex < amountSamples; sampleIndex++ {
 			cameraRay := scn.CreateCameraRay(x+renderPass.Dx, y+renderPass.Dy, width, height, camera, sampleIndex)
 			col := tracePath(cameraRay, camera, scene, 0, rayContexts)
-			renderedPixelData.GetPixel(x+renderPass.Dx, y+renderPass.Dy).ChannelAdd(&col)
+			renderedPixelData.GetPixel(x+renderPass.Dx, y+renderPass.Dy).ChannelAdd(col)
 
 			progressbar.Add(1)
 		}

@@ -44,7 +44,8 @@ animations: build_sphere_circle_rotation \
 	build_tessellated_sphere \
 	build_tessellated_sphere_transform \
 	build_experiment \
-	build_gopher
+	build_gopher \
+	build_snookertable
 
 # Build animation scenes
 # -----------------------------------
@@ -123,3 +124,6 @@ build_experiment: build
 
 build_gopher: build
 	go build -o bin/gopher ./cmd/scene/test/gopher
+
+build_snookertable: build
+	go build -o bin/snookertable ./cmd/scene/snookertable

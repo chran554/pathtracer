@@ -37,7 +37,7 @@ func NewDragon01(scale float64) *scn.FacetStructure {
 		T(1.0, true, scn.RefractionIndex_Glass)
 	*/
 	object.Material = scn.NewMaterial().N("dragon").
-		C(color.Color{R: 0.7, G: 0.6, B: 0.3}, 1.0).
+		C(color.Color{R: 0.7, G: 0.6, B: 0.3}).
 		M(0.4, 0.5)
 	object.RotateY(&vec3.Zero, math.Pi/20)
 	object.UpdateBounds()

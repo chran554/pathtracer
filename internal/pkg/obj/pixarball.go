@@ -6,14 +6,14 @@ import (
 )
 
 func NewPixarBall(pixarBallOrigin *vec3.T, pixarBallRadius float64) *scn.Sphere {
+	textureOrigin := pixarBallOrigin.Added(&vec3.T{-pixarBallRadius, -pixarBallRadius, 0})
 	pixarBall := &scn.Sphere{
 		Name:   "pixar ball",
 		Origin: pixarBallOrigin,
 		Radius: pixarBallRadius,
-		Material: scn.NewMaterial().N("pixar ball").PP("textures/pixar_ball_02.png",
-			pixarBallOrigin.Added(&vec3.T{-pixarBallRadius, -pixarBallRadius, 0}),
-			vec3.UnitX.Scaled(pixarBallRadius*2),
-			vec3.UnitY.Scaled(pixarBallRadius*2)),
+		Material: scn.NewMaterial().N("pixar ball").
+			PP("textures/pixar_ball_02.png", &textureOrigin, vec3.UnitX.Scaled(pixarBallRadius*2), vec3.UnitY.Scaled(pixarBallRadius*2)),
 	}
+
 	return pixarBall
 }

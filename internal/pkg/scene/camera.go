@@ -20,7 +20,7 @@ type Camera struct {
 	ViewPlaneDistance float64 // ViewPlaneDistance determine the focal length, the view angle of the camera.
 	_coordinateSystem *mat3.T
 	ApertureSize      float64 // ApertureSize is the size of the aperture opening. The wider the aperture the less focus depth. Value 0.0 is infinite focus depth.
-	ApertureShape     string  // ApertureShape is the file path to a black and white image where white define the aperture shape. Aperture size determine the size of the longest side (width or height) of the image. If nil then a default round aperture shape is used.
+	ApertureShape     string  // ApertureShape is the file path to a black and white image where white define the aperture shape. Aperture size determine the size of the longest side (width or height) of the image. If empty string then a default round aperture shape is used.
 	FocusDistance     float64
 	Samples           int
 	AntiAlias         bool
@@ -29,7 +29,7 @@ type Camera struct {
 	RecursionDepth    int
 }
 
-func NewCamera(origin *vec3.T, focusPoint *vec3.T) *Camera {
+func NewCamera(origin *vec3.T, focusPoint *vec3.T, amountSamples int, magnification float64) *Camera {
 	heading := focusPoint.Subed(origin)
 	focusDistance := heading.Length()
 	heading.Normalize()
@@ -42,9 +42,9 @@ func NewCamera(origin *vec3.T, focusPoint *vec3.T) *Camera {
 		ApertureSize:      0.0, // Use default aperture, with no "Depth of Field" (DOF).
 		ApertureShape:     "",  // Use default, round aperture.
 		FocusDistance:     focusDistance,
-		Samples:           64,
+		Samples:           amountSamples,
 		AntiAlias:         true,
-		Magnification:     1.0,
+		Magnification:     magnification,
 		RenderType:        Pathtracing,
 		RecursionDepth:    4,
 	}
@@ -197,7 +197,7 @@ func roundApertureOffset(amountSamples int, sample int) (float64, float64) {
 
 func getCameraRayIntersectionWithFocalPlane(camera *Camera, perfectHeading *vec3.T) *vec3.T {
 	ray := &Ray{
-		Origin:  &vec3.Zero,
+		Origin:  &vec3.T{0, 0, 0},
 		Heading: perfectHeading,
 	}
 

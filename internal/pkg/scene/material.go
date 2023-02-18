@@ -62,8 +62,8 @@ func (m *Material) N(name string) *Material {
 }
 
 // C is color properties
-func (m *Material) C(color color.Color, scale float64) *Material {
-	m.Color = (&color).Multiply(float32(scale))
+func (m *Material) C(color color.Color) *Material {
+	m.Color = &color
 	return m
 }
 
@@ -96,14 +96,14 @@ func (m *Material) P(projection *ImageProjection) *Material {
 }
 
 // PP is parallel projection properties
-func (m *Material) PP(textureFilename string, origin vec3.T, u vec3.T, v vec3.T) *Material {
+func (m *Material) PP(textureFilename string, origin *vec3.T, u vec3.T, v vec3.T) *Material {
 	parallelImageProjection := NewParallelImageProjection(textureFilename, origin, u, v)
 	m.Projection = &parallelImageProjection
 	return m
 }
 
 // SP is spherical projection (of equirectangular images) properties
-func (m *Material) SP(textureFilename string, origin vec3.T, u vec3.T, v vec3.T) *Material {
+func (m *Material) SP(textureFilename string, origin *vec3.T, u vec3.T, v vec3.T) *Material {
 	sphericalImageProjection := NewSphericalImageProjection(textureFilename, origin, u, v)
 	m.Projection = &sphericalImageProjection
 	return m

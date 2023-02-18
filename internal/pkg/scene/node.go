@@ -13,6 +13,34 @@ type SceneNode struct {
 	Bounds          *Bounds           `json:"-"`
 }
 
+func NewSceneNode() *SceneNode {
+	return &SceneNode{}
+}
+
+func (sn *SceneNode) S(spheres ...*Sphere) *SceneNode {
+	sn.Spheres = append(sn.Spheres, spheres...)
+	sn.UpdateBounds()
+	return sn
+}
+
+func (sn *SceneNode) D(discs ...*Disc) *SceneNode {
+	sn.Discs = append(sn.Discs, discs...)
+	sn.UpdateBounds()
+	return sn
+}
+
+func (sn *SceneNode) FS(facetStructures ...*FacetStructure) *SceneNode {
+	sn.FacetStructures = append(sn.FacetStructures, facetStructures...)
+	sn.UpdateBounds()
+	return sn
+}
+
+func (sn *SceneNode) SN(sceneChildNodes ...*SceneNode) *SceneNode {
+	sn.ChildNodes = append(sn.ChildNodes, sceneChildNodes...)
+	sn.UpdateBounds()
+	return sn
+}
+
 func (sn *SceneNode) Initialize() {
 	// Empty by intention
 }

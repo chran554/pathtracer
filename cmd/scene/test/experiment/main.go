@@ -14,7 +14,7 @@ import (
 var animationName = "experiment"
 
 var environmentRadius = 500.0 * 1000.0
-var environmentEmissionFactor = float32(1.0)
+var environmentEmissionFactor = 1.0
 
 var amountFrames = 1
 
@@ -31,7 +31,6 @@ var viewPlaneDistance = 800.0
 var apertureSize = 0.0 // 0.75 // 2.0
 
 func main() {
-	animation := getAnimation(int(float64(imageWidth)*magnification), int(float64(imageHeight)*magnification))
 
 	/*
 		object := obj.NewDragon02(100, true, true)
@@ -77,14 +76,11 @@ func main() {
 	// environmentSphere := addEnvironmentMapping("textures/equirectangular/nightsky.png")
 
 	// Ground
-	groundProjection := scn.NewParallelImageProjection("textures/ground/grass_short.png", vec3.Zero, vec3.UnitX.Scaled(80/2), vec3.UnitZ.Scaled(50/2))
-	ground := scn.Disc{
-		Name:     "Ground",
-		Origin:   &vec3.Zero,
-		Normal:   &vec3.UnitY,
-		Radius:   environmentRadius,
-		Material: &scn.Material{Name: "Ground material", Color: &color.White, Emission: &color.Black, Glossiness: 0.0, Roughness: 1.0, Projection: &groundProjection},
-	}
+	groundProjection := scn.NewParallelImageProjection("textures/ground/grass_short.png", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(80/2), vec3.UnitZ.Scaled(50/2))
+	groundMaterial := scn.Material{Name: "Ground material", Color: &color.White, Emission: &color.Black, Glossiness: 0.0, Roughness: 1.0, Projection: &groundProjection}
+	ground := scn.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, &groundMaterial).N("Ground")
+
+	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false)
 
 	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
@@ -107,24 +103,16 @@ func main() {
 		cameraFocusPoint[0] = math.Cos(animationProgress*2*math.Pi+cameraStartAngle) * xzRadius2
 		cameraFocusPoint[2] = math.Sin(animationProgress*2*math.Pi+cameraStartAngle) * xzRadius2
 
-		camera := scn.NewCamera(cameraOrigin, cameraFocusPoint).S(amountSamples).D(maxRecursion).A(apertureSize, "").M(magnification)
+		camera := scn.NewCamera(cameraOrigin, cameraFocusPoint, amountSamples, magnification).D(maxRecursion).A(apertureSize, "")
 
-		scene := scn.SceneNode{
-			Spheres:         []*scn.Sphere{&environmentSphere, lamp},
-			Discs:           []*scn.Disc{&ground},
-			ChildNodes:      []*scn.SceneNode{},
-			FacetStructures: []*scn.FacetStructure{object},
-		}
-		// scene.Spheres = append(scene.Spheres, lamps...)
+		scene := scn.NewSceneNode().
+			S(environmentSphere, lamp).
+			D(ground).
+			FS(object)
 
-		frame := scn.Frame{
-			Filename:   animation.AnimationName + "_" + fmt.Sprintf("%06d", frameIndex),
-			FrameIndex: frameIndex,
-			Camera:     camera,
-			SceneNode:  &scene,
-		}
+		frame := scn.NewFrame(animationName, frameIndex, camera, scene)
 
-		animation.Frames = append(animation.Frames, frame)
+		animation.AddFrame(frame)
 	}
 
 	anm.WriteAnimationToFile(animation, false)
@@ -135,7 +123,7 @@ func createLamp(lampName string, size float64, strength float64, lampPosition *v
 		Name:     lampName,
 		Origin:   lampPosition,
 		Radius:   size,
-		Material: scn.NewMaterial().N(lampName).C(color.White, 1.0).E(lampColor, strength, true),
+		Material: scn.NewMaterial().N(lampName).C(color.White).E(lampColor, strength, true),
 	}
 }
 
@@ -155,7 +143,7 @@ func NewCorner(scale float64) *scn.FacetStructure {
 	facets = append(facets, &scn.Facet{Vertices: []*vec3.T{p000, p010, p_11}})
 
 	object := &scn.FacetStructure{Name: "experiment", Facets: facets}
-	object.Material = scn.NewMaterial().N("experiment").C(color.White, 1.0)
+	object.Material = scn.NewMaterial().N("experiment").C(color.White)
 
 	object.ScaleUniform(&vec3.Zero, scale)
 	object.UpdateBounds()
@@ -169,47 +157,14 @@ func NewCorner(scale float64) *scn.FacetStructure {
 	return object
 }
 
-func addEnvironmentMapping(filename string) scn.Sphere {
+func addEnvironmentMapping(filename string) *scn.Sphere {
 	origin := vec3.T{0, 0, 0}
-
-	projection := scn.ImageProjection{
-		ProjectionType: scn.ProjectionTypeSpherical,
-		ImageFilename:  filename,
-		Origin:         &origin,
-		U:              &vec3.T{-0.2, 0, -1},
-		V:              &vec3.T{0, 1, 0},
-		RepeatU:        true,
-		RepeatV:        true,
-		FlipU:          false,
-		FlipV:          false,
-	}
-
-	material := scn.Material{
-		Color:         &color.Color{R: 1.0, G: 1.0, B: 1.0},
-		Emission:      (&color.Color{R: 1.0, G: 1.0, B: 1.0}).Multiply(environmentEmissionFactor),
-		RayTerminator: true,
-		Projection:    &projection,
-	}
-
-	sphere := scn.Sphere{
-		Name:     "Environment mapping",
-		Origin:   &origin,
-		Radius:   environmentRadius,
-		Material: &material,
-	}
+	u := vec3.T{-0.2, 0, -1}
+	v := vec3.T{0, 1, 0}
+	material := scn.NewMaterial().E(color.White, environmentEmissionFactor, true).SP(filename, &origin, u, v)
+	sphere := scn.NewSphere(&origin, environmentRadius, material).N("Environment mapping")
 
 	return sphere
-}
-
-func getAnimation(width int, height int) *scn.Animation {
-	animation := &scn.Animation{
-		AnimationName:     animationName,
-		Frames:            []scn.Frame{},
-		Width:             width,
-		Height:            height,
-		WriteRawImageFile: false,
-	}
-	return animation
 }
 
 func createFile(name string) *os.File {

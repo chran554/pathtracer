@@ -202,8 +202,17 @@ func (fs *FacetStructure) Translate(translation *vec3.T) {
 }
 
 func (fs *FacetStructure) translate(translation *vec3.T, translatedPoints map[*vec3.T]bool, translatedImageProjections map[*ImageProjection]bool) {
+	// Translate image projection (i.e. image projection origin)
 	if fs.Material != nil && fs.Material.Projection != nil {
-		panic(fmt.Sprintf("No facet structure translation implementation for projection type %s", fs.Material.Projection.ProjectionType))
+		origin := fs.Material.Projection.Origin
+		projectionOriginAlreadyTranslated := translatedPoints[origin]
+		projectionAlreadyTranslated := translatedImageProjections[fs.Material.Projection]
+
+		if !projectionOriginAlreadyTranslated && !projectionAlreadyTranslated {
+			origin.Add(translation)
+			translatedPoints[origin] = true
+			translatedImageProjections[fs.Material.Projection] = true
+		}
 	}
 
 	for _, facet := range fs.Facets {

@@ -14,7 +14,7 @@ var ballRadius float64 = 20
 
 var renderType = scn.Pathtracing
 var maxRecursionDepth = 8
-var amountSamples = 64 // 256 * 8 * 3
+var amountSamples = 1024 * 16
 var lensRadius float64 = 0
 
 var viewPlaneDistance = 1500.0
@@ -27,31 +27,15 @@ var magnification = 1.0
 var roofHeight = ballRadius * 3.0
 
 func main() {
-	animation := scn.Animation{
-		AnimationName:     animationName,
-		Frames:            []scn.Frame{},
-		Width:             int(float64(imageWidth) * magnification),
-		Height:            int(float64(imageHeight) * magnification),
-		WriteRawImageFile: false,
-	}
-
-	floorMaterial := scn.NewMaterial().
-		C(color.Color{R: 0.90, G: 0.90, B: 0.90}, 1.0).
-		M(0.2, 0.5)
-
 	openBox := getCornellBox()
-	openBox.GetFirstObjectBySubstructureName("Floor").Material = floorMaterial
 	openBox.Scale(&vec3.Zero, &vec3.T{2 * ballRadius * 3, roofHeight, 3 * ballRadius * 3})
 	openBox.Translate(&vec3.T{-ballRadius * 3, 0, -2 * ballRadius * 3})
 
-	lampEmission := (&color.Color{R: 0.9, G: 0.9, B: 0.9}).Multiply(5.0)
 	lampHeight := roofHeight - 0.1
 	lampSize := ballRadius * 2
+
 	lamp := scn.FacetStructure{
-		Material: &scn.Material{
-			Emission:      lampEmission,
-			RayTerminator: true,
-		},
+		Material: scn.NewMaterial().N("lamp").E(color.White, 3.0, true),
 		Facets: getFlatRectangleFacets(
 			&vec3.T{-lampSize, lampHeight, +lampSize},
 			&vec3.T{+lampSize, lampHeight, +lampSize},
@@ -66,40 +50,37 @@ func main() {
 	}
 
 	sphere1 := scn.Sphere{
-		Name:   "Right sphere",
-		Origin: &vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0},
-		Radius: ballRadius,
-		Material: scn.NewMaterial().
-			C(color.Color{R: 0.90, G: 0.90, B: 0.90}, 1.0),
+		Name:     "Right sphere",
+		Origin:   &vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0},
+		Radius:   ballRadius,
+		Material: scn.NewMaterial().N("right_sphere").C(color.NewColorGrey(0.9)),
 	}
 
 	sphere2 := scn.Sphere{
-		Name:   "Left sphere",
-		Origin: &vec3.T{-(ballRadius + (ballRadius / 2)), ballRadius, 0},
-		Radius: ballRadius,
-		Material: scn.NewMaterial().
-			C(color.Color{R: 0.9, G: 0.9, B: 0.9}, 1.0).
-			M(0.5, 0.5),
-	}
-
-	sphere3 := scn.Sphere{
-		Name:     "Middle sphere",
-		Origin:   &vec3.T{0, ballRadius, ballRadius * 2 / 3},
+		Name:     "Left sphere",
+		Origin:   &vec3.T{-(ballRadius + (ballRadius / 2)), ballRadius, 0},
 		Radius:   ballRadius,
-		Material: scn.NewMaterial().C(color.Color{R: 0.7, G: 0.9, B: 0.6}, 0.7),
+		Material: scn.NewMaterial().N("left_sphere").C(color.NewColorGrey(0.9)),
 	}
 
 	scene.Spheres = append(scene.Spheres, &sphere1)
 	scene.Spheres = append(scene.Spheres, &sphere2)
-	scene.Spheres = append(scene.Spheres, &sphere3)
 
 	camera := getCamera()
 
 	frame := scn.Frame{
-		Filename:   animation.AnimationName,
+		Filename:   animationName,
 		FrameIndex: 0,
 		Camera:     &camera,
 		SceneNode:  &scene,
+	}
+
+	animation := &scn.Animation{
+		AnimationName:     animationName,
+		Frames:            []scn.Frame{},
+		Width:             int(float64(imageWidth) * magnification),
+		Height:            int(float64(imageHeight) * magnification),
+		WriteRawImageFile: false,
 	}
 
 	animation.Frames = append(animation.Frames, frame)
@@ -143,57 +124,26 @@ func getCornellBox() *scn.FacetStructure {
 	boxP7 := vec3.T{0, 0, 1} // Bottom left away        |          |/
 	boxP8 := vec3.T{0, 0, 0} // Bottom left close       8----------5
 
-	boxMaterial := scn.Material{
-		Color:      &color.Color{R: 0.90, G: 0.90, B: 0.90},
-		Glossiness: 0.0,
-		Roughness:  1.0,
-	}
+	boxMaterial := scn.NewMaterial().N("box").C(color.Color{R: 0.90, G: 0.90, B: 0.90})
+	leftWallMaterial := scn.NewMaterial().N("left_wall").C(color.Color{R: 0.95, G: 0.05, B: 0.05})
+	rightWallMaterial := scn.NewMaterial().N("right_wall").C(color.Color{R: 0.05, G: 0.05, B: 0.95})
 
-	leftWallMaterial := scn.Material{
-		Color:      &color.Color{R: 0.85, G: 0.20, B: 0.20},
-		Glossiness: 0.0,
-		Roughness:  1.0,
-	}
-
-	rightWallMaterial := scn.Material{
-		Color:      &color.Color{R: 0.20, G: 0.20, B: 0.85},
-		Glossiness: 0.0,
-		Roughness:  1.0,
-	}
-
-	box := scn.FacetStructure{
+	box := &scn.FacetStructure{
 		Name: "Open box",
 		FacetStructures: []*scn.FacetStructure{
-			{
-				SubstructureName: "Roof",
-				Material:         &boxMaterial,
-				Facets:           getFlatRectangleFacets(&boxP1, &boxP2, &boxP3, &boxP4),
-			},
-			{
-				SubstructureName: "Floor",
-				Material:         &boxMaterial,
-				Facets:           getFlatRectangleFacets(&boxP8, &boxP7, &boxP6, &boxP5),
-			},
-			{
-				SubstructureName: "Back wall",
-				Material:         &boxMaterial,
-				Facets:           getFlatRectangleFacets(&boxP6, &boxP7, &boxP3, &boxP2),
-			},
-			{
-				SubstructureName: "Right side wall",
-				Material:         &rightWallMaterial,
-				Facets:           getFlatRectangleFacets(&boxP6, &boxP2, &boxP1, &boxP5),
-			},
-			{
-				SubstructureName: "Left side wall",
-				Material:         &leftWallMaterial,
-				Facets:           getFlatRectangleFacets(&boxP7, &boxP8, &boxP4, &boxP3),
-				IgnoreBounds:     true,
-			},
+			getRectangleFacetStructure("Roof", boxMaterial, getFlatRectangleFacets(&boxP1, &boxP2, &boxP3, &boxP4)),
+			getRectangleFacetStructure("Floor", boxMaterial, getFlatRectangleFacets(&boxP8, &boxP7, &boxP6, &boxP5)),
+			getRectangleFacetStructure("Back wall", boxMaterial, getFlatRectangleFacets(&boxP6, &boxP7, &boxP3, &boxP2)),
+			getRectangleFacetStructure("Right side wall", rightWallMaterial, getFlatRectangleFacets(&boxP6, &boxP2, &boxP1, &boxP5)),
+			getRectangleFacetStructure("Left side wall", leftWallMaterial, getFlatRectangleFacets(&boxP7, &boxP8, &boxP4, &boxP3)),
 		},
 	}
 
-	return &box
+	return box
+}
+
+func getRectangleFacetStructure(name string, material *scn.Material, facets []*scn.Facet) *scn.FacetStructure {
+	return &scn.FacetStructure{SubstructureName: name, Material: material, Facets: facets}
 }
 
 func getFlatRectangleFacets(p1, p2, p3, p4 *vec3.T) []*scn.Facet {
@@ -203,13 +153,7 @@ func getFlatRectangleFacets(p1, p2, p3, p4 *vec3.T) []*scn.Facet {
 	normal.Normalize()
 
 	return []*scn.Facet{
-		{
-			Vertices: []*vec3.T{p1, p2, p4},
-			Normal:   &normal,
-		},
-		{
-			Vertices: []*vec3.T{p4, p2, p3},
-			Normal:   &normal,
-		},
+		{Vertices: []*vec3.T{p1, p2, p4}, Normal: &normal},
+		{Vertices: []*vec3.T{p4, p2, p3}, Normal: &normal},
 	}
 }

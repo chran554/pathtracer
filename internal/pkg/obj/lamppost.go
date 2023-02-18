@@ -18,7 +18,7 @@ func NewLampPost(lampPostScale *vec3.T) *scn.FacetStructure {
 		RayTerminator: false,
 	}
 
-	lampMaterial := scn.NewMaterial().N("lamp").C(color.White, 1.0).E(color.White, 2.0, true)
+	lampMaterial := scn.NewMaterial().N("lamp").C(color.White).E(color.White, 2.0, true)
 
 	lampPost := loadLampPost(lampPostScale)
 	lampPost.ClearMaterials()

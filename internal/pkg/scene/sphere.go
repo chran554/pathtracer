@@ -13,105 +13,123 @@ type Sphere struct {
 	Material *Material `json:"material,omitempty"`
 }
 
-func (sphere *Sphere) Initialize() {
-	projection := sphere.Material.Projection
+func NewSphere(origin *vec3.T, radius float64, material *Material) *Sphere {
+	return &Sphere{
+		Origin:   origin,
+		Radius:   radius,
+		Material: material,
+	}
+}
+
+func (s *Sphere) Initialize() {
+	projection := s.Material.Projection
 	if projection != nil {
 		projection.Initialize()
 	}
 }
 
-func (sphere *Sphere) Bounds() *Bounds {
+func (s *Sphere) Bounds() *Bounds {
 	return &Bounds{
-		Xmin: sphere.Origin[0] - sphere.Radius,
-		Xmax: sphere.Origin[0] + sphere.Radius,
-		Ymin: sphere.Origin[1] - sphere.Radius,
-		Ymax: sphere.Origin[1] + sphere.Radius,
-		Zmin: sphere.Origin[2] - sphere.Radius,
-		Zmax: sphere.Origin[2] + sphere.Radius,
+		Xmin: s.Origin[0] - s.Radius,
+		Xmax: s.Origin[0] + s.Radius,
+		Ymin: s.Origin[1] - s.Radius,
+		Ymax: s.Origin[1] + s.Radius,
+		Zmin: s.Origin[2] - s.Radius,
+		Zmax: s.Origin[2] + s.Radius,
 	}
 }
 
-func (sphere *Sphere) Translate(translation *vec3.T) {
+func (s *Sphere) Translate(translation *vec3.T) {
 	translatedPoints := make(map[*vec3.T]bool)
 	translatedImageProjections := make(map[*ImageProjection]bool)
 
-	sphere.translate(translation, translatedPoints, translatedImageProjections)
+	s.translate(translation, translatedPoints, translatedImageProjections)
 }
 
-func (sphere *Sphere) translate(translation *vec3.T, translatedPoints map[*vec3.T]bool, translatedImageProjections map[*ImageProjection]bool) {
-	if sphere.Material != nil && sphere.Material.Projection != nil {
-		panic(fmt.Sprintf("No sphere translation implementation for projection type %s", sphere.Material.Projection.ProjectionType))
+func (s *Sphere) translate(translation *vec3.T, translatedPoints map[*vec3.T]bool, translatedImageProjections map[*ImageProjection]bool) {
+	// Translate image projection (i.e. image projection origin)
+	if s.Material != nil && s.Material.Projection != nil {
+		origin := s.Material.Projection.Origin
+		projectionOriginAlreadyTranslated := translatedPoints[origin]
+		projectionAlreadyTranslated := translatedImageProjections[s.Material.Projection]
+
+		if !projectionOriginAlreadyTranslated && !projectionAlreadyTranslated {
+			origin.Add(translation)
+			translatedPoints[origin] = true
+			translatedImageProjections[s.Material.Projection] = true
+		}
 	}
 
-	originAlreadyTranslated := translatedPoints[sphere.Origin]
+	// Translate sphere origin
+	originAlreadyTranslated := translatedPoints[s.Origin]
 
 	if !originAlreadyTranslated {
-		sphere.Origin.Add(translation)
-		translatedPoints[sphere.Origin] = true
+		s.Origin.Add(translation)
+		translatedPoints[s.Origin] = true
 	}
 }
 
-func (sphere *Sphere) Scale(scaleOrigin *vec3.T, scale *vec3.T) {
+func (s *Sphere) Scale(scaleOrigin *vec3.T, scale *vec3.T) {
 	scaledPoints := make(map[*vec3.T]bool)
 	scaledImageProjections := make(map[*ImageProjection]bool)
 
-	sphere.scale(scaleOrigin, scale, scaledPoints, scaledImageProjections)
+	s.scale(scaleOrigin, scale, scaledPoints, scaledImageProjections)
 }
 
-func (sphere *Sphere) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool, scaledImageProjections map[*ImageProjection]bool) {
+func (s *Sphere) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool, scaledImageProjections map[*ImageProjection]bool) {
 	panic("Scale of sphere is not yet implemented")
 }
 
-func (sphere *Sphere) RotateX(rotationOrigin *vec3.T, angle float64) {
+func (s *Sphere) RotateX(rotationOrigin *vec3.T, angle float64) {
 	rotatedImageProjections := make(map[*ImageProjection]bool)
 	rotatedPoints := make(map[*vec3.T]bool)
 
 	rotationMatrix := mat3.T{}
 	rotationMatrix.AssignXRotation(angle)
 
-	sphere.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedImageProjections)
+	s.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedImageProjections)
 }
 
-func (sphere *Sphere) RotateY(rotationOrigin *vec3.T, angle float64) {
+func (s *Sphere) RotateY(rotationOrigin *vec3.T, angle float64) {
 	rotatedImageProjections := make(map[*ImageProjection]bool)
 	rotatedPoints := make(map[*vec3.T]bool)
 
 	rotationMatrix := mat3.T{}
 	rotationMatrix.AssignYRotation(angle)
 
-	sphere.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedImageProjections)
+	s.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedImageProjections)
 }
 
-func (sphere *Sphere) RotateZ(rotationOrigin *vec3.T, angle float64) {
+func (s *Sphere) RotateZ(rotationOrigin *vec3.T, angle float64) {
 	rotatedImageProjections := make(map[*ImageProjection]bool)
 	rotatedPoints := make(map[*vec3.T]bool)
 
 	rotationMatrix := mat3.T{}
 	rotationMatrix.AssignZRotation(angle)
 
-	sphere.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedImageProjections)
+	s.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedImageProjections)
 }
 
 // rotate "rotates" a sphere. It does not rotate the sphere per se but rather rotates any projection associated with the sphere.
-func (sphere *Sphere) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedProjections map[*ImageProjection]bool) {
-	originAlreadyRotated := rotatedPoints[sphere.Origin]
+func (s *Sphere) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedProjections map[*ImageProjection]bool) {
+	originAlreadyRotated := rotatedPoints[s.Origin]
 
 	if !originAlreadyRotated {
-		sphere.Origin.Sub(rotationOrigin)
-		sphere.Origin[2] *= -1 // Change to right hand coordinate system from left hand coordinate system
-		rotatedProjectionOrigin := rotationMatrix.MulVec3(sphere.Origin)
+		newVertex := s.Origin.Subed(rotationOrigin)
+		newVertex[2] *= -1 // Change to right hand coordinate system from left hand coordinate system
+		rotatedProjectionOrigin := rotationMatrix.MulVec3(&newVertex)
 		rotatedProjectionOrigin[2] *= -1 // Change back from right hand coordinate system to left hand coordinate system
 		rotatedProjectionOrigin.Add(rotationOrigin)
 
-		sphere.Origin[0] = rotatedProjectionOrigin[0]
-		sphere.Origin[1] = rotatedProjectionOrigin[1]
-		sphere.Origin[2] = rotatedProjectionOrigin[2]
+		s.Origin[0] = rotatedProjectionOrigin[0]
+		s.Origin[1] = rotatedProjectionOrigin[1]
+		s.Origin[2] = rotatedProjectionOrigin[2]
 
-		rotatedPoints[sphere.Origin] = true
+		rotatedPoints[s.Origin] = true
 	}
 
-	if sphere.Material != nil && sphere.Material.Projection != nil {
-		imageProjection := sphere.Material.Projection
+	if s.Material != nil && s.Material.Projection != nil {
+		imageProjection := s.Material.Projection
 		projectionType := imageProjection.ProjectionType
 
 		imageProjectionAlreadyRotated := rotatedProjections[imageProjection]
@@ -166,9 +184,14 @@ func (sphere *Sphere) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rota
 	}
 }
 
-func (sphere *Sphere) Normal(point *vec3.T) *vec3.T {
-	normal := point.Subed(sphere.Origin)
+func (s *Sphere) Normal(point *vec3.T) *vec3.T {
+	normal := point.Subed(s.Origin)
 	normal.Normalize()
 
 	return &normal
+}
+
+func (s *Sphere) N(name string) *Sphere {
+	s.Name = name
+	return s
 }

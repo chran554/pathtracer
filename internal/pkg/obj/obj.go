@@ -522,7 +522,7 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 			// Unlike a real transparent material, the dissolve does not depend upon
 			// material thickness nor does it have any spectral character.  Dissolve
 			// works on all illumination models.
-			currentMaterial.Transparency = parseFloat64(tokens[1])
+			currentMaterial.Transparency = 1.0 - parseFloat64(tokens[1])
 			currentMaterial.SolidObject = false
 		case "illum":
 			// illum illum_#

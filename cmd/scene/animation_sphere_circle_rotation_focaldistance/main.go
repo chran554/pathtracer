@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math"
 	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
@@ -24,14 +23,15 @@ var magnification = 1.0
 var cameraOrigin = vec3.T{0, 200, -200}
 
 func main() {
-	animation := scn.Animation{
-		AnimationName: "sphere_circle_rotation_focaldistance_hires",
-		Frames:        []scn.Frame{},
-		Width:         800,
-		Height:        600,
-	}
+	animation := scn.NewAnimation("sphere_circle_rotation_focaldistance_hires", 800, 600, magnification, false)
 
-	nominalFocalDistance := cameraOrigin.Length()
+	groundOrigin := &vec3.T{0, 0, 0}
+	groundMaterial := scn.NewMaterial().
+		C(color.Color{R: 0.5, G: 0.5, B: 0.5}).
+		PP("textures/white_marble.png", groundOrigin, vec3.UnitX.Scaled(50), vec3.UnitZ.Scaled(50))
+	ground := scn.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, 600, groundMaterial)
+
+	nominalFocusDistance := cameraOrigin.Length()
 
 	ballAngle := (2.0 * math.Pi) / float64(amountBalls)
 	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
@@ -39,17 +39,14 @@ func main() {
 		deltaFrameAngle := ballAngle * animationProgress
 
 		// Focal plane distance animation
-		//focalDistance := nominalFocalDistance
-		focalDistance := nominalFocalDistance + circleRadius*math.Sin(math.Pi*2.0*animationProgress)
+		//focusDistance := nominalFocusDistance
+		focusDistance := nominalFocusDistance + circleRadius*math.Sin(math.Pi*2.0*animationProgress)
 
 		// View plane distance animation
 		viewPlaneDistance := nominalViewPlaneDistance
 		//viewPlaneDistance := nominalViewPlaneDistance + (nominalViewPlaneDistance/2.0)*float64(math.Sin(math.Pi*2.0*animationProgress))
 
-		scene := scn.SceneNode{
-			Spheres: []*scn.Sphere{},
-			Discs:   getBottomPlate(),
-		}
+		scene := scn.NewSceneNode().D(ground)
 
 		for ballIndex := 0; ballIndex < amountBalls; ballIndex++ {
 			s := 2.0 * math.Pi
@@ -58,62 +55,20 @@ func main() {
 			x := circleRadius * math.Cos(angle+deltaFrameAngle)
 			z := circleRadius * math.Sin(angle+deltaFrameAngle)
 
-			sphere := scn.Sphere{
-				Origin: &vec3.T{x, ballRadius, z},
-				Radius: ballRadius,
-				Material: &scn.Material{
-					Color:    &color.Color{R: 1, G: 1, B: 1},
-					Emission: nil,
-				},
-			}
+			sphere := scn.NewSphere(&vec3.T{x, ballRadius, z}, ballRadius, scn.NewMaterial())
 
-			scene.Spheres = append(scene.Spheres, &sphere)
+			scene.S(sphere)
 		}
 
-		camera := getCamera(focalDistance, viewPlaneDistance)
-		frame := scn.Frame{
-			Filename:   animation.AnimationName + "_" + fmt.Sprintf("%06d", frameIndex),
-			FrameIndex: frameIndex,
-			Camera:     &camera,
-			SceneNode:  &scene,
-		}
+		camera := scn.NewCamera(&cameraOrigin, &vec3.T{0, ballRadius, 0}, amountSamples, magnification).
+			A(lensRadius, "").
+			V(viewPlaneDistance).
+			F(focusDistance)
+
+		frame := scn.NewFrame(animation.AnimationName, frameIndex, camera, scene)
 
 		animation.Frames = append(animation.Frames, frame)
 	}
 
 	anm.WriteAnimationToFile(animation, false)
-}
-
-func getCamera(focalDistance float64, viewPlaneDistance float64) scn.Camera {
-	return scn.Camera{
-		Origin:            &cameraOrigin,
-		Heading:           &vec3.T{-cameraOrigin[0], -(cameraOrigin[1] - ballRadius), -cameraOrigin[2]},
-		ViewUp:            &vec3.T{0, 1, 0},
-		ViewPlaneDistance: viewPlaneDistance,
-		ApertureSize:      lensRadius,
-		FocusDistance:     focalDistance,
-		Samples:           amountSamples,
-		AntiAlias:         true,
-		Magnification:     magnification,
-	}
-}
-
-func getBottomPlate() []*scn.Disc {
-	origin := vec3.T{0, 0, 0}
-
-	u := vec3.T{50, 0, 0}
-	v := vec3.T{0, 0, 50}
-	parallelImageProjection := scn.NewParallelImageProjection("textures/white_marble.png", origin, u, v)
-	return []*scn.Disc{
-		{
-			Origin: &origin,
-			Normal: &vec3.T{0, 1, 0},
-			Radius: 600,
-			Material: &scn.Material{
-				Color:      &color.Color{R: 0.5, G: 0.5, B: 0.5},
-				Emission:   nil,
-				Projection: &parallelImageProjection,
-			},
-		},
-	}
 }
