@@ -22,7 +22,7 @@ func main() {
 
 	projectionU := vec3.T{discRadius / 2.0, 0, 0}
 	projectionV := vec3.T{0, 0, discRadius / 2.0}
-	discTextureMaterial := scn.NewMaterial().PP("textures/test/uv.png", projectionOrigin, projectionU, projectionV)
+	discTextureMaterial := scn.NewMaterial().PP("textures/test/uv.png", &projectionOrigin, projectionU, projectionV)
 	texturedDisc := scn.NewDisc(&discOrigin, &vec3.T{0, 1, 0}, discRadius, discTextureMaterial)
 
 	lamp := scn.NewSphere(&vec3.T{0, 250, 0}, 150.0, scn.NewMaterial().E(color.White, 5.0, true))

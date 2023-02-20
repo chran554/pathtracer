@@ -12,10 +12,8 @@ var animationName = "cornellbox"
 
 var ballRadius float64 = 20
 
-var renderType = scn.Pathtracing
 var maxRecursionDepth = 8
 var amountSamples = 1024 * 16
-var lensRadius float64 = 0
 
 var viewPlaneDistance = 1500.0
 var cameraDistanceFactor = 1.0
@@ -34,7 +32,7 @@ func main() {
 	lampHeight := roofHeight - 0.1
 	lampSize := ballRadius * 2
 
-	lamp := scn.FacetStructure{
+	lamp := &scn.FacetStructure{
 		Material: scn.NewMaterial().N("lamp").E(color.White, 3.0, true),
 		Facets: getFlatRectangleFacets(
 			&vec3.T{-lampSize, lampHeight, +lampSize},
@@ -44,71 +42,25 @@ func main() {
 		),
 	}
 
-	scene := scn.SceneNode{
-		Spheres:         []*scn.Sphere{},
-		FacetStructures: []*scn.FacetStructure{openBox, &lamp},
-	}
+	rightSphereMaterial := scn.NewMaterial().N("right_sphere").C(color.NewColorGrey(0.9))
+	leftSphereMaterial := scn.NewMaterial().N("left_sphere").C(color.NewColorGrey(0.9))
 
-	sphere1 := scn.Sphere{
-		Name:     "Right sphere",
-		Origin:   &vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0},
-		Radius:   ballRadius,
-		Material: scn.NewMaterial().N("right_sphere").C(color.NewColorGrey(0.9)),
-	}
+	sphere1 := scn.NewSphere(&vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0}, ballRadius, rightSphereMaterial).N("Right sphere")
+	sphere2 := scn.NewSphere(&vec3.T{-(ballRadius + (ballRadius / 2)), ballRadius, 0}, ballRadius, leftSphereMaterial).N("Left sphere")
 
-	sphere2 := scn.Sphere{
-		Name:     "Left sphere",
-		Origin:   &vec3.T{-(ballRadius + (ballRadius / 2)), ballRadius, 0},
-		Radius:   ballRadius,
-		Material: scn.NewMaterial().N("left_sphere").C(color.NewColorGrey(0.9)),
-	}
+	scene := scn.NewSceneNode().S(sphere1, sphere2).FS(openBox, lamp)
 
-	scene.Spheres = append(scene.Spheres, &sphere1)
-	scene.Spheres = append(scene.Spheres, &sphere2)
-
-	camera := getCamera()
-
-	frame := scn.Frame{
-		Filename:   animationName,
-		FrameIndex: 0,
-		Camera:     &camera,
-		SceneNode:  &scene,
-	}
-
-	animation := &scn.Animation{
-		AnimationName:     animationName,
-		Frames:            []scn.Frame{},
-		Width:             int(float64(imageWidth) * magnification),
-		Height:            int(float64(imageHeight) * magnification),
-		WriteRawImageFile: false,
-	}
-
-	animation.Frames = append(animation.Frames, frame)
-
-	anm.WriteAnimationToFile(animation, false)
-}
-
-func getCamera() scn.Camera {
 	cameraOrigin := vec3.T{0, ballRadius * 2, -15 * ballRadius}
 	cameraOrigin.Scale(cameraDistanceFactor)
-
 	focusPoint := vec3.T{0, ballRadius, 0}
-	heading := focusPoint.Subed(&cameraOrigin)
-	focalDistance := heading.Length()
+	camera := scn.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).V(viewPlaneDistance).D(maxRecursionDepth)
 
-	return scn.Camera{
-		Origin:            &cameraOrigin,
-		Heading:           &heading,
-		ViewUp:            &vec3.T{0, 1, 0},
-		ViewPlaneDistance: viewPlaneDistance,
-		ApertureSize:      lensRadius,
-		FocusDistance:     focalDistance,
-		Samples:           amountSamples,
-		AntiAlias:         true,
-		Magnification:     magnification,
-		RenderType:        renderType,
-		RecursionDepth:    maxRecursionDepth,
-	}
+	frame := scn.NewFrame(animationName, -1, camera, scene)
+
+	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true)
+	animation.AddFrame(frame)
+
+	anm.WriteAnimationToFile(animation, false)
 }
 
 func getCornellBox() *scn.FacetStructure {
