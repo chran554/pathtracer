@@ -33,7 +33,7 @@ animations: build_sphere_circle_rotation \
 	build_objectfile_test \
 	build_gordian_knot \
 	build_diamondsR4ever \
-	build_dop_test \
+	build_dof_test \
 	build_primitive_display \
 	build_aperture_shape_test \
 	build_aperture_shape_test2 \
@@ -89,8 +89,8 @@ build_gordian_knot: build
 build_diamondsR4ever: build
 	go build -o bin/diamondsR4ever ./cmd/scene/diamondsR4ever
 
-build_dop_test: build
-	go build -o bin/dop_test ./cmd/scene/test/dop_test
+build_dof_test: build
+	go build -o bin/dof_test ./cmd/scene/test/dof_test
 
 build_primitive_display: build
 	go build -o bin/primitive_display ./cmd/scene/primitive_display

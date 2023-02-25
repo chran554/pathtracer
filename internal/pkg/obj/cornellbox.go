@@ -10,7 +10,7 @@ import (
 
 func NewCornellBox(scale *vec3.T, lightIntensityFactor float64) *scn.FacetStructure {
 	var cornellBoxFilename = "cornellbox.obj"
-	var cornellBoxFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/" + cornellBoxFilename
+	var cornellBoxFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + cornellBoxFilename
 
 	cornellBoxFile, err := os.Open(cornellBoxFilenamePath)
 	if err != nil {
@@ -43,7 +43,7 @@ func NewCornellBox(scale *vec3.T, lightIntensityFactor float64) *scn.FacetStruct
 	cornellBox.GetFirstObjectByName("Wall_left").Material = &sideWallMaterial
 	cornellBox.GetFirstObjectByName("Wall_right").Material = &sideWallMaterial
 
-	floorProjection := scn.NewParallelImageProjection("textures/tilesf4.jpeg", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale[0]*0.5), vec3.UnitZ.Scaled(scale[0]*0.5))
+	floorProjection := scn.NewParallelImageProjection("textures/floor/tilesf4.jpeg", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale[0]*0.5), vec3.UnitZ.Scaled(scale[0]*0.5))
 	floorMaterial := *cornellBox.Material
 	floorMaterial.M(0.1, 0.2).P(&floorProjection)
 	cornellBox.GetFirstObjectByName("Floor_2").Material = &floorMaterial

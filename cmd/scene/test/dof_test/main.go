@@ -10,12 +10,12 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "dop_test"
+var animationName = "dof_test"
 
 var ballRadius float64 = 30
 
-var amountSamples = 128 * 4 * 4
-var lensRadius = 12.0 // 7.0 // 15.0
+var amountSamples = 128 * 8 * 8 * 3
+var lensRadius = 0.0 // 12.0
 
 var viewPlaneDistance = 2000.0
 var cameraDistanceFactor = 1.0
@@ -25,7 +25,7 @@ var imageHeight = 400
 var magnification = 1.0
 
 func main() {
-	cornellBox := obj.NewCornellBox(&vec3.T{500, 300, 500}, 9.0) // cm, as units. I.e. a 5x3x5m room
+	cornellBox := obj.NewCornellBox(&vec3.T{500, 300, 500}, 7.0) // cm, as units. I.e. a 5x3x5m room
 
 	amountSpheres := 5
 	sphereSpread := ballRadius * 2.0 * (float64(amountSpheres) + 1)

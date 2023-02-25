@@ -13,7 +13,7 @@ import (
 
 var environmentEnvironMap = "textures/equirectangular/sunset horizon 2800x1400.jpg"
 var environmentRadius = 100.0 * 1000.0
-var environmentEmissionFactor = 2.0
+var environmentEmissionFactor = 0.15
 
 var animationName = "aperture_shape_test"
 var amountFrames = 1
@@ -22,21 +22,18 @@ var imageWidth = 1280
 var imageHeight = 1024
 var magnification = 1.0
 
-var renderType = scn.Pathtracing
-var amountSamples = 512 * 6
-var maxRecursion = 4
+var amountSamples = 512 * 2 * 10
 
-var gopherLightEmissionFactor = 5.0
+var gopherLightEmissionFactor = 0.0 // 75.0
 
-var lampEmissionFactor = 5.0
+var lampEmissionFactor = 1.5
 
-var amountSpheres = 400
+var amountSpheres = 1000
 var sphereRadius = 250.0
 
-var sphereMinDistance = 1.0 * 1000.0
-var sphereMaxDistance = environmentRadius * 0.75
+var sphereMinDistance = -1500.0
+var sphereMaxDistance = environmentRadius * 0.3
 
-var viewPlaneDistance = 800.0
 var apertureSize = 20.0 //500.0
 
 func main() {
@@ -50,14 +47,15 @@ func main() {
 
 	// Gopher
 
-	gopher := obj.NewGopher(3)
+	gopher := obj.NewGopher(600)
 	gopher.RotateY(&vec3.Zero, math.Pi*7.0/8.0)
-	gopher.Translate(&vec3.T{0, -gopher.Bounds.Ymin, -gopher.Bounds.Zmin})
+	gopher.UpdateBounds()
+	gopher.Translate(&vec3.T{0, -gopher.Bounds.Ymin, -gopher.Bounds.Zmin * 0.8})
 	gopher.UpdateBounds()
 
-	gopherLightPosition := vec3.T{gopher.Bounds.Center()[0] - 400, gopher.Bounds.Center()[1] + 400, gopher.Bounds.Center()[2] - 800}
-	gopherLightMaterial := scn.NewMaterial().E(color.Color{R: 15, G: 14.0, B: 12.0}, gopherLightEmissionFactor, true)
-	gopherLight := scn.NewSphere(&gopherLightPosition, 100, gopherLightMaterial).N("Gopher light")
+	gopherLightPosition := vec3.T{gopher.Bounds.Center()[0] - 350, gopher.Bounds.Center()[1] + 350, gopher.Bounds.Center()[2] - 700}
+	gopherLightMaterial := scn.NewMaterial().E(color.NewColorKelvin(5000), gopherLightEmissionFactor, true)
+	gopherLight := scn.NewSphere(&gopherLightPosition, 80, gopherLightMaterial).N("Gopher light")
 
 	// Ground
 
@@ -80,7 +78,7 @@ func main() {
 		SN(childSceneNode)
 
 	startAngle := math.Pi / 2.0
-	xPosMax := 300.0
+	xPosMax := 250.0
 	yPosMax := gopher.Bounds.SizeY() * 0.75
 	yPosMin := gopher.Bounds.SizeY() * 0.15
 
@@ -96,7 +94,9 @@ func main() {
 		yPos := yPosMin + (yPosMax-yPosMin)*(math.Sin(angle+startAngle)+1.0)/2.0
 		cameraOrigin := vec3.T{xPos, yPos, -600}
 
-		camera := scn.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).A(apertureSize, "textures/aperture/heart.png")
+		camera := scn.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).
+			A(apertureSize, "textures/aperture/heart.png").
+			V(600)
 
 		frame := scn.NewFrame(animationName, frameIndex, camera, scene)
 
@@ -115,8 +115,8 @@ func getSphere(radius float64, minDistance, maxDistance float64) *scn.Sphere {
 
 	sphereMaterial := scn.NewMaterial().C(sphereColor).E(sphereColor, lampEmissionFactor, true)
 
-	x := (rand.Float64() - 0.5) * 2 * (maxDistance / 2.0)
-	y := math.Pow(rand.Float64(), 2.0) * (maxDistance / 2.0)
+	x := (rand.Float64() - 0.5) * 2 * (maxDistance * 2 / 2.0)
+	y := math.Pow(rand.Float64(), 2.0) * (maxDistance * 2 / 2.0)
 	z := minDistance + rand.Float64()*(maxDistance-minDistance)
 
 	origin := vec3.T{x, y, z}

@@ -7,7 +7,11 @@ image::documentation/images/go_gopher.png[Go Gopher]
 
 == Gallery
 
-Some images created during development can be found in the link:documentation/gallery/gallery.adoc[Gallery].
+Some fancy images created during development can be found in the link:documentation/gallery/gallery.adoc[Gallery].
+
+== Functionality on display
+
+Images created to display certain core functionality of the raytracer can be found in the link:documentation/functionality/functionality.adoc[Functionality Gallery].
 
 == How to run
 
@@ -31,24 +35,29 @@ For example:
 
 This will build and run the rendering of a cornell box image.
 
-== Features
+== Feature summary
+
+A lot of functionality is on display in the link:documentation/functionality/functionality.adoc[Functionality Gallery].
 
 * Load scene-files (json-based file format) capable of multi frame animations.
 * Pathtracing algorithm
 * Primitives: sphere, disc (circle on plane), triangle (facet)
-* Reflection (mirror)
+* Reflection (glossy/mirror with roughness/brushed for metallic effects)
 * Color definitions by RGB
+* Gamma correction on loaded textures and on rendered image export.
 * Texture projections: sphere (equirectangular), cylindrical, flat (parallel)
 * Progressive/recursive pixel rendering, a quite useful overview after only 5% rendering.
-* Bounding boxes
-* Super sampling: Anti alias
-* Super sampling: DOP - Depth of field (focal distance and "aperture size")
+* Bounding boxes (orthogonal aligned)
+* Super sampling: Anti alias (smooth edges)
+* Super sampling: DOF - xref:documentation/functionality/dof/dof.adoc[Depth of field] (focal distance and "aperture size")
+* Super sampling: DOF - Depth of field - xref:documentation/functionality/dof/dof.adoc[aperture shape] (free form shape)
 * Save image in RAW-format ("praw") for post light editing.
 * Sending broadcast (UDP) messages of rendered pixels to render monitor
-* Metallic parameters "glossy" and "roughness"
 
 === TODO
 
 * Refraction - using refraction index
+* Refraction - Fresnel (dielectric)
+* Refraction - Fresnel (conductor/metal)
 * Refraction - color absorption in gas and liquid (solid) using Beer-Lambert Law
 * ...

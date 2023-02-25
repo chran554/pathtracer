@@ -11,6 +11,7 @@ import (
 	"math"
 	"os"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/util"
 	"strconv"
 )
 
@@ -110,9 +111,9 @@ func WriteImage(filename string, floatImage *FloatImage) {
 		for y := 0; y < height; y++ {
 			pixelValue := floatImage.GetPixel(x, y)
 
-			r := uint8(clamp(0, 255, math.Round(float64(pixelValue.R)*255.0)))
-			g := uint8(clamp(0, 255, math.Round(float64(pixelValue.G)*255.0)))
-			b := uint8(clamp(0, 255, math.Round(float64(pixelValue.B)*255.0)))
+			r := uint8(util.Clamp(0, 255, math.Round(float64(pixelValue.R)*255.0)))
+			g := uint8(util.Clamp(0, 255, math.Round(float64(pixelValue.G)*255.0)))
+			b := uint8(util.Clamp(0, 255, math.Round(float64(pixelValue.B)*255.0)))
 
 			image.Set(x, y, col.RGBA{R: r, G: g, B: b, A: 255})
 		}
@@ -130,16 +131,6 @@ func WriteImage(filename string, floatImage *FloatImage) {
 	if err != nil {
 		fmt.Println("Oups, no image encode for you today.")
 		os.Exit(1)
-	}
-}
-
-func clamp(min float64, max float64, value float64) float64 {
-	if value < min {
-		return min
-	} else if value > max {
-		return max
-	} else {
-		return value
 	}
 }
 

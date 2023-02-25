@@ -1,0 +1,27 @@
+= Depth of field (and aperture shape)
+:toc:
+
+To make a common pinhole camera to be more like a real world camera with depth of field (i.e. able to have parts of the image "out of focus" either in front or behind a focus plane) you will need a "focus distance" and an "aperture size" (or lens radius if you will).
+
+This will not make a accurate simulation, with respect to physics and mathematics, of a very complex camera lens with multiple movable glass lenses in groups and all the real world artefacts that comes with it. But it will still make out a very decent, simplified, model of how a camera with aperture works.
+
+1. First shoot a "perfect" ray from the camera at center of the aperture through your view plane pixel position (pixelX, pixelY). The point where this ray intersect the focus plane is the focus point for the pixel (pixelX, pixelY).
+
+2. All other sample rays shot from the camera in your path tracer should start at random point on the aperture disc and pass through the focus point for the pixel (pixelX, pixelY).
+
+The simplest aperture shape is usually "round circle" as it is simple to implement and very camera like. However, if you do not sample start points for rays randomly on the aperture disc but rather randomly within another shape than a round circle, your out of focus bokeh will be of the shape you sampled. For example heart, star, or letter 'F' shaped as shown in example images.
+
+.How different aperture shapes, and depth of field in general, works
+image::dof.png[How different apertures, and depth of field in general, works]
+
+.No depth of field. Rendered with the common pinhole camera, a camera with infinite depth of field (everything is in focus). It is the same result as having an infinitely small aperture, an aperture of size 0.0 (units).
+image::dof_01.png[alt="Depth of field (none)"]
+
+.Depth of field using aperture 12.0 (in units, not actual 12f as in camera lenses) and "focus distance" (the distance to perfect focus point) approximately at the middle sphere.
+image::dof_02.png[alt="Depth of field"]
+
+.Different aperture shapes for a matrix of luminous balls. Note that the out of focus bokeh in front of the focus plane is upside down and flipped right with left, while out of focus bokeh in the back has the normal shape.
+image::aperture_shape.png[Different aperture shapes]
+
+.Lonesome Gopher in love
+image::aperture_shape_demo.png[Gopher in love]

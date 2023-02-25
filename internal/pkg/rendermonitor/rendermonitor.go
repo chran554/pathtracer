@@ -9,6 +9,7 @@ import (
 	"os"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/image"
+	"pathtracer/internal/pkg/util"
 	"sync"
 	"time"
 )
@@ -82,9 +83,9 @@ func getMessage(imageGroup string, imageName string,
 	c = image.GammaEncodeColor(&c, image.GammaDefault)
 	c.Multiply(255.0)
 
-	r := uint8(clamp(0, 255, math.Round(float64(c.R))))
-	g := uint8(clamp(0, 255, math.Round(float64(c.G))))
-	b := uint8(clamp(0, 255, math.Round(float64(c.B))))
+	r := uint8(util.Clamp(0, 255, math.Round(float64(c.R))))
+	g := uint8(util.Clamp(0, 255, math.Round(float64(c.G))))
+	b := uint8(util.Clamp(0, 255, math.Round(float64(c.B))))
 
 	rawColor := [3]uint8{r, g, b}
 
@@ -116,14 +117,4 @@ func getMessage(imageGroup string, imageName string,
 	}
 
 	return jsonMessage
-}
-
-func clamp(min float64, max float64, value float64) float64 {
-	if value < min {
-		return min
-	} else if value > max {
-		return max
-	} else {
-		return value
-	}
 }
