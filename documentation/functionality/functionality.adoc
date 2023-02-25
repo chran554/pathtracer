@@ -47,7 +47,7 @@ Amount spheres:         49
 Depth of Field with a configurable aperture at the camera.
 The depth of field depends on both aperture size (radius) and focal length.
 
-Read the details on xref:../dof.adoc[how DOF is implemented].
+Read the details on xref:dof/dof.adoc[how DOF is implemented].
 
 .Depth of field using aperture 12.0 (in units, not actual 12f as in camera lenses) and "view plane distance" (the distance to perfect focus point) 2000.
 [cols=">a,<a", frame=none, grid=none]
