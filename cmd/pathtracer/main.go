@@ -317,6 +317,30 @@ func parallelPixelRendering(renderedPixelData *image.FloatImage, camera *scn.Cam
 	}
 }
 
+func FresnelReflectAmount(refractionIndex1 float64, refractionIndex2 float64, normal *vec3.T, incident *vec3.T, minReflection float64, maxReflection float64) float64 {
+	// Schlick approximation
+	r0 := (refractionIndex1 - refractionIndex2) / (refractionIndex1 + refractionIndex2)
+	r0 *= r0
+
+	cosX := -vec3.Dot(normal, incident)
+	if refractionIndex1 > refractionIndex2 {
+		n := refractionIndex1 / refractionIndex2
+		sinT2 := n * n * (1.0 - cosX*cosX)
+
+		// Total internal reflection
+		if sinT2 > 1.0 {
+			return maxReflection
+		}
+		cosX = math.Sqrt(1.0 - sinT2)
+	}
+
+	x := 1.0 - cosX
+	ret := r0 + (1.0-r0)*x*x*x*x*x
+
+	// adjust reflect multiplier for object reflectivity
+	return minReflection*(1.0-ret) + (maxReflection * ret)
+}
+
 func getRandomHemisphereVector(hemisphereHeading *vec3.T) *vec3.T {
 	var vector vec3.T
 

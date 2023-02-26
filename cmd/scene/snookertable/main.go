@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"math"
+	"math/rand"
 	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj"
@@ -21,6 +23,9 @@ var magnification = 1.3
 var amountSamples = 1024 * 10
 
 var apertureSize = 0.1
+
+var ballDisplacementRadius = 0.3
+var maxRotation = (math.Pi / 180) * 5 // Max angle rotation of ball
 
 func main() {
 	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true)
@@ -46,14 +51,26 @@ func main() {
 	for j := 0; j < len(balls); j++ {
 		for i := 0; i < len(balls[j]); i++ {
 			snookerball := NewSnookerBall(balls[j][i])
-			snookerball.Translate(&vec3.T{2.25 * snookerball.Radius * (float64(i) - float64(len(balls[j])-1)/2.0), 0, ((float64(j) - 0.5) / 0.5) * snookerball.Radius * 2.5})
+
+			xRotAngle := maxRotation * (rand.Float64()*2 - 1)
+			yRotAngle := maxRotation * (rand.Float64()*2 - 1)
+			zRotAngle := maxRotation * (rand.Float64()*2 - 1)
+			snookerball.RotateX(snookerball.Bounds().Center(), xRotAngle)
+			snookerball.RotateY(snookerball.Bounds().Center(), yRotAngle)
+			snookerball.RotateZ(snookerball.Bounds().Center(), zRotAngle)
+
+			ballPerfectPosition := vec3.T{2.25 * snookerball.Radius * (float64(i) - float64(len(balls[j])-1)/2.0), 0, ((float64(j) - 0.5) / 0.5) * snookerball.Radius * 2.5}
+			displacementAngle := math.Pi * 2 * rand.Float64()
+			ballPosition := ballPerfectPosition.Added(&vec3.T{ballDisplacementRadius * math.Cos(displacementAngle), 0, ballDisplacementRadius * math.Sin(displacementAngle)})
+
+			snookerball.Translate(&ballPosition)
 			snookerballs = append(snookerballs, snookerball)
 		}
 	}
 
-	steelSphere := scn.NewSphere(&vec3.T{0, 5.7, -10}, 5.7, scn.NewMaterial().M(0.9, 0.15))
+	// steelSphere := scn.NewSphere(&vec3.T{0, 5.7, -10}, 5.7, scn.NewMaterial().M(0.9, 0.15))
 
-	snookerBallsNode := scn.NewSceneNode().S(snookerballs...).S(steelSphere)
+	snookerBallsNode := scn.NewSceneNode().S(snookerballs...) // .S(steelSphere)
 
 	scene := scn.NewSceneNode().
 		S(lamp1, environmentSphere).
@@ -108,5 +125,7 @@ func NewSnookerBall(ball SnookerBall) *scn.Sphere {
 		N(fmt.Sprintf("snooker ball %s", ball)).
 		M(0.05, 0.05).
 		PP(textureFilename, &vec3.T{-radius, 0, 0}, vec3.T{diameter, 0, 0}, vec3.T{0, diameter, 0})
+	//CP(textureFilename, &vec3.T{0, 0, 0}, vec3.UnitZ, vec3.T{0, diameter, 0}, false)
+
 	return scn.NewSphere(&vec3.T{0, radius, 0}, radius, ballMaterial)
 }

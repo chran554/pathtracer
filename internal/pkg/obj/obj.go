@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/util"
 	"sort"
 	"strconv"
 	"strings"
@@ -466,7 +467,7 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 			// from 0 to 1000.
 
 			// Blender software export "Roughness" material parameter as mtl-file parameter "Ns".
-			currentMaterial.Roughness = parseFloat64(tokens[1])
+			currentMaterial.Roughness = util.Clamp(0.0, 1.0, (100.0-parseFloat64(tokens[1]))/100.0)
 		case "refl":
 			// Blender software export "Metallic" material parameter as mtl-file parameter "refl".
 			// This is NOT part of the mtl-file specification as "refl" is not supposed to be used for scalar values but

@@ -27,7 +27,7 @@ animations: build_sphere_circle_rotation \
 	build_cornellbox \
 	build_spherical_projection \
 	build_cylindrical_projection \
-	build_parallel_projection \
+	build_projection_parallel \
 	build_recursive_spheres \
 	build_facetobj_test \
 	build_objectfile_test \
@@ -45,7 +45,8 @@ animations: build_sphere_circle_rotation \
 	build_tessellated_sphere_transform \
 	build_experiment \
 	build_gopher \
-	build_snookertable
+	build_snookertable \
+	build_projection_cylindrical
 
 # Build animation scenes
 # -----------------------------------
@@ -65,8 +66,8 @@ build_cylindrical_projection: build
 build_spherical_projection: build
 	go build -o bin/spherical_projection ./cmd/scene/test/spherical_projection
 
-build_parallel_projection: build
-	go build -o bin/parallel_projection ./cmd/scene/test/parallel_projection
+build_projection_parallel: build
+	go build -o bin/projection_parallel ./cmd/scene/test/projection_parallel
 
 build_reflective_test: build
 	go build -o bin/reflective_test ./cmd/scene/test/reflective_test
@@ -127,3 +128,6 @@ build_gopher: build
 
 build_snookertable: build
 	go build -o bin/snookertable ./cmd/scene/snookertable
+
+build_projection_cylindrical: build
+	go build -o bin/projection_cylindrical ./cmd/scene/test/projection_cylindrical

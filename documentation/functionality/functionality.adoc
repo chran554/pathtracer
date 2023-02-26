@@ -87,11 +87,14 @@ Spherical projection is made from equirectangular images and allow for an image 
 
 A nifty feature is that you can place your actual scene (objects), camera and lighting within a sphere with spherical projection and you will get an environmental projection dome (sphere) as background.
 
-.Spherical projection
-image::spherical_projection_01.png[Spherical projection]
+Note that most of the equirectangular images are twice as wide as they are high.
+There are 360 degrees around the sphere and half the amount of degrees (180) from the bottom to the top. As long as the texture image has the proportion 1:2 then the "pixels" of texture will be square (proportion 1:1) at the equator.
+
+.Spherical projection.
+image::projection_spherical.png[Spherical projection]
 
 .Spherical projection as environmental projection on a large enclosing sphere
-image::recursive_spheres_01.png[Spherical projection - environmental projection]
+image::projection_spherical_environment.png[Spherical projection - environmental projection]
 .Image details
 ----
 Amount samples/pixel:   1024
@@ -99,10 +102,34 @@ Max recursion:          8
 Amount spheres:         4688
 ----
 
+== Image projection - Cylindrical
+
+Cylindrical projection can be used from any image that is wrapped around a cylinder.
+
+.Cylindrical projection
+image::projection_cylindrical.png[Cylindrical projection]
+
+.Image details
+----
+Image size:             960x1200
+Amount samples/pixel:   12288
+Max recursion depth:    4
+Amount facets:          104396
+Amount spheres:         2
+Frame render time: 12h5m47.523553625s
+----
+
+== Image projection - Parallel
+
+Parallel projection can be used from any image that is plainly/straight projected onto a surface.
+
+.Parallel projection. A circular disc and three spheres, all with parallel projection. One sphere share the exact same projection as the disc. The second has a checker pattern and the third has a tree rings pattern projected on them.
+image::projection_parallel.png[Parallel projection]
+
 == Metallic like settings "glossy" and "roughness"
 
-.A Cornell box with "metallic like" settings. Lightning fixed for raw image in post render editor.
-image::cornellbox_04.png[Cornell box with metallic settings]
+.A Cornell box with "metallic like" settings.
+image::reflection_metallic_cornellbox.png[Cornell box with metallic settings]
 
 Using "glossy" and "roughness" parameters rather than the usual "mirror/diffuse".
 The algorithms for metallicness that I tried out, are my own and are most likely not true to the path tracing concept of conservation of energy. (I believe that the algorithms introduce a bit of energy to the system.) +

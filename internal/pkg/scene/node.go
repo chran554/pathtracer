@@ -221,7 +221,7 @@ func (sn *SceneNode) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotat
 	}
 
 	for _, facetStructure := range sn.GetFacetStructures() {
-		facetStructure.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
+		facetStructure.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals, rotatedImageProjections)
 	}
 
 	for _, childNode := range sn.GetChildNodes() {

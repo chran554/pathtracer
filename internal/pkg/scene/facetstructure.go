@@ -150,10 +150,12 @@ func (fs *FacetStructure) RotateX(rotationOrigin *vec3.T, angle float64) {
 	rotatedNormals := make(map[*vec3.T]bool)
 	rotatedVertexNormals := make(map[*vec3.T]bool)
 
+	rotatedImageProjections := make(map[*ImageProjection]bool)
+
 	rotationMatrix := mat3.T{}
 	rotationMatrix.AssignXRotation(angle)
 
-	fs.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
+	fs.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals, rotatedImageProjections)
 }
 
 func (fs *FacetStructure) RotateY(rotationOrigin *vec3.T, angle float64) {
@@ -161,10 +163,12 @@ func (fs *FacetStructure) RotateY(rotationOrigin *vec3.T, angle float64) {
 	rotatedNormals := make(map[*vec3.T]bool)
 	rotatedVertexNormals := make(map[*vec3.T]bool)
 
+	rotatedImageProjections := make(map[*ImageProjection]bool)
+
 	rotationMatrix := mat3.T{}
 	rotationMatrix.AssignYRotation(angle)
 
-	fs.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
+	fs.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals, rotatedImageProjections)
 }
 
 func (fs *FacetStructure) RotateZ(rotationOrigin *vec3.T, angle float64) {
@@ -172,15 +176,29 @@ func (fs *FacetStructure) RotateZ(rotationOrigin *vec3.T, angle float64) {
 	rotatedNormals := make(map[*vec3.T]bool)
 	rotatedVertexNormals := make(map[*vec3.T]bool)
 
+	rotatedImageProjections := make(map[*ImageProjection]bool)
+
 	rotationMatrix := mat3.T{}
 	rotationMatrix.AssignZRotation(angle)
 
-	fs.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
+	fs.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals, rotatedImageProjections)
 }
 
-func (fs *FacetStructure) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool) {
-	if fs.Material != nil && fs.Material.Projection != nil {
-		panic(fmt.Sprintf("No facet structure rotation implementation for projection type %s", fs.Material.Projection.ProjectionType))
+func (fs *FacetStructure) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool, rotatedImageProjections map[*ImageProjection]bool) {
+	if fs.Material != nil && fs.Material.Projection != nil && !rotatedImageProjections[fs.Material.Projection] {
+		projection := fs.Material.Projection
+
+		projection.Origin.Sub(rotationOrigin)
+		rotationMatrix.MulVec3(projection.Origin)
+		projection.Origin.Add(rotationOrigin)
+
+		rotatedU := rotationMatrix.MulVec3(projection.U)
+		projection.U = &rotatedU
+
+		rotatedV := rotationMatrix.MulVec3(projection.V)
+		projection.V = &rotatedV
+
+		rotatedImageProjections[fs.Material.Projection] = true
 	}
 
 	for _, facet := range fs.Facets {
@@ -189,7 +207,7 @@ func (fs *FacetStructure) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, 
 
 	if len(fs.FacetStructures) > 0 {
 		for _, facetStructure := range fs.FacetStructures {
-			facetStructure.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
+			facetStructure.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals, rotatedImageProjections)
 		}
 	}
 }
@@ -238,8 +256,13 @@ func (fs *FacetStructure) Scale(scaleOrigin *vec3.T, scale *vec3.T) {
 }
 
 func (fs *FacetStructure) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool, scaledImageProjections map[*ImageProjection]bool) {
-	if fs.Material != nil && fs.Material.Projection != nil {
-		panic(fmt.Sprintf("No facet structure scale implementation for projection type %s", fs.Material.Projection.ProjectionType))
+	if fs.Material != nil && fs.Material.Projection != nil && !scaledImageProjections[fs.Material.Projection] {
+		projection := fs.Material.Projection
+		projection.Origin.Sub(scaleOrigin).Mul(scale).Add(scaleOrigin)
+		projection.U.Mul(scale)
+		projection.V.Mul(scale)
+
+		scaledImageProjections[projection] = true
 	}
 
 	for _, facet := range fs.Facets {

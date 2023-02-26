@@ -108,3 +108,11 @@ func (m *Material) SP(textureFilename string, origin *vec3.T, u vec3.T, v vec3.T
 	m.Projection = &sphericalImageProjection
 	return m
 }
+
+// CP is cylindrical projection properties
+func (m *Material) CP(textureFilename string, origin *vec3.T, u vec3.T, v vec3.T, repeat bool) *Material {
+	sphericalImageProjection := NewCylindricalImageProjection(textureFilename, origin, u, v)
+	sphericalImageProjection.RepeatV = repeat
+	m.Projection = &sphericalImageProjection
+	return m
+}
