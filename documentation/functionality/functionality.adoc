@@ -123,7 +123,7 @@ Frame render time: 12h5m47.523553625s
 
 Parallel projection can be used from any image that is plainly/straight projected onto a surface.
 
-.Parallel projection. A circular disc and three spheres, all with parallel projection. One sphere share the exact same projection as the disc. The second has a checker pattern and the third has a tree rings pattern projected on them.
+.Parallel projection. A circular disc and three spheres, all with parallel projection. One sphere share the exact same projection as the disc. The second has a checker pattern and the third has a tree rings pattern projected on them from different angles.
 image::projection_parallel.png[Parallel projection]
 
 == Metallic like settings "glossy" and "roughness"
