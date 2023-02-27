@@ -1,5 +1,6 @@
-all: test vet fmt lint build_all
+all: test vet fmt lint
 
+.PHONY: test
 test:
 	go test ./...
 
@@ -17,117 +18,24 @@ lint:
 install-lint-revive:
 	go install github.com/mgechev/revive@latest
 
+.PHONY: build
 build:
 	go build -o bin/pathtracer ./cmd/pathtracer
 
-build_all: build animations
-
-animations: build_sphere_circle_rotation \
-	build_sphere_rotation_focaldistance \
-	build_cornellbox \
-	build_spherical_projection \
-	build_cylindrical_projection \
-	build_projection_parallel \
-	build_recursive_spheres \
-	build_facetobj_test \
-	build_objectfile_test \
-	build_gordian_knot \
-	build_diamondsR4ever \
-	build_dof_test \
-	build_primitive_display \
-	build_aperture_shape_test \
-	build_aperture_shape_test2 \
-	build_ply_file_test \
-	build_window_test \
-	build_lamp_post \
-	build_aoc_2022_d12 \
-	build_tessellated_sphere \
-	build_tessellated_sphere_transform \
-	build_experiment \
-	build_gopher \
-	build_snookertable \
-	build_projection_cylindrical
-
-# Build animation scenes
-# -----------------------------------
-
-build_sphere_circle_rotation: build
-	go build -o bin/sphere_circle_rotation ./cmd/scene/sphere_circle_rotation
-
-build_sphere_rotation_focaldistance: build
-	go build -o bin/animation_sphere_circle_rotation_focaldistance ./cmd/scene/animation_sphere_circle_rotation_focaldistance
-
-build_cornellbox: build
-	go build -o bin/cornellbox ./cmd/scene/cornellbox
-
-build_cylindrical_projection: build
-	go build -o bin/cylindrical_projection ./cmd/scene/test/cylindrical_projection
-
-build_spherical_projection: build
-	go build -o bin/spherical_projection ./cmd/scene/test/spherical_projection
-
-build_projection_parallel: build
-	go build -o bin/projection_parallel ./cmd/scene/test/projection_parallel
-
-build_reflective_test: build
-	go build -o bin/reflective_test ./cmd/scene/test/reflective_test
-
-build_refraction_test: build
-	go build -o bin/refraction_test ./cmd/scene/test/refraction_test
-
-build_recursive_spheres: build
-	go build -o bin/recursive_spheres ./cmd/scene/recursive_spheres
-
-build_facetobj_test: build
-	go build -o bin/facetobj_test ./cmd/scene/test/facetobj_test
-
-build_objectfile_test: build
-	go build -o bin/objectfile_test ./cmd/scene/test/objectfile_test
-
-build_gordian_knot: build
-	go build -o bin/gordian_knot ./cmd/scene/gordian_knot
-
-build_diamondsR4ever: build
-	go build -o bin/diamondsR4ever ./cmd/scene/diamondsR4ever
-
-build_dof_test: build
-	go build -o bin/dof_test ./cmd/scene/test/dof_test
-
-build_primitive_display: build
-	go build -o bin/primitive_display ./cmd/scene/primitive_display
-
-build_aperture_shape_test: build
-	go build -o bin/aperture_shape_test ./cmd/scene/test/aperture_shape_test
-
-build_aperture_shape_test2: build
-	go build -o bin/aperture_shape_test2 ./cmd/scene/test/aperture_shape_test2
-
-build_ply_file_test: build
-	go build -o bin/ply_file_test ./cmd/scene/test/ply_file_test
-
-build_window_test: build
-	go build -o bin/window_test ./cmd/scene/test/window_test
-
-build_lamp_post: build
-	go build -o bin/lamp_post ./cmd/scene/lamp_post
-
-build_aoc_2022_d12: build
-	go build -o bin/aoc_2022_d12 ./cmd/scene/aoc_2022_d12
-
-build_tessellated_sphere: build
-	go build -o bin/tessellated_sphere ./cmd/scene/test/tessellated_sphere
-
-build_tessellated_sphere_transform: build
-	go build -o bin/tessellated_sphere_transform ./cmd/scene/test/tessellated_sphere_transform
-
-build_experiment: build
-	go build -o bin/experiment ./cmd/scene/test/experiment
-
-build_gopher: build
-	go build -o bin/gopher ./cmd/scene/test/gopher
-
-build_snookertable: build
-	go build -o bin/snookertable ./cmd/scene/snookertable
-
-build_projection_cylindrical: build
-	go build -o bin/projection_cylindrical ./cmd/scene/test/projection_cylindrical
+.PHONY: build_scene
+build_scene: build
+	@if [ -z "$(SCENE_NAME)" ]; then  \
+		echo "You need to set SCENE_NAME parameter with a scene name before calling make."; \
+		exit 2; \
+	else \
+	   	if [ -d "./cmd/scene/$(SCENE_NAME)" ]; then \
+			echo "Making target for scene $(SCENE_NAME)"; \
+			go build -o bin/$(SCENE_NAME) ./cmd/scene/$(SCENE_NAME); \
+		elif [ -d "./cmd/scene/test/$(SCENE_NAME)" ]; then \
+			echo "Making target for test scene $(SCENE_NAME)"; \
+			go build -o bin/$(SCENE_NAME) ./cmd/scene/test/$(SCENE_NAME); \
+		else \
+			echo "Could not find any scene nor test scene directory for $(SCENE_NAME)"; \
+			exit 2; \
+		fi \
+	fi
