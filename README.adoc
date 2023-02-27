@@ -56,8 +56,8 @@ A lot of functionality is on display in the link:documentation/functionality/fun
 
 === TODO
 
-* Refraction - using refraction index
-* Refraction - Fresnel (dielectric)
-* Refraction - Fresnel (conductor/metal)
+* Reflection - Fresnel (dielectric/non-conducting)
+* Reflection - Fresnel (conductor/metal)
+* Refraction - using refraction index (WIP)
 * Refraction - color absorption in gas and liquid (solid) using Beer-Lambert Law
 * ...
