@@ -104,3 +104,90 @@ func (c *Color) Multiply(factor float32) *Color {
 	c.B *= factor
 	return c
 }
+
+// KelvinTemperatureColor2 gives rgb-value for a Kelvin temperature
+// using a more accurate version algorithm based on a different curve fit to the original RGB to Kelvin data.
+//
+// https://github.com/neilbartlett/color-temperature/blob/master/index.js
+func KelvinTemperatureColor2(kelvinTemperature float64) Color {
+	// Temperature must fall between 1000 and 40000 degrees
+	kelvinTemperature = util.Clamp(1000, 40000, kelvinTemperature)
+
+	var temperature = kelvinTemperature / 100.0
+	var red, green, blue float64
+
+	if temperature < 66.0 {
+		red = 255
+	} else {
+		// a + b x + c Log[x] /.
+		// {a -> 351.97690566805693`,
+		// b -> 0.114206453784165`,
+		// c -> -40.25366309332127
+		//x -> (kelvin/100) - 55}
+		red = temperature - 55.0
+		red = 351.97690566805693 + 0.114206453784165*red - 40.25366309332127*math.Log(red)
+	}
+
+	if temperature < 66.0 {
+		// a + b x + c Log[x] /.
+		// {a -> -155.25485562709179`,
+		// b -> -0.44596950469579133`,
+		// c -> 104.49216199393888`,
+		// x -> (kelvin/100) - 2}
+		green = temperature - 2
+		green = -155.25485562709179 - 0.44596950469579133*green + 104.49216199393888*math.Log(green)
+
+	} else {
+		// a + b x + c Log[x] /.
+		// {a -> 325.4494125711974`,
+		// b -> 0.07943456536662342`,
+		// c -> -28.0852963507957`,
+		// x -> (kelvin/100) - 50}
+		green = temperature - 50.0
+		green = 325.4494125711974 + 0.07943456536662342*green - 28.0852963507957*math.Log(green)
+	}
+
+	if temperature >= 66.0 {
+		blue = 255
+	} else {
+
+		if temperature <= 20.0 {
+			blue = 0
+		} else {
+			// a + b x + c Log[x] /.
+			// {a -> -254.76935184120902`,
+			// b -> 0.8274096064007395`,
+			// c -> 115.67994401066147`,
+			// x -> kelvin/100 - 10}
+			blue = temperature - 10
+			blue = -254.76935184120902 + 0.8274096064007395*blue + 115.67994401066147*math.Log(blue)
+		}
+	}
+
+	red = util.Clamp(0.0, 1.0, red/255.0)
+	green = util.Clamp(0.0, 1.0, green/255.0)
+	blue = util.Clamp(0.0, 1.0, blue/255.0)
+
+	return NewColor(red, green, blue)
+}
+
+func KelvinTemperatureCCT(c Color) float64 {
+	var temperature float64
+
+	epsilon := 0.4
+	minTemperature := 1000.0
+	maxTemperature := 40000.0
+
+	for (maxTemperature - minTemperature) > epsilon {
+		temperature = (maxTemperature + minTemperature) / 2
+		testRGB := KelvinTemperatureColor2(temperature)
+
+		if (testRGB.B / testRGB.R) >= (c.B / c.R) {
+			maxTemperature = temperature
+		} else {
+			minTemperature = temperature
+		}
+	}
+
+	return temperature
+}

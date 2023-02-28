@@ -12,11 +12,13 @@ import (
 
 var animationName = "recursive_spheres"
 
-var environmentEnvironMap = "textures/equirectangular/nightsky.png"
+var environmentEnvironMap = "textures/equirectangular/open_grassfield_sunny_day.jpg"
+
+//var environmentEnvironMap = "textures/equirectangular/nightsky.png"
 
 // var environmentEnvironMap = "textures/equirectangular/sunset horizon 2800x1400.jpg"
-var environmentRadius = 100.0 * 1000.0
-var environmentEmissionFactor = 1.0
+var skyDomeRadius = 100.0 * 1000.0
+var skyDomeEmissionFactor = 1.0
 
 var amountFrames = 1
 
@@ -24,18 +26,14 @@ var imageWidth = 1280
 var imageHeight = 1024
 var magnification = 1.0
 
-var amountSamples = 128 // 2000
-
-var ballsLightEmissionFactor = 0.01
+var amountSamples = 1024 * 3
 
 var startSphereRadius = 150.0
 var maxSphereRecursionDepth = 6
 
-var apertureSize = 5.0
+var apertureSize = 3.0
 
-var sphereMaterial = scn.NewMaterial().C(color.Color{R: 0.42, G: 0.47, B: 0.42}).
-	M(0.85, 0.01).
-	E(color.Color{R: 0.85, G: 0.95, B: 0.85}, 0.22, false)
+var sphereMaterial = scn.NewMaterial().C(color.NewColorGrey(0.8)).M(0.70, 0.07)
 
 func main() {
 	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true)
@@ -55,32 +53,18 @@ func main() {
 		recursiveBalls.RotateX(&vec3.Zero, math.Pi/12)
 		recursiveBalls.RotateY(&vec3.Zero, math.Pi/8)
 
-		ballsLightDistanceFactor := 400.0
-		ballsLightPosition := ballsBounds.Center().Add(&vec3.T{-ballsLightDistanceFactor, ballsLightDistanceFactor, -2.0 * ballsLightDistanceFactor})
-		ballsLightMaterial := scn.NewMaterial().E(color.Color{R: 15, G: 14.0, B: 12.0}, ballsLightEmissionFactor, true)
-		ballsLight := scn.NewSphere(ballsLightPosition, 200, ballsLightMaterial).N("Balls light")
-
 		// Sky dome
-
-		environmentOrigin := vec3.T{0, 0, 0}
-		environmentMaterial := scn.NewMaterial().
-			E(color.White, environmentEmissionFactor, true).
-			SP(environmentEnvironMap, &environmentOrigin, vec3.T{-0.2, 0, -1}, vec3.T{0, 1, 0})
-		environmentSphere := scn.NewSphere(&environmentOrigin, environmentRadius, environmentMaterial).N("Environment mapping")
-
-		// Ground
-
-		groundMaterial := scn.NewMaterial().N("Ground material").PP("textures/ground/soil-cracked.png", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(250*2), vec3.UnitZ.Scaled(250*2))
-		ground := scn.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
+		skyDomeOrigin := vec3.T{0, 0, 0}
+		skyDomeMaterial := scn.NewMaterial().
+			E(color.White, skyDomeEmissionFactor, true).
+			SP(environmentEnvironMap, &skyDomeOrigin, vec3.T{-0.75, 0, -0.25}, vec3.T{0, 1, 0})
+		skyDome := scn.NewSphere(&skyDomeOrigin, skyDomeRadius, skyDomeMaterial).N("Environment mapping")
 
 		cameraOrigin := ballsBounds.Center().Add(&vec3.T{0, ballsBounds.SizeY() * 1.5 / 10.0, -800})
 		cameraFocusPoint := ballsBounds.Center().Add(&vec3.T{0, ballsBounds.SizeY() / 10.0, -ballsBounds.SizeZ() / 2.0 * 0.8})
-		camera := scn.NewCamera(cameraOrigin, cameraFocusPoint, amountSamples, magnification).A(apertureSize, "")
+		camera := scn.NewCamera(cameraOrigin, cameraFocusPoint, amountSamples, magnification).A(apertureSize, "").V(700)
 
-		scene := scn.NewSceneNode().
-			S(environmentSphere, ballsLight).
-			D(ground).
-			SN(recursiveBalls)
+		scene := scn.NewSceneNode().S(skyDome).SN(recursiveBalls)
 
 		frame := scn.NewFrame(animationName, frameIndex, camera, scene)
 

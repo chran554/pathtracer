@@ -3,7 +3,7 @@
 
 Some images to illustrate renderer functionality and some _show off_ gems.
 
-=== Cornell box
+== Cornell box
 
 It doesn't look much to the world, but it is the hello world of path tracing.
 
@@ -20,3 +20,29 @@ Amount facets:          12
 Amount spheres:         2
 Frame render time: 7h52m49.628069625s
 ----
+
+== Advent of code 2022 day 12
+
+The programming calendar "Advent of Code" 2022 gave a problem where you had to find the shortest path from one point to another given a height map and a couple of movement constraints from one coordinate in the map to another.
+
+The shortest path was found using an A* search algorithm where each coordinate was a node and with, up to, 4 edges to adjacent coordinates (depending on the movement constraints).
+
+The lava is just a texture added to the "a" height level for visual effect and not really part of the assignment. Looks cool though.
+
+https://adventofcode.com/2022/day/12
+
+I could not help myself from trying to render an animation of the resulting path over the height map.
+
+The animation can be viewed at https://vimeo.com/user83485151[Vimeo].
+
+image::aoc_2022_d12.png[Advent of code 2022 day 12]
+.Advent of code animation details
+----
+Amount frames:          1580
+Image size:             250x250
+Amount samples/pixel:   200
+Max recursion depth:    4
+Amount facets:          42624
+Animation render time: aproximately (drum roll...) 72 hours
+----
+
