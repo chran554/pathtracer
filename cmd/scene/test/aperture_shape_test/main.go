@@ -11,6 +11,8 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
+// "Lonesome Gopher in love" scene
+
 var environmentEnvironMap = "textures/equirectangular/sunset horizon 2800x1400.jpg"
 var environmentRadius = 100.0 * 1000.0
 var environmentEmissionFactor = 0.15
@@ -113,7 +115,9 @@ func getSphere(radius float64, minDistance, maxDistance float64) *scn.Sphere {
 
 	sphereColor := color.NewColor(r, g, b)
 
-	sphereMaterial := scn.NewMaterial().C(sphereColor).E(sphereColor, lampEmissionFactor, true)
+	sphereMaterial := scn.NewMaterial().
+		C(sphereColor).
+		E(sphereColor, lampEmissionFactor, true)
 
 	x := (rand.Float64() - 0.5) * 2 * (maxDistance * 2 / 2.0)
 	y := math.Pow(rand.Float64(), 2.0) * (maxDistance * 2 / 2.0)
