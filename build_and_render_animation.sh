@@ -17,6 +17,7 @@ SCENE_DEFINITION=$SCENE_NAME.animation.json
 
 echo "-----------------------------------------------------------------------------"
 echo "Building executables:"
+make build
 make build_scene SCENE_NAME="$SCENE_NAME"
 
 echo "-----------------------------------------------------------------------------"
