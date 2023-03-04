@@ -139,6 +139,11 @@ func writeRenderedImage(animation scn.Animation, frame *scn.Frame, renderedPixel
 }
 
 func initializeScene(scene *scn.SceneNode) {
+	_initializeScene(scene)
+	scene.UpdateBounds()
+}
+
+func _initializeScene(scene *scn.SceneNode) {
 	// fmt.Printf("Scene: %+v\n", scene)
 
 	discs := scene.GetDiscs()
@@ -147,7 +152,7 @@ func initializeScene(scene *scn.SceneNode) {
 	}
 
 	spheres := scene.GetSpheres()
-	if len(spheres) < 25 {
+	if len(spheres) < 10 {
 		for _, sphere := range spheres {
 			sphere.Initialize()
 		}
@@ -427,7 +432,7 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 				sceneNodeStack.PushAll(currentSceneNode.GetChildNodes())
 			}
 
-			for _, sphere := range (*currentSceneNode).GetSpheres() {
+			for _, sphere := range currentSceneNode.GetSpheres() {
 				tempIntersectionPoint, tempIntersection := scn.SphereIntersection(ray, sphere)
 				if tempIntersection {
 					distance := vec3.Distance(ray.Origin, tempIntersectionPoint)
@@ -453,7 +458,7 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 				}
 			}
 
-			for _, disc := range (*currentSceneNode).GetDiscs() {
+			for _, disc := range currentSceneNode.GetDiscs() {
 				tempIntersectionPoint, tempIntersection := scn.DiscIntersection(ray, disc)
 				if tempIntersection {
 					distance := vec3.Distance(ray.Origin, tempIntersectionPoint)
@@ -472,7 +477,7 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 				}
 			}
 
-			for _, facetStructure := range (*currentSceneNode).GetFacetStructures() {
+			for _, facetStructure := range currentSceneNode.GetFacetStructures() {
 				tempIntersection, tempIntersectionPoint, tempIntersectionNormal, tempMaterial := scn.FacetStructureIntersection(ray, facetStructure)
 
 				if tempIntersection {
