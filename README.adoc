@@ -58,6 +58,7 @@ A lot of functionality is on display in the link:documentation/functionality/fun
 
 * Reflection - Fresnel (dielectric/non-conducting)
 * Reflection - Fresnel (conductor/metal)
-* Refraction - using refraction index (WIP)
-* Refraction - color absorption in gas and liquid (solid) using Beer-Lambert Law
+* Refraction - using refraction index (WIP - work in progress)
+* Color absorption in gas and liquid (solid) using Beer-Lambert Law
+* Fake haze (testing a spin-off idea from Beer-Lambert)
 * ...
