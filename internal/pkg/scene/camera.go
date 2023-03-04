@@ -29,8 +29,8 @@ type Camera struct {
 	RecursionDepth    int
 }
 
-func NewCamera(origin *vec3.T, focusPoint *vec3.T, amountSamples int, magnification float64) *Camera {
-	heading := focusPoint.Subed(origin)
+func NewCamera(origin *vec3.T, viewPoint *vec3.T, amountSamples int, magnification float64) *Camera {
+	heading := viewPoint.Subed(origin)
 	focusDistance := heading.Length()
 	heading.Normalize()
 
