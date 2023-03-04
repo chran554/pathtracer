@@ -24,110 +24,110 @@ var amountSamples = 256 * 2
 var cameraOrigin = vec3.T{0, 150, -800}
 var cameraDistanceFactor = 0.8
 var viewPlaneDistance = 600.0
-var cameraAperture = 10.0
+var cameraAperture = 15.0
 
 var lightIntensityFactor = 5.0
 
 func main() {
-	width := int(float64(imageWidth) * magnification)
-	height := int(float64(imageHeight) * magnification)
-
-	// Keep image proportions to an even amount of pixel for mp4 encoding
-	if width%2 == 1 {
-		width++
-	}
-	if height%2 == 1 {
-		height++
-	}
-
 	// Cornell box
-
 	cornellBox := GetCornellBox(&vec3.T{500, 300, 500}, lightIntensityFactor) // cm, as units. I.e. a 5x3x5m room
 
 	// Gopher
+	gopherPupilMaterial := scn.NewMaterial().C(color.NewColorGrey(0.0)).M(0.05, 0.05)
 
-	gopher := GetGopher(&vec3.T{1, 1, 1})
-	gopher.Translate(&vec3.T{0, -gopher.Bounds.Ymin, 0})
-	gopher.ScaleUniform(&vec3.Zero, 2.0)
-	gopher.RotateY(&vec3.Zero, math.Pi*5.0/6.0)
-	gopher.Translate(&vec3.T{800, 0, 800})
+	gopherBlue := GetGopher(&vec3.T{1, 1, 1})
+	gopherBlue.ReplaceMaterial("eye_pupil", gopherPupilMaterial)
+	gopherBlue.Translate(&vec3.T{0, -gopherBlue.Bounds.Ymin, 0})
+	gopherBlue.ScaleUniform(&vec3.Zero, 2.0)
+	gopherBlue.RotateY(&vec3.Zero, math.Pi*5/6)
+	gopherBlue.Translate(&vec3.T{800, 0, 800})
 
-	gopherLightMaterial := scn.NewMaterial().E(color.Color{R: 6, G: 5.3, B: 4.5}, 1.0, true)
-	gopherLight := scn.NewSphere(&vec3.T{850, 50, 600}, 70.0, gopherLightMaterial).N("Gopher light")
+	gopherPurple := GetGopher(&vec3.T{1, 1, 1})
+	gopherPurple.ReplaceMaterial("body", scn.NewMaterial().C(color.NewColor(0.72, 0.55, 0.90)))
+	gopherPurple.ReplaceMaterial("eye_pupil", gopherPupilMaterial)
+	gopherPurple.Translate(&vec3.T{0, -gopherPurple.Bounds.Ymin, 0})
+	gopherPurple.ScaleUniform(&vec3.Zero, 2.0)
+	gopherPurple.RotateY(&vec3.Zero, -math.Pi*4/6)
+	gopherPurple.Translate(&vec3.T{-800, 0, 800})
+
+	gopherYellow := GetGopher(&vec3.T{1, 1, 1})
+	gopherYellow.ReplaceMaterial("body", scn.NewMaterial().C(color.NewColor(0.90, 0.86, 0.55)))
+	gopherYellow.ReplaceMaterial("eye_pupil", gopherPupilMaterial)
+	gopherYellow.Translate(&vec3.T{0, -gopherYellow.Bounds.Ymin, 0})
+	gopherYellow.ScaleUniform(&vec3.Zero, 2.0)
+	gopherYellow.RotateY(&vec3.Zero, -math.Pi*7/8)
+	gopherYellow.Translate(&vec3.T{-300, 0, 800})
 
 	// Diamond
-
 	diamond := GetDiamond(&vec3.T{2, 2, 2})
 	diamond.Translate(&vec3.T{0, -diamond.Bounds.Ymin, 0})
 	diamond.RotateX(&vec3.Zero, 0.7173303226) // Pavilion angle, lay diamond on the side on the floor
-	diamond.RotateY(&vec3.Zero, -math.Pi*3.0/6.0)
+	diamond.RotateY(&vec3.Zero, -math.Pi*3/6)
 	diamond.Translate(&vec3.T{600, 0, 700})
 	//diamond.Translate(&vec3.T{0, 0, -200})
 	diamond.Material = &scn.Material{Color: &color.Color{R: 0.85, G: 0.85, B: 0.75}, Emission: &color.Color{R: 0.1, G: 0.08, B: 0.05}, Glossiness: 0.05, Roughness: 0.0, Transparency: 0.0}
 
 	podiumHeight := 30.0
 	podiumWidth := 200.0
-	interPodiumDistance := 400.0
+	interPodiumDistance := 300.0
 
 	triangleSize := 80.0 * 2.0
 	sphereRadius := 80.0
 	discRadius := 80.0
 
 	sphereLocation := vec3.T{-interPodiumDistance, 0, 0}
-	triangleLocation := vec3.T{interPodiumDistance, 0, 0}
-	discLocation := vec3.T{0, 0, 0}
+	triangleLocation := vec3.T{0, 0, 0}
+	discLocation := vec3.T{interPodiumDistance, 0, 0}
 
-	podiumMaterial := scn.Material{Color: &color.Color{R: 0.9, G: 0.9, B: 0.9}, Roughness: 1.0}
+	podiumMaterial := scn.NewMaterial().C(color.NewColorGrey(0.9))
 
-	// Sphere
-
+	// Sphere primitive
 	spherePodium := obj.NewBox(obj.BoxCenteredYPositive)
-	spherePodium.Material = &podiumMaterial
+	spherePodium.Material = podiumMaterial
 	spherePodium.Scale(&vec3.Zero, &vec3.T{podiumWidth, podiumHeight, podiumWidth})
 	spherePodium.Translate(&sphereLocation)
 
-	sphereMaterial := scn.NewMaterial().C(color.Color{R: 0.80, G: 1.00, B: 0.80}).M(0.3, 0.2)
+	sphereMaterial := scn.NewMaterial().C(color.Color{R: 0.70, G: 1.00, B: 0.70}).M(0.1, 0.2)
 	sphere := scn.NewSphere(&vec3.T{0, 0, 0}, sphereRadius, sphereMaterial).N("Sphere primitive")
 	sphere.Translate(&vec3.T{0.0, podiumHeight + sphereRadius, 0.0})
 	sphere.Translate(&sphereLocation)
 
-	// Triangle
-
+	// Triangle primitive
 	trianglePodium := obj.NewBox(obj.BoxCenteredYPositive)
-	trianglePodium.Material = &podiumMaterial
+	trianglePodium.Material = podiumMaterial
 	trianglePodium.Scale(&vec3.Zero, &vec3.T{podiumWidth, podiumHeight, podiumWidth})
 	trianglePodium.Translate(&triangleLocation)
 
 	triangle := trianglePrimitive()
 	triangle.ScaleUniform(&vec3.Zero, triangleSize)
-	triangle.RotateX(&vec3.Zero, -math.Pi/8.0)
-	triangle.RotateY(&vec3.Zero, -math.Pi/4.0)
+	triangle.RotateX(&vec3.Zero, -math.Pi/8)
+	triangle.RotateY(&vec3.Zero, -math.Pi/4)
 	triangle.Translate(&vec3.T{0.0, podiumHeight, 0.0})
 	triangle.Translate(&triangleLocation)
 
-	// Disc
-
+	// Disc primitive
 	discPodium := obj.NewBox(obj.BoxCenteredYPositive)
-	discPodium.Material = &podiumMaterial
+	discPodium.Material = podiumMaterial
 	discPodium.Scale(&vec3.Zero, &vec3.T{podiumWidth, podiumHeight, podiumWidth})
 	discPodium.Translate(&discLocation) // Move podium to location
 
-	discMaterial := scn.NewMaterial().C(color.Color{R: 1.00, G: 0.80, B: 0.80}).M(0.05, 0.1)
+	discMaterial := scn.NewMaterial().C(color.Color{R: 1.00, G: 0.70, B: 0.70}).M(0.1, 0.2)
 	disc := scn.NewDisc(&vec3.T{0, 0, 0}, &vec3.T{0, 0, -1}, discRadius, discMaterial).N("Disc primitive")
-	disc.RotateX(&vec3.Zero, -math.Pi/8.0)
-	disc.RotateY(&vec3.Zero, -math.Pi/8.0)
+	disc.RotateX(&vec3.Zero, -math.Pi/8)
+	disc.RotateY(&vec3.Zero, -math.Pi*2/8)
 	disc.Translate(&vec3.T{0.0, podiumHeight + discRadius, 0.0})
 	disc.Translate(&discLocation) // Move disc to location
 
+	// Scene
 	scene := scn.NewSceneNode().
-		S(sphere, gopherLight).
+		S(sphere).
 		D(disc).
-		FS(cornellBox, triangle, spherePodium, discPodium, trianglePodium, gopher, diamond)
+		FS(cornellBox, triangle, spherePodium, discPodium, trianglePodium, gopherBlue, gopherPurple, gopherYellow)
 
 	animationStartIndex := 0
 	animationEndIndex := amountAnimationFrames - 1
 
-	animation := scn.NewAnimation(animationName, width, height, magnification, false)
+	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false)
 
 	for frameIndex := animationStartIndex; frameIndex <= animationEndIndex; frameIndex++ {
 		animationProgress := float64(frameIndex) / float64(amountAnimationFrames)
@@ -142,11 +142,7 @@ func main() {
 }
 
 func trianglePrimitive() *scn.FacetStructure {
-	material := scn.Material{
-		Color:      &color.Color{R: 0.80, G: 0.80, B: 1.00},
-		Glossiness: 0.05,
-		Roughness:  0.1,
-	}
+	material := scn.NewMaterial().C(color.Color{R: 0.70, G: 0.70, B: 1.00}).M(0.1, 0.2)
 	triangleHeight := 1.0
 	triangleWidth := triangleHeight / (2.0 * math.Cos(math.Pi/6.0))
 	triangle := scn.Facet{
@@ -158,7 +154,7 @@ func trianglePrimitive() *scn.FacetStructure {
 	}
 	facetStructure := scn.FacetStructure{
 		SubstructureName: "Triangle primitive",
-		Material:         &material,
+		Material:         material,
 		Facets:           []*scn.Facet{&triangle},
 	}
 	facetStructure.UpdateNormals()
@@ -207,8 +203,8 @@ func GetCornellBox(scale *vec3.T, lightIntensityFactor float64) *scn.FacetStruct
 
 	//floorProjection := scn.NewParallelImageProjection("textures/tilesf4.jpeg", vec3.Zero, vec3.UnitX.Scaled(scale[0]*0.5), vec3.UnitZ.Scaled(scale[0]*0.5))
 	floorMaterial := *cornellBox.Material
-	floorMaterial.Glossiness = 0.2
-	floorMaterial.Roughness = 0.2
+	floorMaterial.Glossiness = 0.3
+	floorMaterial.Roughness = 0.1
 	//floorMaterial.Projection = &floorProjection
 	cornellBox.ReplaceMaterial("Floor_2", &floorMaterial)
 
@@ -277,6 +273,11 @@ func getCamera(animationProgress float64, focusHeight float64) *scn.Camera {
 	cameraFocus.Add(&cameraFocusAnimationTranslation)
 
 	origin := cameraOrigin.Scaled(cameraDistanceFactor)
+
+	// Still image camera settings
+	// origin = cameraOrigin.Added(&vec3.T{0, 0, 0})
+	// origin.Scale(cameraDistanceFactor)
+	// cameraFocus = vec3.T{0, focusHeight * 1.5, 0}
 
 	return scn.NewCamera(&origin, &cameraFocus, amountSamples, magnification).V(viewPlaneDistance).A(cameraAperture, "")
 }
