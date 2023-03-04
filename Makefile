@@ -23,7 +23,7 @@ build:
 	go build -o bin/pathtracer ./cmd/pathtracer
 
 .PHONY: build_scene
-build_scene: build
+build_scene:
 	@if [ -z "$(SCENE_NAME)" ]; then  \
 		echo "You need to set SCENE_NAME parameter with a scene name before calling make."; \
 		exit 2; \
