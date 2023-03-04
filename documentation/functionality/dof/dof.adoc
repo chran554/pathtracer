@@ -20,8 +20,13 @@ image::dof_01.png[alt="Depth of field (none)"]
 .Depth of field using aperture 12.0 (in units, not actual 12f as in camera lenses) and "focus distance" (the distance to perfect focus point) approximately at the middle sphere.
 image::dof_02.png[alt="Depth of field"]
 
-.Different aperture shapes for a matrix of luminous balls. Note that the out of focus bokeh in front of the focus plane is upside down and flipped right with left, while out of focus bokeh in the back has the normal shape.
+.Different aperture shapes for a matrix of luminous balls.
 image::aperture_shape.png[Different aperture shapes]
+
+A short animation with luminous balls and a star shaped aperture can be found at https://vimeo.com/801995169[Vimeo] (it should be played in a loop though).
+
+.Camera aperture in the shape of capital letter "F" on a matrix of luminous balls. Note that the out of focus bokeh in front of the focus plane is upside down and flipped right with left, while out of focus bokeh in the back has the normal shape.
+image::aperture_shape_letterF.png[Camera aperture shape of capital "F"]
 
 .Lonesome Gopher in love
 image::aperture_shape_demo.png[Gopher in love]

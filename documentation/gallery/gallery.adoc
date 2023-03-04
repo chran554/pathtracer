@@ -35,8 +35,7 @@ I could not help myself from trying to render an animation of the resulting path
 
 The animation can be viewed at https://vimeo.com/user83485151[Vimeo].
 
-image::aoc_2022_d12.png[Advent of code 2022 day 12]
-.Advent of code animation details
+.Advent of code *animation* details
 ----
 Amount frames:          1580
 Image size:             250x250
@@ -46,3 +45,4 @@ Amount facets:          42624
 Animation render time: aproximately (drum roll...) 72 hours
 ----
 
+image::aoc_2022_d12.png[Advent of code 2022 day 12]

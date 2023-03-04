@@ -23,6 +23,25 @@ Amount spheres:         2
 Frame render time: 7h52m49.628069625s
 ----
 
+== Primitives
+
+I have implemented three types of primitives for my raytracer: triangles, spheres, and discs.
+
+.The primitives implemented: triangles, spheres, and discs
+image::primitive_display.png[The primitives triangle, sphere, and disc]
+.Primitives image details
+----
+Image size:             1600x600
+Amount samples/pixel:   8192
+Max recursion depth:    4
+Amount facets:          154807 (1 triangle, room, and 3 detailed Gophers)
+Amount spheres:         1
+Amount discs:           1
+Frame render time: 10h48m1.2195545s
+----
+
+A short animation can be found at https://vimeo.com/803459254[Vimeo] (it should be played in a loop though).
+
 == Material - Reflection
 
 Reflection is not just "mirror" parameter on materials, but it is split in two parameters to simulate metal properties. The two parameters are "glossiness" and "roughness".
@@ -55,7 +74,7 @@ Amount spheres:    5
 Total execution time: 14h6m26.331560583s
 ----
 
-A short animation clip can be found at https://vimeo.com/758989253[Vimeo] (it should be played in a loop though).
+A short animation can be found at https://vimeo.com/758989253[Vimeo] (it should be played in a loop though).
 
 == Depth of Field (DOF)
 
@@ -94,7 +113,7 @@ Read the details on xref:../dof.adoc[how DOF and free aperture shape is implemen
 .Different aperture shapes for a matrix of luminous balls
 image::dof/aperture_shape.png[Different aperture shapes]
 
-A short animation clip with luminous balls and a star shaped aperture can be found at https://vimeo.com/801995169[Vimeo] (it should be played in a loop though).
+A short animation with luminous balls and a star shaped aperture can be found at https://vimeo.com/801995169[Vimeo] (it should be played in a loop though).
 
 == Image projection - Spherical
 
