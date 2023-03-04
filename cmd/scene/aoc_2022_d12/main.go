@@ -28,7 +28,7 @@ var magnification = 0.25
 // var renderType = scn.Raycasting
 var amountSamples = 200 // 200 * 4 * 3 // 2000 * 2 * 4
 
-var apertureSize = 3.0
+var apertureSize = 2.0
 
 func main() {
 	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false)
@@ -73,7 +73,7 @@ func main() {
 		C(color.White).
 		E(color.White, 1.5, false).
 		M(0.2, 0.3).
-		SP("textures/planets/sun.jpg", &vec3.T{1540 / 2, -1540 / 2, 820 / 2}, vec3.UnitX.Scaled(100), vec3.UnitZ.Scaled(100))
+		SP("textures/planets/sun.jpg", &vec3.T{1540 / 2, -1540 / 2, 820 / 2}, vec3.UnitX.Scaled(-100), vec3.UnitZ.Scaled(100))
 
 	pathMaterial := scn.NewMaterial().
 		C(pathColor).
@@ -82,12 +82,12 @@ func main() {
 
 	startMaterial := scn.NewMaterial().
 		C(startColor).
-		E(startColor, 3.0*pathEmissionFactor, false).
+		E(startColor, 1.5*pathEmissionFactor, false).
 		M(0.3, 0.1)
 
 	endMaterial := scn.NewMaterial().
 		C(endColor).
-		E(endColor, 3.0*pathEmissionFactor, false).
+		E(endColor, 1.5*pathEmissionFactor, false).
 		M(0.3, 0.1)
 
 	for yPos := 0; yPos < karta.GetHeight(); yPos++ {
@@ -146,7 +146,7 @@ func main() {
 	amountFrames = len(pathPositions) * 4
 	//headingSamples := 10
 	//amountPositionSamples := len(pathPositions)
-	for frameIndex := 470; frameIndex < amountFrames; frameIndex++ {
+	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
 
 		focusPoint, _ := pathCurve.GetPoint(animationProgress)
@@ -164,6 +164,11 @@ func main() {
 		cameraOrigin.Add(&vec3.T{0.0, 100.0, 0.0}) // Raise the camera above the focus point
 		cameraFocusPoint := focusPoint
 		camera := scn.NewCamera(&cameraOrigin, cameraFocusPoint, amountSamples, magnification).A(apertureSize, "")
+
+		// Still image camera settings
+		// cameraOrigin = vec3.T{-300, 350, 150}
+		// focusPoint = &vec3.T{850, 10, 400}
+		// camera = scn.NewCamera(&cameraOrigin, focusPoint, amountSamples, magnification).A(apertureSize, "")
 
 		frame := scn.NewFrame(animationName, frameIndex, camera, scene)
 		animation.AddFrame(frame)
