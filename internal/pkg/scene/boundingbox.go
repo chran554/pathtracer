@@ -12,6 +12,27 @@ type Bounds struct {
 	Zmin, Zmax float64
 }
 
+func NewBounds() Bounds {
+	return Bounds{
+		Xmin: math.MaxFloat64,
+		Xmax: -math.MaxFloat64,
+		Ymin: math.MaxFloat64,
+		Ymax: -math.MaxFloat64,
+		Zmin: math.MaxFloat64,
+		Zmax: -math.MaxFloat64,
+	}
+}
+
+func (b *Bounds) IsZeroBounds() bool {
+	return b.Xmin == math.MaxFloat64 &&
+		b.Xmax == -math.MaxFloat64 &&
+		b.Ymin == math.MaxFloat64 &&
+		b.Ymax == -math.MaxFloat64 &&
+		b.Zmin == math.MaxFloat64 &&
+		b.Zmax == -math.MaxFloat64
+
+}
+
 func (b *Bounds) Center() *vec3.T {
 	return &vec3.T{
 		(b.Xmax-b.Xmin)/2.0 + b.Xmin,
@@ -65,27 +86,6 @@ func (b *Bounds) IncludeVertex(vertex *vec3.T) {
 	b.Ymax = math.Max(b.Ymax, vertex[1])
 	b.Zmin = math.Min(b.Zmin, vertex[2])
 	b.Zmax = math.Max(b.Zmax, vertex[2])
-}
-
-func NewBounds() Bounds {
-	return Bounds{
-		Xmin: math.MaxFloat64,
-		Xmax: -math.MaxFloat64,
-		Ymin: math.MaxFloat64,
-		Ymax: -math.MaxFloat64,
-		Zmin: math.MaxFloat64,
-		Zmax: -math.MaxFloat64,
-	}
-}
-
-func (b *Bounds) IsZeroBounds() bool {
-	return b.Xmin == math.MaxFloat64 &&
-		b.Xmax == -math.MaxFloat64 &&
-		b.Ymin == math.MaxFloat64 &&
-		b.Ymax == -math.MaxFloat64 &&
-		b.Zmin == math.MaxFloat64 &&
-		b.Zmax == -math.MaxFloat64
-
 }
 
 func BoundingBoxIntersection1(line *Ray, bounds *Bounds) bool {

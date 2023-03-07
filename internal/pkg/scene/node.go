@@ -130,6 +130,7 @@ func (sn *SceneNode) Scale(scaleOrigin *vec3.T, scale *vec3.T) {
 	scaledImageProjections := make(map[*ImageProjection]bool)
 
 	sn.scale(scaleOrigin, scale, scaledPoints, scaledImageProjections)
+	sn.UpdateBounds()
 }
 
 func (sn *SceneNode) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool, scaledImageProjections map[*ImageProjection]bool) {
@@ -155,6 +156,7 @@ func (sn *SceneNode) Translate(translation *vec3.T) {
 	translatedImageProjections := make(map[*ImageProjection]bool)
 
 	sn.translate(translation, translatedPoints, translatedImageProjections)
+	sn.UpdateBounds()
 }
 
 func (sn *SceneNode) translate(translation *vec3.T, translatedPoints map[*vec3.T]bool, translatedImageProjections map[*ImageProjection]bool) {
@@ -185,6 +187,7 @@ func (sn *SceneNode) RotateX(rotationOrigin *vec3.T, angle float64) {
 	rotationMatrix.AssignXRotation(angle)
 
 	sn.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals, rotatedImageProjections)
+	sn.UpdateBounds()
 }
 
 func (sn *SceneNode) RotateY(rotationOrigin *vec3.T, angle float64) {
@@ -197,6 +200,7 @@ func (sn *SceneNode) RotateY(rotationOrigin *vec3.T, angle float64) {
 	rotationMatrix.AssignYRotation(angle)
 
 	sn.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals, rotatedImageProjections)
+	sn.UpdateBounds()
 }
 
 func (sn *SceneNode) RotateZ(rotationOrigin *vec3.T, angle float64) {
@@ -209,6 +213,7 @@ func (sn *SceneNode) RotateZ(rotationOrigin *vec3.T, angle float64) {
 	rotationMatrix.AssignZRotation(angle)
 
 	sn.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals, rotatedImageProjections)
+	sn.UpdateBounds()
 }
 
 func (sn *SceneNode) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool, rotatedImageProjections map[*ImageProjection]bool) {

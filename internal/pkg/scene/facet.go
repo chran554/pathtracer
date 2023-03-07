@@ -52,13 +52,16 @@ func (f *Facet) SplitMultiPointFacet() []*Facet {
 }
 
 func (f *Facet) UpdateBounds() *Bounds {
-	bounds := NewBounds()
-	for _, vertex := range f.Vertices {
-		bounds.IncludeVertex(vertex)
+	if f.Bounds == nil {
+		bounds := NewBounds()
+		for _, vertex := range f.Vertices {
+			bounds.IncludeVertex(vertex)
+		}
+
+		f.Bounds = &bounds
 	}
 
-	f.Bounds = &bounds
-	return &bounds
+	return f.Bounds
 }
 
 func (f *Facet) UpdateNormal() {
@@ -170,6 +173,8 @@ func (f *Facet) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoi
 			rotatedVertexNormals[vertexNormal] = true
 		}
 	}
+
+	f.Bounds = nil
 }
 
 func (f *Facet) translate(translation *vec3.T, translatedPoints map[*vec3.T]bool) {
@@ -186,6 +191,8 @@ func (f *Facet) translate(translation *vec3.T, translatedPoints map[*vec3.T]bool
 			translatedPoints[vertex] = true
 		}
 	}
+
+	f.Bounds = nil
 }
 
 func (f *Facet) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool) {
@@ -205,6 +212,8 @@ func (f *Facet) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3
 			scaledPoints[vertex] = true
 		}
 	}
+
+	f.Bounds = nil
 }
 
 func (f *Facet) ChangeWindingOrder() {

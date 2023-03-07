@@ -156,6 +156,7 @@ func (fs *FacetStructure) RotateX(rotationOrigin *vec3.T, angle float64) {
 	rotationMatrix.AssignXRotation(angle)
 
 	fs.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals, rotatedImageProjections)
+	fs.UpdateBounds()
 }
 
 func (fs *FacetStructure) RotateY(rotationOrigin *vec3.T, angle float64) {
@@ -169,6 +170,7 @@ func (fs *FacetStructure) RotateY(rotationOrigin *vec3.T, angle float64) {
 	rotationMatrix.AssignYRotation(angle)
 
 	fs.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals, rotatedImageProjections)
+	fs.UpdateBounds()
 }
 
 func (fs *FacetStructure) RotateZ(rotationOrigin *vec3.T, angle float64) {
@@ -182,6 +184,7 @@ func (fs *FacetStructure) RotateZ(rotationOrigin *vec3.T, angle float64) {
 	rotationMatrix.AssignZRotation(angle)
 
 	fs.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals, rotatedImageProjections)
+	fs.UpdateBounds()
 }
 
 func (fs *FacetStructure) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool, rotatedImageProjections map[*ImageProjection]bool) {
@@ -217,6 +220,7 @@ func (fs *FacetStructure) Translate(translation *vec3.T) {
 	translatedImageProjections := make(map[*ImageProjection]bool)
 
 	fs.translate(translation, translatedPoints, translatedImageProjections)
+	fs.UpdateBounds()
 }
 
 func (fs *FacetStructure) translate(translation *vec3.T, translatedPoints map[*vec3.T]bool, translatedImageProjections map[*ImageProjection]bool) {
@@ -253,6 +257,7 @@ func (fs *FacetStructure) Scale(scaleOrigin *vec3.T, scale *vec3.T) {
 	scaledPoints := make(map[*vec3.T]bool)
 	scaledImageProjections := make(map[*ImageProjection]bool)
 	fs.scale(scaleOrigin, scale, scaledPoints, scaledImageProjections)
+	fs.UpdateBounds()
 }
 
 func (fs *FacetStructure) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool, scaledImageProjections map[*ImageProjection]bool) {
@@ -403,6 +408,7 @@ func (fs *FacetStructure) RemoveObjectsByName(objectName string) {
 	}
 
 	removeObjectsByName(fs, objectName, nameMatchFunction)
+	fs.UpdateBounds()
 }
 
 func (fs *FacetStructure) RemoveObjectsBySubstructureName(objectName string) {
@@ -411,6 +417,7 @@ func (fs *FacetStructure) RemoveObjectsBySubstructureName(objectName string) {
 	}
 
 	removeObjectsByName(fs, objectName, nameMatchFunction)
+	fs.UpdateBounds()
 }
 
 func (fs *FacetStructure) RemoveObjectsByMaterialName(materialName string) {
@@ -419,6 +426,7 @@ func (fs *FacetStructure) RemoveObjectsByMaterialName(materialName string) {
 	}
 
 	removeObjectsByName(fs, materialName, nameMatchFunction)
+	fs.UpdateBounds()
 }
 
 func (fs *FacetStructure) ClearMaterials() {
@@ -608,13 +616,11 @@ func (fs *FacetStructure) getFacets() []*Facet {
 }
 
 func (fs *FacetStructure) CenterOn(newCenter *vec3.T) {
-	fs.UpdateBounds()
 	boundsCenter := fs.Bounds.Center()
 	boundsCenter.Invert()
 	boundsCenter.Add(newCenter)
 
-	fs.Translate(newCenter)
-	fs.UpdateBounds()
+	fs.Translate(boundsCenter)
 }
 
 func (fs *FacetStructure) ChangeWindingOrder() {
