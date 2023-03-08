@@ -314,7 +314,7 @@ func parallelPixelRendering(renderedPixelData *image.FloatImage, camera *scn.Cam
 
 	defer wg.Done()
 
-	defaultRenderContext := &scn.Material{Name: "default render context", Color: &color.White, Transparency: 1.0, SolidObject: true, RefractionIndex: scn.RefractionIndex_Air}
+	defaultRenderContext := scn.NewMaterial().N("default render context").C(color.White).T(1.0, true, scn.RefractionIndex_Air)
 	rayContexts := []*scn.Material{defaultRenderContext}
 
 	// Debug ray at specified pixel
@@ -340,6 +340,14 @@ func parallelPixelRendering(renderedPixelData *image.FloatImage, camera *scn.Cam
 	}
 }
 
+// FresnelReflectAmount
+//
+// refractionIndex1 is the index of the medium that we come from.
+// refractionIndex1 is the index of the medium that we hit.
+// incident is the direction vector of the ray, the direction in which we travelled.
+// normal is the normal of the surface we hit (pointing more or less towards our incident vector.
+//
+// https://blog.demofox.org/2020/06/14/casual-shadertoy-path-tracing-3-fresnel-rough-refraction-absorption-orbit-camera/
 func FresnelReflectAmount(refractionIndex1 float64, refractionIndex2 float64, normal *vec3.T, incident *vec3.T, minReflection float64, maxReflection float64) float64 {
 	// Schlick approximation
 	r0 := (refractionIndex1 - refractionIndex2) / (refractionIndex1 + refractionIndex2)
@@ -463,7 +471,7 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 
 	if ii.intersection {
 		if ii.material == nil {
-			ii.material = scn.NewMaterial() // Default material if not specified is matte diffuse white
+			ii.material = scn.NewMaterial() // Default material, if not specified, is matte diffuse white
 		}
 
 		projectionColor := &color.White // Default value if no projection is applied
@@ -486,94 +494,86 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 			if !ii.material.RayTerminator {
 				var newRayHeading *vec3.T
 
-				useTransparencyRay := (ii.material.Transparency > 0.0) && (rand.Float64() < ii.material.Transparency)
+				// Flip normal if it is pointing away from the incoming ray
+				if vectorCosinePositive(ii.normalAtIntersection, ray.Heading) {
+					ii.normalAtIntersection.Invert()
+				}
 
+				currentRayContext := rayContexts[len(rayContexts)-1]
+
+				reflectionProbability := FresnelReflectAmount(currentRayContext.RefractionIndex, ii.material.RefractionIndex, ii.normalAtIntersection, ray.Heading, ii.material.Glossiness, 1.0)
+
+				probabilitySum := reflectionProbability + ii.material.Transparency + ii.material.Diffuse
+				probabilityValue := rand.Float64() * probabilitySum
+
+				useReflectionRay := probabilityValue < reflectionProbability
+				useTransparencyRay := !useReflectionRay && (probabilityValue < (reflectionProbability + ii.material.Transparency))
+				useDiffuseRay := !useReflectionRay && !useTransparencyRay
+
+				diffuseHeading := getRandomCosineWeightedHemisphereVector(ii.normalAtIntersection)
 				cosineNewRayAndNormal := 1.0
 
-				if useTransparencyRay && ii.material.SolidObject && (ii.material.RefractionIndex > 0.0) {
-					isIngoingRay := vectorCosineNegative(ii.normalAtIntersection, ray.Heading)
+				if useDiffuseRay {
+					// Weight for cosine weighted hemisphere sampling
+					cosineNewRayAndNormal = 0.5 // remove the cosine factor as it is already included in hemisphere sampling
+					newRayHeading = diffuseHeading
 
-					if isIngoingRay {
-						// Ingoing ray to a solid object with refraction index
-						currentRayContext := rayContexts[len(rayContexts)-1]
+				} else if useReflectionRay {
+					reflectionHeading := getReflectionVector(ii.normalAtIntersection, ray.Heading)
 
-						var totalInternalReflection bool
-						newRayHeading, totalInternalReflection = getRefractionVector(ii.normalAtIntersection, ray.Heading, currentRayContext.RefractionIndex, ii.material.RefractionIndex)
+					interpolationWeight := ii.material.Roughness * ii.material.Roughness
+					interpolatedHeading := vec3.Interpolate(reflectionHeading, diffuseHeading, interpolationWeight)
+					interpolatedHeading.Normalize()
 
-						if !totalInternalReflection {
-							rayContexts = append(rayContexts, ii.material)
-						}
-					} else {
-						// Outgoing ray from a solid object with refraction index
-						currentRayContext := rayContexts[len(rayContexts)-1] // Get current ray context
-						rayContexts = rayContexts[:len(rayContexts)-1]       // Pop off current ray context
-						if len(rayContexts) == 0 {
-							panic("About to access empty ray context (after popping last context)...")
-						}
-						previousRayContext := rayContexts[len(rayContexts)-1] // Get previous ray context
+					// Weight for cosine weighted hemisphere sampling
+					cosineNewRayAndNormal = 0.5*interpolationWeight + (1.0 - interpolationWeight) // Interpolated weight diffuse --> specular
+					newRayHeading = &interpolatedHeading
 
-						// Flip normal if needed, to face ray
-						if vectorCosinePositive(ii.normalAtIntersection, ray.Heading) {
-							ii.normalAtIntersection.Invert()
-						}
+				} else if useTransparencyRay {
+					if ii.material.SolidObject && (ii.material.RefractionIndex > 0.0) {
+						isIngoingRay := vectorCosineNegative(ii.normalAtIntersection, ray.Heading)
 
-						var totalInternalReflection bool
-						newRayHeading, totalInternalReflection = getRefractionVector(ii.normalAtIntersection, ray.Heading, currentRayContext.RefractionIndex, previousRayContext.RefractionIndex)
+						if isIngoingRay {
+							// Ingoing ray to a solid object with refraction index
 
-						if totalInternalReflection {
-							rayContexts = append(rayContexts, currentRayContext) // We are not leaving current ray context, due to total internal reflection
+							var totalInternalReflection bool
+							newRayHeading, totalInternalReflection = getRefractionVector(ii.normalAtIntersection, ray.Heading, currentRayContext.RefractionIndex, ii.material.RefractionIndex)
+
+							if !totalInternalReflection {
+								rayContexts = append(rayContexts, ii.material)
+							}
 						} else {
-							// previous ray context is already on top of stack
+							// Outgoing ray from a solid object with refraction index
+
+							// Outgoing ray from a solid object with refraction index
+							rayContexts = rayContexts[:len(rayContexts)-1] // Pop off current ray context
+							if len(rayContexts) == 0 {
+								panic("About to access empty ray context (after popping last context)...")
+							}
+							previousRayContext := rayContexts[len(rayContexts)-1] // Get previous ray context
+
+							// Flip normal if needed, to face ray
+							if vectorCosinePositive(ii.normalAtIntersection, ray.Heading) {
+								ii.normalAtIntersection.Invert()
+							}
+
+							var totalInternalReflection bool
+							newRayHeading, totalInternalReflection = getRefractionVector(ii.normalAtIntersection, ray.Heading, currentRayContext.RefractionIndex, previousRayContext.RefractionIndex)
+
+							if totalInternalReflection {
+								rayContexts = append(rayContexts, currentRayContext) // We are not leaving current ray context, due to total internal reflection
+							} else {
+								// previous ray context is already on top of stack
+							}
 						}
-					}
 
-					cosineNewRayAndNormal = 1.0
+						cosineNewRayAndNormal = 1.0
 
-				} else if useTransparencyRay && !ii.material.SolidObject {
-					// Just pass through the object in the same direction as before.
-					// The walls of the object are super thin and do not refract the ray.
-					newRayHeading = ray.Heading
-					cosineNewRayAndNormal = 1.0
-
-				} else {
-					// Flip normal if it is pointing away from the incoming ray
-					if vectorCosinePositive(ii.normalAtIntersection, ray.Heading) {
-						ii.normalAtIntersection.Invert()
-					}
-
-					// diffuseHeading := getRandomHemisphereVector(normalAtIntersection)
-					diffuseHeading := getRandomCosineWeightedHemisphereVector(ii.normalAtIntersection)
-
-					useReflectionRay := rand.Float64() < ii.material.Glossiness
-
-					if useReflectionRay {
-						reflectionHeading := getReflectionVector(ii.normalAtIntersection, ray.Heading)
-
-						interpolationWeight := ii.material.Roughness * ii.material.Roughness
-						interpolatedHeading := vec3.Interpolate(reflectionHeading, diffuseHeading, interpolationWeight)
-						interpolatedHeading.Normalize()
-
-						newRayHeading = &interpolatedHeading
-
-						// Weight for random hemisphere sampling
-						//cosineNewRayAndNormal = vec3.Dot(normalAtIntersection, newRayHeading) / (normalAtIntersection.Length() * newRayHeading.Length())
-						//cosineNewRayAndNormal = cosineNewRayAndNormal*interpolationWeight + (1.0 - interpolationWeight) // Interpolated weight diffuse --> specular
-
-						// Weight for cosine weighted hemisphere sampling
-						cosineNewRayAndNormal = 0.5*interpolationWeight + (1.0 - interpolationWeight) // Interpolated weight diffuse --> specular
-
-					} else {
-						// cosine weighted hemisphere sampling
-						//diffuseHeading.Add(normalAtIntersection)
-						//diffuseHeading.Normalize()
-
-						newRayHeading = diffuseHeading
-
-						// Weight for cosine weighted hemisphere sampling
-						cosineNewRayAndNormal = 0.5 // remove the cosine factor as it is already included in hemisphere sampling
-
-						// Weight for random hemisphere sampling
-						// cosineNewRayAndNormal = vec3.Dot(normalAtIntersection, newRayHeading) / (normalAtIntersection.Length() * newRayHeading.Length())
+					} else if !ii.material.SolidObject {
+						// Just pass through the object in the same direction as before.
+						// The walls of the object are super thin and do not refract the ray.
+						newRayHeading = ray.Heading
+						cosineNewRayAndNormal = 1.0
 					}
 				}
 
@@ -593,18 +593,9 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 				incomingEmissionOnSurface.Multiply(float32(cosineNewRayAndNormal))
 
 				outgoingEmission = color.Color{
-					//R: material.Color.R * projectionColor.R * (incomingEmission.R * float32(cosineNewRayAndNormal)*material.Glossiness),
-					//G: material.Color.G * projectionColor.G * (incomingEmission.G * float32(cosineNewRayAndNormal)*material.Glossiness),
-					//B: material.Color.B * projectionColor.B * (incomingEmission.B * float32(cosineNewRayAndNormal)*material.Glossiness),
-
-					R: incomingEmissionOnSurface.R*float32(ii.material.Glossiness) + incomingEmissionOnSurface.R*ii.material.Color.R*projectionColor.R*float32(1.0-ii.material.Glossiness),
-					G: incomingEmissionOnSurface.G*float32(ii.material.Glossiness) + incomingEmissionOnSurface.G*ii.material.Color.G*projectionColor.G*float32(1.0-ii.material.Glossiness),
-					B: incomingEmissionOnSurface.B*float32(ii.material.Glossiness) + incomingEmissionOnSurface.B*ii.material.Color.B*projectionColor.B*float32(1.0-ii.material.Glossiness),
-
-					// The multiplication by 0.5 is actually a division by 2, to normalize the added light as there are two light rays fired and added together.
-					// R: 0.5 * (float32(cosineNewRayAndNormalDiffuse)*incomingEmissionDiffuse.R*material.Color.R*projectionColor.R + float32(cosineNewRayAndNormal)*incomingEmission.R*material.Glossiness),
-					// G: 0.5 * (float32(cosineNewRayAndNormalDiffuse)*incomingEmissionDiffuse.G*material.Color.G*projectionColor.G + float32(cosineNewRayAndNormal)*incomingEmission.G*material.Glossiness),
-					// B: 0.5 * (float32(cosineNewRayAndNormalDiffuse)*incomingEmissionDiffuse.B*material.Color.B*projectionColor.B + float32(cosineNewRayAndNormal)*incomingEmission.B*material.Glossiness),
+					R: incomingEmissionOnSurface.R * ii.material.Color.R * projectionColor.R,
+					G: incomingEmissionOnSurface.G * ii.material.Color.G * projectionColor.G,
+					B: incomingEmissionOnSurface.B * ii.material.Color.B * projectionColor.B,
 				}
 			}
 
@@ -640,7 +631,8 @@ func processFacetStructureIntersection(ray *scn.Ray, facetStructure *scn.FacetSt
 }
 
 func processDiscIntersection(ray *scn.Ray, disc *scn.Disc, ii *IntersectionInformation) {
-	tempIntersectionPoint, tempIntersection := scn.DiscIntersection(ray, disc)
+	tempIntersection, tempIntersectionPoint, tempIntersectionNormal := scn.DiscIntersection(ray, disc)
+
 	if tempIntersection {
 		distance := vec3.Distance(ray.Origin, tempIntersectionPoint)
 		if distance < ii.shortestDistance && distance > epsilonDistance {
@@ -648,7 +640,7 @@ func processDiscIntersection(ray *scn.Ray, disc *scn.Disc, ii *IntersectionInfor
 			ii.intersectionPoint = tempIntersectionPoint // Save the intersection point of the closest intersection
 			ii.shortestDistance = distance               // Save the shortest intersection distance
 			ii.material = disc.Material
-			ii.normalAtIntersection = &(*disc.Normal) // Should be normalized from initialization
+			ii.normalAtIntersection = tempIntersectionNormal // Should be normalized from initialization
 
 			// Flip normal if it is pointing away from the incoming ray
 			if vectorCosinePositive(ii.normalAtIntersection, ray.Heading) {
@@ -660,6 +652,7 @@ func processDiscIntersection(ray *scn.Ray, disc *scn.Disc, ii *IntersectionInfor
 
 func processSphereIntersection(ray *scn.Ray, sphere *scn.Sphere, ii *IntersectionInformation) {
 	tempIntersectionPoint, tempIntersection := scn.SphereIntersection(ray, sphere)
+
 	if tempIntersection {
 		distance := vec3.Distance(ray.Origin, tempIntersectionPoint)
 

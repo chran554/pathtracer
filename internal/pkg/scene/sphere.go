@@ -1,7 +1,6 @@
 package scene
 
 import (
-	"fmt"
 	"github.com/ungerik/go3d/float64/mat3"
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -111,36 +110,39 @@ func (s *Sphere) RotateZ(rotationOrigin *vec3.T, angle float64) {
 }
 
 // rotate "rotates" a sphere. It does not rotate the sphere per se but rather rotates any projection associated with the sphere.
-func (s *Sphere) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedProjections map[*ImageProjection]bool) {
+func (s *Sphere) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedImageProjections map[*ImageProjection]bool) {
 	originAlreadyRotated := rotatedPoints[s.Origin]
 
+	// Rotate sphere origin
 	if !originAlreadyRotated {
 		newVertex := s.Origin.Subed(rotationOrigin)
 		newVertex[2] *= -1 // Change to right hand coordinate system from left hand coordinate system
-		rotatedProjectionOrigin := rotationMatrix.MulVec3(&newVertex)
-		rotatedProjectionOrigin[2] *= -1 // Change back from right hand coordinate system to left hand coordinate system
-		rotatedProjectionOrigin.Add(rotationOrigin)
+		rotatedOrigin := rotationMatrix.MulVec3(&newVertex)
+		rotatedOrigin[2] *= -1 // Change back from right hand coordinate system to left hand coordinate system
+		rotatedOrigin.Add(rotationOrigin)
 
-		s.Origin[0] = rotatedProjectionOrigin[0]
-		s.Origin[1] = rotatedProjectionOrigin[1]
-		s.Origin[2] = rotatedProjectionOrigin[2]
+		s.Origin[0] = rotatedOrigin[0]
+		s.Origin[1] = rotatedOrigin[1]
+		s.Origin[2] = rotatedOrigin[2]
 
 		rotatedPoints[s.Origin] = true
 	}
 
+	// Rotate sphere image projection
 	if s.Material != nil && s.Material.Projection != nil {
 		imageProjection := s.Material.Projection
 		projectionType := imageProjection.ProjectionType
 
-		imageProjectionAlreadyRotated := rotatedProjections[imageProjection]
+		imageProjectionAlreadyRotated := rotatedImageProjections[imageProjection]
+		imageProjectionOriginAlreadyRotated := rotatedPoints[imageProjection.Origin]
+		imageProjectionUAlreadyRotated := rotatedPoints[imageProjection.U]
+		imageProjectionVAlreadyRotated := rotatedPoints[imageProjection.V]
 
 		if !imageProjectionAlreadyRotated {
-
 			// If projection type is parallel or spherical then rotate projection origin, u, and v vectors.
 			// No need to translate u, and v vectors by rotation origin as they are pure vectors and not points without a specific location.
-			if projectionType == ProjectionTypeParallel || projectionType == ProjectionTypeSpherical {
+			if !imageProjectionOriginAlreadyRotated {
 				projectionOrigin := *imageProjection.Origin
-
 				projectionOrigin.Sub(rotationOrigin)
 				projectionOrigin[2] *= -1 // Change to right hand coordinate system from left hand coordinate system
 				rotatedProjectionOrigin := rotationMatrix.MulVec3(&projectionOrigin)
@@ -150,7 +152,9 @@ func (s *Sphere) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPo
 				imageProjection.Origin[0] = rotatedProjectionOrigin[0]
 				imageProjection.Origin[1] = rotatedProjectionOrigin[1]
 				imageProjection.Origin[2] = rotatedProjectionOrigin[2]
+			}
 
+			if !imageProjectionUAlreadyRotated {
 				projectionU := *imageProjection.U
 				projectionU[2] *= -1 // Convert to right hand coordinate system before rotation matrix
 				rotatedProjectionU := rotationMatrix.MulVec3(&projectionU)
@@ -159,7 +163,9 @@ func (s *Sphere) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPo
 				imageProjection.U[0] = rotatedProjectionU[0]
 				imageProjection.U[1] = rotatedProjectionU[1]
 				imageProjection.U[2] = rotatedProjectionU[2]
+			}
 
+			if !imageProjectionVAlreadyRotated {
 				projectionV := *imageProjection.V
 				projectionV[2] *= -1 // Convert to right hand coordinate system before rotation matrix
 				rotatedProjectionV := rotationMatrix.MulVec3(&projectionV)
@@ -168,17 +174,19 @@ func (s *Sphere) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPo
 				imageProjection.V[0] = rotatedProjectionV[0]
 				imageProjection.V[1] = rotatedProjectionV[1]
 				imageProjection.V[2] = rotatedProjectionV[2]
+			}
 
-				if projectionType == ProjectionTypeParallel {
-					imageProjection._invertedCoordinateSystemMatrix = nil
-					imageProjection.initializeParallellProjection()
+			if projectionType == ProjectionTypeParallel {
+				imageProjection._invertedCoordinateSystemMatrix = nil
+				imageProjection.initializeParallellProjection()
 
-				} else if projectionType == ProjectionTypeSpherical {
-					imageProjection._invertedCoordinateSystemMatrix = nil
-					imageProjection.initializeSphericalProjection()
-				}
-			} else {
-				panic(fmt.Sprintf("No sphere rotation implementation for projection type %s", projectionType))
+			} else if projectionType == ProjectionTypeSpherical {
+				imageProjection._invertedCoordinateSystemMatrix = nil
+				imageProjection.initializeSphericalProjection()
+
+			} else if projectionType == ProjectionTypeCylindrical {
+				imageProjection._invertedCoordinateSystemMatrix = nil
+				imageProjection.initializeCylindricalProjection()
 			}
 		}
 	}

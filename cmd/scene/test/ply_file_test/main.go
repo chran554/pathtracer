@@ -83,13 +83,8 @@ func GetCornellBox(scale *vec3.T, lightIntensityFactor float64) *scn.FacetStruct
 	var cornellBoxFilename = "cornellbox.obj"
 	var cornellBoxFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + cornellBoxFilename
 
-	cornellBoxFile, err := os.Open(cornellBoxFilenamePath)
-	if err != nil {
-		fmt.Printf("ouupps, something went wrong loading file: '%s'\n%s\n", cornellBoxFilenamePath, err.Error())
-	}
-	defer cornellBoxFile.Close()
+	cornellBox := obj.ReadOrPanic(cornellBoxFilenamePath)
 
-	cornellBox, err := obj.Read(cornellBoxFile)
 	cornellBox.Scale(&vec3.Zero, scale)
 	cornellBox.ClearMaterials()
 

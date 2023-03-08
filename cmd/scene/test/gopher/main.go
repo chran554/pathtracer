@@ -1,10 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"github.com/ungerik/go3d/float64/vec3"
 	"math"
-	"os"
 	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj"
@@ -44,7 +42,7 @@ func main() {
 	skyDome := scn.NewSphere(&vec3.T{0, 0, 0}, 5000, skyMaterial).N("sky dome")
 
 	// Gopher
-	gopher := GetGopher(&vec3.T{1, 1, 1})
+	gopher := obj.NewGopher(200.0)
 	gopher.Translate(&vec3.T{0, -gopher.Bounds.Ymin, 0})
 	gopher.ScaleUniform(&vec3.Zero, 2.0)
 	gopher.RotateY(&vec3.Zero, math.Pi*5.0/6.0)
@@ -85,24 +83,4 @@ func getCamera(animationProgress float64) *scn.Camera {
 	focusDistance := heading.Length() * 1.75
 
 	return scn.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).F(focusDistance)
-}
-
-func GetGopher(scale *vec3.T) *scn.FacetStructure {
-	var objFilename = "go_gopher_color.obj"
-	var objFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + objFilename
-
-	objFile, err := os.Open(objFilenamePath)
-	if err != nil {
-		message := fmt.Sprintf("ouupps, something went wrong loading file: '%s'\n%s\n", objFilenamePath, err.Error())
-		panic(message)
-	}
-	defer objFile.Close()
-
-	object, err := obj.Read(objFile)
-	object.Scale(&vec3.Zero, scale)
-	// obj.ClearMaterials()
-	object.UpdateBounds()
-	fmt.Printf("Gopher bounds: %+v\n", object.Bounds)
-
-	return object
 }

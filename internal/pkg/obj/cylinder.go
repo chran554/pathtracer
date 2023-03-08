@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/ungerik/go3d/float64/vec3"
 	"math"
-	"os"
 	scn "pathtracer/internal/pkg/scene"
 )
 
@@ -37,25 +36,19 @@ func loadCylinder() *scn.FacetStructure {
 	var objFilename = "cylinder_no_caps.obj"
 	var objFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + objFilename
 
-	objFile, err := os.Open(objFilenamePath)
-	if err != nil {
-		message := fmt.Sprintf("ouupps, something went wrong loading file: '%s'\n%s\n", objFilenamePath, err.Error())
-		panic(message)
-	}
-	defer objFile.Close()
+	cylinder := ReadOrPanic(objFilenamePath)
 
-	obj, err := Read(objFile)
-	obj.CenterOn(&vec3.Zero)
-	obj.RotateX(&vec3.Zero, math.Pi/2)
+	cylinder.CenterOn(&vec3.Zero)
+	cylinder.RotateX(&vec3.Zero, math.Pi/2)
 
-	xmin := obj.Bounds.Xmin
-	xmax := obj.Bounds.Xmax
-	ymin := obj.Bounds.Ymin
-	ymax := obj.Bounds.Ymax
-	zmin := obj.Bounds.Zmin
-	zmax := obj.Bounds.Zmax
+	xmin := cylinder.Bounds.Xmin
+	xmax := cylinder.Bounds.Xmax
+	ymin := cylinder.Bounds.Ymin
+	ymax := cylinder.Bounds.Ymax
+	zmin := cylinder.Bounds.Zmin
+	zmax := cylinder.Bounds.Zmax
 
-	obj.Scale(&vec3.Zero, &vec3.T{1.0 / (xmax - xmin), 1.0 / (ymax - ymin), 1.0 / (zmax - zmin)}) // resize/scale to height and radius == 1.0 units
+	cylinder.Scale(&vec3.Zero, &vec3.T{1.0 / (xmax - xmin), 1.0 / (ymax - ymin), 1.0 / (zmax - zmin)}) // resize/scale to height and radius == 1.0 units
 
-	return obj
+	return cylinder
 }

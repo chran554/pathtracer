@@ -22,6 +22,7 @@ const (
 type Material struct {
 	Name            string           `json:"Name,omitempty"`
 	Color           *color.Color     `json:"Color,omitempty"`
+	Diffuse         float64          `json:"Diffuse,omitempty"`
 	Emission        *color.Color     `json:"Emission,omitempty"`
 	Glossiness      float64          `json:"Glossiness,omitempty"` // Glossiness is the percent amount that will make out specular reflection. Values [0.0 .. 1.0] with default 0.0. Lower value the more diffuse color will appear and higher value the more mirror reflection will appear.
 	Roughness       float64          `json:"Roughness,omitempty"`  // Roughness is the diffuse spread of the specular reflection. Values [0.0 .. 1.0] with default 0.0. Lower is like "brushed metal" or "foggy/hazy reflection" and higher value give a more mirror like reflection. A value of 0.0 is perfect mirror reflection and a value of 0.0 is a perfect diffuse material (no mirror at al).
@@ -37,11 +38,12 @@ func NewMaterial() *Material {
 	return &Material{
 		Name:            "",
 		Color:           &color.White,
+		Diffuse:         1.0,
 		Emission:        &color.Black,
 		Glossiness:      0.0,
 		Roughness:       1.0,
 		Projection:      nil,
-		RefractionIndex: 0.0,
+		RefractionIndex: RefractionIndex_Air,
 		SolidObject:     false,
 		Transparency:    0.0,
 		RayTerminator:   false,
@@ -78,6 +80,7 @@ func (m *Material) E(emission color.Color, scale float64, rayTerminator bool) *M
 func (m *Material) M(glossiness float64, roughness float64) *Material {
 	m.Roughness = roughness
 	m.Glossiness = glossiness
+	m.Diffuse = 1.0 - (m.Glossiness + m.Transparency)
 	return m
 }
 
@@ -86,6 +89,7 @@ func (m *Material) T(transparency float64, solidObject bool, refractionIndex flo
 	m.Transparency = transparency
 	m.SolidObject = solidObject
 	m.RefractionIndex = refractionIndex
+	m.Diffuse = 1.0 - (m.Glossiness + m.Transparency)
 	return m
 }
 

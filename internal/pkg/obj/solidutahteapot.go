@@ -1,9 +1,7 @@
 package obj
 
 import (
-	"fmt"
 	"github.com/ungerik/go3d/float64/vec3"
-	"os"
 	"pathtracer/internal/pkg/color"
 	scn "pathtracer/internal/pkg/scene"
 )
@@ -12,18 +10,11 @@ func NewSolidUtahTeapot(scale float64) *scn.FacetStructure {
 	var objectFilename = "utah_teapot_solid_01.obj"
 	var objectFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + objectFilename
 
-	objectFile, err := os.Open(objectFilenamePath)
-	if err != nil {
-		fmt.Printf("ouupps, something went wrong loading file: '%s'\n%s\n", objectFilenamePath, err.Error())
-	}
-	defer objectFile.Close()
+	utahTeaPot := ReadOrPanic(objectFilenamePath)
 
-	object, err := Read(objectFile)
-	//object.CenterOn(&vec3.Zero)
-	object.Translate(&vec3.T{0, -object.Bounds.Ymin, 0})
+	utahTeaPot.Translate(&vec3.T{0, -utahTeaPot.Bounds.Ymin, 0})
 
-	object.ScaleUniform(&vec3.Zero, scale/object.Bounds.Ymax)
-	object.UpdateBounds()
+	utahTeaPot.ScaleUniform(&vec3.Zero, scale/utahTeaPot.Bounds.Ymax)
 
 	porcelainMaterial := scn.NewMaterial().
 		N("Porcelain material").
@@ -36,8 +27,8 @@ func NewSolidUtahTeapot(scale float64) *scn.FacetStructure {
 	// 	M(0.2, 0.05).
 	// 	T(1.0, true, scn.RefractionIndex_Glass)
 
-	object.ClearMaterials()
-	object.Material = porcelainMaterial
+	utahTeaPot.ClearMaterials()
+	utahTeaPot.Material = porcelainMaterial
 
-	return object
+	return utahTeaPot
 }

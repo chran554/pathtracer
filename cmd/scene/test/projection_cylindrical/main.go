@@ -10,6 +10,7 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
+// Soda cans Coca Cola and Pepsi
 var animationName = "projection_cylindrical"
 
 var amountAnimationFrames = 1
@@ -20,7 +21,7 @@ var magnification = 2.0
 
 var amountSamples = 1024 * 12
 
-var apertureSize = 0.5
+var apertureSize = 0.4
 
 func main() {
 	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true)
@@ -30,7 +31,7 @@ func main() {
 		//C(color.NewColorGrey(0.2))).
 		SP("textures/equirectangular/las-vegas-hotell-lobby.png", &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 
-	lamp1 := scn.NewSphere(&vec3.T{-50, 150, -75}, 50, scn.NewMaterial().E(color.NewColorKelvin(5000), 18, true)).N("lamp")
+	lamp1 := scn.NewSphere(&vec3.T{-50, 150, -75}, 50, scn.NewMaterial().E(color.NewColorKelvin(6000), 18, true)).N("lamp")
 
 	tableBoard := obj.NewBox(obj.BoxCentered)
 	tableBoard.Translate(&vec3.T{0, -tableBoard.Bounds.Ymax, 0})

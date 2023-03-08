@@ -3,7 +3,6 @@ package obj
 import (
 	"fmt"
 	"github.com/ungerik/go3d/float64/vec3"
-	"os"
 	"pathtracer/internal/pkg/color"
 	scn "pathtracer/internal/pkg/scene"
 )
@@ -44,22 +43,17 @@ func loadCastle(scale *vec3.T) *scn.FacetStructure {
 	var objFilename = "castle_02.obj"
 	var objFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/" + objFilename
 
-	objFile, err := os.Open(objFilenamePath)
-	if err != nil {
-		fmt.Printf("ouupps, something went wrong loading file: '%s'\n%s\n", objFilenamePath, err.Error())
-	}
-	defer objFile.Close()
+	castle := ReadOrPanic(objFilenamePath)
 
-	obj, err := Read(objFile)
-	ymin := obj.Bounds.Ymin
-	ymax := obj.Bounds.Ymax
-	obj.Translate(&vec3.T{0.0, -ymin, 0.0})       // lamp base touch the ground (xz-plane)
-	obj.ScaleUniform(&vec3.Zero, 1.0/(ymax-ymin)) // resize/scale to height == 1.0 units
+	ymin := castle.Bounds.Ymin
+	ymax := castle.Bounds.Ymax
+	castle.Translate(&vec3.T{0.0, -ymin, 0.0})       // lamp base touch the ground (xz-plane)
+	castle.ScaleUniform(&vec3.Zero, 1.0/(ymax-ymin)) // resize/scale to height == 1.0 units
 
-	obj.Scale(&vec3.Zero, scale)
+	castle.Scale(&vec3.Zero, scale)
 
-	obj.UpdateBounds()
-	fmt.Printf("Castle bounds: %+v\n", obj.Bounds)
+	castle.UpdateBounds()
+	fmt.Printf("Castle bounds: %+v\n", castle.Bounds)
 
-	return obj
+	return castle
 }

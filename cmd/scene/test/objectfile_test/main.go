@@ -1,10 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"github.com/ungerik/go3d/float64/mat3"
 	"math"
-	"os"
 	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj"
@@ -83,14 +81,7 @@ func main() {
 }
 
 func NewCornellBox(scale float64) *scn.FacetStructure {
-	cornellBoxFile, err := os.Open(cornellBoxFilenamePath)
-	if err != nil {
-		message := fmt.Sprintf("ouupps, something went wrong loading file: '%s'\n%s\n", cornellBoxFilenamePath, err.Error())
-		panic(message)
-	}
-	defer cornellBoxFile.Close()
-
-	cornellBox, err := obj.Read(cornellBoxFile)
+	cornellBox := obj.ReadOrPanic(cornellBoxFilenamePath)
 	cornellBox.ScaleUniform(&vec3.Zero, scale)
 
 	cornellBox.ReplaceMaterial("Wall_right", scn.NewMaterial().C(color.NewColor(0.9, 0.1, 0.1)).M(0.1, 0.2))

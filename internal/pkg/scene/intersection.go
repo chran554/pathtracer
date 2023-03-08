@@ -301,18 +301,19 @@ func FacetStructureIntersection(line *Ray, facetStructure *FacetStructure) (inte
 	return intersection, intersectionPoint, intersectionNormal, intersectionMaterial
 }
 
-func DiscIntersection(line *Ray, disc *Disc) (*vec3.T, bool) {
+func DiscIntersection(line *Ray, disc *Disc) (intersection bool, intersectionPoint *vec3.T, intersectionNormal *vec3.T) {
 	plane := Plane{Origin: disc.Origin, Normal: disc.Normal}
-	intersectionPoint, intersection := GetLinePlaneIntersectionPoint2(line, &plane)
+	discPlaneIntersectionPoint, discIntersection := GetLinePlaneIntersectionPoint2(line, &plane)
 
-	if intersection {
-		intersectionDistance := vec3.Distance(disc.Origin, intersectionPoint)
+	if discIntersection {
+		intersectionDistance := vec3.Distance(disc.Origin, discPlaneIntersectionPoint)
 		if intersectionDistance <= disc.Radius {
-			return intersectionPoint, true
+			normal := *disc.Normal
+			return true, discPlaneIntersectionPoint, &normal
 		}
 	}
 
-	return nil, false
+	return false, nil, nil
 }
 
 // SphereIntersection finds the closest ray intersection point (in positive direction from ray origin point) with sphere.

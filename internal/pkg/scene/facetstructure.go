@@ -359,13 +359,21 @@ func (fs *FacetStructure) GetObjectsByMaterialName(materialName string) []*Facet
 	return getObjectsByName(fs, materialName, nameMatchFunction)
 }
 
-func (fs *FacetStructure) ReplaceMaterial(materialName string, material *Material) []*FacetStructure {
+func (fs *FacetStructure) ReplaceMaterial(materialName string, material *Material) {
 	objects := fs.GetObjectsByMaterialName(materialName)
 	for _, object := range objects {
 		object.Material = material
 	}
+}
 
-	return objects
+func (fs *FacetStructure) GetFirstMaterialByName(materialName string) *Material {
+	objects := fs.GetObjectsByMaterialName(materialName)
+
+	if len(objects) > 0 {
+		return objects[0].Material
+	} else {
+		return nil
+	}
 }
 
 func getObjectsByName(fs *FacetStructure, name string, matchFunction func(*FacetStructure, string) bool) []*FacetStructure {

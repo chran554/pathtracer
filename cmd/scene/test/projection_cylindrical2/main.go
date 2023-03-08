@@ -9,7 +9,7 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var amountSamples = 1024 * 4
+var amountSamples = 1024
 
 func main() {
 	cylinderRadius := 3 * 100.0 // 300 cm

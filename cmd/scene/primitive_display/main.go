@@ -1,10 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"github.com/ungerik/go3d/float64/vec3"
 	"math"
-	"os"
 	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj"
@@ -13,7 +11,7 @@ import (
 
 var animationName = "primitive_display"
 
-var amountAnimationFrames = 72 * 2
+var amountAnimationFrames = 1 // 72 * 2
 
 var imageWidth = 800
 var imageHeight = 200
@@ -26,23 +24,24 @@ var cameraDistanceFactor = 0.8
 var viewPlaneDistance = 600.0
 var cameraAperture = 15.0
 
-var lightIntensityFactor = 5.0
+var lightIntensityFactor = 7.0
 
 func main() {
 	// Cornell box
-	cornellBox := GetCornellBox(&vec3.T{500, 300, 500}, lightIntensityFactor) // cm, as units. I.e. a 5x3x5m room
+	cornellBox := obj.NewWhiteCornellBox(&vec3.T{500 * 4, 300 * 2, 500 * 4}, lightIntensityFactor) // cm, as units. I.e. a 5x3x5m room
+	cornellBox.GetFirstMaterialByName("floor").M(0.01, 0.3)
 
 	// Gopher
 	gopherPupilMaterial := scn.NewMaterial().C(color.NewColorGrey(0.0)).M(0.05, 0.05)
 
-	gopherBlue := GetGopher(&vec3.T{1, 1, 1})
+	gopherBlue := obj.NewGopher(180.0)
 	gopherBlue.ReplaceMaterial("eye_pupil", gopherPupilMaterial)
 	gopherBlue.Translate(&vec3.T{0, -gopherBlue.Bounds.Ymin, 0})
 	gopherBlue.ScaleUniform(&vec3.Zero, 2.0)
 	gopherBlue.RotateY(&vec3.Zero, math.Pi*5/6)
 	gopherBlue.Translate(&vec3.T{800, 0, 800})
 
-	gopherPurple := GetGopher(&vec3.T{1, 1, 1})
+	gopherPurple := obj.NewGopher(180.0)
 	gopherPurple.ReplaceMaterial("body", scn.NewMaterial().C(color.NewColor(0.72, 0.55, 0.90)))
 	gopherPurple.ReplaceMaterial("eye_pupil", gopherPupilMaterial)
 	gopherPurple.Translate(&vec3.T{0, -gopherPurple.Bounds.Ymin, 0})
@@ -50,7 +49,7 @@ func main() {
 	gopherPurple.RotateY(&vec3.Zero, -math.Pi*4/6)
 	gopherPurple.Translate(&vec3.T{-800, 0, 800})
 
-	gopherYellow := GetGopher(&vec3.T{1, 1, 1})
+	gopherYellow := obj.NewGopher(180.0)
 	gopherYellow.ReplaceMaterial("body", scn.NewMaterial().C(color.NewColor(0.90, 0.86, 0.55)))
 	gopherYellow.ReplaceMaterial("eye_pupil", gopherPupilMaterial)
 	gopherYellow.Translate(&vec3.T{0, -gopherYellow.Bounds.Ymin, 0})
@@ -59,13 +58,15 @@ func main() {
 	gopherYellow.Translate(&vec3.T{-300, 0, 800})
 
 	// Diamond
-	diamond := GetDiamond(&vec3.T{2, 2, 2})
-	diamond.Translate(&vec3.T{0, -diamond.Bounds.Ymin, 0})
+	diamond := obj.NewDiamond(200)
 	diamond.RotateX(&vec3.Zero, 0.7173303226) // Pavilion angle, lay diamond on the side on the floor
 	diamond.RotateY(&vec3.Zero, -math.Pi*3/6)
 	diamond.Translate(&vec3.T{600, 0, 700})
 	//diamond.Translate(&vec3.T{0, 0, -200})
-	diamond.Material = &scn.Material{Color: &color.Color{R: 0.85, G: 0.85, B: 0.75}, Emission: &color.Color{R: 0.1, G: 0.08, B: 0.05}, Glossiness: 0.05, Roughness: 0.0, Transparency: 0.0}
+	diamond.Material = scn.NewMaterial().
+		C(color.NewColor(0.85, 0.85, 0.75)).
+		E(color.NewColor(0.1, 0.08, 0.05), 1.0, false).
+		M(0.05, 0.0)
 
 	podiumHeight := 30.0
 	podiumWidth := 200.0
@@ -160,94 +161,6 @@ func trianglePrimitive() *scn.FacetStructure {
 	facetStructure.UpdateNormals()
 
 	return &facetStructure
-}
-
-func GetCornellBox(scale *vec3.T, lightIntensityFactor float64) *scn.FacetStructure {
-	var cornellBoxFilename = "cornellbox.obj"
-	var cornellBoxFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + cornellBoxFilename
-
-	cornellBoxFile, err := os.Open(cornellBoxFilenamePath)
-	if err != nil {
-		message := fmt.Sprintf("ouupps, something went wrong loading file: '%s'\n%s\n", cornellBoxFilenamePath, err.Error())
-		panic(message)
-	}
-	defer cornellBoxFile.Close()
-
-	cornellBox, err := obj.Read(cornellBoxFile)
-	cornellBox.Scale(&vec3.Zero, scale)
-	cornellBox.ClearMaterials()
-	cornellBox.UpdateBounds()
-	fmt.Printf("Cornell box bounds: %+v\n", cornellBox.Bounds)
-
-	cornellBox.Material = scn.NewMaterial().N("Cornell box default material").
-		C(color.Color{R: 0.95, G: 0.95, B: 0.95})
-
-	lampMaterial := scn.NewMaterial().N("Lamp").
-		E(color.White, lightIntensityFactor, true)
-
-	cornellBox.GetFirstObjectByName("Lamp_1").Material = lampMaterial
-	cornellBox.GetFirstObjectByName("Lamp_2").Material = lampMaterial
-	cornellBox.GetFirstObjectByName("Lamp_3").Material = lampMaterial
-	cornellBox.GetFirstObjectByName("Lamp_4").Material = lampMaterial
-
-	//backWallProjection := scn.NewParallelImageProjection("textures/wallpaper/anemone-rose-flower-eucalyptus-leaves-pampas-grass.png", vec3.Zero, vec3.UnitX.Scaled(scale[0]), vec3.UnitY.Scaled(scale[0]*0.66))
-	//backWallMaterial := *cornellBox.Material
-	//backWallMaterial.Projection = &backWallProjection
-	//cornellBox.GetFirstObjectByName("Wall_back").Material = &backWallMaterial
-
-	//sideWallProjection := scn.NewParallelImageProjection("textures/wallpaper/anemone-rose-flower-eucalyptus-leaves-pampas-grass.png", vec3.Zero, vec3.UnitZ.Scaled(scale[0]), vec3.UnitY.Scaled(scale[0]*0.66))
-	//sideWallMaterial := *cornellBox.Material
-	//sideWallMaterial.Projection = &sideWallProjection
-	//cornellBox.GetFirstObjectByName("Wall_left").Material = &sideWallMaterial
-	//cornellBox.GetFirstObjectByName("Wall_right").Material = &sideWallMaterial
-
-	//floorProjection := scn.NewParallelImageProjection("textures/tilesf4.jpeg", vec3.Zero, vec3.UnitX.Scaled(scale[0]*0.5), vec3.UnitZ.Scaled(scale[0]*0.5))
-	floorMaterial := *cornellBox.Material
-	floorMaterial.Glossiness = 0.3
-	floorMaterial.Roughness = 0.1
-	//floorMaterial.Projection = &floorProjection
-	cornellBox.ReplaceMaterial("Floor_2", &floorMaterial)
-
-	return cornellBox
-}
-
-func GetGopher(scale *vec3.T) *scn.FacetStructure {
-	var objFilename = "go_gopher_color.obj"
-	var objFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + objFilename
-
-	objFile, err := os.Open(objFilenamePath)
-	if err != nil {
-		message := fmt.Sprintf("ouupps, something went wrong loading file: '%s'\n%s\n", objFilenamePath, err.Error())
-		panic(message)
-	}
-	defer objFile.Close()
-
-	obj, err := obj.Read(objFile)
-	obj.Scale(&vec3.Zero, scale)
-	// obj.ClearMaterials()
-	obj.UpdateBounds()
-	fmt.Printf("Gopher bounds: %+v\n", obj.Bounds)
-
-	return obj
-}
-
-func GetDiamond(scale *vec3.T) *scn.FacetStructure {
-	var objFilename = "diamond.obj"
-	var objFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + objFilename
-
-	objFile, err := os.Open(objFilenamePath)
-	if err != nil {
-		fmt.Printf("ouupps, something went wrong loading file: '%s'\n%s\n", objFilenamePath, err.Error())
-	}
-	defer objFile.Close()
-
-	obj, err := obj.Read(objFile)
-	obj.Scale(&vec3.Zero, scale)
-	// obj.ClearMaterials()
-	obj.UpdateBounds()
-	fmt.Printf("Diamond bounds: %+v\n", obj.Bounds)
-
-	return obj
 }
 
 func getCamera(animationProgress float64, focusHeight float64) *scn.Camera {

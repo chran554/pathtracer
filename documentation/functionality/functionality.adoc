@@ -42,22 +42,61 @@ Frame render time: 10h48m1.2195545s
 
 A short animation can be found at https://vimeo.com/803459254[Vimeo] (it should be played in a loop though).
 
-== Material - Reflection
+== Material - Reflection Fresnel (dielectric/non-conducting)
 
-Reflection is not just "mirror" parameter on materials, but it is split in two parameters to simulate metal properties. The two parameters are "glossiness" and "roughness".
+Work in progress (WIP)
 
-Glossiness is the parameter that is the common "mirror" parameter that most tracers implement that is the normal reflection control.
+Fresnel reflections at low gracing angles on objects.
 
-Roughness is how rough the mirror surface is, much like the real world material "brushed aluminum".
+I based my implementation on a Schlick approximation.
 
-.Light green sphere with reflective parameters glossiness (increasing from left=0.0 to right=1.0) and roughness (increasing from bottom=0.0 to top=1.0)
-image::reflection.png[Reflective parameters glossiness and roughness]
+.Light green spheres with fresnel and glossy reflection. Increasing refraction index from left 1.000273 (air) to right 2.417 (diamond) and increasing glossiness from bottom 0.0 to top 1.0.
+image::reflective_test_refractionindex_glossiness.png[Fresnel reflection using ]
+
+.Fresnel and glossy image details
+----
+Image size:             1350x900
+Amount samples/pixel:   12288
+Max recursion depth:    6
+Amount facets:          18
+Amount spheres:         49
+----
+
+.Fresnel reflection. Left sphere has refraction index 1.495 (Acrylic plastic). Note that the *reflection increases at the very edge on the top* of the left sphere (low gracing angle). (Right sphere has no Fresnel as it has the same refraction index as the surrounding air, but has common glossiness and roughness instead.)
+image::fresnel_refind1.495.png[Fresnel reflection using refraction index 1.495]
+
+.Fresnel image details
+----
+Image size:             800x500
+Amount samples/pixel:   36864
+Max recursion depth:    8
+Amount facets:          12
+Amount spheres:         2
+Refreaction index:      1.495
+----
+
+== Material - Reflection Fresnel (conductor/metal)
+
+Work in progress (WIP)
+
+== Material - Reflection (glossy and roughness)
+
+Reflection is not just a single "mirror" parameter on materials, but it is split in two parameters to simulate metal properties. The two parameters are "*glossiness*" and "*roughness*".
+
+_Glossiness_ is the parameter that is the common "mirror" parameter that most tracers implement, that is the normal reflection control. A value of 0.0 is no mirrorness at all and a value of 1.0 can give a perfect mirror (depending on the roughness value).
+
+_Roughness_ is how rough the mirror surface is, much like the real world material "brushed aluminum". It gives a non-sharp reflection. Roughness 0.0 is perfect clear mirror reflection and for roughness 1.0 it is the same as diffuse reflection.
+A material with roughness 1.0 do not differ from a perfectly diffuse material, although it has full (1.0) glossiness.
+
+.Light green sphere with reflective parameters glossiness and roughness. Glossiness increasing from left 0.0 to right 1.0 and roughness increasing from bottom 0.0 to top 1.0.
+image::reflective_test_glossy_roughness.png[Reflective parameters glossiness and roughness]
 
 .Reflection image details
 ----
 Image size:             1350x900
-Amount samples/pixel:   3072
-Max recursion:          6
+Amount samples/pixel:   12288
+Max recursion depth:    6
+Amount facets:          18
 Amount spheres:         49
 ----
 

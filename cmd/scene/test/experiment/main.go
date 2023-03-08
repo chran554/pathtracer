@@ -77,8 +77,8 @@ func main() {
 
 	// Ground
 	groundProjection := scn.NewParallelImageProjection("textures/ground/grass_short.png", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(80/2), vec3.UnitZ.Scaled(50/2))
-	groundMaterial := scn.Material{Name: "Ground material", Color: &color.White, Emission: &color.Black, Glossiness: 0.0, Roughness: 1.0, Projection: &groundProjection}
-	ground := scn.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, &groundMaterial).N("Ground")
+	groundMaterial := scn.NewMaterial().N("Ground material").P(&groundProjection)
+	ground := scn.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
 
 	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false)
 

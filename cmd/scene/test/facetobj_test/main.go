@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/ungerik/go3d/float64/mat3"
 	"math"
-	"os"
 	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj"
@@ -66,31 +65,10 @@ func main() {
 	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true)
 
 	for imageIndex := 0; imageIndex < amountImages; imageIndex++ {
-
 		fmt.Printf("\n\nCostructing frame %d\n", imageIndex)
 		fmt.Printf("Reading file: %s\n", filename)
 
-		var err error
-
-		/*wd, err := os.Getwd()
-		if err != nil {
-			panic(err)
-		}
-		parentPath := filepath.Dir(wd)
-		fmt.Println(parentPath)*/
-
-		f, err := os.Open(filename)
-		if err != nil {
-			message := fmt.Sprintf("ouupps, something went wrong loading file: '%s'\n%s\n", filename, err.Error())
-			panic(message)
-		}
-
-		facetStructure, err := obj.Read(f)
-		if err != nil {
-			message := fmt.Sprintf("ouups, something went wrong parsing object. %s\n", err.Error())
-			panic(message)
-		}
-		f.Close()
+		facetStructure := obj.ReadOrPanic(filename)
 
 		facetStructure.UpdateBounds()
 		fmt.Printf("Object in file \"%s\" has bounds %+v.\n", objectFilename, facetStructure.Bounds)

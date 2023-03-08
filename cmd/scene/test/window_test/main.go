@@ -31,8 +31,8 @@ func main() {
 	room.Translate(&vec3.T{0, 0, -roomDepth / 3})
 	room.Material = scn.NewMaterial().C(color.Color{R: 0.9, G: 0.8, B: 0.7})
 
-	room.GetObjectsBySubstructureName("xmin")[0].Material = &scn.Material{Color: &color.Color{R: 0.75, G: 0.25, B: 0.25}, Roughness: 1.0}
-	room.GetObjectsBySubstructureName("xmax")[0].Material = &scn.Material{Color: &color.Color{R: 0.25, G: 0.25, B: 0.75}, Roughness: 1.0}
+	room.GetObjectsBySubstructureName("xmin")[0].Material = scn.NewMaterial().C(color.NewColor(0.75, 0.25, 0.25))
+	room.GetObjectsBySubstructureName("xmax")[0].Material = scn.NewMaterial().C(color.NewColor(0.25, 0.25, 0.75))
 	room.UpdateBounds()
 	fmt.Printf("Room bounds: %+v\n", room.Bounds)
 
@@ -44,10 +44,10 @@ func main() {
 	window := createWindow(windowX, windowHeightOverFloor, windowWidth, windowHeight)
 
 	// Diffuse sphere
-	sphere1 := scn.NewSphere(&vec3.T{0, 12, -30}, 12, &scn.Material{Color: &color.Color{R: 0.9, G: 0.8, B: 0.7}, Roughness: 1.0, Glossiness: 0.0})
+	sphere1 := scn.NewSphere(&vec3.T{0, 12, -30}, 12, scn.NewMaterial().C(color.NewColor(0.9, 0.8, 0.7)).M(0.0, 1.0))
 
 	// Mirror sphere
-	sphere2 := scn.NewSphere(&vec3.T{28, 16, 15}, 16, &scn.Material{Color: &color.Color{R: 0.97, G: 0.97, B: 0.843}, Roughness: 0.0, Glossiness: 0.8})
+	sphere2 := scn.NewSphere(&vec3.T{28, 16, 15}, 16, scn.NewMaterial().C(color.NewColor(0.97, 0.97, 0.843)).M(0.8, 0.0))
 
 	scene := scn.NewSceneNode().
 		FS(room, window).

@@ -37,6 +37,23 @@ func Read(file *os.File) (*scene.FacetStructure, error) {
 	return facetStructure, nil
 }
 
+func ReadOrPanic(objFilenamePath string) *scene.FacetStructure {
+	objFile, err := os.Open(objFilenamePath)
+	if err != nil {
+		message := fmt.Sprintf("Could not open obj file: '%s'\n%s\n", objFilenamePath, err.Error())
+		panic(message)
+	}
+	defer objFile.Close()
+
+	obj, err := Read(objFile)
+	if err != nil {
+		message := fmt.Sprintf("Could not read obj file: '%s'\n%s\n", objFile.Name(), err.Error())
+		panic(message)
+	}
+
+	return obj
+}
+
 func WriteObjFile(objFile, mtlFile *os.File, facetStructure *scene.FacetStructure, comment []string) error {
 	objWriter := bufio.NewWriter(objFile)
 	mtlWriter := bufio.NewWriter(mtlFile)

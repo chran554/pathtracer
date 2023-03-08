@@ -20,12 +20,12 @@ var imageWidth = 1200
 var imageHeight = 480
 var magnification = 1.3
 
-var amountSamples = 1024 * 10
+var amountSamples = 1024 // 1024 * 16
 
 var apertureSize = 0.1
 
 var ballDisplacementRadius = 0.3
-var maxRotation = (math.Pi / 180) * 5 // Max angle rotation of ball
+var maxRotation = (math.Pi / 180) * 15 // Max angle rotation of ball
 
 func main() {
 	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true)
@@ -55,9 +55,9 @@ func main() {
 			xRotAngle := maxRotation * (rand.Float64()*2 - 1)
 			yRotAngle := maxRotation * (rand.Float64()*2 - 1)
 			zRotAngle := maxRotation * (rand.Float64()*2 - 1)
+			snookerball.RotateZ(snookerball.Bounds().Center(), zRotAngle)
 			snookerball.RotateX(snookerball.Bounds().Center(), xRotAngle)
 			snookerball.RotateY(snookerball.Bounds().Center(), yRotAngle)
-			snookerball.RotateZ(snookerball.Bounds().Center(), zRotAngle)
 
 			ballPerfectPosition := vec3.T{2.25 * snookerball.Radius * (float64(i) - float64(len(balls[j])-1)/2.0), 0, ((float64(j) - 0.5) / 0.5) * snookerball.Radius * 2.5}
 			displacementAngle := math.Pi * 2 * rand.Float64()
@@ -120,12 +120,14 @@ func NewSnookerBall(ball SnookerBall) *scn.Sphere {
 	diameter := 5.7 // Pool (Pocket Billiard] Balls
 
 	radius := diameter / 2
-	textureFilename := fmt.Sprintf("textures/snooker/%s.png", ball)
+	textureFilename := fmt.Sprintf("textures/snooker/%s_wpi.png", ball)
 	ballMaterial := scn.NewMaterial().
 		N(fmt.Sprintf("snooker ball %s", ball)).
-		M(0.05, 0.05).
-		PP(textureFilename, &vec3.T{-radius, 0, 0}, vec3.T{diameter, 0, 0}, vec3.T{0, diameter, 0})
-	//CP(textureFilename, &vec3.T{0, 0, 0}, vec3.UnitZ, vec3.T{0, diameter, 0}, false)
+		M(0.2, 0.05).
+		T(0.0, true, scn.RefractionIndex_AcrylicPlastic).
+		//SP(textureFilename, &vec3.T{0, radius, 0}, vec3.T{0, 0, diameter}, vec3.T{0, radius, 0})
+		//PP(textureFilename, &vec3.T{-radius, 0, 0}, vec3.T{diameter, 0, 0}, vec3.T{0, diameter, 0})
+		CP(textureFilename, &vec3.T{0, 0, 0}, vec3.UnitZ, vec3.T{0, diameter, 0}, false)
 
 	return scn.NewSphere(&vec3.T{0, radius, 0}, radius, ballMaterial)
 }
