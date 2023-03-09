@@ -29,7 +29,7 @@ var magnification = 0.75
 func main() {
 	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false)
 
-	cornellBox := obj.NewCornellBox(&vec3.T{500, 410, 500}, lampEmissionFactor)
+	cornellBox := obj.NewCornellBox(&vec3.T{700, 810, 700}, lampEmissionFactor)
 	cornellBox.ReplaceMaterial("left", scn.NewMaterial().N("left").C(color.NewColor(0.85, 0.85, 0.85)))
 	cornellBox.ReplaceMaterial("right", scn.NewMaterial().N("right").C(color.NewColor(0.85, 0.85, 0.85)))
 	cornellBox.ReplaceMaterial("back", scn.NewMaterial().N("back").C(color.NewColor(0.70, 0.70, 0.70)))
