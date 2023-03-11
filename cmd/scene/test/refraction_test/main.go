@@ -15,18 +15,23 @@ var animationName = "refraction_test"
 
 var ballRadius float64 = 30
 
-var maxRecursionDepth = 8
-var amountSamples = 512 * 2 // * 5 // * 4
-var lensRadius = 2.0        // 0.25
+var maxRecursionDepth = 10
+var amountSamples = 1024 * 8 // * 2 // * 5 // * 4
+var lensRadius = 0.0         // 2.0        // 0.25
 
-var imageWidth = 500
+var imageWidth = 600
 var imageHeight = 400
-var magnification = 1.5
+var magnification = 2.0
 
 func main() {
 	cornellBox := GetCornellBox(&vec3.T{300, 300, 300}, 10.0) // cm, as units. I.e. a 5x3x5m room
 
-	spheres := GetSpheres(1, &vec3.T{-40, 0, 0})
+	spheres := GetSpheres(1, &vec3.T{0, 0, 0})
+	spheres2 := GetSpheres(1, &vec3.T{0, 0, 0})
+	spheres2[0].Origin.Add(&vec3.T{40, 0, -20})
+	spheres2[0].Material.C(color.NewColor(0.95, 0.6, 0.5))
+
+	spheres = append(spheres, spheres2...)
 
 	glassPokal := obj.NewGlassIkeaPokal(50.0)
 	glassPokal.Translate(&vec3.T{10, 0, -20})
@@ -34,12 +39,18 @@ func main() {
 	glassSkoja := obj.NewGlassIkeaSkoja(40.0)
 	glassSkoja.Translate(&vec3.T{35, 0, 0})
 
+	// glassMaterial := scn.NewMaterial().
+	// 	N("glass material").
+	// 	C(color.Color{R: 0.98, G: 0.80, B: 0.75}).
+	// 	M(0.2, 0.05).
+	// 	T(0.95, true, scn.RefractionIndex_Glass)
 	utahTeapot := obj.NewSolidUtahTeapot(50.0)
 	utahTeapot.RotateY(&vec3.T{0, 0, 0}, -math.Pi/3.5-math.Pi/2.0)
-	utahTeapot.Translate(&vec3.T{25, 0, 150})
+	utahTeapot.Translate(&vec3.T{25 + 5, 0, 150})
+	// utahTeapot.Material = glassMaterial
 
 	pixarBallRadius := 20.0
-	pixarBallOrigin := &vec3.T{-130, pixarBallRadius, 160}
+	pixarBallOrigin := &vec3.T{-130 + 30, pixarBallRadius, 160}
 	pixarBall := obj.NewPixarBall(pixarBallOrigin, pixarBallRadius)
 	//pixarBall.RotateY(pixarBallOrigin, 0.0)
 	pixarBall.RotateY(pixarBallOrigin, math.Pi/4.0)
@@ -47,11 +58,12 @@ func main() {
 	scene := scn.NewSceneNode().
 		S(spheres...).
 		S(pixarBall).
-		FS(cornellBox /*glassPokal, glassSkoja*/, utahTeapot)
+		FS(cornellBox /*glassPokal, glassSkoja,*/, utahTeapot)
 
-	origin := &vec3.T{0, 70, -200}
-	focusPoint := spheres[0].Origin.Added(&vec3.T{ballRadius / 2, 0, -ballRadius / 3.0})
-	camera := scn.NewCamera(origin, &focusPoint, amountSamples, magnification).D(maxRecursionDepth).A(lensRadius, "")
+	sphereBounds := spheres[0].Bounds()
+	cameraOrigin := &vec3.T{sphereBounds.Center()[1], sphereBounds.Center()[1], -200}
+	cameraFocusPoint := sphereBounds.Center().Added(&vec3.T{0, 0, -ballRadius / 3.0})
+	camera := scn.NewCamera(cameraOrigin, &cameraFocusPoint, amountSamples, magnification).D(maxRecursionDepth).A(lensRadius, "")
 
 	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false)
 
@@ -67,8 +79,8 @@ func GetSpheres(amountSpheres int, translation *vec3.T) []*scn.Sphere {
 	sphereMaterial := scn.NewMaterial().
 		N("glass sphere").
 		C(color.Color{R: 0.95, G: 0.95, B: 0.99}).
-		M(0.5, 0.05).
-		T(0.94, true, scn.RefractionIndex_Glass)
+		M(0.01, 0.05).
+		T(0.98, true, scn.RefractionIndex_Glass)
 
 	for i := 0; i < amountSpheres; i++ {
 		positionOffsetX := 0.0 // (-sphereSpread/2.0 + float64(i)*sphereCC) * 0.5
@@ -115,10 +127,10 @@ func GetCornellBox(scale *vec3.T, lightIntensityFactor float64) *scn.FacetStruct
 	cornellBox.GetFirstObjectByName("Lamp_3").Material = lampMaterial
 	cornellBox.GetFirstObjectByName("Lamp_4").Material = lampMaterial
 
-	cornellBox.GetFirstObjectByName("Wall_back").Material = backWallMaterial
-	cornellBox.GetFirstObjectByName("Wall_left").Material = sideWallMaterial
-	cornellBox.GetFirstObjectByName("Wall_right").Material = sideWallMaterial
-	cornellBox.GetFirstObjectByName("Floor_2").Material = floorMaterial
+	cornellBox.GetFirstObjectByName("Back").Material = backWallMaterial
+	cornellBox.GetFirstObjectByName("Left").Material = sideWallMaterial
+	cornellBox.GetFirstObjectByName("Right").Material = sideWallMaterial
+	cornellBox.GetFirstObjectByName("Floor").Material = floorMaterial
 
 	return cornellBox
 }

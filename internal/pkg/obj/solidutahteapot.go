@@ -7,11 +7,12 @@ import (
 )
 
 func NewSolidUtahTeapot(scale float64) *scn.FacetStructure {
-	var objectFilename = "utah_teapot_solid_01.obj"
+	var objectFilename = "utah_teapot_solid_02.obj"
 	var objectFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + objectFilename
 
 	utahTeaPot := ReadOrPanic(objectFilenamePath)
 
+	utahTeaPot.CenterOn(&vec3.Zero)
 	utahTeaPot.Translate(&vec3.T{0, -utahTeaPot.Bounds.Ymin, 0})
 
 	utahTeaPot.ScaleUniform(&vec3.Zero, scale/utahTeaPot.Bounds.Ymax)
@@ -19,7 +20,8 @@ func NewSolidUtahTeapot(scale float64) *scn.FacetStructure {
 	porcelainMaterial := scn.NewMaterial().
 		N("Porcelain material").
 		C(color.Color{R: 0.88, G: 0.96, B: 0.96}).
-		M(0.1, 0.1)
+		M(0.05, 0.1).
+		T(0.0, true, scn.RefractionIndex_Porcelain)
 
 	// glassMaterial := scn.NewMaterial().
 	// 	N("Glass material").

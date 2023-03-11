@@ -30,7 +30,7 @@ const (
 
 var (
 	debugPixel = struct{ x, y int }{x: -1, y: -1} // No debug
-	//debugPixel = struct{ x, y int }{x: 600, y: 300}
+	//debugPixel = struct{ x, y int }{x: 450, y: 300}
 )
 
 type IntersectionInformation struct {
@@ -494,14 +494,25 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 			if !ii.material.RayTerminator {
 				var newRayHeading *vec3.T
 
-				// Flip normal if it is pointing away from the incoming ray
-				if vectorCosinePositive(ii.normalAtIntersection, ray.Heading) {
+				// Flip normal if it is pointing away from the incoming ray on a non-solid object
+				if !ii.material.SolidObject && vectorCosinePositive(ii.normalAtIntersection, ray.Heading) {
 					ii.normalAtIntersection.Invert()
 				}
+				isIngoingRay := vectorCosineNegative(ii.normalAtIntersection, ray.Heading)
 
 				currentRayContext := rayContexts[len(rayContexts)-1]
 
-				reflectionProbability := FresnelReflectAmount(currentRayContext.RefractionIndex, ii.material.RefractionIndex, ii.normalAtIntersection, ray.Heading, ii.material.Glossiness, 1.0)
+				var reflectionProbability float64
+				if isIngoingRay {
+					// Add Fresnel reflection if it is an ingoing array (for now)
+					reflectionProbability = FresnelReflectAmount(currentRayContext.RefractionIndex, ii.material.RefractionIndex, ii.normalAtIntersection, ray.Heading, ii.material.Glossiness, 1.0)
+				} else {
+					// previousRayContext := rayContexts[len(rayContexts)-2]
+					// normal := ii.normalAtIntersection.Inverted()
+					// reflectionProbability = FresnelReflectAmount(currentRayContext.RefractionIndex, previousRayContext.RefractionIndex, &normal, ray.Heading, ii.material.Glossiness, 1.0)
+
+					reflectionProbability = ii.material.Glossiness
+				}
 
 				probabilitySum := reflectionProbability + ii.material.Transparency + ii.material.Diffuse
 				probabilityValue := rand.Float64() * probabilitySum
@@ -531,10 +542,10 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 
 				} else if useTransparencyRay {
 					if ii.material.SolidObject && (ii.material.RefractionIndex > 0.0) {
-						isIngoingRay := vectorCosineNegative(ii.normalAtIntersection, ray.Heading)
 
 						if isIngoingRay {
 							// Ingoing ray to a solid object with refraction index
+							//fmt.Printf("Ingoing... %s\n", ii.material.Name)
 
 							var totalInternalReflection bool
 							newRayHeading, totalInternalReflection = getRefractionVector(ii.normalAtIntersection, ray.Heading, currentRayContext.RefractionIndex, ii.material.RefractionIndex)
@@ -544,6 +555,7 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 							}
 						} else {
 							// Outgoing ray from a solid object with refraction index
+							//fmt.Printf("Outgoing... %s\n", ii.material.Name)
 
 							// Outgoing ray from a solid object with refraction index
 							rayContexts = rayContexts[:len(rayContexts)-1] // Pop off current ray context
@@ -611,7 +623,7 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 }
 
 func processFacetStructureIntersection(ray *scn.Ray, facetStructure *scn.FacetStructure, ii *IntersectionInformation) {
-	tempIntersection, tempIntersectionPoint, tempIntersectionNormal, tempMaterial := scn.FacetStructureIntersection(ray, facetStructure)
+	tempIntersection, tempIntersectionPoint, tempIntersectionNormal, tempMaterial := scn.FacetStructureIntersection(ray, facetStructure, nil)
 
 	if tempIntersection {
 		distance := vec3.Distance(ray.Origin, tempIntersectionPoint)
@@ -621,6 +633,11 @@ func processFacetStructureIntersection(ray *scn.Ray, facetStructure *scn.FacetSt
 			ii.intersectionPoint = tempIntersectionPoint // Save the intersection point of the closest intersection
 			ii.material = tempMaterial
 			ii.normalAtIntersection = tempIntersectionNormal // Should be normalized from initialization
+
+			if ii.material == nil {
+				ii.material = scn.NewMaterial() // If, for some erroneous reason there is an intersection without any material, use default (diffuse white).
+				fmt.Printf("Warning: Could not find any material for intersection point on facet structure '%s' ('%s').\n", facetStructure.Name, facetStructure.SubstructureName)
+			}
 
 			// Flip normal if it is pointing away from the incoming ray
 			//if vectorCosinePositive(normalAtIntersection, ray.Heading) {
