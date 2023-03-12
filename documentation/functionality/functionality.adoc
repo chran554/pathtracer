@@ -62,7 +62,20 @@ Amount facets:          18
 Amount spheres:         49
 ----
 
-.Fresnel reflection. Left sphere has refraction index 1.495 (Acrylic plastic). Note that the *reflection increases at the very edge on the top* of the left sphere (low gracing angle). (Right sphere has no Fresnel as it has the same refraction index as the surrounding air, but has common glossiness and roughness instead.)
+.Fresnel reflection angle. Reflection increases at the very edge of the sphere (low gracing angle). The surrounding medium is air and the sphere is white with refraction index of porcelain (refraction index 1.504).
+image::fresnel_angle_refind1.504.png[Fresnel reflection using refraction index 1.504]
+
+.Fresnel angle image details
+----
+Image size:             800x600
+Amount samples/pixel:   12288
+Max recursion depth:    4
+Amount facets:          256
+Amount spheres:         2
+Refreaction index:      1.504 (porcelain)
+----
+
+.Fresnel reflection. Left sphere has refraction index 1.495 (Acrylic plastic). Note that the reflection increases at the very edge on the top of the left sphere (low gracing angle). (Right sphere has no Fresnel as it has the same refraction index as the surrounding air, but has common glossiness and roughness instead.)
 image::fresnel_refind1.495.png[Fresnel reflection using refraction index 1.495]
 
 .Fresnel image details
@@ -72,7 +85,7 @@ Amount samples/pixel:   36864
 Max recursion depth:    8
 Amount facets:          12
 Amount spheres:         2
-Refreaction index:      1.495
+Refreaction index:      1.495 (acrylic plastic)
 ----
 
 == Material - Reflection Fresnel (conductor/metal)

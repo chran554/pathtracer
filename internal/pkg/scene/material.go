@@ -5,67 +5,6 @@ import (
 	"pathtracer/internal/pkg/color"
 )
 
-const (
-	RefractionIndex_Vacuum         = 1.0
-	RefractionIndex_Air            = 1.000273
-	RefractionIndex_Water          = 1.333
-	RefractionIndex_Ice            = 1.31
-	RefractionIndex_PyrexGlass     = 1.470
-	RefractionIndex_AcrylicPlastic = 1.495
-	RefractionIndex_Glass          = 1.50
-	RefractionIndex_WindowGlass    = 1.52
-	RefractionIndex_PetPlastic     = 1.5750
-	RefractionIndex_Sapphire       = 1.762
-	RefractionIndex_Diamond        = 2.417
-
-	Acetone                         = 1.36
-	Alcohol                         = 1.329
-	Amber                           = 1.54
-	Amorphous_Selenium              = 2.92
-	Barium_Borosilicate             = 1.554
-	Calspar                         = 11.66
-	CarbonDisulfide                 = 1.63
-	ChromiumOxide                   = 2.705
-	CopperOxide                     = 2.705
-	CrownGlass                      = 1.52
-	Crystal                         = 2.00
-	CubicZirconia                   = 2.15
-	Diamond                         = 2.417
-	Emerald                         = 1.57
-	EthylAlcohol                    = 1.36
-	FlintGlass_heaviest             = 1.89
-	FlintGlass_heavy                = 1.65
-	flourapatite_synthetic          = 1.633
-	Flourite                        = 1.434
-	FusedQuartz                     = 1.46
-	Garnet                          = 1.80 //	1.73-1.89
-	Glass                           = 1.5
-	Hydroxyapatite_synthetic        = 1.649
-	Ice                             = 3.309
-	IodineCrystal                   = 3.34
-	LapisLazuli                     = 1.61
-	LiquidCarbonDioxide             = 1.20
-	Lucite                          = 1.51
-	Plexiglass                      = 1.51
-	Opal                            = 1.46 // 1.44- 1.48
-	Polystyrene                     = 1.55
-	RefractionIndex_Porcelain       = 1.504
-	Quartz                          = 11.544
-	Ruby                            = 1.77
-	Sapphire                        = 1.77
-	SodiumChloride_salt             = 11.544
-	Strontium_glass                 = 1.550
-	SugarSolution30                 = 1.38 // (30%)
-	SugarSolution60                 = 1.49 // (60%)
-	ToothStructure_enamel           = 1.655
-	Topaz                           = 1.61
-	Triethyleneglycol_dimethacylate = 1.457
-	Urethane_dimethacylate          = 1.481
-	Water                           = 1.333 // (20C)
-	ZincCrownGlass                  = 1.517
-	Zirconium                       = 1.520
-)
-
 type Material struct {
 	Name            string           `json:"Name,omitempty"`
 	Color           *color.Color     `json:"Color,omitempty"`

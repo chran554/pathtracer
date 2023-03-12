@@ -97,7 +97,7 @@ func main() {
 		heightFactor := math.Sin(2.0 * 2.0 * math.Pi * animationProgress)
 		camera := getCamera(&cameraOrigin, facetStructure.Bounds.Center(), 2.0*math.Pi*animationProgress, heightFactor)
 
-		frame := scn.NewFrame("facetobj", imageIndex, camera, scene)
+		frame := scn.NewFrame(animationName, imageIndex, camera, scene)
 
 		animation.AddFrame(frame)
 	}

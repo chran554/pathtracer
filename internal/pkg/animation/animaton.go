@@ -18,19 +18,18 @@ func WriteAnimationToFile(animation *scene.Animation, indent bool) {
 		jsonData, err = json.Marshal(animation)
 	}
 	if err != nil {
-		fmt.Printf("ouupps, could not marshal animation \"%s\" to json: %s", animation.AnimationName, err.Error())
+		message := fmt.Sprintf("Could not marshal animation \"%s\" to json: %s", animation.AnimationName, err.Error())
+		panic(message)
 	}
 
 	filename := "scene/" + animation.AnimationName + ".animation.json"
 	err = os.WriteFile(filename, jsonData, 0644)
 	if err != nil {
-		fmt.Println("Could not write animation file:", filename)
-		os.Exit(1)
+		panic(fmt.Sprintf("Could not write animation file: %s", filename))
 	} else {
 		fileSize, err := getFileSize(filename)
 		if err != nil {
-			fmt.Println("Written animation file seem to be broken:", filename)
-			os.Exit(1)
+			panic(fmt.Sprintf("Written animation file seem to be broken: %s", filename))
 		}
 		fmt.Println("Wrote animation file \"" + filename + "\" of size " + ByteCountIEC(fileSize) + " (" + strconv.FormatInt(fileSize, 10) + " bytes)")
 	}
