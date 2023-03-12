@@ -41,24 +41,33 @@ A lot of functionality is on display in the link:documentation/functionality/fun
 
 * Load scene-files (json-based file format) capable of multi frame animations.
 * Pathtracing algorithm
+
 * Primitives: sphere, disc (circle on plane), triangle (facet)
-* Reflection (glossy/mirror with roughness/brushed for metallic effects)
+* Scene building - primitives in hierarchies and translation, scaling, and rotation on any level.
+* Bounding boxes (orthogonal aligned and hierarchically arranged)
+* Reading (and writing) of Wavefront `.obj` 3D object file format (along with accompanying `.mtl` file)
+* Reading of `.ply` 3D object file format
+* Reflection - Fresnel (dielectric/non-conducting)
+* Reflection - glossy & roughness (mirror with roughness/brushed for metallic effects)
 * Color definitions by RGB
+* Importance sampling - cosine weighted hemisphere sampling (instead of uniform sampling)
 * Gamma correction on loaded textures and on rendered image export.
 * Texture projections: sphere (equirectangular), cylindrical, flat (parallel)
-* Progressive/recursive pixel rendering, a quite useful overview after only 5% rendering.
-* Bounding boxes (orthogonal aligned)
-* Super sampling: Anti alias (smooth edges)
-* Super sampling: DOF - xref:documentation/functionality/dof/dof.adoc[Depth of field] (focal distance and "aperture size")
+* Free position camera with any direction and any focal length.
+* Super sampling: Anti alias (random rays within the pixel for smooth edges)
+* Super sampling: DOF - xref:documentation/functionality/dof/dof.adoc[Depth of field] (focus distance and "aperture size")
 * Super sampling: DOF - Depth of field - xref:documentation/functionality/dof/dof.adoc[aperture shape] (free form shape)
-* Save image in RAW-format ("praw") for post light editing.
-* Sending broadcast (UDP) messages of rendered pixels to render monitor
+* Save rendered image in PNG-format
+* Save rendered HDR (high dynamic range) image in RAW-format ("praw") for post light editing in separate application tool https://github.com/chran554/RawImageEditor[RawImageEditor].
+* Progressive/recursive pixel rendering, a quite useful overview after only 5% rendering.
+* Sending broadcast (UDP) messages of rendered pixels to render monitor https://github.com/chran554/PathtracerMonitor[PathtracerMonitor].
 
 === TODO
 
-* Reflection - Fresnel (dielectric/non-conducting)
 * Reflection - Fresnel (conductor/metal)
 * Refraction - using refraction index (WIP - work in progress)
 * Color absorption in gas and liquid (solid) using Beer-Lambert Law
 * Fake haze (testing a spin-off idea from Beer-Lambert)
+* Normal maps (and maybe bump maps)
+* Multi textures with operations `average` (really `add` with normalize), `subtract` (with min level 0.0), and `multiply`.
 * ...
