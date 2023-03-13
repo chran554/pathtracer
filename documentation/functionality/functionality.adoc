@@ -49,7 +49,7 @@ The process is called Monte Carlo Integration and for each pixel ray fired and r
 
 The Monte Carlo integration is a calculation intense process. It is not clear on what amount of integration samples (rays per pixel). The integration error (pixel intensity noise) is only halved as the amount of rays per pixel is doubled (and with that doubled rendering time, as it follow linear to the amount of rays fired).
 
-.Cornell box at different amount of Monte Carlo integration samples (rays per pixel)
+.Cornell box at different amount of Monte Carlo integration samples (rays per pixel). (Cosine weighted hemisphere importance sampling is used.)
 image::MonteCarloIntegration.png[Cornell box at different amount of Monte Carlo integration samples (rays per pixel)]
 
 .Monte Carlo integration with different amount samples (rays per pixel) details
@@ -68,7 +68,7 @@ Frame render time: 1h0m37.03s (16384 samples/rays per pixel)
 
 In the recursive step of firing a new ray from an intersection point on a perfect diffuse object you should sample the hemisphere (around the intersection normal) uniformly or even randomly for a perfect diffuse result. However, as the light coming from that ray will be multiplied by the cosine value of the angle between the intersection normal and the ray heading vector (incoming light at low angles are do not contribute much light at all to the intersection point) the rays fired close to the normal will contribute a whooping lot more than the rays close to the intersection point tangent plane.
 
-So, instead of firing a lot of rays from the intersection point where a lot of the only will contribute a minuscule to the Monte Carlo integration sum, we do not multiply the rays by the angle cosine value. Instead, we weigh the rays equally much but make sure we fire rays close to the intersection normal more often and those close to the tangent plane more seldom, in a cosine distribution way. Given a infinite amount samples it will turn out, mathematically, the same but the cosine weighted distribution will converge faster.
+So, instead of firing a lot of rays from the intersection point where a lot of the only will contribute a minuscule to the Monte Carlo integration sum, we do not multiply the rays by the angle cosine value. Instead, we weigh all the rays equally much but make sure we fire rays close to the intersection normal, that will give a lot of contribution, more often and fire those close to the intersection point tangent plane more seldom, in a cosine distribution way. Given a infinite amount samples it will turn out, mathematically, the same but the cosine weighted distribution will converge faster.
 
 .Uniform random distribution sampling of the intersection point hemisphere. Using 4 samples per pixel.
 image::cornellbox_diffuse_random_hemisphere.png[Random sampled hemisphere. 4 samples/pixel.]
@@ -76,15 +76,7 @@ image::cornellbox_diffuse_random_hemisphere.png[Random sampled hemisphere. 4 sam
 .Cosine weighted sampling of the intersection point hemisphere. Using 4 samples per pixel. The faster convergence is shown in comparison to the uniform random sampled hemisphere.
 image::cornellbox_diffuse_cosine_weighted_hemisphere.png[Cosine weighted hemisphere sampling. 4 samples/pixel.]
 
-.Uniform random sampling of hemisphere image
-----
-Image size:             800x400
-Amount samples/pixel:   4
-Max recursion:          4
-Amount spheres:         3
-----
-
-.Cosine weighted sampling of hemisphere image
+.Uniform random and cosine weighted sampling of hemisphere image
 ----
 Image size:             800x400
 Amount samples/pixel:   4
@@ -101,7 +93,7 @@ Fresnel reflections at low gracing angles on objects.
 I based my implementation on a Schlick approximation.
 
 .Light green spheres with fresnel and glossy reflection. Increasing refraction index from left 1.000273 (air) to right 2.417 (diamond) and increasing glossiness from bottom 0.0 to top 1.0.
-image::reflective_test_refractionindex_glossiness.png[Fresnel reflection using ]
+image::reflective_test_refractionindex_glossiness.png[Fresnel reflection with different refraction indicies and levels of glossiness]
 
 .Fresnel and glossy image details
 ----
