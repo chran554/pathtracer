@@ -51,7 +51,7 @@ func NewGlassIkeaSkoja(scale float64) *scn.FacetStructure {
 		N("Red juice").
 		C(color.Color{R: 0.97, G: 0.45, B: 0.47}).
 		M(0.2, 0.0).
-		T(0.98, true, scn.SugarSolution60)
+		T(0.98, true, scn.RefractionIndex_SugarSolution60)
 
 	glass.ClearMaterials()
 	glassObject.Material = glassMaterial
