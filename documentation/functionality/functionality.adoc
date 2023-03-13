@@ -42,6 +42,34 @@ Frame render time: 10h48m1.2195545s
 
 A short animation can be found at https://vimeo.com/803459254[Vimeo] (it should be played in a loop though).
 
+== Importance sampling - Cosine weighted hemisphere
+
+In the recursive step of firing a new ray from an intersection point on a perfect diffuse object you should sample the hemisphere (around the intersection normal) uniformly or even randomly for a perfect diffuse result. However, as the light coming from that ray will be multiplied by the cosine value of the angle between the intersection normal and the ray heading vector (incoming light at low angles are do not contribute much light at all to the intersection point) the rays fired close to the normal will contribute a whooping lot more than the rays close to the intersection point tangent plane.
+
+So, instead of firing a lot of rays from the intersection point where a lot of the only will contribute a minuscule to the Monte Carlo integration sum, we do not multiply the rays by the angle cosine value. Instead, we weigh the rays equally much but make sure we fire rays close to the intersection normal more often and those close to the tangent plane more seldom, in a cosine distribution way. Given a infinite amount samples it will turn out, mathematically, the same but the cosine weighted distribution will converge faster.
+
+.Uniform random distribution sampling of the intersection point hemisphere. Using 4 samples per pixel.
+image::cornellbox_diffuse_random_hemisphere.png[Random sampled hemisphere. 4 samples/pixel.]
+
+.Cosine weighted sampling of the intersection point hemisphere. Using 4 samples per pixel. The faster convergence is shown in comparison to the uniform random sampled hemisphere.
+image::cornellbox_diffuse_cosine_weighted_hemisphere.png[Cosine weighted hemisphere sampling. 4 samples/pixel.]
+
+.Uniform random sampling of hemisphere image
+----
+Image size:             800x400
+Amount samples/pixel:   4
+Max recursion:          4
+Amount spheres:         3
+----
+
+.Cosine weighted sampling of hemisphere image
+----
+Image size:             800x400
+Amount samples/pixel:   4
+Max recursion:          4
+Amount spheres:         3
+----
+
 == Material - Reflection Fresnel (dielectric/non-conducting)
 
 Work in progress (WIP)

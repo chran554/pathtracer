@@ -524,10 +524,17 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 				diffuseHeading := getRandomCosineWeightedHemisphereVector(ii.normalAtIntersection)
 				cosineNewRayAndNormal := 1.0
 
+				// Uniform random hemisphere sampling
+				//diffuseHeading := getRandomHemisphereVector(ii.normalAtIntersection)
+				//cosineNewRayAndNormal := 1.0
+
 				if useDiffuseRay {
 					// Weight for cosine weighted hemisphere sampling
 					cosineNewRayAndNormal = 0.5 // remove the cosine factor as it is already included in hemisphere sampling
 					newRayHeading = diffuseHeading
+
+					// Uniform random hemisphere sampling
+					// cosineNewRayAndNormal = vec3.Dot(ii.normalAtIntersection, newRayHeading) / (ii.normalAtIntersection.Length() * newRayHeading.Length())
 
 				} else if useReflectionRay {
 					reflectionHeading := getReflectionVector(ii.normalAtIntersection, ray.Heading)
