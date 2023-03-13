@@ -5,11 +5,9 @@ A pathtracer written in go (golang) for testing out pathtracing ideas and algori
 .The Go Gopher mascot rendered by the pathtracer
 image::documentation/images/go_gopher.png[Go Gopher]
 
-== Gallery
+== Galleries
 
 Some fancy images created during development can be found in the link:documentation/gallery/gallery.adoc[Gallery].
-
-== Functionality on display
 
 Images created to display certain core functionality of the raytracer can be found in the link:documentation/functionality/functionality.adoc[Functionality Gallery].
 
