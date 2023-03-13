@@ -13,7 +13,7 @@ var animationName = "cornellbox"
 
 var ballRadius float64 = 20
 
-var amountSamples = 1024 * 16
+var amountSamples = 1024 * 32
 
 var imageWidth = 800
 var imageHeight = 400
@@ -23,7 +23,7 @@ var viewPlaneDistance = 1500.0
 
 func main() {
 	boxUnit := ballRadius * 3
-	cornellBox := obj.NewCornellBox(&vec3.T{2 * boxUnit, boxUnit, 3 * boxUnit}, 4)
+	cornellBox := obj.NewCornellBox(&vec3.T{2 * boxUnit, boxUnit, 3 * boxUnit}, 6)
 
 	rightSphereMaterial := scn.NewMaterial().N("Right sphere").C(color.NewColorGrey(0.9))
 	leftSphereMaterial := scn.NewMaterial().N("Left sphere").C(color.NewColorGrey(0.9))
@@ -37,11 +37,11 @@ func main() {
 
 	cameraOrigin := cornellBox.Bounds.Center().Add(&vec3.T{0, 0, -15 * ballRadius})
 	focusPoint := cornellBox.Bounds.Center()
-	camera := scn.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).V(viewPlaneDistance)
-
-	frame := scn.NewFrame(animationName, -1, camera, scene)
 
 	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true)
+
+	camera := scn.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).V(viewPlaneDistance)
+	frame := scn.NewFrame(animationName, -1, camera, scene)
 	animation.AddFrame(frame)
 
 	anm.WriteAnimationToFile(animation, false)

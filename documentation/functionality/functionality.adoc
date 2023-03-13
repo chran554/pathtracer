@@ -42,6 +42,28 @@ Frame render time: 10h48m1.2195545s
 
 A short animation can be found at https://vimeo.com/803459254[Vimeo] (it should be played in a loop though).
 
+== Monte Carlo Integration
+
+As the pathtracer sends multiple rays through each pixel and each ray bounces and take a different path than the other, some rays hit a light source and others do not. The resulting light (or lack thereof) of each ray is accumulated for the pixel and averaged.
+The process is called Monte Carlo Integration and for each pixel ray fired and result included in the average, the closer to the perfect intensity value for the pixel.
+
+The Monte Carlo integration is a calculation intense process. It is not clear on what amount of integration samples (rays per pixel). The integration error (pixel intensity noise) is only halved as the amount of rays per pixel is doubled (and with that doubled rendering time, as it follow linear to the amount of rays fired).
+
+.Cornell box at different amount of Monte Carlo integration samples (rays per pixel)
+image::MonteCarloIntegration.png[Cornell box at different amount of Monte Carlo integration samples (rays per pixel)]
+
+.Monte Carlo integration with different amount samples (rays per pixel) details
+----
+Image size:             400x200
+Amount samples/pixel:   1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384
+Max recursion depth:    4
+Amount facets:          18
+Amount spheres:         2
+Frame render time:      3.65s (    1 sample/ray per pixel)
+Frame render time:   3m49.05s ( 1024 samples/rays per pixel)
+Frame render time: 1h0m37.03s (16384 samples/rays per pixel)
+----
+
 == Importance sampling - Cosine weighted hemisphere
 
 In the recursive step of firing a new ray from an intersection point on a perfect diffuse object you should sample the hemisphere (around the intersection normal) uniformly or even randomly for a perfect diffuse result. However, as the light coming from that ray will be multiplied by the cosine value of the angle between the intersection normal and the ray heading vector (incoming light at low angles are do not contribute much light at all to the intersection point) the rays fired close to the normal will contribute a whooping lot more than the rays close to the intersection point tangent plane.
