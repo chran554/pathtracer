@@ -192,14 +192,30 @@ func (fs *FacetStructure) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, 
 		projection := fs.Material.Projection
 
 		projection.Origin.Sub(rotationOrigin)
-		rotationMatrix.MulVec3(projection.Origin)
-		projection.Origin.Add(rotationOrigin)
+		projection.Origin[2] *= -1
+		rotatedVertex := rotationMatrix.MulVec3(projection.Origin)
+		rotatedVertex[2] *= -1
+		rotatedVertex.Add(rotationOrigin)
 
+		projection.Origin[0] = rotatedVertex[0]
+		projection.Origin[1] = rotatedVertex[1]
+		projection.Origin[2] = rotatedVertex[2]
+
+		projection.U[2] *= -1
 		rotatedU := rotationMatrix.MulVec3(projection.U)
-		projection.U = &rotatedU
+		rotatedU[2] *= -1
 
+		projection.U[0] = rotatedU[0]
+		projection.U[1] = rotatedU[1]
+		projection.U[2] = rotatedU[2]
+
+		projection.V[2] *= -1
 		rotatedV := rotationMatrix.MulVec3(projection.V)
-		projection.V = &rotatedV
+		rotatedV[2] *= -1
+
+		projection.V[0] = rotatedV[0]
+		projection.V[1] = rotatedV[1]
+		projection.V[2] = rotatedV[2]
 
 		rotatedImageProjections[fs.Material.Projection] = true
 	}
