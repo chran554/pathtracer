@@ -71,3 +71,15 @@ Render date:            2023-03-15
 Frame render time:      12h44m3.190926s
 ----
 
+== Lonesome gopher in love
+
+Really produced to show off the xref:../functionality/dof/dof.adoc["free aperture shape" functionality].
+
+.Lonesome gopher in love
+image::lonesome_gopher_in_love.png[Lonesome gopher in love]
+
+.Lonesome gopher in love
+----
+Render date:            2023-02-25
+----
+
