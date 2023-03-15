@@ -1,7 +1,7 @@
 = Gallery
 :toc:
 
-Some images to illustrate renderer functionality and some _show off_ gems.
+Some _show off_ gems. Not that many really, as I usually produce images to show off xref:../functionality/functionality.adoc[functionality].
 
 == Cornell box
 
@@ -13,12 +13,14 @@ Just look at 'em bleed'n walls!
 image::cornellbox.png[Cornell box]
 .Cornell box image details
 ----
-Image size:             800x500
-Amount samples/pixel:   16384
+Image size:             800x400
+Amount samples/pixel:   65536
 Max recursion depth:    8
-Amount facets:          12
+Amount facets:          18
 Amount spheres:         2
-Frame render time: 7h52m49.628069625s
+
+Render date:            2023-03-14
+Frame render time:      22h59m38.170794209s
 ----
 
 == Advent of code 2022 day 12
@@ -42,7 +44,30 @@ Image size:             250x250
 Amount samples/pixel:   200
 Max recursion depth:    4
 Amount facets:          42624
-Animation render time: aproximately (drum roll...) 72 hours
+
+Render date:            2023-02-19
+Animation render time:  aproximately (drum roll...) 72 hours
 ----
 
 image::aoc_2022_d12.png[Advent of code 2022 day 12]
+
+== Billiard table with a die
+
+Well, the die is 3 cm in width, so it is a pretty large die... +
+But I wanted it to stand out in the image
+
+.Billiard table with a die
+image::snookertable_dice.png[Snooker table with a die]
+
+.Advent of code *animation* details
+----
+Image size:             1200x900
+Amount samples/pixel:   16384
+Max recursion depth:    4
+Amount facets:          24
+Amount spheres:         17
+
+Render date:            2023-03-15
+Frame render time:      12h44m3.190926s
+----
+

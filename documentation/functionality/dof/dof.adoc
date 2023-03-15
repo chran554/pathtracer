@@ -9,7 +9,10 @@ This will not make a accurate simulation, with respect to physics and mathematic
 
 2. All other sample rays shot from the camera in your path tracer should start at random point on the aperture disc and pass through the focus point for the pixel (pixelX, pixelY).
 
-The simplest aperture shape is usually "round circle" as it is simple to implement and very camera like. However, if you do not sample start points for rays randomly on the aperture disc but rather randomly within another shape than a round circle, your out of focus bokeh will be of the shape you sampled. For example heart, star, or letter 'F' shaped as shown in example images.
+The simplest aperture shape is usually "round circle" as it is simple to implement and very camera like. +
+However, if you do not sample start points for rays randomly on the aperture disc but rather randomly within another shape than a round circle, your out of focus bokeh will be of the shape you sampled. For example heart, star, or letter 'F' shaped as shown in example images.
+
+I have used black and white bitmaps to define my aperture shapes. (See aperture images below.) It gives a very simple aperture shape understanding and an extremely easy editing as opposed to define functions for the shapes. I do not use this functionality much, so my implementation is very naive. When I am about to fire rays starting from my aperture I choose a random pixel on the aperture image and check if it is black or white. If it is black I repeat the random pixel selection and if it is white I choose that as the start position for my ray.
 
 .How different aperture shapes, and depth of field in general, works
 image::dof.png[How different apertures, and depth of field in general, works]

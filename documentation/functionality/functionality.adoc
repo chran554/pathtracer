@@ -11,16 +11,17 @@ It do also show the lack of point (and very small) lights that is out of the box
 
 Just look at 'em bleed'n walls!
 
-.The classic Cornell box. Color bleeding. Lightning fixed for raw image in post render editor.
+.The classic Cornell box. Color bleeding.
 image::cornellbox.png[Cornell box]
+
 .Cornell box image details
 ----
-Image size:             800x500
-Amount samples/pixel:   16384
+Image size:             800x400
+Amount samples/pixel:   65536
 Max recursion depth:    8
-Amount facets:          12
+Amount facets:          18
 Amount spheres:         2
-Frame render time: 7h52m49.628069625s
+Frame render time: 22h59m38.170794209s
 ----
 
 == Primitives
@@ -202,7 +203,7 @@ A round aperture gives round blur shapes and other shapes of the aperture will g
 
 Note that out of focus in the foreground gives the shape upside down and flipped left with right, while out of focus in the background will give shapes "correct" as in the aperture.
 
-Read the details on xref:../dof.adoc[how DOF and free aperture shape is implemented].
+Read the details on xref:dof/dof.adoc[how DOF and free aperture shape is implemented].
 
 .Different aperture shapes for a matrix of luminous balls
 image::dof/aperture_shape.png[Different aperture shapes]
