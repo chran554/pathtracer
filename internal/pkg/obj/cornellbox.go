@@ -10,11 +10,11 @@ import (
 // NewCornellBox creates a new cornell box (open in the back) with the center of the floor in origin (0,0,0).
 // Left wall is blue and right wall is red.
 // The scale is the total (width, height, depth) of the cornell box.
-func NewCornellBox(scale *vec3.T, lightIntensityFactor float64) *scn.FacetStructure {
+func NewCornellBox(scale *vec3.T, singleLight bool, lightIntensityFactor float64) *scn.FacetStructure {
 	blueColor := color.NewColor(0.05, 0.05, 0.95)
 	redColor := color.NewColor(0.95, 0.05, 0.05)
 
-	cornellBox := cornelBox(scale, lightIntensityFactor)
+	cornellBox := cornelBox(scale, singleLight, lightIntensityFactor)
 	cornellBox.GetFirstMaterialByName("left").C(blueColor)
 	cornellBox.GetFirstMaterialByName("right").C(redColor)
 
@@ -23,11 +23,11 @@ func NewCornellBox(scale *vec3.T, lightIntensityFactor float64) *scn.FacetStruct
 
 // NewWhiteCornellBox creates a new, whole white, cornell box (open in the back) with the center of the floor in origin (0,0,0).
 // The scale is the total (width, height, depth) of the cornell box.
-func NewWhiteCornellBox(scale *vec3.T, lightIntensityFactor float64) *scn.FacetStructure {
-	return cornelBox(scale, lightIntensityFactor)
+func NewWhiteCornellBox(scale *vec3.T, singleLight bool, lightIntensityFactor float64) *scn.FacetStructure {
+	return cornelBox(scale, singleLight, lightIntensityFactor)
 }
 
-func cornelBox(scale *vec3.T, lightIntensityFactor float64) (cornellBox *scn.FacetStructure) {
+func cornelBox(scale *vec3.T, singleLight bool, lightIntensityFactor float64) (cornellBox *scn.FacetStructure) {
 	var cornellBoxFilename = "cornellbox.obj"
 	var cornellBoxFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + cornellBoxFilename
 
@@ -53,10 +53,50 @@ func cornelBox(scale *vec3.T, lightIntensityFactor float64) (cornellBox *scn.Fac
 	cornellBox.GetFirstObjectByName("Ceiling").Material = cornellBox.Material.Copy().N("ceiling")
 
 	lampMaterial := scn.NewMaterial().N("lamp").E(color.White, lightIntensityFactor, true)
-	cornellBox.GetFirstObjectByName("Lamp_1").Material = lampMaterial
-	cornellBox.GetFirstObjectByName("Lamp_2").Material = lampMaterial
-	cornellBox.GetFirstObjectByName("Lamp_3").Material = lampMaterial
-	cornellBox.GetFirstObjectByName("Lamp_4").Material = lampMaterial
+
+	if singleLight {
+		cornellBox.RemoveObjectsByName("Lamp_1")
+		cornellBox.RemoveObjectsByName("Lamp_2")
+		cornellBox.RemoveObjectsByName("Lamp_3")
+		cornellBox.RemoveObjectsByName("Lamp_4")
+
+		lampSizeX := scale[0] / 3
+		lampY := scale[1] - 0.001
+		lampSizeZ := scale[2] / 3
+
+		lamp := &scn.FacetStructure{
+			Name:     "Lamp",
+			Material: lampMaterial,
+			Facets: getFlatRectangleFacets(
+				&vec3.T{-lampSizeX, lampY, +lampSizeZ},
+				&vec3.T{+lampSizeX, lampY, +lampSizeZ},
+				&vec3.T{+lampSizeX, lampY, -lampSizeZ},
+				&vec3.T{-lampSizeX, lampY, -lampSizeZ},
+			),
+		}
+
+		cornellBox.FacetStructures = append(cornellBox.FacetStructures, lamp)
+
+	} else {
+		cornellBox.GetFirstObjectByName("Lamp_1").Material = lampMaterial
+		cornellBox.GetFirstObjectByName("Lamp_2").Material = lampMaterial
+		cornellBox.GetFirstObjectByName("Lamp_3").Material = lampMaterial
+		cornellBox.GetFirstObjectByName("Lamp_4").Material = lampMaterial
+	}
+
+	cornellBox.UpdateBounds()
 
 	return cornellBox
+}
+
+func getFlatRectangleFacets(p1, p2, p3, p4 *vec3.T) []*scn.Facet {
+	v1 := p2.Subed(p1)
+	v2 := p3.Subed(p1)
+	normal := vec3.Cross(&v1, &v2)
+	normal.Normalize()
+
+	return []*scn.Facet{
+		{Vertices: []*vec3.T{p1, p2, p4}, Normal: &normal},
+		{Vertices: []*vec3.T{p4, p2, p3}, Normal: &normal},
+	}
 }
