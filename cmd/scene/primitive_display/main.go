@@ -28,7 +28,7 @@ var lightIntensityFactor = 7.0
 
 func main() {
 	// Cornell box
-	cornellBox := obj.NewWhiteCornellBox(&vec3.T{500 * 4, 300 * 2, 500 * 4}, lightIntensityFactor) // cm, as units. I.e. a 5x3x5m room
+	cornellBox := obj.NewWhiteCornellBox(&vec3.T{500 * 4, 300 * 2, 500 * 4}, false, lightIntensityFactor) // cm, as units. I.e. a 5x3x5m room
 	cornellBox.GetFirstMaterialByName("floor").M(0.01, 0.3)
 
 	// Gopher

@@ -25,7 +25,7 @@ var imageHeight = 400
 var magnification = 1.0
 
 func main() {
-	cornellBox := obj.NewCornellBox(&vec3.T{500, 300, 500}, 7.0) // cm, as units. I.e. a 5x3x5m room
+	cornellBox := obj.NewCornellBox(&vec3.T{500, 300, 500}, false, 7.0) // cm, as units. I.e. a 5x3x5m room
 
 	amountSpheres := 5
 	sphereSpread := ballRadius * 2.0 * (float64(amountSpheres) + 1)
