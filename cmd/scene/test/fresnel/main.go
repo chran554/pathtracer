@@ -9,6 +9,10 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
+// Two Spheres in a cornell box (+ a small sphere light in the center).
+// The left sphere has reflections through Fresnel (using refraction index).
+// The right sphere has matching reflections through common mirror (glossiness and roughness).
+
 var animationName = "fresnel"
 
 var ballRadius float64 = 20
