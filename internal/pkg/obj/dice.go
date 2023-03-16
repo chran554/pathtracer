@@ -7,12 +7,23 @@ import (
 	scn "pathtracer/internal/pkg/scene"
 )
 
+type Dice struct {
+	*scn.FacetStructure
+}
+
+func AsDice(fs *scn.FacetStructure) *Dice {
+	return &(Dice{FacetStructure: fs})
+}
+
+func (dice *Dice) BorderColor(c color.Color) {
+	dice.FacetStructure.Material.Color = &c
+}
+
 // NewDice creates a new cornell box (open in the back) with the center of the floor in origin (0,0,0).
 // Left wall is blue and right wall is red.
 // The scale is the total (width, height, depth) of the cornell box.
 func NewDice(scale float64) *scn.FacetStructure {
-	cornellBox := dice(scale)
-	return cornellBox
+	return dice(scale)
 }
 
 func dice(scale float64) (dice *scn.FacetStructure) {
@@ -29,11 +40,19 @@ func dice(scale float64) (dice *scn.FacetStructure) {
 	fmt.Printf("Dice bounds: %+v\n", dice.Bounds)
 
 	diceMaterial := scn.NewMaterial().N("dice").
-		C(color.NewColorGrey(0.9)).
+		C(color.NewColorGrey(1.0)). // TODO Set to same color as texture background, should be 0.9 or something. Color should affect color diffuse textures (by operation multiplication)?
 		T(0.0, true, scn.RefractionIndex_AcrylicPlastic).
 		M(0.075, 0.2)
 
 	dice.Material = diceMaterial
+
+	// TODO Fix. Awkward solution due to obj file loading bug, naming top structure after last material/group read.
+	facetStructures := dice.GetObjectsByName("dice")
+	for _, fs := range facetStructures {
+		if len(fs.FacetStructures) == 0 {
+			fs.Material = nil
+		}
+	}
 
 	b := dice.Bounds
 	diceMaterial1 := diceMaterial.Copy().N("1"). /*.C(color.NewColor(1, 0, 0))*/ PP("textures/dice/dice_1.png", &vec3.T{b.Xmax, b.Ymin, 0}, vec3.T{-scale, 0, 0}, vec3.T{0, scale, 0})
