@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math"
 	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj"
@@ -13,15 +14,17 @@ var animationName = "cornellbox"
 
 var ballRadius float64 = 20
 
-var amountSamples = 1024 * 32
+// var amountSamples = 1024 * 64
+var maxRecursionDepth = 4
 
 var imageWidth = 800
 var imageHeight = 400
-var magnification = 1.0
+var magnification = 0.5
 
 var viewPlaneDistance = 1500.0
 
 func main() {
+	// TODO Set lamp size of cornell single light to: 		lampPercentageOfCeiling := 0.20
 	cornellBoxUnit := ballRadius * 3
 	cornellBox := obj.NewCornellBox(&vec3.T{2 * cornellBoxUnit, cornellBoxUnit, 3 * cornellBoxUnit}, true, 40)
 
@@ -40,9 +43,16 @@ func main() {
 
 	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true)
 
-	camera := scn.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).V(viewPlaneDistance)
-	frame := scn.NewFrame(animationName, -1, camera, scene)
-	animation.AddFrame(frame)
+	//camera := scn.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).V(viewPlaneDistance).D(maxRecursionDepth)
+	//frame := scn.NewFrame(animationName, -1, camera, scene)
+	//animation.AddFrame(frame)
+
+	for frameIndex := 0; frameIndex <= 16; frameIndex++ {
+		amountSamples := int(math.Pow(2, float64(frameIndex)))
+		camera := scn.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).V(viewPlaneDistance).D(maxRecursionDepth)
+		frame := scn.NewFrame(animationName, amountSamples, camera, scene)
+		animation.AddFrame(frame)
+	}
 
 	anm.WriteAnimationToFile(animation, false)
 }
