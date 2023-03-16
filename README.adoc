@@ -38,26 +38,26 @@ This will build and run the rendering of a cornell box image.
 A lot of functionality is on display in the link:documentation/functionality/functionality.adoc[Functionality Gallery].
 
 * Load scene-files (json-based file format) capable of multi frame animations.
-* Pathtracing algorithm
+* xref:documentation/functionality/functionality.adoc#_cornell_box[Pathtracing] algorithm
 
-* Primitives: sphere, disc (circle on plane), triangle (facet)
+* xref:documentation/functionality/functionality.adoc#_primitives[Primitives]: sphere, disc (circle on plane), triangle (facet)
 * Scene building - primitives in hierarchies and translation, scaling, and rotation on any level.
 * Bounding boxes (orthogonal aligned and hierarchically arranged)
 * Reading (and writing) of Wavefront `.obj` 3D object file format (along with accompanying `.mtl` file)
 * Reading of `.ply` 3D object file format
-* Reflection - Fresnel (dielectric/non-conducting)
-* Reflection - glossy & roughness (mirror with roughness/brushed for metallic effects)
+* xref:documentation/functionality/functionality.adoc#_material__reflection_fresnel_dielectricnon_conducting[Reflection - Fresnel (dielectric/non-conducting)]
+* xref:documentation/functionality/functionality.adoc#_material__reflection_glossy_and_roughness[Reflection - glossy & roughness] (mirror with roughness/brushed for metallic effects)
 * Color definitions by RGB
-* Importance sampling - cosine weighted hemisphere sampling (instead of uniform sampling)
+* xref:documentation/functionality/functionality.adoc#_importance_sampling__cosine_weighted_hemisphere[Importance sampling - cosine weighted hemisphere sampling] (instead of uniform sampling)
 * Gamma correction on loaded textures and on rendered image export.
-* Texture projections: sphere (equirectangular), cylindrical, flat (parallel)
+* Texture projections: xref:documentation/functionality/functionality.adoc#_image_projection__spherical[sphere] (equirectangular), xref:documentation/functionality/functionality.adoc#_image_projection__cylindrical[cylindrical], xref:documentation/functionality/functionality.adoc#_image_projection__parallel[parallel] (flat)
 * Free position camera with any direction and any focal length.
-* Super sampling: Anti alias (random rays within the pixel for smooth edges)
+* Super sampling: Anti-alias (random rays within the pixel for smooth edges)
 * Super sampling: DOF - xref:documentation/functionality/dof/dof.adoc[Depth of field] (focus distance and "aperture size")
 * Super sampling: DOF - Depth of field - xref:documentation/functionality/dof/dof.adoc[aperture shape] (free form shape)
 * Save rendered image in PNG-format
 * Save rendered HDR (high dynamic range) image in RAW-format ("praw") for post light editing in separate application tool https://github.com/chran554/RawImageEditor[RawImageEditor].
-* Progressive/recursive pixel rendering, a quite useful overview after only 5% rendering.
+* https://github.com/chran554/PathtracerMonitor[Progressive/recursive pixel rendering], producing a quite useful overview after only 5% rendering.
 * Sending broadcast (UDP) messages of rendered pixels to render monitor https://github.com/chran554/PathtracerMonitor[PathtracerMonitor].
 
 === TODO
