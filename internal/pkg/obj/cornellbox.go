@@ -60,9 +60,11 @@ func cornelBox(scale *vec3.T, singleLight bool, lightIntensityFactor float64) (c
 		cornellBox.RemoveObjectsByName("Lamp_3")
 		cornellBox.RemoveObjectsByName("Lamp_4")
 
-		lampSizeX := scale[0] / 3
+		lampPercentageOfCeiling := 2.0 / 3.0 // Two thirds in width and depth (i.e. 0.666*0.666 = 44.4% of the ceiling)
+
+		lampSizeX := (scale[0] / 2) * lampPercentageOfCeiling
 		lampY := scale[1] - 0.001
-		lampSizeZ := scale[2] / 3
+		lampSizeZ := (scale[2] / 2) * lampPercentageOfCeiling
 
 		lamp := &scn.FacetStructure{
 			Name:     "Lamp",
