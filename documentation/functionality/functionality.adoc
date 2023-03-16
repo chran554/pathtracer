@@ -50,8 +50,12 @@ The process is called Monte Carlo Integration and for each pixel ray fired and r
 
 The Monte Carlo integration is a calculation intense process. It is not clear on what amount of integration samples (rays per pixel). The integration error (pixel intensity noise) is only halved as the amount of rays per pixel is doubled (and with that doubled rendering time, as it follow linear to the amount of rays fired).
 
-.Cornell box at different amount of Monte Carlo integration samples (rays per pixel). (Cosine weighted hemisphere importance sampling is used.)
-image::MonteCarloIntegration.png[Cornell box at different amount of Monte Carlo integration samples (rays per pixel)]
+For the image below I have intentionally chosen this "tricky" scene, for pathtracing, with a very "small" light in the ceiling as it would produce a lot of noise in the image when using small amount of rays that would miss the light.
+
+.Cornell box at different amount of Monte Carlo integration samples (rays per pixel). No importance sampling is used but simple uniform random hemisphere sampling.
+image::MonteCarloIntegration_UniformRandomSampling.png[Cornell box at different amount of Monte Carlo integration samples (rays per pixel)]
+
+See also the cornell box sample comparison in the <<_importance_sampling__cosine_weighted_hemisphere, importance sampling - cosine weighted>> sections.
 
 .Monte Carlo integration with different amount samples (rays per pixel) details
 ----
@@ -71,10 +75,13 @@ In the recursive step of firing a new ray from an intersection point on a perfec
 
 So, instead of firing a lot of rays from the intersection point where a lot of the only will contribute a minuscule to the Monte Carlo integration sum, we do not multiply the rays by the angle cosine value. Instead, we weigh all the rays equally much but make sure we fire rays close to the intersection normal, that will give a lot of contribution, more often and fire those close to the intersection point tangent plane more seldom, in a cosine distribution way. Given a infinite amount samples it will turn out, mathematically, the same but the cosine weighted distribution will converge faster.
 
-.Uniform random distribution sampling of the intersection point hemisphere. Using 4 samples per pixel.
-image::cornellbox_diffuse_random_hemisphere.png[Random sampled hemisphere. 4 samples/pixel.]
+."Uniform random" sampling vs "Cosine weighted" sampling in a side by side comparison at different amount of Monte Carlo integration samples (rays per pixel)
+image::MonteCarloIntegration_ImportanceSampling_CosineWeighted.png["Uniform random" sampling vs "Cosine weighted" sampling in a side by side comparison at different amount of Monte Carlo integration samples (rays per pixel)]
 
-.Cosine weighted sampling of the intersection point hemisphere. Using 4 samples per pixel. The faster convergence is shown in comparison to the uniform random sampled hemisphere.
+.Uniform random distribution hemisphere sampling of the intersection point hemisphere. Using 4 samples per pixel.
+image::cornellbox_diffuse_random_hemisphere.png[Uniform random sampled hemisphere. 4 samples/pixel.]
+
+.Cosine weighted hemisphere sampling of the intersection point hemisphere. Using 4 samples per pixel. The faster convergence is shown in comparison to the uniform random sampled hemisphere.
 image::cornellbox_diffuse_cosine_weighted_hemisphere.png[Cosine weighted hemisphere sampling. 4 samples/pixel.]
 
 .Uniform random and cosine weighted sampling of hemisphere image
