@@ -50,7 +50,7 @@ The process is called Monte Carlo Integration and for each pixel ray fired and r
 
 The Monte Carlo integration is a calculation intense process. It is not clear on what amount of integration samples (rays per pixel). The integration error (pixel intensity noise) is only halved as the amount of rays per pixel is doubled (and with that doubled rendering time, as it follow linear to the amount of rays fired).
 
-For the image below I have intentionally chosen this "tricky" scene, for pathtracing, with a very "small" light in the ceiling as it would produce a lot of noise in the image when using small amount of rays that would miss the light.
+For the image below I have intentionally chosen this "tricky" scene, for pathtracing, with a very "small" and intense light in the ceiling as it would produce a lot of noise in the image when using small amount of rays that would miss the light. (A larger light source would drastically reduce the noise, but I wanted a noisy image throughout the sampling range for comparison.)
 
 .Cornell box at different amount of Monte Carlo integration samples (rays per pixel). No importance sampling is used but simple uniform random hemisphere sampling.
 image::MonteCarloIntegration_UniformRandomSampling.png[Cornell box at different amount of Monte Carlo integration samples (rays per pixel)]
@@ -100,9 +100,9 @@ Work in progress (WIP)
 
 Fresnel reflections at low gracing angles on objects.
 
-I based my implementation on a Schlick approximation.
+I based my Fresnel implementation on a Schlick approximation.
 
-.Light green spheres with fresnel and glossy reflection. Increasing refraction index from left 1.000273 (air) to right 2.417 (diamond) and increasing glossiness from bottom 0.0 to top 1.0.
+.Light green spheres with fresnel and glossy reflection. Increasing refraction index from left 1.000273 (air) to right 2.417 (diamond) and increasing glossiness from bottom 0.0 to top 1.0 (roughness is 0.0 for all spheres).
 image::reflective_test_refractionindex_glossiness.png[Fresnel reflection with different refraction indicies and levels of glossiness]
 
 .Fresnel and glossy image details
