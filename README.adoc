@@ -38,19 +38,19 @@ This will build and run the rendering of a cornell box image.
 A lot of functionality is on display in the link:documentation/functionality/functionality.adoc[Functionality Gallery].
 
 * Load scene-files (json-based file format) capable of multi frame animations.
-* xref:documentation/functionality/functionality.adoc#cornell_box[Pathtracing] algorithm
+* xref:documentation/functionality/functionality.adoc#cornell-box[Pathtracing] algorithm
 
 * xref:documentation/functionality/functionality.adoc#primitives[Primitives]: sphere, disc (circle on plane), triangle (facet)
 * Scene building - primitives in hierarchies and translation, scaling, and rotation on any level.
 * Bounding boxes (orthogonal aligned and hierarchically arranged)
 * Reading (and writing) of Wavefront `.obj` 3D object file format (along with accompanying `.mtl` file)
 * Reading of `.ply` 3D object file format
-* xref:documentation/functionality/functionality.adoc#material__reflection_fresnel_dielectricnon_conducting[Reflection - Fresnel (dielectric/non-conducting)]
-* xref:documentation/functionality/functionality.adoc#material__reflection_glossy_and_roughness[Reflection - glossy & roughness] (mirror with roughness/brushed for metallic effects)
+* xref:documentation/functionality/functionality.adoc#material-reflection-fresnel-dielectricnon-conducting[Reflection - Fresnel (dielectric/non-conducting)]
+* xref:documentation/functionality/functionality.adoc#material-reflection-glossy-and-roughness[Reflection - glossy & roughness] (mirror with roughness/brushed for metallic effects)
 * Color definitions by RGB
-* xref:documentation/functionality/functionality.adoc#importance_sampling__cosine_weighted_hemisphere[Importance sampling - cosine weighted hemisphere sampling] (instead of uniform sampling)
+* xref:documentation/functionality/functionality.adoc#importance-sampling-cosine-weighted-hemisphere[Importance sampling - cosine weighted hemisphere sampling] (instead of uniform sampling)
 * Gamma correction on loaded textures and on rendered image export.
-* Texture projections: xref:documentation/functionality/functionality.adoc#image_projection_spherical[sphere] (equirectangular), xref:documentation/functionality/functionality.adoc#image_projection_cylindrical[cylindrical], xref:documentation/functionality/functionality.adoc#image_projection_parallel[parallel] (flat)
+* Texture projections: xref:documentation/functionality/functionality.adoc#image-projection-spherical[sphere] (equirectangular), xref:documentation/functionality/functionality.adoc#image-projection-cylindrical[cylindrical], xref:documentation/functionality/functionality.adoc#image-projection-parallel[parallel] (flat)
 * Free position camera with any direction and any focal length.
 * Super sampling: Anti-alias (random rays within the pixel for smooth edges)
 * Super sampling: DOF - xref:documentation/functionality/dof/dof.adoc[Depth of field] (focus distance and "aperture size")
