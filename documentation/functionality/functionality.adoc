@@ -71,9 +71,11 @@ Frame render time: 1h0m37.03s (16384 samples/rays per pixel)
 
 == Importance sampling - Cosine weighted hemisphere
 
+Summary: Cosine weighted hemisphere sampling will _converge faster, producing less noisy result images for fewer rays (and thus in lesser time)_.
+
 In the recursive step of firing a new ray from an intersection point on a perfect diffuse object you should sample the hemisphere (around the intersection normal) uniformly or even randomly for a perfect diffuse result. However, as the light coming from that ray will be multiplied by the cosine value of the angle between the intersection normal and the ray heading vector (incoming light at low angles are do not contribute much light at all to the intersection point) the rays fired close to the normal will contribute a whooping lot more than the rays close to the intersection point tangent plane.
 
-So, instead of firing a lot of rays from the intersection point where a lot of the only will contribute a minuscule to the Monte Carlo integration sum, we do not multiply the rays by the angle cosine value. Instead, we weigh all the rays equally much but make sure we fire rays close to the intersection normal, that will give a lot of contribution, more often and fire those close to the intersection point tangent plane more seldom, in a cosine distribution way. Given a infinite amount samples it will turn out, mathematically, the same but the cosine weighted distribution will converge faster.
+So, instead of firing a lot of rays from the intersection point where a lot of the only will contribute a minuscule to the Monte Carlo integration sum, we do not multiply the rays by the angle cosine value. Instead, we weigh all the rays equally much but make sure we fire rays close to the intersection normal, that will give a lot of contribution, more often and fire those close to the intersection point tangent plane more seldom, in a cosine distribution way. Given a infinite amount samples it will turn out, mathematically, the same but the *cosine weighted distribution will converge faster, producing less noisy result images for fewer rays/in lesser time*.
 
 ."Uniform random" sampling vs "Cosine weighted" sampling in a side by side comparison at different amount of Monte Carlo integration samples (rays per pixel)
 image::MonteCarloIntegration_ImportanceSampling_CosineWeighted.png["Uniform random" sampling vs "Cosine weighted" sampling in a side by side comparison at different amount of Monte Carlo integration samples (rays per pixel)]
