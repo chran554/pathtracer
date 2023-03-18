@@ -242,19 +242,29 @@ Amount spheres:         4688
 
 == Image projection - Cylindrical
 
-Cylindrical projection can be used from any image that is wrapped around a cylinder.
+Cylindrical projection can be used for any image that is wrapped around a cylinder. The projection can be used on any object of course.
+
+The cylindrical projection projects any image around and perpendicular towards a vector of certain length from a start point.
+
+The projection is defined by three vectors:
+
+ * _projection origin_ - the start point of the v vector.
+ * _u_ - the start angle for the projected image (the image x-axis is wrapped 360° around projection vector)
+ * _v_ - the projection direction and height (the y-axis of the image)
 
 .Cylindrical projection
 image::projection_cylindrical.png[Cylindrical projection]
 
-.Image details
+.Cylindrical projection image details
 ----
-Image size:             960x1200
-Amount samples/pixel:   12288
+Image size:             1024x576
+Amount samples/pixel:   16384
 Max recursion depth:    4
-Amount facets:          104396
+Amount facets:          208780
 Amount spheres:         2
-Frame render time: 12h5m47.523553625s
+
+Render date:            2023-03-18
+Frame render time:      6h53m34.284895459s
 ----
 
 == Image projection - Parallel
