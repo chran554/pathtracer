@@ -2,6 +2,7 @@ package scene
 
 import (
 	"github.com/ungerik/go3d/float64/vec3"
+	"math"
 	"pathtracer/internal/pkg/color"
 )
 
@@ -66,7 +67,7 @@ func (m *Material) E(emission color.Color, scale float64, rayTerminator bool) *M
 func (m *Material) M(glossiness float64, roughness float64) *Material {
 	m.Roughness = roughness
 	m.Glossiness = glossiness
-	m.Diffuse = 1.0 - (m.Glossiness + m.Transparency)
+	m.Diffuse = 1.0 - math.Min(m.Glossiness+m.Transparency, 1.0)
 	return m
 }
 
@@ -75,7 +76,7 @@ func (m *Material) T(transparency float64, solidObject bool, refractionIndex flo
 	m.Transparency = transparency
 	m.SolidObject = solidObject
 	m.RefractionIndex = refractionIndex
-	m.Diffuse = 1.0 - (m.Glossiness + m.Transparency)
+	m.Diffuse = 1.0 - math.Min(m.Glossiness+m.Transparency, 1.0)
 	return m
 }
 
