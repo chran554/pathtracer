@@ -65,7 +65,7 @@ func main() {
 	cameraFocusPoint := sphereBounds.Center().Added(&vec3.T{0, 0, -ballRadius / 3.0})
 	camera := scn.NewCamera(cameraOrigin, &cameraFocusPoint, amountSamples, magnification).D(maxRecursionDepth).A(lensRadius, "")
 
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false)
+	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
 	frame := scn.NewFrame(animation.AnimationName, -1, camera, scene)
 

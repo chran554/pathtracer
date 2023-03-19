@@ -17,7 +17,7 @@ var magnification = 2.0
 func main() {
 	size := 800.0 // 100 cm
 
-	animation := scn.NewAnimation("heightmap_test", 800, 400, magnification, false)
+	animation := scn.NewAnimation("heightmap_test", 800, 400, magnification, false, false)
 
 	landscapeMaterial := scn.NewMaterial().N("Ground material").
 		T(0.0, false, scn.RefractionIndex_Quartz).

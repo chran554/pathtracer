@@ -67,7 +67,7 @@ func main() {
 
 	scene := scn.NewSceneNode().FS(cornellBox).SN(q1, q2, q3, q4)
 
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false)
+	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
 	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
 		animationProgress := float64(frameIndex) / float64(amountFrames)

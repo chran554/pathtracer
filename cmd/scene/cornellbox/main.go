@@ -38,7 +38,7 @@ func main() {
 	cameraOrigin := cornellBox.Bounds.Center().Add(&vec3.T{0, 0, -15 * ballRadius})
 	focusPoint := cornellBox.Bounds.Center()
 
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true)
+	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
 	camera := scn.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).V(viewPlaneDistance)
 	frame := scn.NewFrame(animationName, -1, camera, scene)

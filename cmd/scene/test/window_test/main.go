@@ -63,7 +63,7 @@ func main() {
 
 	frame := scn.NewFrame(animationName, -1, camera, scene)
 
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true)
+	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 	animation.AddFrame(frame)
 
 	anm.WriteAnimationToFile(animation, false)

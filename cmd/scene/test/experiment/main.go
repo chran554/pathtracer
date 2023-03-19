@@ -80,7 +80,7 @@ func main() {
 	groundMaterial := scn.NewMaterial().N("Ground material").P(&groundProjection)
 	ground := scn.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
 
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false)
+	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
 	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
 		animationProgress := float64(frameIndex) / float64(amountFrames)

@@ -52,7 +52,7 @@ const (
 )
 
 func main() {
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true)
+	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
 	environmentSphere := scn.NewSphere(&vec3.T{0, 0, 0}, 3*100, scn.NewMaterial().
 		E(color.White, 6, true).

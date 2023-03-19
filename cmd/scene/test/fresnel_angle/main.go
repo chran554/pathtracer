@@ -14,7 +14,7 @@ var amountSamples = 1024 * 12
 func main() {
 	cylinderRadius := 3 * 100.0 // 300 cm
 
-	animation := scn.NewAnimation("fresnel_angle", 800, 600, 1.0, false)
+	animation := scn.NewAnimation("fresnel_angle", 800, 600, 1.0, false, false)
 
 	projectionOrigin := &vec3.T{0, 0, 0}
 	projectionU := vec3.UnitZ.Inverted()

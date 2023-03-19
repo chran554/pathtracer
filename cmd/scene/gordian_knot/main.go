@@ -43,7 +43,7 @@ var amountBalls = 75
 var scale = 100.0
 
 func main() {
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true)
+	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
 	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
 		animationProgress := float64(frameIndex) / float64(amountFrames)

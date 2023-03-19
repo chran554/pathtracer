@@ -13,7 +13,7 @@ var amountSamples = 5
 var viewPlaneDistance = 1600.0
 
 func main() {
-	animation := scn.NewAnimation("cylindrical_projection", 800, 600, 1.0, false)
+	animation := scn.NewAnimation("cylindrical_projection", 800, 600, 1.0, false, false)
 
 	sphereOrigin := vec3.T{0, 0, 0}
 	projectionOrigin := sphereOrigin

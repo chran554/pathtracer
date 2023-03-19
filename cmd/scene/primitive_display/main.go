@@ -128,7 +128,7 @@ func main() {
 	animationStartIndex := 0
 	animationEndIndex := amountAnimationFrames - 1
 
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false)
+	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
 	for frameIndex := animationStartIndex; frameIndex <= animationEndIndex; frameIndex++ {
 		animationProgress := float64(frameIndex) / float64(amountAnimationFrames)

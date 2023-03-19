@@ -27,7 +27,7 @@ func main() {
 	dx := 1.4
 	dy := -10.0
 
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true)
+	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
 	skyDome := scn.NewSphere(&vec3.T{0, 0, 0}, 4*100, scn.NewMaterial().
 		E(color.White, 1, true).
@@ -82,7 +82,7 @@ func main() {
 			A(apertureSize, "").
 			F(focusDistance)
 
-		frame := scn.NewFrame(animation.AnimationName, animationFrameIndex, camera, scene)
+		frame := scn.NewFrame(animation.AnimationName, -1, camera, scene)
 		animation.AddFrame(frame)
 	}
 

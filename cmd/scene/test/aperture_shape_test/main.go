@@ -84,7 +84,7 @@ func main() {
 	yPosMax := gopher.Bounds.SizeY() * 0.75
 	yPosMin := gopher.Bounds.SizeY() * 0.15
 
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false)
+	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
 	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
 		animationProgress := float64(frameIndex) / float64(amountFrames)

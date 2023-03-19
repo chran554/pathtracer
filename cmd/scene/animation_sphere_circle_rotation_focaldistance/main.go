@@ -23,7 +23,7 @@ var magnification = 1.0
 var cameraOrigin = vec3.T{0, 200, -200}
 
 func main() {
-	animation := scn.NewAnimation("sphere_circle_rotation_focaldistance_hires", 800, 600, magnification, false)
+	animation := scn.NewAnimation("sphere_circle_rotation_focaldistance_hires", 800, 600, magnification, false, false)
 
 	groundOrigin := &vec3.T{0, 0, 0}
 	groundMaterial := scn.NewMaterial().

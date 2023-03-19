@@ -62,7 +62,7 @@ func main() {
 	// filename := "/Users/christian/projects/code/go/pathtracer/objects/triangle.obj"
 	// filename := "objects/go_gopher_high.obj"
 
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true)
+	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
 	for imageIndex := 0; imageIndex < amountImages; imageIndex++ {
 		fmt.Printf("\n\nCostructing frame %d\n", imageIndex)

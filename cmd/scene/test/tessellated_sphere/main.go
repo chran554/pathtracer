@@ -28,7 +28,7 @@ var maxRecursion = 2
 var apertureSize = 1.5
 
 func main() {
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false)
+	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
 	// Sphere
 	tessellatedSphere := obj.NewTessellatedSphere(5, false)

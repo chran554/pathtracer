@@ -30,7 +30,7 @@ var imageHeight = 500
 var magnification = 1.5
 
 func main() {
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true)
+	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
 	scale := 100.0
 	cornellBox := NewCornellBox(100.0)

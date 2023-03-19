@@ -57,7 +57,7 @@ func main() {
 		D(ground).
 		FS(gopher)
 
-	animation := scn.NewAnimation(animationName, width, height, magnification, false)
+	animation := scn.NewAnimation(animationName, width, height, magnification, false, false)
 
 	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
 		animationProgress := float64(frameIndex) / float64(amountFrames)

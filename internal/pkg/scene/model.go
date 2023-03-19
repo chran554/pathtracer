@@ -18,20 +18,46 @@ const (
 	Raycasting RenderType = "Raycasting"
 )
 
+type ScreenResolution struct {
+	name   string
+	width  int
+	height int
+}
+
+var (
+	ScreenResolution_HD_854x480_WVGA     ScreenResolution = ScreenResolution{name: "WVGA (HD 16:9)", width: 854, height: 480}
+	ScreenResolution_HD_1024x576_PAL     ScreenResolution = ScreenResolution{name: "PAL (HD 16:9)", width: 1024, height: 576}
+	ScreenResolution_HD_1366x768         ScreenResolution = ScreenResolution{name: "1366x768 (HD 16:9)", width: 1366, height: 768}
+	ScreenResolution_HD_1600x900         ScreenResolution = ScreenResolution{name: "1600x900 (HD 16:9)", width: 1600, height: 900}
+	ScreenResolution_HD_1920x1080_FullHD ScreenResolution = ScreenResolution{name: "Full HD (HD 16:9)", width: 1920, height: 1080}
+	ScreenResolution_HD_2560x1440_WQHD   ScreenResolution = ScreenResolution{name: "WQHD (HD 16:9)", width: 2560, height: 1440}
+	ScreenResolution_HD_3840x2160_UHD1   ScreenResolution = ScreenResolution{name: "UHD-1 (HD 16:9)", width: 3840, height: 2160}
+	ScreenResolution_HD_5120x2880_5K     ScreenResolution = ScreenResolution{name: "5K (HD 16:9)", width: 5120, height: 2880}
+	ScreenResolution_HD_7680x4320_UHD2   ScreenResolution = ScreenResolution{name: "UHD-2 (HD 16:9)", width: 7680, height: 4320}
+	ScreenResolution_VGA_320x240_QVGA    ScreenResolution = ScreenResolution{name: "QVGA (VGA 4:3)", width: 320, height: 240}
+	ScreenResolution_VGA_640x480_VGA     ScreenResolution = ScreenResolution{name: "VGA (VGA 4:3)", width: 640, height: 480}
+	ScreenResolution_VGA_800x600_SGA     ScreenResolution = ScreenResolution{name: "SVGA (VGA 4:3)", width: 800, height: 600}
+	ScreenResolution_VGA_1024x768_XGA    ScreenResolution = ScreenResolution{name: "XGA (VGA 4:3)", width: 1024, height: 768}
+	ScreenResolution_VGA_1400x1050_SXGA  ScreenResolution = ScreenResolution{name: "SXGA (VGA 4:3)", width: 1400, height: 1050}
+	ScreenResolution_VGA_1600x1200_UXGA  ScreenResolution = ScreenResolution{name: "UXGA (VGA 4:3)", width: 1600, height: 1200}
+	ScreenResolution_VGA_2048x1536_QXGA  ScreenResolution = ScreenResolution{name: "QXGA (VGA 4:3)", width: 2048, height: 1536}
+)
+
 type Ray struct {
 	Origin  *vec3.T
 	Heading *vec3.T
 }
 
 type Animation struct {
-	AnimationName     string
-	Frames            []*Frame
-	Width             int
-	Height            int
-	WriteRawImageFile bool
+	AnimationName      string
+	Frames             []*Frame
+	Width              int
+	Height             int
+	WriteRawImageFile  bool
+	WriteImageInfoFile bool
 }
 
-func NewAnimation(name string, pixelWidth int, pixelHeight int, magnification float64, rawFile bool) *Animation {
+func NewAnimation(name string, pixelWidth int, pixelHeight int, magnification float64, rawFile bool, infoFile bool) *Animation {
 	width := int(float64(pixelWidth) * magnification)
 	height := int(float64(pixelHeight) * magnification)
 
@@ -44,10 +70,11 @@ func NewAnimation(name string, pixelWidth int, pixelHeight int, magnification fl
 	}
 
 	return &Animation{
-		AnimationName:     name,
-		Width:             width,
-		Height:            height,
-		WriteRawImageFile: rawFile,
+		AnimationName:      name,
+		Width:              width,
+		Height:             height,
+		WriteRawImageFile:  rawFile,
+		WriteImageInfoFile: infoFile,
 	}
 }
 

@@ -15,7 +15,7 @@ import (
 	"pathtracer/internal/pkg/renderpass"
 	scn "pathtracer/internal/pkg/scene"
 	"pathtracer/internal/pkg/util"
-	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -39,6 +39,44 @@ type IntersectionInformation struct {
 	shortestDistance     float64
 	material             *scn.Material
 	normalAtIntersection *vec3.T
+}
+
+type RenderFrameInformation struct {
+	frameIndex          int
+	animationFrameCount int
+	imageFilename       string
+	renderAlgorithm     scn.RenderType
+	imageWidth          int
+	imageHeight         int
+
+	amountFacets  int
+	amountSpheres int
+	amountDiscs   int
+
+	samplesPerPixel   int
+	maxRecursionDepth int
+
+	renderStartTime time.Time
+	renderEndTime   time.Time
+}
+
+func NewRenderFrameInformation(scene *scn.SceneNode, animation *scn.Animation, frame *scn.Frame) RenderFrameInformation {
+	return RenderFrameInformation{
+		// frameIndex:          frameIndex,
+		animationFrameCount: len(animation.Frames),
+		imageFilename:       frame.Filename,
+		renderAlgorithm:     frame.Camera.RenderType,
+		imageWidth:          animation.Width,
+		imageHeight:         animation.Height,
+		amountFacets:        scene.GetAmountFacets(),
+		amountSpheres:       scene.GetAmountSpheres(),
+		amountDiscs:         scene.GetAmountDiscs(),
+		samplesPerPixel:     frame.Camera.Samples,
+		maxRecursionDepth:   frame.Camera.RecursionDepth,
+		// renderStartTime:     time.Now(),
+		// renderEndTime:       time.Time{},
+		// renderDuration:      0,
+	}
 }
 
 func NewIntersectionInformation() *IntersectionInformation {
@@ -88,64 +126,85 @@ func main() {
 	defer renderMonitor.Close()
 
 	for frameIndex, frame := range animation.Frames {
-		frameStartTimestamp := time.Now()
+		frameInformation := NewRenderFrameInformation(frame.SceneNode, &animation, frame)
+		frameInformation.frameIndex = frameIndex
+		frameInformation.renderStartTime = time.Now()
+
 		renderMonitor.Initialize(animation.AnimationName, frame.Filename, animation.Width, animation.Height)
 		time.Sleep(50 * time.Millisecond)
 
-		var scene scn.SceneNode
-		scene = *frame.SceneNode
+		fmt.Println(frameInformationPreRenderText(frameInformation))
 
-		unevenWidth := (animation.Width%2) == 1 || (animation.Height%2) == 1
-		mp4CreationWarning := ""
-		if unevenWidth && (len(animation.Frames) > 1) {
-			mp4CreationWarning = " (uneven width or height, no animation can be made)"
-		}
-
-		progress := float64(frameIndex+1) / float64(len(animation.Frames))
-		fmt.Println("-----------------------------------------------")
-		fmt.Println("Frame number:          ", frameIndex+1, "of", len(animation.Frames), "   (animation progress "+fmt.Sprintf("%.2f", progress*100.0)+"%)")
-		fmt.Println("Frame label:           ", frame.FrameIndex)
-		fmt.Println("Frame image file:      ", frame.Filename)
 		fmt.Println()
-		fmt.Println("Render algorithm:      ", frame.Camera.RenderType)
-		fmt.Println("Image size:            ", strconv.Itoa(animation.Width)+"x"+strconv.Itoa(animation.Height)+mp4CreationWarning)
-		fmt.Println("Amount samples/pixel:  ", frame.Camera.Samples)
-		fmt.Println("Max recursion depth:   ", frame.Camera.RecursionDepth)
-		fmt.Println()
-		if scene.GetAmountFacets() > 0 {
-			fmt.Println("Amount facets:         ", scene.GetAmountFacets())
-		}
-		if scene.GetAmountSpheres() > 0 {
-			fmt.Println("Amount spheres:        ", scene.GetAmountSpheres())
-		}
-		if scene.GetAmountDiscs() > 0 {
-			fmt.Println("Amount discs:          ", scene.GetAmountDiscs())
-		}
-		fmt.Println()
-
 		fmt.Println("Initialize scene...")
-		initializeScene(&scene)
+		scene := frame.SceneNode
+		initializeScene(scene)
 
 		renderedPixelData := image.NewFloatImage(animation.AnimationName, animation.Width, animation.Height)
 
 		fmt.Println("Rendering...")
-		render(frame.Camera, &scene, animation.Width, animation.Height, renderedPixelData, &renderMonitor)
+		render(frame.Camera, scene, animation.Width, animation.Height, renderedPixelData, &renderMonitor)
 
-		writeRenderedImage(animation, frame, renderedPixelData)
-
-		deInitializeScene(&scene)
-		frame.SceneNode = nil
 		fmt.Println("Releasing resources...")
-		fmt.Println()
+		deInitializeScene(scene)
+		frame.SceneNode = nil
 
-		fmt.Println("Frame render time:", time.Since(frameStartTimestamp))
+		frameInformation.renderEndTime = time.Now()
+		fmt.Println(frameInformationPostRenderText(frameInformation))
+
+		writeRenderedImage(animation, frame, renderedPixelData, frameInformation)
 	}
 
 	fmt.Printf("Total execution time (for %d frames): %s\n", len(animation.Frames), time.Since(startTimestamp))
 }
 
-func writeRenderedImage(animation scn.Animation, frame *scn.Frame, renderedPixelData *image.FloatImage) {
+func frameInformationPostRenderText(frameInformation RenderFrameInformation) string {
+	stringBuilder := strings.Builder{}
+	renderDuration := frameInformation.renderEndTime.Sub(frameInformation.renderStartTime)
+	renderDuration.Round(time.Minute)
+	stringBuilder.WriteString(fmt.Sprintf("Render date:           %s\n", frameInformation.renderStartTime.Format("2006-01-02")))
+	stringBuilder.WriteString(fmt.Sprintf("Render duration:       %s\n", renderDuration))
+
+	return stringBuilder.String()
+}
+
+func frameInformationPreRenderText(frameInformation RenderFrameInformation) string {
+	stringBuilder := strings.Builder{}
+
+	unevenWidth := (frameInformation.imageWidth%2) == 1 || (frameInformation.imageHeight%2) == 1
+	mp4CreationWarning := ""
+	if unevenWidth && (frameInformation.animationFrameCount > 1) {
+		mp4CreationWarning = " (uneven width or height, no animation can be made)"
+	}
+
+	progress := float64(frameInformation.frameIndex+1) / float64(frameInformation.animationFrameCount)
+	stringBuilder.WriteString("-----------------------------------------------\n")
+	stringBuilder.WriteString("\n")
+	stringBuilder.WriteString(fmt.Sprintf("Frame number:          %d of %d   (animation progress %.2f%%)\n", frameInformation.frameIndex+1, frameInformation.animationFrameCount, progress*100.0))
+	// stringBuilder.WriteString(fmt.Sprintf("Frame label:           %d\n", frameInformation.frameIndex))
+	stringBuilder.WriteString(fmt.Sprintf("Frame image file:      %s\n", frameInformation.imageFilename))
+	stringBuilder.WriteString("\n")
+	stringBuilder.WriteString(fmt.Sprintf("Render algorithm:      %s\n", frameInformation.renderAlgorithm))
+	stringBuilder.WriteString(fmt.Sprintf("Image size:            %dx%d %s\n", frameInformation.imageWidth, frameInformation.imageHeight, mp4CreationWarning))
+	stringBuilder.WriteString(fmt.Sprintf("Amount samples/pixel:  %d\n", frameInformation.samplesPerPixel))
+	stringBuilder.WriteString(fmt.Sprintf("Max recursion depth:   %d\n", frameInformation.maxRecursionDepth))
+	stringBuilder.WriteString("\n")
+	if frameInformation.amountFacets > 0 {
+		stringBuilder.WriteString(fmt.Sprintf("Amount facets:         %d\n", frameInformation.amountFacets))
+	}
+	if frameInformation.amountSpheres > 0 {
+		stringBuilder.WriteString(fmt.Sprintf("Amount spheres:        %d\n", frameInformation.amountSpheres))
+	}
+	if frameInformation.amountDiscs > 0 {
+		stringBuilder.WriteString(fmt.Sprintf("Amount discs:          %d\n", frameInformation.amountDiscs))
+	}
+
+	return stringBuilder.String()
+}
+
+func writeRenderedImage(animation scn.Animation, frame *scn.Frame, renderedPixelData *image.FloatImage, frameInformation RenderFrameInformation) {
 	animationDirectory := filepath.Join(".", "rendered", animation.AnimationName)
+
 	animationFrameFilename := filepath.Join(animationDirectory, frame.Filename+".png")
 	os.MkdirAll(animationDirectory, os.ModePerm)
 	image.WriteImage(animationFrameFilename, renderedPixelData)
@@ -153,6 +212,15 @@ func writeRenderedImage(animation scn.Animation, frame *scn.Frame, renderedPixel
 	if animation.WriteRawImageFile {
 		animationFrameRawFilename := filepath.Join(animationDirectory, frame.Filename+".praw")
 		image.WriteRawImage(animationFrameRawFilename, renderedPixelData)
+	}
+
+	if animation.WriteImageInfoFile {
+		frameInfoTextFilename := filepath.Join(animationDirectory, frame.Filename+".txt")
+		frameInfoText := fmt.Sprintf("%s\n%s", frameInformationPreRenderText(frameInformation), frameInformationPostRenderText(frameInformation))
+		err := os.WriteFile(frameInfoTextFilename, []byte(frameInfoText), 0644)
+		if err != nil {
+			panic("could not write text information for frame \"" + frameInformation.imageFilename + "\"")
+		}
 	}
 }
 
@@ -251,9 +319,9 @@ func subdivideSpheres(spheres []*scn.Sphere) []*scn.SceneNode {
 }
 
 func deInitializeScene(scene *scn.SceneNode) {
-	(*scene).Clear()
+	scene.Clear()
 
-	discs := (*scene).GetDiscs()
+	discs := scene.GetDiscs()
 
 	for _, disc := range discs {
 		projection := disc.Material.Projection
@@ -262,7 +330,7 @@ func deInitializeScene(scene *scn.SceneNode) {
 		}
 	}
 
-	spheres := (*scene).GetSpheres()
+	spheres := scene.GetSpheres()
 
 	for _, sphere := range spheres {
 		projection := sphere.Material.Projection

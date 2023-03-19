@@ -19,7 +19,7 @@ var viewPlaneDistance = 1600.0
 var magnification = 1.5
 
 func main() {
-	animation := scn.NewAnimation("spherical_projection", 1200, 600, magnification, false)
+	animation := scn.NewAnimation("spherical_projection", 1200, 600, magnification, false, false)
 
 	sphere2Origin := vec3.T{0, 0, 0}
 	sphere1Origin := sphere2Origin.Added(&vec3.T{-ballRadius * 2.2, 0, 0})

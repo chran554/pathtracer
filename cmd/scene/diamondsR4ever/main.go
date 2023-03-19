@@ -24,7 +24,7 @@ var viewPlaneDistance = 1000.0
 var cameraDistanceFactor = 1.0
 
 func main() {
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true)
+	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
 	roomScale := 100.0
 	// cornellBox := getCornellBox(cornellBoxFilenamePath, 100.0)

@@ -70,7 +70,7 @@ func main() {
 	focusPoint := vec3.T{0, 60 * 3, -30 * 3}
 	camera := scn.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).A(lensRadius, "")
 
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false)
+	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
 	frame := scn.NewFrame(animation.AnimationName, -1, camera, scene)
 

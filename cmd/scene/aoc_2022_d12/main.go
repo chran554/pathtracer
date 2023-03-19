@@ -31,7 +31,7 @@ var amountSamples = 200 // 200 * 4 * 3 // 2000 * 2 * 4
 var apertureSize = 2.0
 
 func main() {
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false)
+	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
 	skyDomeOrigin := &vec3.T{0, 0, 0}
 	skyDomeMaterial := scn.NewMaterial().
