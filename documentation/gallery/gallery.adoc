@@ -53,8 +53,29 @@ image::aoc_2022_d12.png[Advent of code 2022 day 12]
 
 == Billiard table with a die
 
+I will describe my thoughts on this simple scene. I might sound as I have put a lot of thought into this scene, but I really have not. I just have a vision of what I want to accomplish and try to realise as well as I can (without too much effort).
+
 Well, the die is 3 cm in width, so it is a pretty large die... +
-But I wanted it to stand out in the image
+But I wanted it to stand out in the image.
+
+I am pretty pleased with the colors of both the cloth and the balls themselves.
+
+The ball textures are drawn in https://inkscape.org/[inkscape]. The font used is "Sofia Pro Soft". I found it after quite some research and evaluation as I wanted a quite professional billiard ball look and yet friendly appearance.
+The billiard balls were first placed in perfect positions with perfect distance from each other and facing strict towards the camera. But it was too perfect, so I added some random offset to the positions and random rotation as well to make them more dynamic.
+
+The table cloth is an actually mobile photo taken by myself as I visited a billiard hall. The table cloth photo was made seamless using the https://www.imgonline.com.ua/eng/make-seamless-texture.php[make seamless online tool].
+
+The lighting was set to warm color to mimic the warm lighting of dimmed low watt tungsten light bulbs. The warm light is 5000 Kelvin, whereas 6000 Kelvin is the white point reference (unfortunately not the standard D65). +
+I was thinking of implementing white color temperature myself solely using algorithm for CIE standard observer 2° and the properties of sRGB space, but I have too much other functionality abd things to do...
+
+The dice textures was made using inkscape. The dice itself was made in https://blender.org[Blender] and exported as a Wavefront obj-file to be used in my own renderer. (Yeah, I know, not quite using the full potential of Blender...)
+
+The billiard balls actually have a cylindrical projection on them. The number circle is too small at the center to have any noticeable distortion.
+
+=== TODO
+
+I will get back to this scene. It is still too clean. The balls should have som scratches and blue chalk dirt on them. The cloth should have imperfections as well. I guess I could fake it by adding random dirt to the textures but that would be rather dull. +
+It is much more fun to implement texture layers and normal mapping.
 
 .Billiard table with a die
 image::snookertable_dice.png[Snooker table with a die]
