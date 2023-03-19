@@ -61,8 +61,8 @@ func (image *FloatImage) SetPixel(x, y int, color *color.Color) {
 func LoadImageData(filename string) *FloatImage {
 	textureImage, err := getImageFromFilePath(filename)
 	if err != nil {
-		fmt.Printf("image file \"%s\" could not be loaded: %s\n", filename, err.Error())
-		os.Exit(1)
+		message := fmt.Sprintf("image file \"%s\" could not be loaded: %s", filename, err.Error())
+		panic(message)
 	}
 
 	width := textureImage.Bounds().Max.X
