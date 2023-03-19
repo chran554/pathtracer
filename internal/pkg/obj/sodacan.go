@@ -14,10 +14,34 @@ func NewSodaCanPepsi(scale float64) *scn.FacetStructure {
 	return sodaCan
 }
 
-// NewSodaCanCocaCola
+// NewSodaCanMtnDew
 // Normal soda can height is 11.6 cm.
-func NewSodaCanCocaCola(scale float64) *scn.FacetStructure {
+func NewSodaCanMtnDew(scale float64) *scn.FacetStructure {
+	sodaCan := loadSodaCan("textures/sodacan/sodacan_mtn-dew.png", color.NewColor(0.2, 0.9, 0.2), scale)
+	return sodaCan
+}
+
+// NewSodaCanFantaOrange
+// Normal soda can height is 11.6 cm.
+func NewSodaCanFantaOrange(scale float64) *scn.FacetStructure {
+	sodaCan := loadSodaCan("textures/sodacan/sodacan_fanta-orange.png", color.NewColor(0.937, 0.455, 0.047), scale)
+	return sodaCan
+}
+
+// NewSodaCanCocaColaClassic
+// Normal soda can height is 11.6 cm.
+func NewSodaCanCocaColaClassic(scale float64) *scn.FacetStructure {
 	sodaCan := loadSodaCan("textures/sodacan/sodacan_cocacola.jpg", color.NewColor(0.9, 0.2, 0.2), scale)
+	return sodaCan
+}
+
+func NewSodaCanCocaColaModern(scale float64) *scn.FacetStructure {
+	sodaCan := loadSodaCan("textures/sodacan/sodacan_cocacola_02.png", color.NewColor(0.9, 0.2, 0.2), scale)
+	return sodaCan
+}
+
+func NewSodaCanTest(scale float64) *scn.FacetStructure {
+	sodaCan := loadSodaCan("textures/test/checkered 360x180 with lines.png", color.NewColor(0.65, 0.55, 0.2), scale)
 	return sodaCan
 }
 
@@ -25,27 +49,32 @@ func loadSodaCan(textureFileName string, tabColor color.Color, scale float64) *s
 	var objFilename = "sodacan.obj"
 	var objFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + objFilename
 
-	obj := ReadOrPanic(objFilenamePath)
+	sodaCan := ReadOrPanic(objFilenamePath)
+	sodaCan.CenterOn(&vec3.Zero)
 
-	ymin := obj.Bounds.Ymin
-	ymax := obj.Bounds.Ymax
-	obj.Translate(&vec3.T{0.0, -ymin, 0.0})       // can bottom touch the ground (xz-plane)
-	obj.ScaleUniform(&vec3.Zero, 1.0/(ymax-ymin)) // resize/scale to height == 1.0 units
+	ymin := sodaCan.Bounds.Ymin
+	ymax := sodaCan.Bounds.Ymax
+	sodaCan.Translate(&vec3.T{0.0, -ymin, 0.0})       // can bottom touch the ground (xz-plane)
+	sodaCan.ScaleUniform(&vec3.Zero, 1.0/(ymax-ymin)) // resize/scale to height == 1.0 units
 
-	aluminumMaterialLid := scn.NewMaterial().M(0.3, 0.4)
-	aluminumMaterialTab := scn.NewMaterial().C(tabColor).M(0.3, 0.4)
-	aluminumMaterialBody := scn.NewMaterial().
-		M(0.2, 0.1).
-		T(0.0, true, scn.RefractionIndex_AcrylicPlastic).
-		CP(textureFileName, &vec3.T{0, 0.065, 0}, vec3.UnitX, vec3.T{0, 0.89 - 0.065, 0}, false)
-	obj.ReplaceMaterial("lid", aluminumMaterialLid)
-	obj.ReplaceMaterial("tab", aluminumMaterialTab)
-	obj.ReplaceMaterial("body", aluminumMaterialBody)
+	sodaCanBody := sodaCan.GetFirstObjectByName("body")
+	bodyProjectionBottomOffset := 0.065
 
-	obj.ScaleUniform(&vec3.Zero, scale)
+	aluminumMaterialLid := scn.NewMaterial().N("lid").M(0.3, 0.4)
+	aluminumMaterialTab := scn.NewMaterial().N("tab").C(tabColor).M(0.3, 0.4)
+	aluminumMaterialBody := scn.NewMaterial().N("body").
+		M(0.2, 0.15).
+		T(0.0, false, scn.RefractionIndex_AcrylicPlastic).
+		CP(textureFileName, &vec3.T{0, bodyProjectionBottomOffset, 0}, vec3.UnitX, vec3.T{0, sodaCanBody.Bounds.Ymax - bodyProjectionBottomOffset - 0.005, 0}, false)
+	//CP(textureFileName, &vec3.T{0, 0.065, 0}, vec3.UnitX, vec3.T{0, 0.89 - 0.065, 0}, false)
 
-	obj.UpdateBounds()
-	fmt.Printf("%s bounds: %+v\n", objFilename, obj.Bounds)
+	sodaCan.ReplaceMaterial("lid", aluminumMaterialLid)
+	sodaCan.ReplaceMaterial("tab", aluminumMaterialTab)
+	sodaCan.ReplaceMaterial("body", aluminumMaterialBody)
 
-	return obj
+	sodaCan.ScaleUniform(&vec3.Zero, scale)
+
+	fmt.Printf("%s bounds: %+v\n", objFilename, sodaCan.Bounds)
+
+	return sodaCan
 }

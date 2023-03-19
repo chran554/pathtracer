@@ -11,7 +11,7 @@ import (
 )
 
 // 3 soda cans: Test, Coca Cola, and Pepsi
-var animationName = "projection_cylindrical"
+var animationName = "soda_cans"
 
 var amountAnimationFrames = 1
 
@@ -19,7 +19,7 @@ var imageWidth = 1024
 var imageHeight = 576
 var magnification = 1.0
 
-var amountSamples = 1024 * 16 // 1024 * 12
+var amountSamples = 1024 * 24 // 1024 * 12
 
 var apertureSize = 0.2
 
@@ -60,13 +60,13 @@ func main() {
 	sodaCanMtnDew.RotateY(&vec3.Zero, math.Pi*5/6)
 	sodaCanMtnDew.Translate(&vec3.T{5 * dx, 0 + dy, 5})
 
-	sodaCanTest := obj.NewSodaCanTest(sodaCanHeight)
-	sodaCanTest.RotateY(&vec3.Zero, -math.Pi*2/3)
-	sodaCanTest.Translate(&vec3.T{6 * dx, 0 + dy, -1.5})
+	sodaCanFanta := obj.NewSodaCanFantaOrange(sodaCanHeight)
+	sodaCanFanta.RotateY(&vec3.Zero, math.Pi*5/8)
+	sodaCanFanta.Translate(&vec3.T{6 * dx, 0 + dy, -1.5})
 
 	scene := scn.NewSceneNode().
 		S(lamp1, skyDome).
-		FS(tableBoard, sodaCanCocaCola, sodaCanPepsi, sodaCanMtnDew, sodaCanTest)
+		FS(tableBoard, sodaCanCocaCola, sodaCanPepsi, sodaCanMtnDew, sodaCanFanta)
 
 	//animationStep := 1.0 / float64(amountAnimationFrames)
 	for animationFrameIndex := 0; animationFrameIndex < amountAnimationFrames; animationFrameIndex++ {
