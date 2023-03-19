@@ -127,7 +127,7 @@ Amount spheres:         2
 Refreaction index:      1.504 (porcelain)
 ----
 
-.Fresnel reflection. Left sphere has refraction index 1.333 (same as water). Note that the reflection increases at the very edge of the left sphere (low gracing angle) and reflection strength subside towards the center of the left sphere. Right sphere has no Fresnel as it has the same refraction index as the surrounding air, but has matching common glossiness and roughness instead. The right sphere still has noticeable stronger reflections of the walls, at the center, than the left sphere.
+.Fresnel reflection. Left sphere has refraction index 1.333 (same as water). Note that the reflection increases at the very edge of the left sphere (low gracing angle) and reflection strength subside towards the center of the left sphere. Right sphere has no Fresnel as it has the same refraction index as the surrounding air, but has matching common glossiness and roughness instead. Notice that the right sphere still has stronger reflections of the walls at its center, but you can not find any at the left Fresnel sphere. (Fresnel reflection is really present all around the left sphere but is _very weak_ at direct angles.)
 image::fresnel_refind1.333.png[Fresnel reflection using refraction index 1.33]
 
 .Fresnel image details

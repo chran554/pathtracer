@@ -83,3 +83,22 @@ image::lonesome_gopher_in_love.png[Lonesome gopher in love]
 Render date:            2023-02-25
 ----
 
+== Soda cans
+
+Really produced to show off the xref:../functionality/functionality.adoc#image-projection-cylindrical[cylindrical projection functionality].
+
+.Soda cans
+image::soda_cans.png[Soda cans]
+
+.Soda cans
+----
+Image size:             1024x576
+Amount samples/pixel:   24576
+Max recursion depth:    4
+Amount facets:          208780
+Amount spheres:         2
+
+Render date             2023-03-19
+Frame render time:      10h20m29.731529458s
+----
+
