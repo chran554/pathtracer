@@ -1,5 +1,10 @@
 package util
 
+import (
+	"github.com/ungerik/go3d/float64/vec3"
+	"math"
+)
+
 func Clamp(min float64, max float64, value float64) float64 {
 	if value < min {
 		return min
@@ -8,4 +13,16 @@ func Clamp(min float64, max float64, value float64) float64 {
 	} else {
 		return value
 	}
+}
+
+func Cosine(a *vec3.T, b *vec3.T) float64 {
+	return vec3.Dot(a, b) / math.Sqrt(a.LengthSqr()*b.LengthSqr())
+}
+
+func CosinePositive(a *vec3.T, b *vec3.T) bool {
+	return vec3.Dot(a, b) >= 0
+}
+
+func CosineNegative(a *vec3.T, b *vec3.T) bool {
+	return vec3.Dot(a, b) < 0
 }

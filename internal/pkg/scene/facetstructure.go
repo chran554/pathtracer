@@ -5,6 +5,7 @@ import (
 	"github.com/ungerik/go3d/float64/mat3"
 	"github.com/ungerik/go3d/float64/vec3"
 	"math"
+	"pathtracer/internal/pkg/util"
 	"strings"
 )
 
@@ -553,22 +554,32 @@ func logSubdivision(subFacetStructures []*FacetStructure, level int, fs *FacetSt
 	fmt.Printf("level: %d, structures:%d, facets:%d --> %s\n", level, len(fs.FacetStructures), len(fs.Facets), builder.String())
 }
 
-// UpdateVertexNormals
+// UpdateVertexNormals updates vertex normals with an average normal of all facets sharing that vertex.
+func (fs *FacetStructure) UpdateVertexNormals(keepExistingVertexNormals bool) {
+	fs.UpdateVertexNormalsWithThreshold(keepExistingVertexNormals, 180)
+}
+
+// UpdateVertexNormalsWithThreshold updates vertex normals for a facet with an average normal of all facets sharing that vertex
+// and is facing the same direction within a threshold angle (in degrees [0..180], not radians).
+// A threshold of 180 degrees will include all facets sharing the same vertex.
+// A value of 0 degrees will only include all facets that share the same vertex and have the same normal.
 // https://iquilezles.org/articles/normals/
 // https://computergraphics.stackexchange.com/questions/4031/programmatically-generating-vertex-normals
-func (fs *FacetStructure) UpdateVertexNormals(keepExistingVertexNormals bool) {
+func (fs *FacetStructure) UpdateVertexNormalsWithThreshold(keepExistingVertexNormals bool, facetAngleThreshold float64) {
 	fs.UpdateNormals()
+
+	angleCosineThreshold := math.Cos((math.Pi / 180) * facetAngleThreshold)
 
 	vertexToFacetMap := fs.getVertexToFacetMap()
 	facets := fs.getFacets()
 
 	for _, facet := range facets {
-		sharedFacetVertex := false
+		facetHasSharedVertex := false
 		for _, vertex := range facet.Vertices {
-			sharedFacetVertex = sharedFacetVertex || (len(vertexToFacetMap[vertex]) > 1)
+			facetHasSharedVertex = facetHasSharedVertex || (len(vertexToFacetMap[vertex]) > 1)
 		}
 
-		if sharedFacetVertex {
+		if facetHasSharedVertex {
 			originalAmountVertexNormals := len(facet.VertexNormals)
 			createVertexNormals := originalAmountVertexNormals == 0
 			if createVertexNormals {
@@ -578,7 +589,17 @@ func (fs *FacetStructure) UpdateVertexNormals(keepExistingVertexNormals bool) {
 			if createVertexNormals || !keepExistingVertexNormals {
 				for vertexIndex, vertex := range facet.Vertices {
 					vertexFacets := vertexToFacetMap[vertex]
-					vertexNormal := calculateAverageNormal(vertexFacets)
+
+					var includedVertexFacets []*Facet
+					for _, vertexFacet := range vertexFacets {
+						// TODO calculate which facets to include for current facet (vertex)
+						cosine := util.Cosine(facet.Normal, vertexFacet.Normal)
+						if cosine >= angleCosineThreshold {
+							includedVertexFacets = append(includedVertexFacets, vertexFacet)
+						}
+					}
+
+					vertexNormal := calculateAverageNormal(includedVertexFacets)
 					facet.VertexNormals[vertexIndex] = vertexNormal
 				}
 			}

@@ -549,7 +549,7 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 
 		if camera.RenderType == scn.Raycasting || camera.RenderType == "" {
 			incomingRayInverted := ray.Heading.Inverted()
-			cosineIncomingRayAndNormal := vectorCosine(ii.normalAtIntersection, &incomingRayInverted)
+			cosineIncomingRayAndNormal := util.Cosine(ii.normalAtIntersection, &incomingRayInverted)
 
 			outgoingEmission = color.Color{
 				R: ii.material.Color.R * float32(cosineIncomingRayAndNormal) * projectionColor.R,
@@ -563,10 +563,10 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 				var newRayHeading *vec3.T
 
 				// Flip normal if it is pointing away from the incoming ray on a non-solid object
-				if !ii.material.SolidObject && vectorCosinePositive(ii.normalAtIntersection, ray.Heading) {
+				if !ii.material.SolidObject && util.CosinePositive(ii.normalAtIntersection, ray.Heading) {
 					ii.normalAtIntersection.Invert()
 				}
-				isIngoingRay := vectorCosineNegative(ii.normalAtIntersection, ray.Heading)
+				isIngoingRay := util.CosineNegative(ii.normalAtIntersection, ray.Heading)
 
 				currentRayContext := rayContexts[len(rayContexts)-1]
 
@@ -640,7 +640,7 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 							previousRayContext := rayContexts[len(rayContexts)-1] // Get previous ray context
 
 							// Flip normal if needed, to face ray
-							if vectorCosinePositive(ii.normalAtIntersection, ray.Heading) {
+							if util.CosinePositive(ii.normalAtIntersection, ray.Heading) {
 								ii.normalAtIntersection.Invert()
 							}
 
@@ -668,7 +668,7 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 
 				//rayStartOffset := newRayHeading.Scaled(epsilonDistance)
 				rayStartOffset := ii.normalAtIntersection.Scaled(epsilonDistance)
-				if vectorCosineNegative(newRayHeading, ii.normalAtIntersection) {
+				if util.CosineNegative(newRayHeading, ii.normalAtIntersection) {
 					(&rayStartOffset).Invert()
 				}
 
@@ -735,7 +735,7 @@ func processDiscIntersection(ray *scn.Ray, disc *scn.Disc, ii *IntersectionInfor
 			ii.normalAtIntersection = tempIntersectionNormal // Should be normalized from initialization
 
 			// Flip normal if it is pointing away from the incoming ray
-			if vectorCosinePositive(ii.normalAtIntersection, ray.Heading) {
+			if util.CosinePositive(ii.normalAtIntersection, ray.Heading) {
 				ii.normalAtIntersection.Invert()
 			}
 		}
@@ -800,16 +800,4 @@ func getRefractionVector(normal *vec3.T, incomingVector *vec3.T, leavingRefracti
 	outgoingVector = &io
 
 	return outgoingVector, false
-}
-
-func vectorCosine(a *vec3.T, b *vec3.T) float64 {
-	return vec3.Dot(a, b) / math.Sqrt(a.LengthSqr()*b.LengthSqr())
-}
-
-func vectorCosinePositive(a *vec3.T, b *vec3.T) bool {
-	return vec3.Dot(a, b) >= 0
-}
-
-func vectorCosineNegative(a *vec3.T, b *vec3.T) bool {
-	return vec3.Dot(a, b) < 0
 }
