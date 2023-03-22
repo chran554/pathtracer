@@ -2,14 +2,16 @@ package main
 
 import (
 	"fmt"
-	"github.com/ungerik/go3d/float64/vec3"
 	"math"
 	"os"
+	"path/filepath"
 	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/ply"
 	scn "pathtracer/internal/pkg/scene"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 var animationName = "vertext_normal_smooth_test"
@@ -71,8 +73,7 @@ func main() {
 }
 
 func readBeethovenPlyFile() *scn.FacetStructure {
-	var plyFilename = "beethoven.ply"
-	var plyFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/ply/" + plyFilename
+	var plyFilenamePath = filepath.Join(obj.PlyFileDir, "beethoven.ply")
 
 	plyFile, err := os.Open(plyFilenamePath)
 	if err != nil {

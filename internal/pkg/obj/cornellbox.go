@@ -2,9 +2,11 @@ package obj
 
 import (
 	"fmt"
-	"github.com/ungerik/go3d/float64/vec3"
+	"path/filepath"
 	"pathtracer/internal/pkg/color"
 	scn "pathtracer/internal/pkg/scene"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 // NewCornellBox creates a new cornell box (open in the back) with the center of the floor in origin (0,0,0).
@@ -28,8 +30,7 @@ func NewWhiteCornellBox(scale *vec3.T, singleLight bool, lightIntensityFactor fl
 }
 
 func cornelBox(scale *vec3.T, singleLight bool, lightIntensityFactor float64) (cornellBox *scn.FacetStructure) {
-	var cornellBoxFilename = "cornellbox.obj"
-	var cornellBoxFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + cornellBoxFilename
+	var cornellBoxFilenamePath = filepath.Join(ObjFileDir, "cornellbox.obj")
 
 	cornellBox = ReadOrPanic(cornellBoxFilenamePath)
 	cornellBox.Name = "cornellbox"
