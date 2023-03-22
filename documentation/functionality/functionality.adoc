@@ -274,3 +274,15 @@ Parallel projection can be used from any image that is plainly/straight projecte
 .Parallel projection. A circular disc and three spheres, all with parallel projection. One sphere share the exact same projection as the disc. The second has a checker pattern and the third has a tree rings pattern projected on them from different angles.
 image::projection_parallel.png[Parallel projection]
 
+== Smooth vertex normals
+
+Vertex normals, as opposed to facet normals, can be interpolated over the facet for each intersection point to produce a visually smooth surface.
+
+The path tracer can take a facet structure and (re-)calculate the vertex normals to produce a smooth surface between neighbouring facets.
+
+The vertex normal calculation for a vertex shared by many facets is not weighted in any way, but is the average normal of all shared facets.
+
+However, you can specify how much the neighbouring facets are allowed to differ in angle from the current facet whose vertex normals you update.
+
+.Smooth vertex normal calculation on Beethoven bust statue. Result of smooth vertex normal calculation at different angle thresholds for facets. Facets that are in a too sharp angle of each other (defined by the threshold value) are not smoothened together. A threshold _value of 0 would not smooth any facet_ at all as every facet would have its vertex normals equal to the facet normal. A threshold _value of 180 would smooth all neighbouring_ facets in each vertex with each other. The angle values in the image are in degrees.
+image::smooth_vertex_normals.png[Result of smooth vertex normals at different angle thresholds]
