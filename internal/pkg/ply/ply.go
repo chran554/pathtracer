@@ -13,9 +13,9 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-// PropertyDefinition holds the definition from the ply file header of a property of an element.
+// propertyDefinition holds the definition from the ply file header of a property of an element.
 // This property definition can hold both single property definitions and "reference list" definitions.
-type PropertyDefinition struct {
+type propertyDefinition struct {
 	// Single property definition
 	name     string
 	dataType string
@@ -28,29 +28,29 @@ type PropertyDefinition struct {
 	listElementType          string // listElementType the type of element that the index references in the list refer to. (Like a facet element with list property refer to index of element type vertex (vertices).
 }
 
-type ElementDefinition struct {
+type elementDefinition struct {
 	name       string
 	count      int
-	properties []*PropertyDefinition
+	properties []*propertyDefinition
 }
 
-type PropertyValue struct {
+type propertyValue struct {
 	name       string
-	valueType  ValueType
+	valueType  valueType
 	intValue   int
 	floatValue float64
 }
 
-type ElementValue struct {
+type elementValue struct {
 	name   string
 	index  int
-	values []*PropertyValue
+	values []*propertyValue
 }
 
-type ValueType string
+type valueType string
 
 const (
-	Unknown        ValueType = "?"
+	Unknown        valueType = "?"
 	Int                      = "int"
 	Float                    = "float"
 	IndexReference           = "indexReference"
@@ -95,7 +95,7 @@ func Read(file *os.File) (*scene.FacetStructure, error) {
 	return facetStructure, nil
 }
 
-func convertToFacetStructure(values []*ElementValue) (*scene.FacetStructure, error) {
+func convertToFacetStructure(values []*elementValue) (*scene.FacetStructure, error) {
 	var vertices []*vec3.T
 	var facets []*scene.Facet
 	var err error
@@ -111,7 +111,7 @@ func convertToFacetStructure(values []*ElementValue) (*scene.FacetStructure, err
 	return &scene.FacetStructure{Facets: facets}, nil
 }
 
-func extractFacets(values []*ElementValue, vertices []*vec3.T) ([]*scene.Facet, error) {
+func extractFacets(values []*elementValue, vertices []*vec3.T) ([]*scene.Facet, error) {
 	var facets []*scene.Facet
 
 	for _, value := range values {
@@ -136,7 +136,7 @@ func extractFacets(values []*ElementValue, vertices []*vec3.T) ([]*scene.Facet, 
 	return facets, nil
 }
 
-func extractVertices(values []*ElementValue) ([]*vec3.T, error) {
+func extractVertices(values []*elementValue) ([]*vec3.T, error) {
 	var vertices []*vec3.T
 
 	for _, value := range values {
@@ -163,7 +163,7 @@ func extractVertices(values []*ElementValue) ([]*vec3.T, error) {
 	return vertices, nil
 }
 
-func getPropertyValue(propertyValue *PropertyValue) float64 {
+func getPropertyValue(propertyValue *propertyValue) float64 {
 	var value float64
 
 	if propertyValue.valueType == Int {
@@ -179,7 +179,7 @@ func getPropertyValue(propertyValue *PropertyValue) float64 {
 // https://web.archive.org/web/20161204152348/http://www.dcs.ed.ac.uk/teaching/cs4/www/graphics/Web/ply.html
 // https://www.mathworks.com/help/vision/ug/the-ply-format.html
 // http://paulbourke.net/dataformats/ply/
-func readPly(reader io.Reader) ([]*ElementDefinition, []*ElementValue, error) {
+func readPly(reader io.Reader) ([]*elementDefinition, []*elementValue, error) {
 	lines, err := readLines(reader)
 	if err != nil {
 		return nil, nil, err
@@ -190,7 +190,7 @@ func readPly(reader io.Reader) ([]*ElementDefinition, []*ElementValue, error) {
 		return nil, nil, err
 	}
 
-	var elementValues []*ElementValue
+	var elementValues []*elementValue
 	if elementValues, err = parsePlyDataSection(elementDefinitions, dataStartLineIndex, lines); err != nil {
 		return nil, nil, fmt.Errorf("could not parse ply: %w", err)
 	}
@@ -198,7 +198,7 @@ func readPly(reader io.Reader) ([]*ElementDefinition, []*ElementValue, error) {
 	return elementDefinitions, elementValues, nil
 }
 
-func parsePlyDataSection(elementDefinitions []*ElementDefinition, dataStartIndex int, lines []string) (elementValues []*ElementValue, error error) {
+func parsePlyDataSection(elementDefinitions []*elementDefinition, dataStartIndex int, lines []string) (elementValues []*elementValue, error error) {
 	for lineIndex := dataStartIndex; lineIndex < len(lines); lineIndex++ {
 		line := lines[lineIndex]
 		dataLineIndex := lineIndex - dataStartIndex
@@ -206,7 +206,7 @@ func parsePlyDataSection(elementDefinitions []*ElementDefinition, dataStartIndex
 
 		currentElementDefinition, elementValueIndex := elementDefinitionAtDataLine(elementDefinitions, dataLineNumber)
 
-		elementValue := &ElementValue{name: currentElementDefinition.name, index: elementValueIndex}
+		elementValue := &elementValue{name: currentElementDefinition.name, index: elementValueIndex}
 		tokens := parseTokens(line, ' ')
 
 		if currentElementDefinition.properties[0].listProperty {
@@ -221,7 +221,7 @@ func parsePlyDataSection(elementDefinitions []*ElementDefinition, dataStartIndex
 			propertyDefinition := currentElementDefinition.properties[0]
 			elementReferenceType := getElementReferenceType(propertyDefinition.listElementType)
 			for _, token := range tokens[1:] {
-				propertyValue := &PropertyValue{
+				propertyValue := &propertyValue{
 					name:       strings.ToLower(elementReferenceType),
 					valueType:  IndexReference,
 					intValue:   getIntValue(IndexReference, token),
@@ -234,7 +234,7 @@ func parsePlyDataSection(elementDefinitions []*ElementDefinition, dataStartIndex
 			for tokenIndex, token := range tokens {
 				propertyDefinition := currentElementDefinition.properties[tokenIndex]
 				valueType := getValueType(propertyDefinition.dataType)
-				propertyValue := &PropertyValue{
+				propertyValue := &propertyValue{
 					name:       strings.ToLower(propertyDefinition.name),
 					valueType:  valueType,
 					intValue:   getIntValue(valueType, token),
@@ -264,7 +264,7 @@ func getElementReferenceType(elementTypeReference string) string {
 	return s
 }
 
-func getIntValue(valueType ValueType, text string) int {
+func getIntValue(valueType valueType, text string) int {
 	if (valueType == Int) || (valueType == IndexReference) {
 		value, err := strconv.Atoi(text)
 		if err != nil {
@@ -277,7 +277,7 @@ func getIntValue(valueType ValueType, text string) int {
 	return 0
 }
 
-func getFloatValue(valueType ValueType, text string) float64 {
+func getFloatValue(valueType valueType, text string) float64 {
 	if valueType == Float {
 		value, err := strconv.ParseFloat(text, 64)
 		if err != nil {
@@ -302,7 +302,7 @@ uint    unsigned integer         4
 float   single-precision float   4
 double  double-precision float   8
 */
-func getValueType(dataType string) ValueType {
+func getValueType(dataType string) valueType {
 	switch dataType {
 	case "char":
 		fallthrough
@@ -342,7 +342,7 @@ func getValueType(dataType string) ValueType {
 	}
 }
 
-func elementDefinitionAtDataLine(elementSections []*ElementDefinition, lineNumber int) (currentElementSection *ElementDefinition, elementValueIndex int) {
+func elementDefinitionAtDataLine(elementSections []*elementDefinition, lineNumber int) (currentElementSection *elementDefinition, elementValueIndex int) {
 	elementSectionLineStart := 1
 	for _, elementSection := range elementSections {
 		if (lineNumber >= elementSectionLineStart) && (lineNumber < (elementSectionLineStart + elementSection.count)) {
@@ -368,7 +368,7 @@ func readLines(r io.Reader) ([]string, error) {
 	return lines, scanner.Err()
 }
 
-func parsePlyHeaderSection(lines []string) (elementDefinitions []*ElementDefinition, dataStartIndex int, error error) {
+func parsePlyHeaderSection(lines []string) (elementDefinitions []*elementDefinition, dataStartIndex int, error error) {
 	if (len(lines) > 0) && !(lines[0] == "ply" || lines[0] == "Ply" || lines[0] == "PLY") {
 		return nil, -1, fmt.Errorf("can notrecognise PLY file as it do not start with magic number 'ply'")
 	}
@@ -417,7 +417,7 @@ func parsePlyHeaderSection(lines []string) (elementDefinitions []*ElementDefinit
 		case "element":
 			// Definition: element <element-name> <number-in-file>
 			count, _ := strconv.Atoi(tokens[2])
-			elementSection := ElementDefinition{name: tokens[1], count: count, properties: nil}
+			elementSection := elementDefinition{name: tokens[1], count: count, properties: nil}
 			elementDefinitions = append(elementDefinitions, &elementSection)
 		case "property":
 			if tokens[1] == "list" {
@@ -428,7 +428,7 @@ func parsePlyHeaderSection(lines []string) (elementDefinitions []*ElementDefinit
 				// This means that the property "vertex_index" contains first an unsigned char telling how many indices the property contains,
 				// followed by a list containing that many integers. Each integer in this variable-length list is an index to a vertex.
 				lastElementSection := elementDefinitions[len(elementDefinitions)-1]
-				property := PropertyDefinition{
+				property := propertyDefinition{
 					listProperty:             true,
 					listCountDataType:        tokens[2],
 					listElementIndexDataType: tokens[3],
@@ -442,7 +442,7 @@ func parsePlyHeaderSection(lines []string) (elementDefinitions []*ElementDefinit
 				// property <data-type> <property-name-3>
 				// ...
 				lastElementSection := elementDefinitions[len(elementDefinitions)-1]
-				property := PropertyDefinition{
+				property := propertyDefinition{
 					name:     tokens[2],
 					dataType: tokens[1],
 					index:    len(lastElementSection.properties),
