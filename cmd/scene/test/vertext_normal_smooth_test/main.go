@@ -1,14 +1,9 @@
 package main
 
 import (
-	"fmt"
-	"math"
-	"os"
-	"path/filepath"
 	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj"
-	"pathtracer/internal/pkg/ply"
 	scn "pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -48,12 +43,8 @@ func main() {
 	maxDegree := 80
 	degreeIncrease := 5
 	for degree := minDegree; degree <= maxDegree; degree += degreeIncrease {
-		beethoven := readBeethovenPlyFile()
-		if beethoven == nil {
-			panic("could not load beethoven")
-		}
-		beethoven.ScaleUniform(&vec3.Zero, 50.0)
-		beethoven.Translate(&vec3.T{0, pillar.Bounds.Ymax, pillar.Bounds.Center()[2]})
+		beethoven := obj.NewBeethoven(50.0)
+		beethoven.Translate(&vec3.T{pillar.Bounds.Center()[0], pillar.Bounds.Ymax, pillar.Bounds.Center()[2]})
 		// beethoven.Material = scn.NewMaterial().N("Statue").M(0.1, 0.6).PP("textures/marble/white_marble.png", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(200), vec3.UnitY.Scaled(200))
 		beethoven.Material = scn.NewMaterial().N("Statue")
 		beethoven.UpdateVertexNormalsWithThreshold(false, float64(degree))
@@ -70,32 +61,6 @@ func main() {
 	}
 
 	anm.WriteAnimationToFile(animation, false)
-}
-
-func readBeethovenPlyFile() *scn.FacetStructure {
-	var plyFilenamePath = filepath.Join(obj.PlyFileDir, "beethoven.ply")
-
-	plyFile, err := os.Open(plyFilenamePath)
-	if err != nil {
-		fmt.Printf("ouupps, something went wrong loading file: '%s'\n%s\n", plyFilenamePath, err.Error())
-		return nil
-	}
-	defer plyFile.Close()
-
-	plyFacetStructure, err := ply.ReadPlyFile(plyFile)
-	if err != nil {
-		fmt.Printf("could not read ply-file '%s': %s", plyFile.Name(), err.Error())
-		return nil
-	}
-	plyFacetStructure.CenterOn(&vec3.Zero)
-	plyFacetStructure.RotateY(&vec3.Zero, math.Pi-math.Pi/12.0)
-	plyFacetStructure.Translate(&vec3.T{0, -plyFacetStructure.Bounds.Ymin, 0})
-	plyFacetStructure.ScaleUniform(&vec3.Zero, 1.0/plyFacetStructure.Bounds.SizeY())
-	plyFacetStructure.UpdateNormals()
-
-	fmt.Printf("ply object bounds: %+v\n", plyFacetStructure.Bounds)
-
-	return plyFacetStructure
 }
 
 func setCornellBoxMaterial(cornellBox *scn.FacetStructure) {

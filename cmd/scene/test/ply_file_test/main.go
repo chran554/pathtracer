@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/ungerik/go3d/float64/vec3"
 	"math"
 	"os"
 	anm "pathtracer/internal/pkg/animation"
@@ -10,6 +9,8 @@ import (
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/ply"
 	scn "pathtracer/internal/pkg/scene"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 var animationName = "ply_file_test"
@@ -46,7 +47,7 @@ func main() {
 	}
 	defer plyFile.Close()
 
-	plyFacetStructure, err := ply.ReadPlyFile(plyFile)
+	plyFacetStructure, err := ply.Read(plyFile)
 	if err != nil {
 		fmt.Printf("could not read ply-file '%s': %s", plyFile.Name(), err.Error())
 		return
