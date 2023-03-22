@@ -286,3 +286,6 @@ However, you can specify how much the neighbouring facets are allowed to differ 
 
 .Smooth vertex normal calculation on Beethoven bust statue. Result of smooth vertex normal calculation at different angle thresholds for facets. Facets that are in a too sharp angle of each other (defined by the threshold value) are not smoothened together. A threshold _value of 0 would not smooth any facet_ at all as every facet would have its vertex normals equal to the facet normal. A threshold _value of 180 would smooth all neighbouring_ facets in each vertex with each other. The angle values in the image are in degrees.
 image::smooth_vertex_normals.png[Result of smooth vertex normals at different angle thresholds]
+
+.Smooth vertex normal calculation on Beethoven bust statue. 0 is "no smoothing" original and 180 is "smoothing of all" vertices of all shared facets.
+image::smooth_beethoven.gif[Result of smooth vertex normals at different angle thresholds]
