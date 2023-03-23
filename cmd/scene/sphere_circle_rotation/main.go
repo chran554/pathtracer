@@ -11,17 +11,17 @@ import (
 
 type projection struct {
 	filename      string
-	emission      *color.Color
+	emission      color.Color
 	rayTerminator bool
 }
 
 var projectionTextures = []projection{
 	{filename: "textures/planets/earth_daymap.jpg"},
 	{filename: "textures/planets/jupiter2_6k_contrast.png"},
-	{filename: "textures/planets/moonmap4k_2.png"},
+	{filename: "textures/planets/moonmap4k_2.png", emission: color.NewColorGrey(0.1)},
 	{filename: "textures/planets/mars.jpg"},
 	//{filename: "textures/planets/sun.jpg", emission: &color.Color{R: 32.0, G: 32.0, B: 32.0}, rayTerminator: true},
-	{filename: "textures/planets/sunmap.jpg", emission: &color.Color{R: 42.0, G: 42.0, B: 42.0}, rayTerminator: true},
+	{filename: "textures/planets/sunmap.jpg", emission: color.NewColorGrey(60.0)},
 	{filename: "textures/planets/venusmap.jpg"},
 	{filename: "textures/planets/makemake_fictional.jpg"},
 	{filename: "textures/planets/plutomap2k.jpg"},
@@ -38,9 +38,9 @@ var amountFrames = 1
 
 var imageWidth = 800
 var imageHeight = 600
-var magnification = 1.0 * 2
+var magnification = 2.0
 
-var amountSamples = 512 * 2 * 8
+var amountSamples = 1024 * 16
 
 var cameraDistanceFactor = 2.5
 
@@ -53,7 +53,7 @@ var lensRadius = 0.05
 var amountBallsToRotateBeforeMovieLoop = len(projectionTextures)
 
 func main() {
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
+	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, true)
 
 	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
@@ -67,21 +67,22 @@ func main() {
 		balls := addBallsToScene(deltaBallAngle, -projectionAngle, projectionTextures)
 
 		// Reflective Center Ball
-		mirrorSphereRadius := ballRadius * 3.0
-		mirrorMaterial := scn.NewMaterial().C(color.Color{R: 0.90, G: 0.90, B: 0.90}).M(0.975, 0.0)
-		reflectiveCenterBall := scn.NewSphere(&vec3.T{0, mirrorSphereRadius * 1, 0}, mirrorSphereRadius, mirrorMaterial).N("Mirror sphere")
+		// mirrorSphereRadius := ballRadius * 3.0
+		// mirrorMaterial := scn.NewMaterial().C(color.Color{R: 0.90, G: 0.90, B: 0.90}).M(0.975, 0.0)
+		// reflectiveCenterBall := scn.NewSphere(&vec3.T{0, mirrorSphereRadius * 1, 0}, mirrorSphereRadius, mirrorMaterial).N("Mirror sphere")
 
 		// Sky Dome
 		skyDomeRadius := 100.0 * 1000.0
 		skyDomeOrigin := &vec3.T{0, 0, 0}
-		skyDomeMaterial := scn.NewMaterial().E(color.White, 1.0, true).SP(environmentEnvironMap, skyDomeOrigin, vec3.UnitY, vec3.UnitY)
+		skyDomeMaterial := scn.NewMaterial().E(color.White, 1.0, true).SP(environmentEnvironMap, skyDomeOrigin, vec3.UnitX, vec3.UnitY)
 		skyDome := scn.NewSphere(skyDomeOrigin, skyDomeRadius, skyDomeMaterial)
 
 		camera := getCamera(magnification, animationProgress)
 
 		scene := scn.NewSceneNode().
 			S(balls...).
-			S(reflectiveCenterBall, skyDome)
+			//S(reflectiveCenterBall).
+			S(skyDome)
 
 		frame := scn.NewFrame(animationName, frameIndex, camera, scene)
 
@@ -114,7 +115,7 @@ func addBallsToScene(deltaBallAngle float64, projectionAngle float64, projection
 		projectionV := math.Sin(projectionAngle)
 
 		material := scn.NewMaterial().
-			E(*projectionData[projectionTextureIndex].emission, 1.0, projectionData[projectionTextureIndex].rayTerminator).
+			E(projectionData[projectionTextureIndex].emission, 1.0, projectionData[projectionTextureIndex].rayTerminator).
 			SP(projectionData[projectionTextureIndex].filename, &ballOrigin, vec3.T{projectionU, 0, projectionV}, vec3.T{0, 1, 0})
 
 		sphere := scn.NewSphere(&ballOrigin, ballRadius, material)
