@@ -55,6 +55,7 @@ A lot of functionality is on display in the link:documentation/functionality/fun
 * Super sampling: Anti-alias (random rays within the pixel for smooth edges)
 * Super sampling: DOF - xref:documentation/functionality/dof/dof.adoc[Depth of field] (focus distance and "aperture size")
 * Super sampling: DOF - Depth of field - xref:documentation/functionality/dof/dof.adoc[aperture shape] (free form shape)
+* xref:documentation/functionality/functionality.adoc#smooth-vertex-normals[Smooth vertex normal calculation] for facet structures. (Non weighted, but with angle threshold for smoothing between facets.)
 * Save rendered image in PNG-format
 * Save rendered HDR (high dynamic range) image in RAW-format ("praw") for post light editing in separate application tool https://github.com/chran554/RawImageEditor[RawImageEditor].
 * https://github.com/chran554/PathtracerMonitor[Progressive/recursive pixel rendering], producing a quite useful overview after only 5% rendering.
