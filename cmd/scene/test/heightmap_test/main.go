@@ -1,49 +1,69 @@
 package main
 
 import (
+	"math"
 	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj"
 	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/util"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var amountSamples = 1024 * 16
+var amountAnimationFrames = 300
+var amountSamples = 256
 
 var apertureSize = 1.5
-var magnification = 2.0
+
+var width = 800
+var height = 600
+var magnification = 0.25
 
 func main() {
 	size := 800.0 // 100 cm
 
-	animation := scn.NewAnimation("heightmap_test", 800, 400, magnification, false, false)
+	animation := scn.NewAnimation("heightmap_test", width, height, magnification, false, true)
 
 	landscapeMaterial := scn.NewMaterial().N("Ground material").
 		T(0.0, false, scn.RefractionIndex_Quartz).
-		PP("textures/ground/soil-cracked.png", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(75), vec3.UnitZ.Scaled(75))
+		PP("textures/ground/soil-cracked-bright.png", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(75), vec3.UnitZ.Scaled(75))
 	landscape := obj.NewHeightMap("textures/height maps/test_heightmap.png", vec3.T{size, size / 7, size})
-	landscape.UpdateVertexNormals(false)
+	landscape.UpdateVertexNormalsWithThreshold(false, 0)
+	//landscape.UpdateVertexNormalsWithThreshold(false, 75)
 	landscape.Material = landscapeMaterial
-
-	lamp := scn.NewSphere(&vec3.T{500, 400, -300}, 200.0, scn.NewMaterial().E(color.White, 12, true))
 
 	groundDisc := scn.NewDisc(&vec3.Zero, &vec3.UnitY, 10*1000, landscapeMaterial)
 
 	skyDomeOrigin := &vec3.T{0, 0, 0}
 	skyDomeMaterial := scn.NewMaterial().
-		E(color.White, 1, true).
+		E(color.White, 3, true).
 		SP("textures/equirectangular/sunset horizon 2800x1400.jpg", skyDomeOrigin, vec3.T{-0.2, 0, -1}, vec3.T{0, 1, 0})
 	skyDome := scn.NewSphere(skyDomeOrigin, 10*1000, skyDomeMaterial).N("Sky dome")
 
-	scene := scn.NewSceneNode().FS(landscape).S(lamp, skyDome).D(groundDisc)
+	animationStartIndex := 0
+	animationEndIndex := amountAnimationFrames - 1
 
-	cameraOrigin := vec3.T{0, size / 4, -size * 1.2}
-	focusPoint := vec3.T{0, landscape.Bounds.SizeY() / 3, 0}
-	camera := scn.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).A(apertureSize, "")
+	cameraStartAngle := util.DegToRad(-90)
+	lightStartAngle := util.DegToRad(-45)
 
-	frame := scn.NewFrame(animation.AnimationName, -1, camera, scene)
-	animation.AddFrame(frame)
+	for frameIndex := animationStartIndex; frameIndex <= animationEndIndex; frameIndex++ {
+		animationProgress := float64(frameIndex) / float64(amountAnimationFrames)
+		angle := animationProgress * util.DegToRad(360*0.75)
+
+		lamp := scn.NewSphere(&vec3.T{0.75 * size * math.Cos(lightStartAngle+angle), 400, 0.75 * size * math.Sin(lightStartAngle+angle)}, 200.0, scn.NewMaterial().E(color.White, 12, true))
+
+		cameraOrigin := vec3.T{size * math.Cos(cameraStartAngle), size * 0.75, size * math.Sin(cameraStartAngle)}
+		focusDistance := (&vec3.T{0, landscape.Bounds.SizeY() / 2, 0}).Sub(&cameraOrigin).Length()
+		viewPoint := vec3.T{0, landscape.Bounds.SizeY() / 2, 0}
+		camera := scn.NewCamera(&cameraOrigin, &viewPoint, amountSamples, magnification).A(apertureSize, "").F(focusDistance)
+
+		scene := scn.NewSceneNode().FS(landscape).S(lamp, skyDome).D(groundDisc)
+
+		frame := scn.NewFrame(animation.AnimationName, frameIndex, camera, scene)
+
+		animation.AddFrame(frame)
+	}
 
 	anm.WriteAnimationToFile(animation, false)
 }

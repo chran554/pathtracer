@@ -5,6 +5,14 @@ import (
 	"math"
 )
 
+const (
+	radPerDeg = math.Pi / 180.0
+)
+
+func DegToRad(degrees float64) float64 {
+	return radPerDeg * degrees
+}
+
 func Clamp(min float64, max float64, value float64) float64 {
 	if value < min {
 		return min
