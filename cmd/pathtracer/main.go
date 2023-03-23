@@ -142,7 +142,7 @@ func main() {
 
 		renderedPixelData := image.NewFloatImage(animation.AnimationName, animation.Width, animation.Height)
 
-		fmt.Println("Rendering...")
+		fmt.Println(frameInformationProgressSummary(frameInformation))
 		render(frame.Camera, scene, animation.Width, animation.Height, renderedPixelData, &renderMonitor)
 
 		fmt.Println("Releasing resources...")
@@ -150,12 +150,30 @@ func main() {
 		frame.SceneNode = nil
 
 		frameInformation.renderEndTime = time.Now()
+		fmt.Println()
 		fmt.Println(frameInformationPostRenderText(frameInformation))
 
 		writeRenderedImage(animation, frame, renderedPixelData, frameInformation)
 	}
 
 	fmt.Printf("Total execution time (for %d frames): %s\n", len(animation.Frames), time.Since(startTimestamp))
+}
+
+func frameInformationProgressSummary(frameInformation RenderFrameInformation) string {
+	animationProgressText := fmt.Sprintf("animation progress, before rendering frame, %.2f%%", (float64(frameInformation.frameIndex)/float64(frameInformation.animationFrameCount))*100.0)
+	animationEstimatedRemainingTimeText := ""
+	if frameInformation.frameIndex > 0 {
+		renderTime := time.Since(frameInformation.renderStartTime)
+		timePerFrame := float64(renderTime) / float64(frameInformation.frameIndex)
+		animationEstimatedRemainingTime := timePerFrame * float64(frameInformation.animationFrameCount-(frameInformation.frameIndex))
+		animationEstimatedRemainingTimeText = fmt.Sprintf(" with %d to go", time.Duration(int64(animationEstimatedRemainingTime)).Round(time.Minute))
+	}
+
+	if frameInformation.animationFrameCount > 1 {
+		return fmt.Sprintf("Rendering %s, frame %d of %d  (%s%s)...\n", frameInformation.imageFilename, frameInformation.frameIndex+1, frameInformation.animationFrameCount, animationProgressText, animationEstimatedRemainingTimeText)
+	} else {
+		return fmt.Sprintf("Rendering %s (single frame)...\n", frameInformation.imageFilename)
+	}
 }
 
 func frameInformationPostRenderText(frameInformation RenderFrameInformation) string {
