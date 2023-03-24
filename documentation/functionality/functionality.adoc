@@ -48,7 +48,7 @@ A short animation can be found at https://vimeo.com/803459254[Vimeo] (it should 
 As the pathtracer sends multiple rays through each pixel and each ray bounces and take a different path than the other, some rays hit a light source and others do not. The resulting light (or lack thereof) of each ray is accumulated for the pixel and averaged.
 The process is called Monte Carlo Integration and for each pixel ray fired and result included in the average, the closer to the perfect intensity value for the pixel.
 
-The Monte Carlo integration is a calculation intense process. It is not clear on what amount of integration samples (rays per pixel). The integration error (pixel intensity noise) is only halved as the amount of rays per pixel is doubled (and with that doubled rendering time, as it follow linear to the amount of rays fired).
+The Monte Carlo integration is a calculation intense process. It is not clear on what amount of integration samples (rays per pixel) to use for each scene. The integration error (pixel intensity noise) is only halved as the amount of rays per pixel is doubled (and with that doubled rendering time, as it follow linear to the amount of rays fired).
 
 For the image below I have intentionally chosen this "tricky" scene, for pathtracing, with a very "small" and intense light in the ceiling as it would produce a lot of noise in the image when using small amount of rays that would miss the light. (A larger light source would drastically reduce the noise, but I wanted a noisy image throughout the sampling range for comparison.)
 
