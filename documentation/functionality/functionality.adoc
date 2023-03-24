@@ -290,11 +290,14 @@ image::smooth_vertex_normals.png[Result of smooth vertex normals at different an
 .Smooth vertex normal calculation on Beethoven bust statue. 0 is "no smoothing" original and 180 is "smoothing of all" vertices of all shared facets.
 image::smooth_beethoven.gif[Result of smooth vertex normals at different angle thresholds]
 
-== Side project - Brilliant cut diamond
+== Side project - Brilliant cut diamond (3D object)
 
 .Images of a real (as opposed to a computer rendered) brilliant cut diamond
-image::../../cmd/obj/diamond/documentation/images/diamond_side_view.png[Diamond brilliant cut - side view,width=75%,height=75%]
-
+[cols=">a,<a", frame=none, grid=none]
+|===
+| image::../../cmd/obj/diamond/documentation/images/diamond_side_view.png[Diamond brilliant cut - side view,width=75%,height=75%]
+| image::../../cmd/obj/diamond/documentation/images/diamond_top_view.png[Diamond brilliant cut - top view,width=75%,height=75%]
+|===
 
 One of the things I have been dying to render as soon as I get my pathtracer calculation shit together are diamonds. +
 To be able to catch the reflections and refractions of diamonds is a goal waiting to be achieved.
