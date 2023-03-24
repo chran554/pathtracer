@@ -289,3 +289,18 @@ image::smooth_vertex_normals.png[Result of smooth vertex normals at different an
 
 .Smooth vertex normal calculation on Beethoven bust statue. 0 is "no smoothing" original and 180 is "smoothing of all" vertices of all shared facets.
 image::smooth_beethoven.gif[Result of smooth vertex normals at different angle thresholds]
+
+== Side project - Brilliant cut diamond
+
+.Images of a real (as opposed to a computer rendered) brilliant cut diamond
+image::../../cmd/obj/diamond/documentation/images/diamond_side_view.png[Diamond brilliant cut - side view,width=75%,height=75%]
+
+
+One of the things I have been dying to render as soon as I get my pathtracer calculation shit together are diamonds. +
+To be able to catch the reflections and refractions of diamonds is a goal waiting to be achieved.
+
+I realize I will most likely not come as far as different refractions of light at different wavelengths and show off some rainbows. It could be done though, but it would be a pain in the a$$ to implement light sources and define realistic materials according to their distribution of energy in the visual spectral. Not to mention the calculation burden of integrating those spectral distributions... It would probably take forever to render as I am limited in how to perform those calculations efficient. And just to produce some rainbows...
+
+But! I have prepared, and put some serious effort in how to create 3D models of brilliant cut diamonds from parameters. Although you can fiddle with the parameters to change the aspects and proportions of the diamonds will be flawless in their surfaces and angles. Any distortions or flaws need to be added afterwards.
+
+Read all about how a 3d model of a (perfect) xref:../../cmd/obj/diamond/README.adoc[brilliant cut diamond] is constructed.

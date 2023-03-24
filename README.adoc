@@ -13,6 +13,8 @@ Images created to display certain core functionality of the raytracer can be fou
 
 == How to run
 
+=== Execute pathtracer
+
 The renderer accepts a render scene file as program argument.
 
 There are several go programs in the `cmd` directory that will create a scene file.
@@ -20,7 +22,7 @@ Run one of those programs to create a scene file.
 
 === Build and run path tracer for a scene file
 
-You can use a script to conveniently build and execute a scene file creation program and then build and run the pathtracer for that created scene file.
+You can use the script to conveniently build and execute a scene file creation program and then build and run the pathtracer for that created scene file. The script was created for macOS zshell.
 
 The produced result will end up in the `rendered` directory.
 
@@ -33,7 +35,16 @@ For example:
 
 This will build and run the rendering of a cornell box image.
 
-== Feature summary
+=== First time: Use "go" to compile
+
+You will need to install "go" compiler of fairly recent version (v18+) on your computer to be able to compile the pathtracer (and scene-file creating programs).
+The pathtracer itself do not rely on many 3:rd party libraries, so you should be just fine compiling after updating those few and fairly small libraries.
+
+=== First time: Update file paths in scene-file programs
+
+Most of the scenes use textures and load 3D object files. You will probably need to update some absolute paths in the scene programs to those external resources to match you location of the pathtracer project. (Yeah, I know, the paths should be relative or configurable. Stop naggin'.)
+
+== Pathtracer feature summary
 
 A lot of functionality is on display in the link:documentation/functionality/functionality.adoc[Functionality Gallery].
 

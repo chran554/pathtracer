@@ -1,27 +1,49 @@
 = Depth of field (and aperture shape)
 :toc:
 
+.Lonesome Gopher in love
+image::aperture_shape_demo.png[Gopher in love]
+
+== Pinhole camera with indefinably sharpness
+
+A common pinhole, indefinably sharp, camera is really constructed by a camera point, an "up" vector describing what direction is up, a view direction vector, a view plane (screen) with pixels and the distance (view plane distance) between the camera and the screen plane. The view direction vector is really the inverted normal of the view plane.
+
+=== How to render an image with indefinably sharpness
+
+You render your image by firing rays from the camera point against each pixel in the screen view plane, painting that pixel in the screen with whatever you hit along the ray in front of the camera.
+
+.No depth of field. Rendered with the common pinhole camera, a camera with infinite depth of field (everything is in focus). It is the same result as having an infinitely small aperture, an aperture of size 0.0 (units).
+image::dof_01.png[alt="Depth of field (none)"]
+
+== Pinhole camera with aperture and depth of field
+
 To make a common pinhole camera to be more like a real world camera with depth of field (i.e. able to have parts of the image "out of focus" either in front or behind a focus plane) you will need a "focus distance" and an "aperture size" (or lens radius if you will).
 
-This will not make a accurate simulation, with respect to physics and mathematics, of a very complex camera lens with multiple movable glass lenses in groups and all the real world artefacts that comes with it. But it will still make out a very decent, simplified, model of how a camera with aperture works.
+NOTE::
+The term "focus plane" comes from the camera notion of the "plane" on the "focus distance" from the camera where all things are in perfect focus. It is not really plane, neither in the pathtracer nor in the real camera world, but rather a concave cap part of a sphere. The camera is in the center of the sphere and perfect focus is at a radius of "focus distance".
 
-1. First shoot a "perfect" ray from the camera at center of the aperture through your view plane pixel position (pixelX, pixelY). The point where this ray intersect the focus plane is the focus point for the pixel (pixelX, pixelY).
+This pathtracer model for a camera with depth of field will not make an accurate simulation, with respect to physics and mathematics, of a very complex camera lens with multiple movable glass lenses in groups and all the real world artefacts that comes with it. But it will produce fairly good results and still make out a decent, simplified, model of how a camera with aperture works.
 
-2. All other sample rays shot from the camera in your path tracer should start at random point on the aperture disc and pass through the focus point for the pixel (pixelX, pixelY).
+=== How to render an image with depth of field
+
+Basically this is a two-step process for each pixel in the screen (view plane).
+
+1. First shoot a "perfect" ray from the camera at center of the aperture through your view plane pixel position (pixelX, pixelY). The point where this ray intersect the focus plane is the _focus point_ for the pixel (pixelX, pixelY).
+
+2. All sample rays shot, for the view plane pixel (pixelX, pixelY), start at random point on the aperture plane (or "disc" if the aperture is round) and pass through/aim for that _focus point_ for the pixel (pixelX, pixelY) on the focus plane, not the pixel point (pixelX, pixelY) on the view plane(!).
+
+.How different aperture shapes, and depth of field in general, works
+image::dof.png[How different apertures, and depth of field in general, works]
+
+.Depth of field using aperture 12.0 (in units, not actual 12f as in camera lenses) and "focus distance" (the distance to perfect focus point) approximately at the middle sphere.
+image::dof_02.png[alt="Depth of field"]
+
+=== Aperture shapes
 
 The simplest aperture shape is usually "round circle" as it is simple to implement and very camera like. +
 However, if you do not sample start points for rays randomly on the aperture disc but rather randomly within another shape than a round circle, your out of focus bokeh will be of the shape you sampled. For example heart, star, or letter 'F' shaped as shown in example images.
 
 I have used black and white bitmaps to define my aperture shapes. (See aperture images below.) It gives a very simple aperture shape understanding and an extremely easy editing as opposed to define functions for the shapes. I do not use this functionality much, so my implementation is very naive. When I am about to fire rays starting from my aperture I choose a random pixel on the aperture image and check if it is black or white. If it is black I repeat the random pixel selection and if it is white I choose that as the start position for my ray.
-
-.How different aperture shapes, and depth of field in general, works
-image::dof.png[How different apertures, and depth of field in general, works]
-
-.No depth of field. Rendered with the common pinhole camera, a camera with infinite depth of field (everything is in focus). It is the same result as having an infinitely small aperture, an aperture of size 0.0 (units).
-image::dof_01.png[alt="Depth of field (none)"]
-
-.Depth of field using aperture 12.0 (in units, not actual 12f as in camera lenses) and "focus distance" (the distance to perfect focus point) approximately at the middle sphere.
-image::dof_02.png[alt="Depth of field"]
 
 .Different aperture shapes for a matrix of luminous balls.
 image::aperture_shape.png[Different aperture shapes]
@@ -30,6 +52,3 @@ A short animation with luminous balls and a star shaped aperture can be found at
 
 .Camera aperture in the shape of capital letter "F" on a matrix of luminous balls. Note that the out of focus bokeh in front of the focus plane is upside down and flipped right with left, while out of focus bokeh in the back has the normal shape.
 image::aperture_shape_letterF.png[Camera aperture shape of capital "F"]
-
-.Lonesome Gopher in love
-image::aperture_shape_demo.png[Gopher in love]

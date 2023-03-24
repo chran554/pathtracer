@@ -42,6 +42,9 @@ This will produce a diamond 3D object with a girdle diameter of 1.00 units (unle
 The refractive index of diamond is `2.42` use it for your material.
 https://en.wikipedia.org/wiki/List_of_refractive_indices[Refractive index for materials on Wikipedia]
 
+Note::
+There are no parameters for the culet facet as I have not added the option to the implementation. Practically, the culet facet has been minimized or eliminated in the modern round brilliant diamond.
+
 == Brilliant cut
 
 A diamond can be cut a lot of ways (not only in a round shape).
@@ -152,7 +155,7 @@ image::documentation/images/lower_half_facet_length.png[alt="Lower half facet le
 
 === Culet size
 
-The culet facet has been minimized or eliminated in the modern round brilliant.
+The culet facet has been minimized or eliminated in the modern round brilliant diamonds.
 
 === Girdle height
 
