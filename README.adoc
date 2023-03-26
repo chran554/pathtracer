@@ -71,7 +71,7 @@ git lfs pull
 
 Welcome into the world of pathtracing....
 
-https://youtu.be/oXk-PPmH5ak?t=20[Robin Beck - The Very First Time]
+https://youtu.be/oXk-PPmH5ak?t=32[Robin Beck - The Very First Time]
 
 [quote,Robin Beck: The Very First Time]
 Like a break in the clouds and the first ray of sun +
