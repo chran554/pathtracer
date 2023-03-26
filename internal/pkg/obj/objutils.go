@@ -5,8 +5,8 @@ import (
 )
 
 var (
-	// pathtracerRoot = "/Users/christian/Projects/go/pathtracer" // Old mac
-	pathtracerRoot = "/Users/christian/projects/code/go/pathtracer" // New mac
+	pathtracerRoot = "."
 	ObjFileDir     = filepath.Join(pathtracerRoot, "objects/obj")
 	PlyFileDir     = filepath.Join(pathtracerRoot, "objects/ply")
+	TexturesDir    = filepath.Join(pathtracerRoot, "textures")
 )

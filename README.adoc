@@ -35,14 +35,51 @@ For example:
 
 This will build and run the rendering of a cornell box image.
 
-=== First time: Use "go" to compile
+=== For the very first time
 
 You will need to install "go" compiler of fairly recent version (v18+) on your computer to be able to compile the pathtracer (and scene-file creating programs).
 The pathtracer itself do not rely on many 3:rd party libraries, so you should be just fine compiling after updating those few and fairly small libraries.
 
-=== First time: Update file paths in scene-file programs
+The installation instruction steps below assume that you have git and brew already installed.
 
-Most of the scenes use textures and load 3D object files. You will probably need to update some absolute paths in the scene programs to those external resources to match you location of the pathtracer project. (Yeah, I know, the paths should be relative or configurable. Stop naggin'.)
+As I have a lot of "big" images in this repo, textures and such, I use `git lfs` (Large File Storage) to make them not affect my github quota that much.
+The installation show how to install the git lfs plugin. It will not alter or affect your git functionality but rather just add to set of git commands.
+
+[source,shell]
+----
+brew install go
+
+brew install git-lfs
+
+git lfs install
+
+cd <wherever you want to git-clone your pathtracer to>
+
+git clone git@github.com:chran554/pathtracer.git
+
+cd pathtracer
+
+mkdir scene
+
+git lfs pull
+----
+
+[source,shell]
+----
+./build_and_render.sh cornellbox
+----
+
+Welcome into the world of pathtracing....
+
+https://youtu.be/oXk-PPmH5ak?t=20[Robin Beck - The Very First Time]
+
+[quote,Robin Beck: The Very First Time]
+Like a break in the clouds and the first ray of sun +
+I can feel it inside something new has begun +
+And it's taking control of my body and mind +
+It began when I heard I love you +
+For the very first time +
+For the very first time +
 
 == Pathtracer feature summary
 

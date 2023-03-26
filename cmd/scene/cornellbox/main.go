@@ -23,7 +23,7 @@ var viewPlaneDistance = 1500.0
 
 func main() {
 	cornellBoxUnit := ballRadius * 3
-	cornellBox := obj.NewCornellBox(&vec3.T{2 * cornellBoxUnit, cornellBoxUnit, 3 * cornellBoxUnit}, true, 40)
+	cornellBox := obj.NewCornellBox(&vec3.T{2 * cornellBoxUnit, cornellBoxUnit, 3 * cornellBoxUnit}, true, 5)
 
 	rightSphereMaterial := scn.NewMaterial().N("Right sphere").C(color.NewColorGrey(0.9))
 	leftSphereMaterial := scn.NewMaterial().N("Left sphere").C(color.NewColorGrey(0.9))
