@@ -62,7 +62,7 @@ See also the cornell box sample comparison in the <<_importance_sampling__cosine
 Image size:             400x200
 Amount samples/pixel:   1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384
 Max recursion depth:    4
-Amount facets:          18
+Amount facets:          12
 Amount spheres:         2
 Frame render time:      3.65s (    1 sample/ray per pixel)
 Frame render time:   3m49.05s ( 1024 samples/rays per pixel)
@@ -91,7 +91,7 @@ image::cornellbox_diffuse_cosine_weighted_hemisphere.png[Cosine weighted hemisph
 Image size:             800x400
 Amount samples/pixel:   4
 Max recursion:          4
-Amount spheres:         3
+Amount spheres:         2
 ----
 
 == Material - Reflection Fresnel (dielectric/non-conducting)
@@ -136,7 +136,7 @@ Image size:             800x500
 Amount samples/pixel:   16384
 Max recursion depth:    8
 Amount facets:          12
-Amount spheres:         2
+Amount spheres:         3
 Refreaction index:      1.333 (same as water)
 ----
 
