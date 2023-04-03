@@ -2,15 +2,14 @@ package obj
 
 import (
 	"github.com/ungerik/go3d/float64/vec3"
+	"path/filepath"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/obj/wavefrontobj"
 	scn "pathtracer/internal/pkg/scene"
 )
 
 func NewDrWhoAngel(scale float64) *scn.FacetStructure {
-	var objectFilename = "drwho_angel.obj"
-	var objectFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + objectFilename
-
-	angel := ReadOrPanic(objectFilenamePath)
+	angel := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "drwho_angel.obj"))
 
 	angel.CenterOn(&vec3.Zero)
 	angel.Translate(&vec3.T{0, -angel.Bounds.Ymin, 0})

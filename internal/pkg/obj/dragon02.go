@@ -3,15 +3,14 @@ package obj
 import (
 	"github.com/ungerik/go3d/float64/vec3"
 	"math"
+	"path/filepath"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/obj/wavefrontobj"
 	scn "pathtracer/internal/pkg/scene"
 )
 
 func NewDragon02(scale float64, includeDragon bool, includePillar bool) *scn.FacetStructure {
-	var objectFilename = "dragon_02.obj"
-	var objectFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + objectFilename
-
-	dragon := ReadOrPanic(objectFilenamePath)
+	dragon := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "dragon_02.obj"))
 	if !includeDragon {
 		dragon.RemoveObjectsByMaterialName("skin")
 	}

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 	"path/filepath"
-	"pathtracer/internal/pkg/ply"
+	"pathtracer/internal/pkg/obj/ply"
 	scn "pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"

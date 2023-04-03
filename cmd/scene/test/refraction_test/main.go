@@ -5,6 +5,7 @@ import (
 	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj"
+	"pathtracer/internal/pkg/obj/wavefrontobj"
 	scn "pathtracer/internal/pkg/scene"
 	"strconv"
 
@@ -102,7 +103,7 @@ func GetCornellBox(scale *vec3.T, lightIntensityFactor float64) *scn.FacetStruct
 	var cornellBoxFilename = "cornellbox.obj"
 	var cornellBoxFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + cornellBoxFilename
 
-	cornellBox := obj.ReadOrPanic(cornellBoxFilenamePath)
+	cornellBox := wavefrontobj.ReadOrPanic(cornellBoxFilenamePath)
 
 	cornellBox.Scale(&vec3.Zero, scale)
 	cornellBox.ClearMaterials()

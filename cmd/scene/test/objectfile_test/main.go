@@ -5,7 +5,7 @@ import (
 	"math"
 	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/obj"
+	"pathtracer/internal/pkg/obj/wavefrontobj"
 	scn "pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -81,7 +81,7 @@ func main() {
 }
 
 func NewCornellBox(scale float64) *scn.FacetStructure {
-	cornellBox := obj.ReadOrPanic(cornellBoxFilenamePath)
+	cornellBox := wavefrontobj.ReadOrPanic(cornellBoxFilenamePath)
 	cornellBox.ScaleUniform(&vec3.Zero, scale)
 
 	cornellBox.ReplaceMaterial("Wall_right", scn.NewMaterial().C(color.NewColor(0.9, 0.1, 0.1)).M(0.1, 0.2))

@@ -2,15 +2,14 @@ package obj
 
 import (
 	"github.com/ungerik/go3d/float64/vec3"
+	"path/filepath"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/obj/wavefrontobj"
 	scn "pathtracer/internal/pkg/scene"
 )
 
 func NewSolidUtahTeapot(scale float64) *scn.FacetStructure {
-	var objectFilename = "utah_teapot_solid_02.obj"
-	var objectFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + objectFilename
-
-	utahTeaPot := ReadOrPanic(objectFilenamePath)
+	utahTeaPot := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "utah_teapot_solid_02.obj"))
 
 	utahTeaPot.CenterOn(&vec3.Zero)
 	utahTeaPot.Translate(&vec3.T{0, -utahTeaPot.Bounds.Ymin, 0})

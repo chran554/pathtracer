@@ -6,6 +6,7 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 	"math"
 	"os"
+	"pathtracer/internal/pkg/obj/wavefrontobj"
 	"pathtracer/internal/pkg/scene"
 	"testing"
 )
@@ -57,7 +58,7 @@ func Test_TessellatedSphereObject(t *testing.T) {
 		mtlFile := createFile("tessellated_sphere.mtl")
 		defer mtlFile.Close()
 
-		WriteObjFile(objFile, mtlFile, sphere, nil)
+		wavefrontobj.WriteObjFile(objFile, mtlFile, sphere, nil)
 
 		defer os.Remove(objFile.Name())
 		defer os.Remove(mtlFile.Name())

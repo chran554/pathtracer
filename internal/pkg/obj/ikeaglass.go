@@ -2,15 +2,14 @@ package obj
 
 import (
 	"github.com/ungerik/go3d/float64/vec3"
+	"path/filepath"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/obj/wavefrontobj"
 	scn "pathtracer/internal/pkg/scene"
 )
 
 func NewGlassIkeaPokal(scale float64) *scn.FacetStructure {
-	var objectFilename = "glass_ikea_pokal.obj"
-	var objectFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + objectFilename
-
-	glass := ReadOrPanic(objectFilenamePath)
+	glass := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "glass_ikea_pokal.obj"))
 
 	glass.CenterOn(&vec3.Zero)
 	glass.Translate(&vec3.T{0, -glass.Bounds.Ymin, 0})
@@ -28,10 +27,7 @@ func NewGlassIkeaPokal(scale float64) *scn.FacetStructure {
 }
 
 func NewGlassIkeaSkoja(scale float64) *scn.FacetStructure {
-	var objectFilename = "glass_ikea_skoja.obj"
-	var objectFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + objectFilename
-
-	glass := ReadOrPanic(objectFilenamePath)
+	glass := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "glass_ikea_skoja.obj"))
 
 	glass.CenterOn(&vec3.Zero)
 	glass.Translate(&vec3.T{0, -glass.Bounds.Ymin, 0})

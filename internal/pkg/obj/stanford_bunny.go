@@ -2,15 +2,14 @@ package obj
 
 import (
 	"github.com/ungerik/go3d/float64/vec3"
+	"path/filepath"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/obj/wavefrontobj"
 	scn "pathtracer/internal/pkg/scene"
 )
 
 func NewStanfordBunny(scale float64) *scn.FacetStructure {
-	var objectFilename = "stanford_bunny.obj"
-	var objectFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + objectFilename
-
-	bunny := ReadOrPanic(objectFilenamePath)
+	bunny := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "stanford_bunny.obj"))
 
 	bunny.CenterOn(&vec3.Zero)
 	bunny.Translate(&vec3.T{0, -bunny.Bounds.Ymin, 0})

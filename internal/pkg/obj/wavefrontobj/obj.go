@@ -1,4 +1,4 @@
-package obj
+package wavefrontobj
 
 import (
 	"bufio"

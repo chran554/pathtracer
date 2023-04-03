@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/obj/wavefrontobj"
 	scn "pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -30,9 +31,7 @@ func NewWhiteCornellBox(scale *vec3.T, singleLight bool, lightIntensityFactor fl
 }
 
 func cornelBox(scale *vec3.T, singleLight bool, lightIntensityFactor float64) (cornellBox *scn.FacetStructure) {
-	var cornellBoxFilenamePath = filepath.Join(ObjFileDir, "cornellbox.obj")
-
-	cornellBox = ReadOrPanic(cornellBoxFilenamePath)
+	cornellBox = wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "cornellbox.obj"))
 	cornellBox.Name = "cornellbox"
 
 	cornellBox.CenterOn(&vec3.Zero)

@@ -7,7 +7,7 @@ import (
 	"os"
 	"pathtracer/cmd/obj/diamond/pkg/diamond"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/obj"
+	"pathtracer/internal/pkg/obj/wavefrontobj"
 	scn "pathtracer/internal/pkg/scene"
 	"strings"
 )
@@ -43,7 +43,7 @@ func main() {
 	mtlFile := createFile("diamond.mtl")
 	defer mtlFile.Close()
 
-	obj.WriteObjFile(objFile, mtlFile, diamond, comments)
+	wavefrontobj.WriteObjFile(objFile, mtlFile, diamond, comments)
 
 	fmt.Printf("\nCreated diamond obj-file: %s\n", objFile.Name())
 }

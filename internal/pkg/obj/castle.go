@@ -3,7 +3,9 @@ package obj
 import (
 	"fmt"
 	"github.com/ungerik/go3d/float64/vec3"
+	"path/filepath"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/obj/wavefrontobj"
 	scn "pathtracer/internal/pkg/scene"
 )
 
@@ -40,10 +42,7 @@ func NewCastle(scale *vec3.T) *scn.FacetStructure {
 }
 
 func loadCastle(scale *vec3.T) *scn.FacetStructure {
-	var objFilename = "castle_02.obj"
-	var objFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/" + objFilename
-
-	castle := ReadOrPanic(objFilenamePath)
+	castle := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "castle_02.obj"))
 
 	ymin := castle.Bounds.Ymin
 	ymax := castle.Bounds.Ymax

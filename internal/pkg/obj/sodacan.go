@@ -3,53 +3,52 @@ package obj
 import (
 	"fmt"
 	"github.com/ungerik/go3d/float64/vec3"
+	"path/filepath"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/obj/wavefrontobj"
 	scn "pathtracer/internal/pkg/scene"
 )
 
 // NewSodaCanPepsi
 // Normal soda can height is 11.6 cm.
 func NewSodaCanPepsi(scale float64) *scn.FacetStructure {
-	sodaCan := loadSodaCan("textures/sodacan/sodacan_pepsi.jpg", color.NewColor(0.2, 0.2, 0.9), scale)
+	sodaCan := loadSodaCan(filepath.Join(TexturesDir, "sodacan/sodacan_pepsi.jpg"), color.NewColor(0.2, 0.2, 0.9), scale)
 	return sodaCan
 }
 
 // NewSodaCanMtnDew
 // Normal soda can height is 11.6 cm.
 func NewSodaCanMtnDew(scale float64) *scn.FacetStructure {
-	sodaCan := loadSodaCan("textures/sodacan/sodacan_mtn-dew.png", color.NewColor(0.2, 0.9, 0.2), scale)
+	sodaCan := loadSodaCan(filepath.Join(TexturesDir, "sodacan/sodacan_mtn-dew.png"), color.NewColor(0.2, 0.9, 0.2), scale)
 	return sodaCan
 }
 
 // NewSodaCanFantaOrange
 // Normal soda can height is 11.6 cm.
 func NewSodaCanFantaOrange(scale float64) *scn.FacetStructure {
-	sodaCan := loadSodaCan("textures/sodacan/sodacan_fanta-orange.png", color.NewColor(0.937, 0.455, 0.047), scale)
+	sodaCan := loadSodaCan(filepath.Join(TexturesDir, "sodacan/sodacan_fanta-orange.png"), color.NewColor(0.937, 0.455, 0.047), scale)
 	return sodaCan
 }
 
 // NewSodaCanCocaColaClassic
 // Normal soda can height is 11.6 cm.
 func NewSodaCanCocaColaClassic(scale float64) *scn.FacetStructure {
-	sodaCan := loadSodaCan("textures/sodacan/sodacan_cocacola.jpg", color.NewColor(0.9, 0.2, 0.2), scale)
+	sodaCan := loadSodaCan(filepath.Join(TexturesDir, "sodacan/sodacan_cocacola.jpg"), color.NewColor(0.9, 0.2, 0.2), scale)
 	return sodaCan
 }
 
 func NewSodaCanCocaColaModern(scale float64) *scn.FacetStructure {
-	sodaCan := loadSodaCan("textures/sodacan/sodacan_cocacola_02.png", color.NewColor(0.9, 0.2, 0.2), scale)
+	sodaCan := loadSodaCan(filepath.Join(TexturesDir, "sodacan/sodacan_cocacola_02.png"), color.NewColor(0.9, 0.2, 0.2), scale)
 	return sodaCan
 }
 
 func NewSodaCanTest(scale float64) *scn.FacetStructure {
-	sodaCan := loadSodaCan("textures/test/checkered 360x180 with lines.png", color.NewColor(0.65, 0.55, 0.2), scale)
+	sodaCan := loadSodaCan(filepath.Join(TexturesDir, "test/checkered 360x180 with lines.png"), color.NewColor(0.65, 0.55, 0.2), scale)
 	return sodaCan
 }
 
 func loadSodaCan(textureFileName string, tabColor color.Color, scale float64) *scn.FacetStructure {
-	var objFilename = "sodacan.obj"
-	var objFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + objFilename
-
-	sodaCan := ReadOrPanic(objFilenamePath)
+	sodaCan := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "sodacan.obj"))
 	sodaCan.CenterOn(&vec3.Zero)
 
 	ymin := sodaCan.Bounds.Ymin
@@ -74,7 +73,7 @@ func loadSodaCan(textureFileName string, tabColor color.Color, scale float64) *s
 
 	sodaCan.ScaleUniform(&vec3.Zero, scale)
 
-	fmt.Printf("%s bounds: %+v\n", objFilename, sodaCan.Bounds)
+	fmt.Printf("Sodacan %s bounds: %+v\n", textureFileName, sodaCan.Bounds)
 
 	return sodaCan
 }
