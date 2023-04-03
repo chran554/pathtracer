@@ -89,6 +89,10 @@ Property summary, listed in order of parameter importance (importance as in: if 
 . Girdle height = "thin" to "medium"
 . Culet size = "small" to "none"
 
+==== Inconsistencies within this text
+
+If you find any ambiguities, or at least almost but not exactly the same value for a property, it is because I have extracted the information from several sources, and they all differ at some values. After all, not every one agree on the perfect notion thresholds or the even the perfect brilliant cut proportions, even if they come close. The beauty is still subjective and in the eye of the beholder.
+
 === Girdle diameter
 
 The girdle is the reference measurement of the diamond.
@@ -174,9 +178,10 @@ To make it all less intuitive, the categorization of the thickness seem to be a 
 
 .Example of girdle thickness percentages (a rule of thumb)
 |===
-| Thin     | <1%
-| Medium   | 1%-3%
-| Thick    | >4%
+| Knife edge    | 0%
+| Thin          | <0% - <1%
+| Medium        | 1% - 3%
+| Thick         | >4%
 |===
 
 Other categories for a girdle can be "faceted" vs "smooth", and "Polished" vs "bruted".
