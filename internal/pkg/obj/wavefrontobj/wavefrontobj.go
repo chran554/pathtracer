@@ -40,7 +40,11 @@ func Read(file *os.File) (*scene.FacetStructure, error) {
 func ReadOrPanic(objFilenamePath string) *scene.FacetStructure {
 	objFile, err := os.Open(objFilenamePath)
 	if err != nil {
-		message := fmt.Sprintf("Could not open obj file: '%s'\n%s\n", objFilenamePath, err.Error())
+		currentPath, err2 := filepath.Abs(".")
+		if err2 != nil {
+			currentPath = "[unknown]"
+		}
+		message := fmt.Sprintf("Could not open obj file: '%s'\n%s\nCurrent path: '%s'\n", objFilenamePath, err.Error(), currentPath)
 		panic(message)
 	}
 	defer objFile.Close()
@@ -240,11 +244,13 @@ func normalizeName(name string) string {
 
 func parseLines(lines []string, file *os.File) (*scene.FacetStructure, error) {
 	type facetStructureKey struct {
+		objectName   string
 		groupName    string
 		materialName string
 	}
 
-	const defaultName = "default"
+	var defaultName = filepath.Base(file.Name())
+	defaultName = strings.TrimSuffix(defaultName, filepath.Ext(defaultName))
 
 	var vertices []*vec3.T
 	var normals []*vec3.T
@@ -255,10 +261,13 @@ func parseLines(lines []string, file *os.File) (*scene.FacetStructure, error) {
 	groups := make(map[facetStructureKey][]*scene.Facet)
 	smoothGroups := make(map[string][]*scene.Facet)
 
+	var currentObjectName string
 	var currentGroups []string
 	var currentSmoothGroups []string
-	currentMaterial := defaultName
-	var name string
+	var currentMaterialName string
+
+	currentObjectName = defaultName
+	currentMaterialName = defaultName
 
 	for lineIndex, line := range lines {
 		lineNumber := lineIndex + 1
@@ -308,12 +317,13 @@ func parseLines(lines []string, file *os.File) (*scene.FacetStructure, error) {
 			face, err = parseFace(arguments, vertices, normals, textureVertices)
 			triangleFacets := face.SplitMultiPointFacet()
 			if len(currentGroups) > 0 {
+				// A facet can belong to several groups
 				for _, group := range currentGroups {
-					key := facetStructureKey{groupName: group, materialName: currentMaterial}
+					key := facetStructureKey{objectName: currentObjectName, groupName: group, materialName: currentMaterialName}
 					groups[key] = append(groups[key], triangleFacets...)
 				}
 			} else {
-				key := facetStructureKey{groupName: defaultName, materialName: currentMaterial}
+				key := facetStructureKey{objectName: currentObjectName, groupName: defaultName, materialName: currentMaterialName}
 				groups[key] = append(groups[key], triangleFacets...)
 			}
 
@@ -325,7 +335,9 @@ func parseLines(lines []string, file *os.File) (*scene.FacetStructure, error) {
 		case "o":
 			fmt.Printf("Object at line %d: %v\n", lineNumber, arguments)
 			if len(arguments) > 0 {
-				name = strings.Join(arguments, " ")
+				currentObjectName = strings.Join(arguments, " ")
+			} else {
+				currentObjectName = defaultName // Undefined state, when there is no name for the group but assume and use "default group"
 			}
 		case "l":
 			fmt.Printf("Line (not implemented yet) at line %d: %v\n", lineNumber, arguments) // TODO implement
@@ -348,7 +360,7 @@ func parseLines(lines []string, file *os.File) (*scene.FacetStructure, error) {
 			}
 		case "usemtl":
 			materialName := strings.Join(tokens[1:], " ")
-			currentMaterial = materialName
+			currentMaterialName = materialName
 		default:
 			err = fmt.Errorf("unknown/unexpected line type: '%s'", line)
 		}
@@ -360,21 +372,42 @@ func parseLines(lines []string, file *os.File) (*scene.FacetStructure, error) {
 
 	// Build a flat facet structure with either one level or two levels.
 	// The second level facet structures are per group and material.
-	facetStructure := &scene.FacetStructure{Name: name}
+	facetStructure := &scene.FacetStructure{}
 	if len(groups) == 1 {
-		for _, facets := range groups {
+		for group, facets := range groups {
 			facetStructure.Facets = facets
+			facetStructure.Name = first(group.objectName, group.groupName)
+			facetStructure.SubstructureName = second(group.objectName, group.groupName)
 		}
 	} else if len(groups) > 1 {
+
+		facetStructure.Name = defaultName
+
+		var objectNames = make(map[string]bool)
+		var objectName string
+		for key, _ := range groups {
+			objectNames[key.objectName] = true
+			objectName = key.objectName
+		}
+		if len(objectNames) == 1 {
+			facetStructure.Name = objectName
+		}
+
 		for key, facets := range groups {
-			facetStructureName := key.materialName
+			facetStructureName := key.objectName
+
 			if (key.groupName != "") && (key.groupName != defaultName) {
-				fmt.Sprintf("%s::%s", key.groupName, key.materialName)
+				facetStructureName = fmt.Sprintf("%s::%s", facetStructureName, key.groupName)
+			}
+
+			if (key.materialName != "") && (key.materialName != defaultName) {
+				facetStructureName = fmt.Sprintf("%s::%s", facetStructureName, key.materialName)
 			}
 
 			facetGroup := &scene.FacetStructure{Name: facetStructureName}
 			facetGroup.Facets = facets
 			facetGroup.Material = materialMap[key.materialName]
+
 			facetStructure.FacetStructures = append(facetStructure.FacetStructures, facetGroup)
 		}
 	}
@@ -386,6 +419,31 @@ func parseLines(lines []string, file *os.File) (*scene.FacetStructure, error) {
 	}
 
 	return facetStructure, nil
+}
+
+func first(texts ...string) string {
+	for _, text := range texts {
+		if text != "" {
+			return text
+		}
+	}
+
+	return ""
+}
+
+func second(texts ...string) string {
+	var foundFirst = false
+	for _, text := range texts {
+		if text != "" {
+			if !foundFirst {
+				foundFirst = true
+			} else {
+				return text
+			}
+		}
+	}
+
+	return ""
 }
 
 func parseTokens(line string, delimiter rune) []string {

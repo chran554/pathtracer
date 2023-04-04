@@ -82,8 +82,8 @@ func (fs *FacetStructure) UpdateBounds() *Bounds {
 	return fs.Bounds
 }
 
-// Purge removes empty substructures.
-func (fs *FacetStructure) Purge() {
+// PurgeEmptySubStructures removes empty substructures.
+func (fs *FacetStructure) PurgeEmptySubStructures() {
 	for i := 0; i < len(fs.FacetStructures); {
 		if fs.FacetStructures[i].GetAmountFacets() == 0 {
 			fs.FacetStructures[i] = fs.FacetStructures[len(fs.FacetStructures)-1]

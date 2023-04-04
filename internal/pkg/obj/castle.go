@@ -1,7 +1,6 @@
 package obj
 
 import (
-	"fmt"
 	"github.com/ungerik/go3d/float64/vec3"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
@@ -9,9 +8,9 @@ import (
 	scn "pathtracer/internal/pkg/scene"
 )
 
-func NewCastle(scale *vec3.T) *scn.FacetStructure {
+func NewCastle(scale float64) *scn.FacetStructure {
 	object := loadCastle(scale)
-	object.Purge()
+	object.PurgeEmptySubStructures()
 
 	stainedGlassMaterial := scn.NewMaterial().N("stained_glass").
 		C(color.Color{R: 0.95, G: 0.90, B: 0.60}).
@@ -22,8 +21,7 @@ func NewCastle(scale *vec3.T) *scn.FacetStructure {
 		stainedGlassObject.Material = stainedGlassMaterial
 	}
 
-	roofMaterial := scn.NewMaterial().N("roof").
-		C(color.Color{R: 0.30, G: 0.25, B: 0.10})
+	roofMaterial := scn.NewMaterial().N("roof").C(color.Color{R: 0.30, G: 0.25, B: 0.10})
 	roofObjects := object.GetObjectsByMaterialName("erroded_cupper")
 	for _, roofObject := range roofObjects {
 		roofObject.Material = roofMaterial
@@ -41,18 +39,14 @@ func NewCastle(scale *vec3.T) *scn.FacetStructure {
 	return object
 }
 
-func loadCastle(scale *vec3.T) *scn.FacetStructure {
-	castle := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "castle_02.obj"))
+func loadCastle(scale float64) *scn.FacetStructure {
+	castle := wavefrontobj.ReadOrPanic(filepath.Join(ObjEvaluationFileDir, "castle_02.obj"))
 
 	ymin := castle.Bounds.Ymin
 	ymax := castle.Bounds.Ymax
 	castle.Translate(&vec3.T{0.0, -ymin, 0.0})       // lamp base touch the ground (xz-plane)
 	castle.ScaleUniform(&vec3.Zero, 1.0/(ymax-ymin)) // resize/scale to height == 1.0 units
-
-	castle.Scale(&vec3.Zero, scale)
-
-	castle.UpdateBounds()
-	fmt.Printf("Castle bounds: %+v\n", castle.Bounds)
+	castle.ScaleUniform(&vec3.Zero, scale)           // resize requested size
 
 	return castle
 }
