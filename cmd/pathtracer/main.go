@@ -39,6 +39,9 @@ type IntersectionInformation struct {
 	shortestDistance     float64
 	material             *scn.Material
 	normalAtIntersection *vec3.T
+	intersectedFacet     *scn.Facet
+	intersectedSphere    *scn.Sphere
+	intersectedDisc      *scn.Disc
 }
 
 type RenderFrameInformation struct {
@@ -86,6 +89,9 @@ func NewIntersectionInformation() *IntersectionInformation {
 		shortestDistance:     math.MaxFloat64, // At what distance from start point of fired ray
 		material:             nil,             // The material of the closest object that was intersected
 		normalAtIntersection: nil,             // The normal of the object that was intersected, at intersection point
+		intersectedFacet:     nil,
+		intersectedSphere:    nil,
+		intersectedDisc:      nil,
 	}
 }
 
@@ -716,7 +722,7 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 }
 
 func processFacetStructureIntersection(ray *scn.Ray, facetStructure *scn.FacetStructure, ii *IntersectionInformation) {
-	tempIntersection, tempIntersectionPoint, tempIntersectionNormal, tempMaterial := scn.FacetStructureIntersection(ray, facetStructure, nil)
+	tempIntersection, tmpIntersectionFacet, tempIntersectionPoint, tempIntersectionNormal, tempMaterial := scn.FacetStructureIntersection(ray, facetStructure, nil)
 
 	if tempIntersection {
 		distance := vec3.Distance(ray.Origin, tempIntersectionPoint)
@@ -727,15 +733,18 @@ func processFacetStructureIntersection(ray *scn.Ray, facetStructure *scn.FacetSt
 			ii.material = tempMaterial
 			ii.normalAtIntersection = tempIntersectionNormal // Should be normalized from initialization
 
+			ii.intersectedFacet = tmpIntersectionFacet
+			ii.intersectedSphere = nil
+			ii.intersectedDisc = nil
+
 			if ii.material == nil {
 				ii.material = scn.NewMaterial() // If, for some erroneous reason there is an intersection without any material, use default (diffuse white).
 				fmt.Printf("Warning: Could not find any material for intersection point on facet structure '%s' ('%s').\n", facetStructure.Name, facetStructure.SubstructureName)
 			}
 
-			// Flip normal if it is pointing away from the incoming ray
-			//if vectorCosinePositive(normalAtIntersection, ray.Heading) {
-			//	normalAtIntersection.Invert()
-			//}
+			if vec3.Dot(ii.normalAtIntersection, tmpIntersectionFacet.Normal) < 0 {
+				fmt.Println("rotten normals")
+			}
 		}
 	}
 }
@@ -751,6 +760,10 @@ func processDiscIntersection(ray *scn.Ray, disc *scn.Disc, ii *IntersectionInfor
 			ii.shortestDistance = distance               // Save the shortest intersection distance
 			ii.material = disc.Material
 			ii.normalAtIntersection = tempIntersectionNormal // Should be normalized from initialization
+
+			ii.intersectedFacet = nil
+			ii.intersectedSphere = nil
+			ii.intersectedDisc = disc
 
 			// Flip normal if it is pointing away from the incoming ray
 			if util.CosinePositive(ii.normalAtIntersection, ray.Heading) {
@@ -778,6 +791,10 @@ func processSphereIntersection(ray *scn.Ray, sphere *scn.Sphere, ii *Intersectio
 			ii.material = sphere.Material
 
 			ii.normalAtIntersection = sphere.Normal(ii.intersectionPoint)
+
+			ii.intersectedFacet = nil
+			ii.intersectedSphere = sphere
+			ii.intersectedDisc = nil
 
 			// Flip normal if it is pointing away from the incoming ray
 			//if vectorCosinePositive(normalAtIntersection, ray.Heading) {

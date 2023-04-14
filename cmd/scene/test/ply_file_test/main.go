@@ -18,10 +18,10 @@ var cameraDistanceFactor = 1.0
 
 var imageWidth = 450
 var imageHeight = 450
-var magnification = 2.0 / 3.0
+var magnification = 1.5 // 2.0 / 3.0
 
 func main() {
-	cornellBox := obj.NewWhiteCornellBox(&vec3.T{500, 300, 500}, true, 12.0) // cm, as units. I.e. a 5x3x5m room
+	cornellBox := obj.NewWhiteCornellBox(&vec3.T{500, 300, 500}, true, 4.0) // cm, as units. I.e. a 5x3x5m room
 	setCornellBoxMaterial(cornellBox)
 
 	pillarHeight := 130.0
@@ -39,8 +39,8 @@ func main() {
 
 	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
-	minDegree := 0
-	maxDegree := 80
+	minDegree := 40 // 0
+	maxDegree := 40 // 80
 	for degree := minDegree; degree <= maxDegree; degree += 5 {
 		beethoven := obj.NewBeethoven(50.0)
 		beethoven.Translate(&vec3.T{0, pillar.Bounds.Ymax, pillar.Bounds.Center()[2]})
