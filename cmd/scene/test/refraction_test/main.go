@@ -45,7 +45,7 @@ func main() {
 	// 	C(color.Color{R: 0.98, G: 0.80, B: 0.75}).
 	// 	M(0.2, 0.05).
 	// 	T(0.95, true, scn.RefractionIndex_Glass)
-	utahTeapot := obj.NewSolidUtahTeapot(50.0)
+	utahTeapot := obj.NewSolidUtahTeapot(50.0, true, true)
 	utahTeapot.RotateY(&vec3.T{0, 0, 0}, -math.Pi/3.5-math.Pi/2.0)
 	utahTeapot.Translate(&vec3.T{25 + 5, 0, 150})
 	// utahTeapot.Material = glassMaterial

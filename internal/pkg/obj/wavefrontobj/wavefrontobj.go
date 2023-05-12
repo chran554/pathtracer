@@ -55,6 +55,8 @@ func ReadOrPanic(objFilenamePath string) *scene.FacetStructure {
 		panic(message)
 	}
 
+	obj.UpdateBounds()
+
 	return obj
 }
 
@@ -377,7 +379,8 @@ func parseLines(lines []string, file *os.File) (*scene.FacetStructure, error) {
 		for group, facets := range groups {
 			facetStructure.Facets = facets
 			facetStructure.Name = first(group.objectName, group.groupName)
-			facetStructure.SubstructureName = second(group.objectName, group.groupName)
+			//facetStructure.SubstructureName = second(group.objectName, group.groupName, group.materialName)
+			facetStructure.Material = materialMap[group.materialName]
 		}
 	} else if len(groups) > 1 {
 
@@ -394,17 +397,13 @@ func parseLines(lines []string, file *os.File) (*scene.FacetStructure, error) {
 		}
 
 		for key, facets := range groups {
-			facetStructureName := key.objectName
-
-			if (key.groupName != "") && (key.groupName != defaultName) {
-				facetStructureName = fmt.Sprintf("%s::%s", facetStructureName, key.groupName)
-			}
+			facetSubstructureName := key.groupName
 
 			if (key.materialName != "") && (key.materialName != defaultName) {
-				facetStructureName = fmt.Sprintf("%s::%s", facetStructureName, key.materialName)
+				facetSubstructureName = fmt.Sprintf("%s::%s", facetSubstructureName, key.materialName)
 			}
 
-			facetGroup := &scene.FacetStructure{Name: facetStructureName}
+			facetGroup := &scene.FacetStructure{SubstructureName: facetSubstructureName}
 			facetGroup.Facets = facets
 			facetGroup.Material = materialMap[key.materialName]
 
@@ -475,7 +474,8 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 	materialFile := filepath.Join(objectFileDirectory, materialFilename)
 	f, err := os.Open(materialFile)
 	if err != nil {
-		fmt.Printf("ouupps, something went wrong opening material file: '%s'\n%s\n", materialFile, err.Error())
+		message := fmt.Sprintf("Could not find material file: '%s'\n%s\n", materialFile, err.Error())
+		panic(message)
 	}
 	defer f.Close()
 

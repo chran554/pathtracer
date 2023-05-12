@@ -5,15 +5,17 @@ import (
 	"math"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
+	"pathtracer/internal/pkg/obj/wavefrontobj2"
 	scn "pathtracer/internal/pkg/scene"
 )
 
 func NewDragon02(scale float64, includeDragon bool, includePillar bool) *scn.FacetStructure {
-	dragon := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "dragon_02.obj"))
+	dragon := loadDragon02()
+
 	if !includeDragon {
 		dragon.RemoveObjectsByMaterialName("skin")
 	}
+
 	if !includePillar {
 		dragon.RemoveObjectsByMaterialName("pillar")
 	}
@@ -39,5 +41,10 @@ func NewDragon02(scale float64, includeDragon bool, includePillar bool) *scn.Fac
 	dragon.ReplaceMaterial("skin", skinMaterial)
 	dragon.ReplaceMaterial("pillar", pillarMaterial)
 
+	return dragon
+}
+
+func loadDragon02() *scn.FacetStructure {
+	dragon := wavefrontobj2.ReadOrPanic(filepath.Join(ObjFileDir, "dragon_02.obj"))
 	return dragon
 }

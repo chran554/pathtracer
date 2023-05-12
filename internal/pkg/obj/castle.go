@@ -15,7 +15,7 @@ func NewCastle(scale float64) *scn.FacetStructure {
 	stainedGlassMaterial := scn.NewMaterial().N("stained_glass").
 		C(color.Color{R: 0.95, G: 0.90, B: 0.60}).
 		T(0.8, false, 0.0).
-		M(0.95, 0.3)
+		M(0.2, 0.3)
 	stainedGlassObjects := object.GetObjectsByMaterialName("colored_glass")
 	for _, stainedGlassObject := range stainedGlassObjects {
 		stainedGlassObject.Material = stainedGlassMaterial
@@ -30,17 +30,28 @@ func NewCastle(scale float64) *scn.FacetStructure {
 	glassMaterial := scn.NewMaterial().N("glass").
 		C(color.Color{R: 0.93, G: 0.93, B: 0.95}).
 		T(0.8, false, 0.0).
-		M(0.95, 0.1)
+		M(0.2, 0.1)
 	glassObjects := object.GetObjectsByMaterialName("glass")
 	for _, glassObject := range glassObjects {
 		glassObject.Material = glassMaterial
 	}
 
+	lightMaterial := scn.NewMaterial().N("light").E(color.White, 20, true)
+	object.ReplaceMaterial("chapel_light", lightMaterial)
+	object.ReplaceMaterial("hall_light", lightMaterial)
+	object.ReplaceMaterial("hall_tower_left_light", lightMaterial)
+	object.ReplaceMaterial("hall_tower_right_light", lightMaterial)
+	object.ReplaceMaterial("house_tower_light", lightMaterial)
+	object.ReplaceMaterial("tower_back_right_light", lightMaterial)
+	object.ReplaceMaterial("tower_middle_short_light", lightMaterial)
+	object.ReplaceMaterial("tower_middle_tall_light", lightMaterial)
+
 	return object
 }
 
 func loadCastle(scale float64) *scn.FacetStructure {
-	castle := wavefrontobj.ReadOrPanic(filepath.Join(ObjEvaluationFileDir, "castle_02.obj"))
+	castle := wavefrontobj.ReadOrPanic(filepath.Join(ObjEvaluationFileDir, "castle_03.obj"))
+	castle.Scale(&vec3.Zero, &vec3.T{-1, 1, 1}) // Flip along x-axis
 
 	ymin := castle.Bounds.Ymin
 	ymax := castle.Bounds.Ymax

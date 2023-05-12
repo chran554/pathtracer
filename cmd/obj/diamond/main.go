@@ -13,8 +13,10 @@ import (
 )
 
 func main() {
-	scale := 100.0
+	createPerfectBrilliantCutDiamondObjFile(100.0, "diamond")
+}
 
+func createPerfectBrilliantCutDiamondObjFile(scale float64, filename string) {
 	d := diamond.Diamond{
 		GirdleDiameter:                         1.00, // 100.0%
 		GirdleHeightRelativeGirdleDiameter:     0.03, //   3.0%
@@ -25,27 +27,34 @@ func main() {
 		LowerHalfFacetSizeRelativeGirdleRadius: 0.77, //  77.0%
 	}
 
-	m := scn.Material{
-		Name:            "Diamond",
-		Color:           &color.Color{R: 1.00, G: 0.98, B: 0.95}, // Slightly yellowish color
-		Glossiness:      0.98,
-		Roughness:       0.0,
-		RefractionIndex: 2.42, // Refraction index of diamond material
-		Transparency:    1.0,
-	}
-
+	m := diamondMaterial()
 	diamond := diamond.NewDiamondRoundBrilliantCut(d, scale, m)
 
 	comments := fileComments(scale, d, m, diamond.Bounds)
+	objFile := writeDiamondObjFile(filename, diamond, comments)
+	fmt.Printf("\nCreated perfect brilliant cut diamond obj-file: %s\n", objFile.Name())
+}
 
-	objFile := createFile("diamond.obj")
+func writeDiamondObjFile(filename string, diamond *scn.FacetStructure, comments []string) *os.File {
+	objFile := createFile(filename + ".obj")
 	defer objFile.Close()
-	mtlFile := createFile("diamond.mtl")
+	mtlFile := createFile(filename + ".mtl")
 	defer mtlFile.Close()
 
 	wavefrontobj.WriteObjFile(objFile, mtlFile, diamond, comments)
+	return objFile
+}
 
-	fmt.Printf("\nCreated diamond obj-file: %s\n", objFile.Name())
+func diamondMaterial() scn.Material {
+	m := scn.Material{
+		Name:            "Diamond",
+		Color:           &color.Color{R: 1.00, G: 0.99, B: 0.97}, // Very slight yellowish color
+		Glossiness:      0.01,
+		Roughness:       0.01,
+		RefractionIndex: 2.42, // Refraction index of diamond material
+		Transparency:    0.99,
+	}
+	return m
 }
 
 func fileComments(scale float64, d diamond.Diamond, m scn.Material, b *scn.Bounds) []string {

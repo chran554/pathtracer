@@ -5,7 +5,7 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
+	"pathtracer/internal/pkg/obj/wavefrontobj2"
 	scn "pathtracer/internal/pkg/scene"
 )
 
@@ -48,7 +48,7 @@ func NewSodaCanTest(scale float64) *scn.FacetStructure {
 }
 
 func loadSodaCan(textureFileName string, tabColor color.Color, scale float64) *scn.FacetStructure {
-	sodaCan := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "sodacan.obj"))
+	sodaCan := wavefrontobj2.ReadOrPanic(filepath.Join(ObjFileDir, "sodacan.obj"))
 	sodaCan.CenterOn(&vec3.Zero)
 
 	ymin := sodaCan.Bounds.Ymin
@@ -56,7 +56,7 @@ func loadSodaCan(textureFileName string, tabColor color.Color, scale float64) *s
 	sodaCan.Translate(&vec3.T{0.0, -ymin, 0.0})       // can bottom touch the ground (xz-plane)
 	sodaCan.ScaleUniform(&vec3.Zero, 1.0/(ymax-ymin)) // resize/scale to height == 1.0 units
 
-	sodaCanBody := sodaCan.GetFirstObjectByName("body")
+	sodaCanBody := sodaCan.GetFirstObjectBySubstructureName("body")
 	bodyProjectionBottomOffset := 0.065
 
 	aluminumMaterialLid := scn.NewMaterial().N("lid").M(0.3, 0.4)

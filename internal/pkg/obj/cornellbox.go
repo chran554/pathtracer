@@ -44,21 +44,21 @@ func cornelBox(scale *vec3.T, singleLight bool, lightIntensityFactor float64) (c
 
 	cornellBox.ClearMaterials()
 
-	cornellBox.Material = scn.NewMaterial().N("cornellbox").C(color.NewColorGrey(0.95))
+	cornellBox.Material = scn.NewMaterial().N("cornellbox").C(color.NewColorGrey(1.0))
 
-	cornellBox.GetFirstObjectByName("Right").Material = cornellBox.Material.Copy().N("right")
-	cornellBox.GetFirstObjectByName("Left").Material = cornellBox.Material.Copy().N("left")
-	cornellBox.GetFirstObjectByName("Back").Material = cornellBox.Material.Copy().N("back")
-	cornellBox.GetFirstObjectByName("Floor").Material = cornellBox.Material.Copy().N("floor")
-	cornellBox.GetFirstObjectByName("Ceiling").Material = cornellBox.Material.Copy().N("ceiling")
+	cornellBox.GetFirstObjectBySubstructureName("Right::Right").Material = cornellBox.Material.Copy().N("right")
+	cornellBox.GetFirstObjectBySubstructureName("Left::Left").Material = cornellBox.Material.Copy().N("left")
+	cornellBox.GetFirstObjectBySubstructureName("Back::Back").Material = cornellBox.Material.Copy().N("back")
+	cornellBox.GetFirstObjectBySubstructureName("Floor::Floor").Material = cornellBox.Material.Copy().N("floor")
+	cornellBox.GetFirstObjectBySubstructureName("Ceiling::Ceiling").Material = cornellBox.Material.Copy().N("ceiling")
 
 	lampMaterial := scn.NewMaterial().N("lamp").E(color.White, lightIntensityFactor, true)
 
 	if singleLight {
-		cornellBox.RemoveObjectsByName("Lamp_1")
-		cornellBox.RemoveObjectsByName("Lamp_2")
-		cornellBox.RemoveObjectsByName("Lamp_3")
-		cornellBox.RemoveObjectsByName("Lamp_4")
+		cornellBox.RemoveObjectsBySubstructureName("Lamp_1_-_left_away::Lamp_1")
+		cornellBox.RemoveObjectsBySubstructureName("Lamp_2_-_left_close::Lamp_2")
+		cornellBox.RemoveObjectsBySubstructureName("Lamp_3_-_right_away::Lamp_3")
+		cornellBox.RemoveObjectsBySubstructureName("Lamp_4_-_right_close::Lamp_4")
 
 		lampPercentageOfCeiling := 2.0 / 3.0 // Two thirds in width and depth (i.e. 0.666*0.666 = 44.4% of the ceiling)
 

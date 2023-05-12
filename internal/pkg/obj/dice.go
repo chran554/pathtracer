@@ -21,9 +21,7 @@ func (dice *Dice) BorderColor(c color.Color) {
 	dice.FacetStructure.Material.Color = &c
 }
 
-// NewDice creates a new cornell box (open in the back) with the center of the floor in origin (0,0,0).
-// Left wall is blue and right wall is red.
-// The scale is the total (width, height, depth) of the cornell box.
+// NewDice creates a new dice object
 func NewDice(scale float64) *scn.FacetStructure {
 	return dice(scale)
 }

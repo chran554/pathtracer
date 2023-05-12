@@ -2,53 +2,136 @@ package wavefrontobj
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"github.com/ungerik/go3d/float64/vec3"
+	"path/filepath"
 	scn "pathtracer/internal/pkg/scene"
 	"testing"
 )
 
-func TestLoadFile_TestFile(t *testing.T) {
-	t.Run("loading of obj-file", func(t *testing.T) {
-		testCube := loadTestCube(&vec3.T{1, 1, 1})
-
-		fmt.Printf("%+v\n", testCube)
+func Test_LoadFile(t *testing.T) {
+	t.Run("loading of obj-file (cube - vanilla)", func(t *testing.T) {
+		cube := loadTestCube("vanilla")
+		assert.NotNil(t, cube)
 	})
 }
 
-func TestLoadFile_TestCastle(t *testing.T) {
-	t.Run("loading of obj-file", func(t *testing.T) {
-		testCube := loadTestCastle(&vec3.T{1, 1, 1})
+func Test_CubeVanilla(t *testing.T) {
+	t.Run("obj file: cube - vanilla", func(t *testing.T) {
+		cube := loadTestCube("vanilla")
+		fmt.Printf("%+v\n", cube)
+		assertFacetStructure(t, cube, "UnitCube", "", 6*2, 8, 0, "", scn.Bounds{Xmin: -1, Xmax: 1, Ymin: -1, Ymax: 1, Zmin: -1, Zmax: 1})
+	})
+}
 
-		fmt.Printf("%+v\n", testCube)
+func Test_CubeColors(t *testing.T) {
+	t.Run("obj file: cube - colors", func(t *testing.T) {
+		cube := loadTestCube("colors")
+		fmt.Printf("%+v\n", cube)
+		expectedFullCubeBounds := scn.Bounds{Xmin: -1, Xmax: 1, Ymin: -1, Ymax: 1, Zmin: -1, Zmax: 1}
+		assertFacetStructure(t, cube, "UnitCube", "", 0, 8, 3, "", expectedFullCubeBounds)
 
-		for i, structure := range testCube.FacetStructures {
-			fmt.Printf("%3d: '%s'\n", i, structure.Name)
+		assertFacetStructure(t, getSubstructureBySubstructureName(t, "cube_colors::red", cube), "", "cube_colors::red", 2*2, 8, 0, "red", expectedFullCubeBounds)
+		assertFacetStructure(t, getSubstructureBySubstructureName(t, "cube_colors::green", cube), "", "cube_colors::green", 2*2, 8, 0, "green", expectedFullCubeBounds)
+		assertFacetStructure(t, getSubstructureBySubstructureName(t, "cube_colors::blue", cube), "", "cube_colors::blue", 2*2, 8, 0, "blue", expectedFullCubeBounds)
+	})
+}
+
+func Test_CubeGroups(t *testing.T) {
+	t.Run("obj file: cube - groups", func(t *testing.T) {
+		cube := loadTestCube("groups")
+		fmt.Printf("%+v\n", cube)
+		expectedFullCubeBounds := scn.Bounds{Xmin: -1, Xmax: 1, Ymin: -1, Ymax: 1, Zmin: -1, Zmax: 1}
+		assertFacetStructure(t, cube, "UnitCube", "", 0, 8, 3, "", expectedFullCubeBounds)
+
+		assertFacetStructure(t, getSubstructureBySubstructureName(t, "x", cube), "", "x", 2*2, 8, 0, "", expectedFullCubeBounds)
+		assertFacetStructure(t, getSubstructureBySubstructureName(t, "y", cube), "", "y", 2*2, 8, 0, "", expectedFullCubeBounds)
+		assertFacetStructure(t, getSubstructureBySubstructureName(t, "z", cube), "", "z", 2*2, 8, 0, "", expectedFullCubeBounds)
+	})
+}
+
+func Test_CubeGroups_2(t *testing.T) {
+	t.Run("obj file: cube - groups_2", func(t *testing.T) {
+		cube := loadTestCube("groups_2")
+		fmt.Printf("%+v\n", cube)
+		expectedFullCubeBounds := scn.Bounds{Xmin: -1, Xmax: 1, Ymin: -1, Ymax: 1, Zmin: -1, Zmax: 1}
+		assertFacetStructure(t, cube, "UnitCube", "", 8, 8, 1, "", expectedFullCubeBounds)
+
+		assertFacetStructure(t, getSubstructureBySubstructureName(t, "z", cube), "", "z", 2*2, 8, 0, "", expectedFullCubeBounds)
+	})
+}
+
+func getSubstructureBySubstructureName(t *testing.T, name string, structure *scn.FacetStructure) *scn.FacetStructure {
+	var substructure *scn.FacetStructure
+
+	for _, facetSubStructure := range structure.FacetStructures {
+		if name == facetSubStructure.SubstructureName {
+			substructure = facetSubStructure
 		}
-	})
+	}
+
+	assert.NotNil(t, substructure)
+
+	return substructure
 }
 
-func loadTestCube(scale *vec3.T) *scn.FacetStructure {
-	var objFilename = "test_cube.obj"
-	var objFilenamePath = "../../../../objects/" + objFilename
+func assertFacetStructure(t *testing.T, f *scn.FacetStructure, name, substructureName string, amountFacets, amountFacetVertices, amountSubStructures int, materialName string, expectedBounds scn.Bounds) {
+	assert.NotNil(t, f)
 
-	testCube := ReadOrPanic(objFilenamePath)
+	assert.Equal(t, name, f.Name)
+	assert.Equal(t, substructureName, f.SubstructureName)
 
-	testCube.Scale(&vec3.Zero, scale)
+	if amountFacets == 0 {
+		assert.Nil(t, f.Facets)
+	} else {
+		assert.NotNil(t, f.Facets)
+		assert.Equal(t, amountFacets, f.GetAmountFacets())
+	}
 
-	fmt.Printf("Test cube bounds: %+v\n", testCube.Bounds)
+	if amountSubStructures == 0 {
+		assert.Nil(t, f.FacetStructures)
+	} else {
+		assert.NotNil(t, f.FacetStructures)
+		assert.Equal(t, amountSubStructures, len(f.FacetStructures))
+	}
 
-	return testCube
+	if materialName == "" {
+		assert.Nil(t, f.Material)
+	} else {
+		assert.NotNil(t, f.Material)
+		assert.Equal(t, materialName, f.Material.Name)
+	}
+
+	assertBounds(t, expectedBounds, f.Bounds)
+
+	if amountFacets > 0 {
+		vertices := make(map[*vec3.T]bool)
+		for _, facet := range f.Facets {
+			for _, vertex := range facet.Vertices {
+				vertices[vertex] = true
+			}
+		}
+
+		assert.Equal(t, amountFacetVertices, len(vertices))
+	}
 }
 
-func loadTestCastle(scale *vec3.T) *scn.FacetStructure {
-	var objFilename = "castle_02.obj"
-	var objFilenamePath = "../../../../objects/" + objFilename
+func assertBounds(t *testing.T, expectedBounds scn.Bounds, actualBounds *scn.Bounds) {
+	assert.NotNil(t, actualBounds)
+
+	assert.Equal(t, expectedBounds.Xmin, actualBounds.Xmin)
+	assert.Equal(t, expectedBounds.Ymin, actualBounds.Ymin)
+	assert.Equal(t, expectedBounds.Zmin, actualBounds.Zmin)
+	assert.Equal(t, expectedBounds.Xmax, actualBounds.Xmax)
+	assert.Equal(t, expectedBounds.Ymax, actualBounds.Ymax)
+	assert.Equal(t, expectedBounds.Zmax, actualBounds.Zmax)
+}
+
+func loadTestCube(flavour string) *scn.FacetStructure {
+	var objFilename = "cube_" + flavour + ".obj"
+	var objFilenamePath = filepath.Join("../../../../objects/obj/", "test", objFilename)
 
 	testCube := ReadOrPanic(objFilenamePath)
-
-	testCube.Scale(&vec3.Zero, scale)
-
-	fmt.Printf("Test cube bounds: %+v\n", testCube.Bounds)
 
 	return testCube
 }
