@@ -1,4 +1,4 @@
-package wavefrontobj2
+package wavefrontobj
 
 import (
 	"fmt"

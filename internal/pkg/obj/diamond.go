@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/ungerik/go3d/float64/vec3"
 	"path/filepath"
-	"pathtracer/internal/pkg/obj/wavefrontobj2"
+	"pathtracer/internal/pkg/obj/wavefrontobj"
 	scn "pathtracer/internal/pkg/scene"
 )
 
@@ -26,7 +26,7 @@ func NewDiamond(scale float64) *scn.FacetStructure {
 }
 
 func loadDiamond() *scn.FacetStructure {
-	diamond := wavefrontobj2.ReadOrPanic(filepath.Join(ObjFileDir, "diamond.obj"))
+	diamond := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "diamond.obj"))
 
 	return diamond
 }

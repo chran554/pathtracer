@@ -4,7 +4,7 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/obj/wavefrontobj2"
+	"pathtracer/internal/pkg/obj/wavefrontobj"
 	scn "pathtracer/internal/pkg/scene"
 	"pathtracer/internal/pkg/util"
 )
@@ -43,5 +43,5 @@ func NewWindow(scale float64) *scn.FacetStructure {
 }
 
 func loadWindow() *scn.FacetStructure {
-	return wavefrontobj2.ReadOrPanic(filepath.Join(ObjFileDir, "window.obj"))
+	return wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "window.obj"))
 }

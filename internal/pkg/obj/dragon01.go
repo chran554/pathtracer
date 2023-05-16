@@ -5,7 +5,7 @@ import (
 	"math"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/obj/wavefrontobj2"
+	"pathtracer/internal/pkg/obj/wavefrontobj"
 	scn "pathtracer/internal/pkg/scene"
 )
 
@@ -38,5 +38,5 @@ func NewDragon01(scale float64) *scn.FacetStructure {
 }
 
 func loadDragon01() *scn.FacetStructure {
-	return wavefrontobj2.ReadOrPanic(filepath.Join(ObjFileDir, "dragon_01.obj"))
+	return wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "dragon_01.obj"))
 }

@@ -5,7 +5,7 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 	"math"
 	"path/filepath"
-	"pathtracer/internal/pkg/obj/wavefrontobj2"
+	"pathtracer/internal/pkg/obj/wavefrontobj"
 	scn "pathtracer/internal/pkg/scene"
 )
 
@@ -35,7 +35,7 @@ func NewCylinder(cylinderType CylinderType, radius float64, height float64) *scn
 }
 
 func loadCylinder() *scn.FacetStructure {
-	cylinder := wavefrontobj2.ReadOrPanic(filepath.Join(ObjFileDir, "cylinder_no_caps.obj"))
+	cylinder := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "cylinder_no_caps.obj"))
 
 	cylinder.CenterOn(&vec3.Zero)
 	cylinder.RotateX(&vec3.Zero, math.Pi/2)

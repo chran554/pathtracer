@@ -5,7 +5,7 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/obj/wavefrontobj2"
+	"pathtracer/internal/pkg/obj/wavefrontobj"
 	scn "pathtracer/internal/pkg/scene"
 )
 
@@ -31,7 +31,7 @@ func NewLamppost(scale float64, emission float64) *scn.FacetStructure {
 }
 
 func loadLamppost(scale float64) *scn.FacetStructure {
-	lamppost := wavefrontobj2.ReadOrPanic(filepath.Join(ObjFileDir, "lamppost.obj"))
+	lamppost := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "lamppost.obj"))
 
 	ymin := lamppost.Bounds.Ymin
 	ymax := lamppost.Bounds.Ymax

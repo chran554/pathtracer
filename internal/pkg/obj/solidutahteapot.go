@@ -3,12 +3,12 @@ package obj
 import (
 	"github.com/ungerik/go3d/float64/vec3"
 	"path/filepath"
-	"pathtracer/internal/pkg/obj/wavefrontobj2"
+	"pathtracer/internal/pkg/obj/wavefrontobj"
 	scn "pathtracer/internal/pkg/scene"
 )
 
 func NewSolidUtahTeapot(scale float64, includeBody bool, includeLid bool) *scn.FacetStructure {
-	utahTeaPot := wavefrontobj2.ReadOrPanic(filepath.Join(ObjFileDir, "utah_teapot_solid.obj"))
+	utahTeaPot := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "utah_teapot_solid.obj"))
 
 	if !includeBody {
 		utahTeaPot.RemoveObjectsByName("teapot")
@@ -41,7 +41,7 @@ func NewSolidUtahTeapot(scale float64, includeBody bool, includeLid bool) *scn.F
 }
 
 func NewTeacup(scale float64, includeCup bool, includeSaucer bool, includeSpoon bool) *scn.FacetStructure {
-	teacup := wavefrontobj2.ReadOrPanic(filepath.Join(ObjFileDir, "teacup.obj"))
+	teacup := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "teacup.obj"))
 
 	if !includeCup {
 		teacup.RemoveObjectsByName("teacup")
