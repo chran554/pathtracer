@@ -52,12 +52,12 @@ var cameraOrigin = vec3.T{cameraDistance / 1.0, cameraDistance * 4 / 5, -cameraD
 var viewPlaneDistance = 500.0
 
 func main() {
-	// filename := "objects/lamp_post.obj.3ds.obj"
+	// filename := "objects/lamppost.obj.3ds.obj"
 	// filename := "objects/Diamond.obj"
 	//filename := "/Users/christian/projects/code/go/pathtracer/objects/go_gopher_color.obj"
 	filename := "/Users/christian/projects/code/go/pathtracer/objects/" + objectFilename
 	// filename := "/Users/christian/projects/code/go/pathtracer/objects/cube_smooth.obj"
-	// filename := "/Users/christian/projects/code/go/pathtracer/objects/unit_cube.obj"
+	// filename := "/Users/christian/projects/code/go/pathtracer/objects/cube.obj"
 	//filename := "/Users/christian/projects/code/go/pathtracer/objects/facet.obj"
 	// filename := "/Users/christian/projects/code/go/pathtracer/objects/triangle.obj"
 	// filename := "objects/go_gopher_high.obj"

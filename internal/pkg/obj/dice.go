@@ -21,15 +21,13 @@ func (dice *Dice) BorderColor(c color.Color) {
 	dice.FacetStructure.Material.Color = &c
 }
 
-// NewDice creates a new cornell box (open in the back) with the center of the floor in origin (0,0,0).
-// Left wall is blue and right wall is red.
-// The scale is the total (width, height, depth) of the cornell box.
+// NewDice creates a new dice object
 func NewDice(scale float64) *scn.FacetStructure {
 	return dice(scale)
 }
 
 func dice(scale float64) (dice *scn.FacetStructure) {
-	dice = wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "cube_dice.obj"))
+	dice = loadDice()
 	dice.Name = "dice"
 
 	dice.CenterOn(&vec3.Zero)
@@ -71,4 +69,8 @@ func dice(scale float64) (dice *scn.FacetStructure) {
 	dice.UpdateBounds()
 
 	return dice
+}
+
+func loadDice() *scn.FacetStructure {
+	return wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "cube_dice.obj"))
 }

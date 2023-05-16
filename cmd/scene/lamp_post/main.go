@@ -51,14 +51,14 @@ func main() {
 		gopher.UpdateBounds()
 		gopherBounds := gopher.Bounds
 
-		// Kerosine lamp
-		kerosineLamp := obj.NewKerosineLamp(&vec3.T{40, 40, 40})
-		kerosineLamp.RotateY(&vec3.Zero, -math.Pi*4.0/10.0)
-		kerosineLamp.Translate(&vec3.T{gopherBounds.Center()[0] + gopherBounds.SizeX()/2, 0, gopherBounds.Center()[2] - gopherBounds.SizeY()/2})
-		kerosineLamp.UpdateBounds()
+		// kerosene lamp
+		keroseneLamp := obj.NewKeroseneLamp(40, 20)
+		keroseneLamp.RotateY(&vec3.Zero, -math.Pi*4.0/10.0)
+		keroseneLamp.Translate(&vec3.T{gopherBounds.Center()[0] + gopherBounds.SizeX()/2, 0, gopherBounds.Center()[2] - gopherBounds.SizeY()/2})
+		keroseneLamp.UpdateBounds()
 
 		// Lamp post
-		lampPost := obj.NewLampPost(&vec3.T{200, 200, 200})
+		lampPost := obj.NewLamppost(200.0, 2.0)
 
 		// Camera
 		cameraOrigin := gopher.Bounds.Center().Add(&vec3.T{0, 0, -250})
@@ -69,7 +69,7 @@ func main() {
 		scene := scn.NewSceneNode().
 			S(environmentSphere).
 			D(ground).
-			FS(gopher, lampPost, kerosineLamp)
+			FS(gopher, lampPost, keroseneLamp)
 
 		frame := scn.NewFrame(animation.AnimationName, frameIndex, camera, scene)
 

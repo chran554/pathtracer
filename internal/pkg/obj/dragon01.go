@@ -10,7 +10,7 @@ import (
 )
 
 func NewDragon01(scale float64) *scn.FacetStructure {
-	dragon := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "dragon_01.obj"))
+	dragon := loadDragon01()
 
 	dragon.CenterOn(&vec3.Zero)
 	dragon.RotateZ(&vec3.Zero, math.Pi/2)
@@ -35,4 +35,8 @@ func NewDragon01(scale float64) *scn.FacetStructure {
 	dragon.UpdateBounds()
 
 	return dragon
+}
+
+func loadDragon01() *scn.FacetStructure {
+	return wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "dragon_01.obj"))
 }

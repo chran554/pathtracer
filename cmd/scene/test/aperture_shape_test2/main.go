@@ -93,17 +93,17 @@ func GetCornellBox(scale *vec3.T, lightIntensityFactor float64) *scn.FacetStruct
 
 	lampMaterial := scn.NewMaterial().N("Lamp").E(color.White, lightIntensityFactor, true)
 
-	cornellBox.GetFirstObjectByName("Lamp_1").Material = lampMaterial
-	cornellBox.GetFirstObjectByName("Lamp_2").Material = lampMaterial
-	cornellBox.GetFirstObjectByName("Lamp_3").Material = lampMaterial
-	cornellBox.GetFirstObjectByName("Lamp_4").Material = lampMaterial
+	cornellBox.GetFirstObjectBySubstructureName("Lamp_1_-_left_away").Material = lampMaterial
+	cornellBox.GetFirstObjectBySubstructureName("Lamp_2_-_left_close").Material = lampMaterial
+	cornellBox.GetFirstObjectBySubstructureName("Lamp_3_-_right_away").Material = lampMaterial
+	cornellBox.GetFirstObjectBySubstructureName("Lamp_4_-_right_close").Material = lampMaterial
 
 	projectionZoom := 0.33
 	floorProjection := scn.NewParallelImageProjection("textures/floor/7451-diffuse 02 low contrast.png", &vec3.T{-scale[0] * projectionZoom / 8, 0, -scale[0] * projectionZoom / 8}, vec3.UnitX.Scaled(scale[0]*projectionZoom), vec3.UnitZ.Scaled(scale[0]*projectionZoom))
 	floorMaterial := *cornellBox.Material
 	floorMaterial.M(0.0, 1.0)
 	floorMaterial.P(&floorProjection)
-	cornellBox.GetFirstObjectByName("Floor_2").Material = &floorMaterial
+	cornellBox.GetFirstObjectBySubstructureName("Floor").Material = &floorMaterial
 
 	return cornellBox
 }

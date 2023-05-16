@@ -10,11 +10,7 @@ import (
 
 // NewDiamond creates a new diamond with radius set to scale value.
 func NewDiamond(scale float64) *scn.FacetStructure {
-	return loadDiamond(scale)
-}
-
-func loadDiamond(scale float64) *scn.FacetStructure {
-	diamond := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "diamond.obj"))
+	diamond := loadDiamond()
 
 	xmin := diamond.Bounds.Xmin
 	xmax := diamond.Bounds.Xmax
@@ -25,6 +21,12 @@ func loadDiamond(scale float64) *scn.FacetStructure {
 	diamond.ScaleUniform(&vec3.Zero, 2*scale)         // resize to girdle diameter of scale value
 
 	fmt.Printf("Diamond bounds: %+v\n", diamond.Bounds)
+
+	return diamond
+}
+
+func loadDiamond() *scn.FacetStructure {
+	diamond := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "diamond.obj"))
 
 	return diamond
 }

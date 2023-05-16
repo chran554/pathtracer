@@ -37,7 +37,7 @@ func main() {
 	glassPokal := obj.NewGlassIkeaPokal(50.0)
 	glassPokal.Translate(&vec3.T{10, 0, -20})
 
-	glassSkoja := obj.NewGlassIkeaSkoja(40.0)
+	glassSkoja := obj.NewGlassIkeaSkoja(40.0, true)
 	glassSkoja.Translate(&vec3.T{35, 0, 0})
 
 	// glassMaterial := scn.NewMaterial().
@@ -45,7 +45,7 @@ func main() {
 	// 	C(color.Color{R: 0.98, G: 0.80, B: 0.75}).
 	// 	M(0.2, 0.05).
 	// 	T(0.95, true, scn.RefractionIndex_Glass)
-	utahTeapot := obj.NewSolidUtahTeapot(50.0)
+	utahTeapot := obj.NewSolidUtahTeapot(50.0, true, true)
 	utahTeapot.RotateY(&vec3.T{0, 0, 0}, -math.Pi/3.5-math.Pi/2.0)
 	utahTeapot.Translate(&vec3.T{25 + 5, 0, 150})
 	// utahTeapot.Material = glassMaterial
@@ -123,15 +123,15 @@ func GetCornellBox(scale *vec3.T, lightIntensityFactor float64) *scn.FacetStruct
 		C(color.White).
 		E(color.White, lightIntensityFactor, true)
 
-	cornellBox.GetFirstObjectByName("Lamp_1").Material = lampMaterial
-	cornellBox.GetFirstObjectByName("Lamp_2").Material = lampMaterial
-	cornellBox.GetFirstObjectByName("Lamp_3").Material = lampMaterial
-	cornellBox.GetFirstObjectByName("Lamp_4").Material = lampMaterial
+	cornellBox.GetFirstObjectBySubstructureName("Lamp_1_-_left_away").Material = lampMaterial
+	cornellBox.GetFirstObjectBySubstructureName("Lamp_2_-_left_close").Material = lampMaterial
+	cornellBox.GetFirstObjectBySubstructureName("Lamp_3_-_right_away").Material = lampMaterial
+	cornellBox.GetFirstObjectBySubstructureName("Lamp_4_-_right_close").Material = lampMaterial
 
-	cornellBox.GetFirstObjectByName("Back").Material = backWallMaterial
-	cornellBox.GetFirstObjectByName("Left").Material = sideWallMaterial
-	cornellBox.GetFirstObjectByName("Right").Material = sideWallMaterial
-	cornellBox.GetFirstObjectByName("Floor").Material = floorMaterial
+	cornellBox.GetFirstObjectBySubstructureName("Back").Material = backWallMaterial
+	cornellBox.GetFirstObjectBySubstructureName("Left").Material = sideWallMaterial
+	cornellBox.GetFirstObjectBySubstructureName("Right").Material = sideWallMaterial
+	cornellBox.GetFirstObjectBySubstructureName("Floor").Material = floorMaterial
 
 	return cornellBox
 }

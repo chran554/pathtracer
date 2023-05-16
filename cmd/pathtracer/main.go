@@ -14,6 +14,7 @@ import (
 	"pathtracer/internal/pkg/rendermonitor"
 	"pathtracer/internal/pkg/renderpass"
 	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/sunflower"
 	"pathtracer/internal/pkg/util"
 	"strings"
 	"sync"
@@ -495,7 +496,7 @@ func getRandomHemisphereVector(hemisphereHeading *vec3.T) *vec3.T {
 // https://www.csie.ntu.edu.tw/~cyy/courses/rendering/05fall/lectures/handouts/lec10_mc_4up.pdf (page 12)
 func getRandomCosineWeightedHemisphereVector(n *vec3.T) *vec3.T {
 	amountPoints := 10000
-	x, y := util.Sunflower(amountPoints, 0.0, rand.Intn(amountPoints), true)
+	x, y := sunflower.Sunflower(amountPoints, 0.0, rand.Intn(amountPoints), true)
 	// ret.z = sqrtf(max(0.f,1.f - ret.x*ret.x - ret.y*ret.y));
 	z := math.Sqrt(math.Max(0.0, 1.0-x*x-y*y))
 	generatedUnitHemisphereVector := vec3.T{x, y, z}

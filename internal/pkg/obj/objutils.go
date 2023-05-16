@@ -5,8 +5,15 @@ import (
 )
 
 var (
-	pathtracerRoot = "."
-	ObjFileDir     = filepath.Join(pathtracerRoot, "objects/obj")
-	PlyFileDir     = filepath.Join(pathtracerRoot, "objects/ply")
-	TexturesDir    = filepath.Join(pathtracerRoot, "textures")
+	resourcesRoot        = "."
+	ObjFileDir           = filepath.Join(resourcesRoot, "objects/obj")
+	ObjEvaluationFileDir = filepath.Join(resourcesRoot, "objects")
+	PlyFileDir           = filepath.Join(resourcesRoot, "objects/ply")
+	TexturesDir          = filepath.Join(resourcesRoot, "textures")
 )
+
+func SetResourceRoot(resourceRoot string) {
+	resourcesRoot = resourceRoot
+	ObjFileDir = filepath.Join(resourcesRoot, "objects/obj")
+	ObjEvaluationFileDir = filepath.Join(resourcesRoot, "objects")
+}

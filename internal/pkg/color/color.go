@@ -1,8 +1,11 @@
 package color
 
 import (
+	"fmt"
 	"math"
 	"pathtracer/internal/pkg/util"
+	"strconv"
+	"strings"
 )
 
 var (
@@ -12,12 +15,29 @@ var (
 
 type Color struct{ R, G, B float32 }
 
+func (c *Color) RGBA() (r, g, b, a uint32) {
+	return uint32(c.R * 0xffff), uint32(c.G * 0xffff), uint32(c.B * 0xffff), 0xffff
+}
+
 func NewColor(r, g, b float64) Color {
 	return Color{R: float32(r), G: float32(g), B: float32(b)}
 }
 
 func NewColorGrey(greyIntensity float64) Color {
 	return NewColor(greyIntensity, greyIntensity, greyIntensity)
+}
+
+func NewColorHex(colorHex string) Color {
+	colorHex = strings.TrimSpace(strings.Replace(colorHex, "#", "", -1))
+	r, err1 := strconv.ParseInt(colorHex[0:2], 16, 16)
+	g, err2 := strconv.ParseInt(colorHex[2:4], 16, 16)
+	b, err3 := strconv.ParseInt(colorHex[4:6], 16, 16)
+
+	if (err1 != nil) || (err2 != nil) || (err3 != nil) {
+		panic(fmt.Sprintf("Could not convert hex '%s' to RGB value.", colorHex))
+	}
+
+	return NewColor(float64(r)/255.0, float64(g)/255.0, float64(b)/255.0)
 }
 
 func NewColorKelvin(colorTemperature float64) Color {

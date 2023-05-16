@@ -82,8 +82,8 @@ func (fs *FacetStructure) UpdateBounds() *Bounds {
 	return fs.Bounds
 }
 
-// Purge removes empty substructures.
-func (fs *FacetStructure) Purge() {
+// PurgeEmptySubStructures removes empty substructures.
+func (fs *FacetStructure) PurgeEmptySubStructures() {
 	for i := 0; i < len(fs.FacetStructures); {
 		if fs.FacetStructures[i].GetAmountFacets() == 0 {
 			fs.FacetStructures[i] = fs.FacetStructures[len(fs.FacetStructures)-1]
@@ -126,14 +126,11 @@ func (fs *FacetStructure) SplitMultiPointFacets() {
 }
 
 func (fs *FacetStructure) String() string {
-	name := "<noname>"
-	if fs.Name != "" {
-		name = fs.Name
-	}
+	name := fs.StructureNames()
 
 	subStructures := ""
 	if len(fs.FacetStructures) > 0 {
-		subStructures = "{"
+		subStructures = " {"
 		for i, facetStructure := range fs.FacetStructures {
 			if i > 0 {
 				subStructures = subStructures + ", "
@@ -334,14 +331,14 @@ func (fs *FacetStructure) TwistY(origin *vec3.T, anglePerYUnit float64) {
 	fs.UpdateBounds()
 }
 
-func (fs *FacetStructure) GetFirstObjectByName(objectName string) *FacetStructure {
-	if fs.Name == objectName {
+func (fs *FacetStructure) GetFirstObjectByName(name string) *FacetStructure {
+	if fs.Name == name {
 		return fs
 	}
 
 	if len(fs.FacetStructures) > 0 {
 		for _, facetStructure := range fs.FacetStructures {
-			object := facetStructure.GetFirstObjectByName(objectName)
+			object := facetStructure.GetFirstObjectByName(name)
 
 			if object != nil {
 				return object
@@ -352,28 +349,64 @@ func (fs *FacetStructure) GetFirstObjectByName(objectName string) *FacetStructur
 	return nil
 }
 
-func (fs *FacetStructure) GetObjectsByName(objectName string) []*FacetStructure {
+func (fs *FacetStructure) GetFirstObjectByMaterialName(name string) *FacetStructure {
+	if (fs.Material != nil) && (fs.Material.Name == name) {
+		return fs
+	}
+
+	if len(fs.FacetStructures) > 0 {
+		for _, facetStructure := range fs.FacetStructures {
+			object := facetStructure.GetFirstObjectByMaterialName(name)
+
+			if object != nil {
+				return object
+			}
+		}
+	}
+
+	return nil
+}
+
+func (fs *FacetStructure) GetObjectsByName(name string) []*FacetStructure {
 	nameMatchFunction := func(structure *FacetStructure, name string) bool {
 		return structure.Name == name
 	}
 
-	return getObjectsByName(fs, objectName, nameMatchFunction)
+	return getObjectsByName(fs, name, nameMatchFunction)
 }
 
-func (fs *FacetStructure) GetObjectsBySubstructureName(objectName string) []*FacetStructure {
+func (fs *FacetStructure) GetFirstObjectBySubstructureName(name string) *FacetStructure {
+	if fs.SubstructureName == name {
+		return fs
+	}
+
+	if len(fs.FacetStructures) > 0 {
+		for _, facetStructure := range fs.FacetStructures {
+			object := facetStructure.GetFirstObjectBySubstructureName(name)
+
+			if object != nil {
+				return object
+			}
+		}
+	}
+
+	return nil
+}
+
+func (fs *FacetStructure) GetObjectsBySubstructureName(name string) []*FacetStructure {
 	nameMatchFunction := func(structure *FacetStructure, name string) bool {
 		return structure.SubstructureName == name
 	}
 
-	return getObjectsByName(fs, objectName, nameMatchFunction)
+	return getObjectsByName(fs, name, nameMatchFunction)
 }
 
-func (fs *FacetStructure) GetObjectsByMaterialName(materialName string) []*FacetStructure {
+func (fs *FacetStructure) GetObjectsByMaterialName(name string) []*FacetStructure {
 	nameMatchFunction := func(structure *FacetStructure, name string) bool {
 		return (structure.Material != nil) && (structure.Material.Name == name)
 	}
 
-	return getObjectsByName(fs, materialName, nameMatchFunction)
+	return getObjectsByName(fs, name, nameMatchFunction)
 }
 
 func (fs *FacetStructure) ReplaceMaterial(materialName string, material *Material) {
@@ -423,6 +456,10 @@ func removeObjectsByName(fs *FacetStructure, name string, matchFunction func(*Fa
 			} else {
 				facetStructureIndex++
 			}
+		}
+
+		for _, facetStructure := range fs.FacetStructures {
+			removeObjectsByName(facetStructure, name, matchFunction)
 		}
 	}
 }
@@ -715,6 +752,14 @@ func (fs *FacetStructure) getVertices() []*vec3.T {
 	}
 
 	return vertices
+}
+
+func (fs *FacetStructure) StructureNames() string {
+	materialName := ""
+	if fs.Material != nil {
+		materialName = fs.Material.Name
+	}
+	return fs.Name + "::" + fs.SubstructureName + "::" + materialName
 }
 
 //connectedFacetGroups groups a bunch of unordered facets into set of facets that are connected.
