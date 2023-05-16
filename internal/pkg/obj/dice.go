@@ -5,7 +5,7 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
+	"pathtracer/internal/pkg/obj/wavefrontobj2"
 	scn "pathtracer/internal/pkg/scene"
 )
 
@@ -27,7 +27,7 @@ func NewDice(scale float64) *scn.FacetStructure {
 }
 
 func dice(scale float64) (dice *scn.FacetStructure) {
-	dice = wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "cube_dice.obj"))
+	dice = loadDice()
 	dice.Name = "dice"
 
 	dice.CenterOn(&vec3.Zero)
@@ -69,4 +69,8 @@ func dice(scale float64) (dice *scn.FacetStructure) {
 	dice.UpdateBounds()
 
 	return dice
+}
+
+func loadDice() *scn.FacetStructure {
+	return wavefrontobj2.ReadOrPanic(filepath.Join(ObjFileDir, "cube_dice.obj"))
 }

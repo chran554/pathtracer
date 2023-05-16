@@ -5,7 +5,7 @@ import (
 	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
+	"pathtracer/internal/pkg/obj/wavefrontobj2"
 	scn "pathtracer/internal/pkg/scene"
 	"pathtracer/internal/pkg/util"
 
@@ -94,7 +94,7 @@ func main() {
 	spoon.RotateY(&vec3.Zero, util.DegToRad(-80))
 	spoon.Translate(&vec3.T{-25 - 5, tableBoard.Bounds.Ymax, -12})
 
-	room := wavefrontobj.ReadOrPanic(filepath.Join(obj.ObjEvaluationFileDir, "skydome_open.obj"))
+	room := wavefrontobj2.ReadOrPanic(filepath.Join(obj.ObjEvaluationFileDir, "skydome_open.obj"))
 	room.ScaleUniform(&vec3.Zero, 1/room.Bounds.SizeY())
 	room.ScaleUniform(&vec3.Zero, 5.5*100)
 	room.RotateY(&vec3.Zero, util.DegToRad(-90))

@@ -12,6 +12,14 @@ func setTestResourcesRoot() {
 	SetResourceRoot("../../..")
 }
 
+func assertSubstructure(t *testing.T, structure *scn.FacetStructure, objectName string, groupName string, materialName string, amountFacets int, amountSubstructures int) {
+	substructure := getSubstructure(t, structure, objectName, groupName, materialName)
+	assert.NotNilf(t, substructure, "Substructure \"%s\" of structure \"%s\" could not be found.", (&scn.FacetStructure{Name: objectName, SubstructureName: groupName, Material: &scn.Material{Name: materialName}}).StructureNames(), structure.StructureNames())
+
+	assertFacetStructure(t, substructure, objectName, groupName, materialName, amountFacets, amountSubstructures)
+
+}
+
 func assertFacetStructure(t *testing.T, f *scn.FacetStructure, name, substructureName, materialName string, amountFacets, amountSubStructures int) {
 	require.NotNil(t, f)
 
@@ -33,7 +41,7 @@ func assertFacetStructure(t *testing.T, f *scn.FacetStructure, name, substructur
 	}
 
 	if amountSubStructures == 0 {
-		assert.Nil(t, f.FacetStructures)
+		assert.Nilf(t, f.FacetStructures, "Amount substructures are %d and not expected 0 for facet structure \"%s\".", len(f.FacetStructures), f.StructureNames())
 	} else {
 		assert.NotNil(t, f.FacetStructures)
 		assert.Equalf(t, amountSubStructures, len(f.FacetStructures), "Amount of substructures of facet structure \"%s\" differ from expected.", f.StructureNames())

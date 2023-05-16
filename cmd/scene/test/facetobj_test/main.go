@@ -6,7 +6,7 @@ import (
 	"math"
 	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
+	"pathtracer/internal/pkg/obj/wavefrontobj2"
 	scn "pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -68,7 +68,7 @@ func main() {
 		fmt.Printf("\n\nCostructing frame %d\n", imageIndex)
 		fmt.Printf("Reading file: %s\n", filename)
 
-		facetStructure := wavefrontobj.ReadOrPanic(filename)
+		facetStructure := wavefrontobj2.ReadOrPanic(filename)
 
 		facetStructure.UpdateBounds()
 		fmt.Printf("Object in file \"%s\" has bounds %+v.\n", objectFilename, facetStructure.Bounds)

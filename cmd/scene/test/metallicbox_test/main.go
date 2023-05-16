@@ -5,13 +5,13 @@ import (
 	"math"
 	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
+	"pathtracer/internal/pkg/obj/wavefrontobj2"
 	scn "pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "objectfile_test"
+var animationName = "metallicbox_test"
 
 var cornellBoxFilename = "cornellbox.obj"
 var cornellBoxFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + cornellBoxFilename
@@ -81,18 +81,18 @@ func main() {
 }
 
 func NewCornellBox(scale float64) *scn.FacetStructure {
-	cornellBox := wavefrontobj.ReadOrPanic(cornellBoxFilenamePath)
+	cornellBox := wavefrontobj2.ReadOrPanic(cornellBoxFilenamePath)
 	cornellBox.ScaleUniform(&vec3.Zero, scale)
 
-	cornellBox.ReplaceMaterial("Wall_right", scn.NewMaterial().C(color.NewColor(0.9, 0.1, 0.1)).M(0.1, 0.2))
-	cornellBox.ReplaceMaterial("Wall_left", scn.NewMaterial().C(color.NewColor(0.1, 0.1, 0.9)).M(0.1, 0.2))
-	cornellBox.ReplaceMaterial("Wall_back", scn.NewMaterial().C(color.NewColorGrey(0.7)).M(0.1, 0.2))
-	cornellBox.ReplaceMaterial("Ceiling", scn.NewMaterial().C(color.NewColorGrey(0.9)))
-	cornellBox.ReplaceMaterial("Floor_2", scn.NewMaterial().C(color.NewColorGrey(0.8)).M(0.3, 0.05))
+	cornellBox.ReplaceMaterial("Right", scn.NewMaterial().N("Right").C(color.NewColor(0.9, 0.1, 0.1)).M(0.1, 0.2))
+	cornellBox.ReplaceMaterial("Left", scn.NewMaterial().N("Left").C(color.NewColor(0.1, 0.1, 0.9)).M(0.1, 0.2))
+	cornellBox.ReplaceMaterial("Back", scn.NewMaterial().N("Back").C(color.NewColorGrey(0.7)).M(0.1, 0.2))
+	cornellBox.ReplaceMaterial("Ceiling", scn.NewMaterial().N("Ceiling").C(color.NewColorGrey(0.9)))
+	cornellBox.ReplaceMaterial("Floor", scn.NewMaterial().N("Floor").C(color.NewColorGrey(0.8)).M(0.3, 0.05))
 
-	cornellBox.GetFirstObjectByName("Floor_2").Material.PP("textures/marble/white_marble.png", &vec3.T{0, 0, 0}, vec3.T{200 * 2, 0, 0}, vec3.T{0, 0, 200 * 2})
+	cornellBox.GetFirstObjectBySubstructureName("Floor").Material.PP("textures/marble/white_marble.png", &vec3.T{0, 0, 0}, vec3.T{200 * 2, 0, 0}, vec3.T{0, 0, 200 * 2})
 
-	lampMaterial := scn.NewMaterial().E(color.White, 6, true)
+	lampMaterial := scn.NewMaterial().N("Lamp").E(color.White, 6, true)
 	cornellBox.ReplaceMaterial("Lamp_1", lampMaterial)
 	cornellBox.ReplaceMaterial("Lamp_2", lampMaterial)
 	cornellBox.ReplaceMaterial("Lamp_3", lampMaterial)

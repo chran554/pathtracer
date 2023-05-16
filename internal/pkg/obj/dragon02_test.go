@@ -9,7 +9,7 @@ import (
 func Test_LoadDragon02(t *testing.T) {
 	t.Run("obj file: dragon 02 - load", func(t *testing.T) {
 		setTestResourcesRoot()
-		obj := loadKeroseneLamp(1.0)
+		obj := loadDragon02()
 		fmt.Printf("Facet structure to be tested: %+v\n", obj)
 		require.NotNil(t, obj)
 	})

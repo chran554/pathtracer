@@ -390,6 +390,26 @@ func Test_CubeObjectsColors(t *testing.T) {
 	})
 }
 
+// Expected structure:
+//
+// {on: UnitCube, sn: -, mn: -, f: 0}
+//
+//	{on: -, sn: x, mn: -, f: 4}
+//	{on: -, sn: y, mn: -, f: 4}
+//	{on: -, sn: z, mn: -, f: 4}
+func Test_CubeObjectsMaterials2(t *testing.T) {
+	t.Run("obj file: cube - objects_materials_2", func(t *testing.T) {
+		cube := loadTestCube("objects_materials_2")
+		fmt.Printf("Facet structure to be tested: %+v\n", cube)
+		expectedFullCubeBounds := scn.Bounds{Xmin: -1, Xmax: 1, Ymin: -1, Ymax: 1, Zmin: -1, Zmax: 1}
+		assertFacetStructure(t, cube, "UnitCube", "", "", 0, 12, 8, 3, expectedFullCubeBounds)
+
+		assertFacetStructure(t, getSubstructure(t, cube, "", "x", "red"), "", "x", "red", 2*2, 2*2, 8, 0, expectedFullCubeBounds)
+		assertFacetStructure(t, getSubstructure(t, cube, "", "y", "red"), "", "y", "red", 2*2, 2*2, 8, 0, expectedFullCubeBounds)
+		assertFacetStructure(t, getSubstructure(t, cube, "", "z", "red"), "", "z", "red", 2*2, 2*2, 8, 0, expectedFullCubeBounds)
+	})
+}
+
 func getSubstructure(t *testing.T, structure *scn.FacetStructure, objectName, groupName, materialName string) *scn.FacetStructure {
 	var substructure *scn.FacetStructure
 

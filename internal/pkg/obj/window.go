@@ -4,14 +4,14 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
+	"pathtracer/internal/pkg/obj/wavefrontobj2"
 	scn "pathtracer/internal/pkg/scene"
 	"pathtracer/internal/pkg/util"
 )
 
 // NewWindow creates a window with proportions 2/3:1 (width:height) that is scaled with parameter.
 func NewWindow(scale float64) *scn.FacetStructure {
-	window := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "window.obj"))
+	window := loadWindow()
 
 	window.CenterOn(&vec3.Zero)
 	window.RotateY(&vec3.Zero, util.DegToRad(180))
@@ -40,4 +40,8 @@ func NewWindow(scale float64) *scn.FacetStructure {
 	window.ReplaceMaterial("hook", brassMaterial)
 
 	return window
+}
+
+func loadWindow() *scn.FacetStructure {
+	return wavefrontobj2.ReadOrPanic(filepath.Join(ObjFileDir, "window.obj"))
 }

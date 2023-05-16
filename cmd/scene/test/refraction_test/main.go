@@ -5,7 +5,7 @@ import (
 	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
+	"pathtracer/internal/pkg/obj/wavefrontobj2"
 	scn "pathtracer/internal/pkg/scene"
 	"strconv"
 
@@ -37,7 +37,7 @@ func main() {
 	glassPokal := obj.NewGlassIkeaPokal(50.0)
 	glassPokal.Translate(&vec3.T{10, 0, -20})
 
-	glassSkoja := obj.NewGlassIkeaSkoja(40.0)
+	glassSkoja := obj.NewGlassIkeaSkoja(40.0, true)
 	glassSkoja.Translate(&vec3.T{35, 0, 0})
 
 	// glassMaterial := scn.NewMaterial().
@@ -103,7 +103,7 @@ func GetCornellBox(scale *vec3.T, lightIntensityFactor float64) *scn.FacetStruct
 	var cornellBoxFilename = "cornellbox.obj"
 	var cornellBoxFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + cornellBoxFilename
 
-	cornellBox := wavefrontobj.ReadOrPanic(cornellBoxFilenamePath)
+	cornellBox := wavefrontobj2.ReadOrPanic(cornellBoxFilenamePath)
 
 	cornellBox.Scale(&vec3.Zero, scale)
 	cornellBox.ClearMaterials()
@@ -123,15 +123,15 @@ func GetCornellBox(scale *vec3.T, lightIntensityFactor float64) *scn.FacetStruct
 		C(color.White).
 		E(color.White, lightIntensityFactor, true)
 
-	cornellBox.GetFirstObjectByName("Lamp_1").Material = lampMaterial
-	cornellBox.GetFirstObjectByName("Lamp_2").Material = lampMaterial
-	cornellBox.GetFirstObjectByName("Lamp_3").Material = lampMaterial
-	cornellBox.GetFirstObjectByName("Lamp_4").Material = lampMaterial
+	cornellBox.GetFirstObjectBySubstructureName("Lamp_1_-_left_away").Material = lampMaterial
+	cornellBox.GetFirstObjectBySubstructureName("Lamp_2_-_left_close").Material = lampMaterial
+	cornellBox.GetFirstObjectBySubstructureName("Lamp_3_-_right_away").Material = lampMaterial
+	cornellBox.GetFirstObjectBySubstructureName("Lamp_4_-_right_close").Material = lampMaterial
 
-	cornellBox.GetFirstObjectByName("Back").Material = backWallMaterial
-	cornellBox.GetFirstObjectByName("Left").Material = sideWallMaterial
-	cornellBox.GetFirstObjectByName("Right").Material = sideWallMaterial
-	cornellBox.GetFirstObjectByName("Floor").Material = floorMaterial
+	cornellBox.GetFirstObjectBySubstructureName("Back").Material = backWallMaterial
+	cornellBox.GetFirstObjectBySubstructureName("Left").Material = sideWallMaterial
+	cornellBox.GetFirstObjectBySubstructureName("Right").Material = sideWallMaterial
+	cornellBox.GetFirstObjectBySubstructureName("Floor").Material = floorMaterial
 
 	return cornellBox
 }
