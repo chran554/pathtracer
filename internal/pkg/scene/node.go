@@ -127,13 +127,14 @@ func (sn *SceneNode) GetFacetStructures() []*FacetStructure {
 
 func (sn *SceneNode) Scale(scaleOrigin *vec3.T, scale *vec3.T) {
 	scaledPoints := make(map[*vec3.T]bool)
+	scaledNormals := make(map[*vec3.T]bool)
 	scaledImageProjections := make(map[*ImageProjection]bool)
 
-	sn.scale(scaleOrigin, scale, scaledPoints, scaledImageProjections)
+	sn.scale(scaleOrigin, scale, scaledPoints, scaledNormals, scaledImageProjections)
 	sn.UpdateBounds()
 }
 
-func (sn *SceneNode) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool, scaledImageProjections map[*ImageProjection]bool) {
+func (sn *SceneNode) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool, scaledNormals map[*vec3.T]bool, scaledImageProjections map[*ImageProjection]bool) {
 	for _, sphere := range sn.GetSpheres() {
 		sphere.scale(scaleOrigin, scale, scaledPoints, scaledImageProjections)
 	}
@@ -143,11 +144,11 @@ func (sn *SceneNode) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[
 	}
 
 	for _, facetStructure := range sn.GetFacetStructures() {
-		facetStructure.scale(scaleOrigin, scale, scaledPoints, scaledImageProjections)
+		facetStructure.scale(scaleOrigin, scale, scaledPoints, scaledNormals, scaledImageProjections)
 	}
 
 	for _, childNode := range sn.GetChildNodes() {
-		childNode.scale(scaleOrigin, scale, scaledPoints, scaledImageProjections)
+		childNode.scale(scaleOrigin, scale, scaledPoints, scaledNormals, scaledImageProjections)
 	}
 }
 

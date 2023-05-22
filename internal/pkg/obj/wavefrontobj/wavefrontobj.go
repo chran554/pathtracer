@@ -685,8 +685,8 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 		case "sharpness":
 			// sharpness value
 			//
-			// Specifies the sharpness of the reflections from the local reflection
-			// map.  If a material does not have a local reflection map defined in its
+			// Specifies the sharpness of the reflections from the local reflection map.
+			// If a material does not have a local reflection map defined in its
 			// material definition, sharpness will apply to the global reflection map
 			// defined in PreView.
 			//
@@ -695,15 +695,15 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 		case "Ns":
 			// Ns exponent
 			//
-			// Specifies the specular exponent for the current material.  This defines
-			// the focus of the specular highlight.
+			// Specifies the specular exponent for the current material.
+			// This defines the focus of the specular highlight.
 			//
 			// "exponent" is the value for the specular exponent.  A high exponent
 			// results in a tight, concentrated highlight.  Ns values normally range
 			// from 0 to 1000.
 
 			// Blender software export "Roughness" material parameter as mtl-file parameter "Ns".
-			currentMaterial.Roughness = util.Clamp(0.0, 1.0, (100.0-parseFloat64(tokens[1]))/100.0)
+			currentMaterial.Roughness = util.Clamp(0.0, 1.0, (1000.0-parseFloat64(tokens[1]))/1000.0)
 		case "refl":
 			// Blender software export "Metallic" material parameter as mtl-file parameter "refl".
 			// This is NOT part of the mtl-file specification as "refl" is not supposed to be used for scalar values but
@@ -728,9 +728,9 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 			// Tf xyz x y z
 			//
 			// Any light passing through the object is filtered by the transmission
-			// filter, which only allows the specific colors to pass through.  For
-			// example, Tf 0 1 0 allows all the green to pass through and filters out
-			// all the red and blue.
+			// filter, which only allows the specific colors to pass through.
+			// For example, Tf 0 1 0 allows all the green to pass through and
+			// filters out all the red and blue.
 		case "Ke":
 			// Proprietary parameter for "emission" (not present in mtl-file specification)
 			// "emission" [0.0 ..[
@@ -742,8 +742,8 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 		case "Ni":
 			// Ni optical_density
 			//
-			// Specifies the optical density for the surface.  This is also known as
-			// index of refraction.
+			// Specifies the optical density for the surface.
+			// This is also known as index of refraction.
 			currentMaterial.RefractionIndex = parseFloat64(tokens[1])
 			currentMaterial.SolidObject = true
 		case "d":
@@ -764,8 +764,8 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 		case "illum":
 			// illum illum_#
 			//
-			// The "illum" statement specifies the illumination model to use in the
-			// material.  Illumination models are mathematical equations that represent
+			// The "illum" statement specifies the illumination model to use in the material.
+			// Illumination models are mathematical equations that represent
 			// various material lighting and shading effects.
 			//
 			// Illumination    	Properties that are turned on in the

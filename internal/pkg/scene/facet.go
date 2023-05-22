@@ -65,12 +65,17 @@ func (f *Facet) UpdateBounds() *Bounds {
 }
 
 func (f *Facet) UpdateNormal() {
+	sideVector1 := vec3.Sub(f.Vertices[1], f.Vertices[0])
+	sideVector2 := vec3.Sub(f.Vertices[2], f.Vertices[0])
+	normal := vec3.Cross(&sideVector1, &sideVector2)
+	normal.Normalize()
+
 	if f.Normal == nil {
-		sideVector1 := vec3.Sub(f.Vertices[1], f.Vertices[0])
-		sideVector2 := vec3.Sub(f.Vertices[2], f.Vertices[0])
-		normal := vec3.Cross(&sideVector1, &sideVector2)
-		normal.Normalize()
 		f.Normal = &normal
+	} else {
+		f.Normal[0] = normal[0]
+		f.Normal[1] = normal[1]
+		f.Normal[2] = normal[2]
 	}
 }
 
@@ -195,12 +200,10 @@ func (f *Facet) translate(translation *vec3.T, translatedPoints map[*vec3.T]bool
 	f.Bounds = nil
 }
 
-func (f *Facet) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool) {
-	// TODO scale vertex normals
+func (f *Facet) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool, scaledNormals map[*vec3.T]bool) {
+
 	for _, vertex := range f.Vertices {
-		if scaledPoints[vertex] {
-			// fmt.Printf("Point already scaled: %+v\n", vertex)
-		} else {
+		if !scaledPoints[vertex] {
 			newVertex := vertex.Subed(scaleOrigin)
 			newVertex.Mul(scale)
 			newVertex.Add(scaleOrigin)
@@ -212,6 +215,13 @@ func (f *Facet) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3
 			scaledPoints[vertex] = true
 		}
 	}
+
+	if f.Normal != nil {
+		f.UpdateNormal()
+		scaledNormals[f.Normal] = true
+	}
+
+	// TODO Update vertex normals?! How?
 
 	f.Bounds = nil
 }

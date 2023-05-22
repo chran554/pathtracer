@@ -34,6 +34,9 @@ build_scene:
 		elif [ -d "./cmd/scene/test/$(SCENE_NAME)" ]; then \
 			echo "Making target for test scene $(SCENE_NAME)"; \
 			go build -o bin/$(SCENE_NAME) ./cmd/scene/test/$(SCENE_NAME); \
+		elif [ -d "./cmd/scene/test/object/$(SCENE_NAME)" ]; then \
+			echo "Making target for test scene object $(SCENE_NAME)"; \
+			go build -o bin/$(SCENE_NAME) ./cmd/scene/test/object/$(SCENE_NAME); \
 		else \
 			echo "Could not find any scene nor test scene directory for $(SCENE_NAME)"; \
 			exit 2; \

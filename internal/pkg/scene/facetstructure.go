@@ -268,13 +268,20 @@ func (fs *FacetStructure) ScaleUniform(scaleOrigin *vec3.T, scale float64) {
 }
 
 func (fs *FacetStructure) Scale(scaleOrigin *vec3.T, scale *vec3.T) {
+	if (scale[0] < 0) || (scale[1] < 0) || (scale[2] < 0) {
+		fmt.Printf("Not scaling structure %s with negtive composant %+v.\n", fs.StructureNames(), *scale)
+		return
+	}
+
 	scaledPoints := make(map[*vec3.T]bool)
+	scaledNormals := make(map[*vec3.T]bool)
 	scaledImageProjections := make(map[*ImageProjection]bool)
-	fs.scale(scaleOrigin, scale, scaledPoints, scaledImageProjections)
+	fs.scale(scaleOrigin, scale, scaledPoints, scaledNormals, scaledImageProjections)
+
 	fs.UpdateBounds()
 }
 
-func (fs *FacetStructure) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool, scaledImageProjections map[*ImageProjection]bool) {
+func (fs *FacetStructure) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool, scaledNormals map[*vec3.T]bool, scaledImageProjections map[*ImageProjection]bool) {
 	if fs.Material != nil && fs.Material.Projection != nil && !scaledImageProjections[fs.Material.Projection] {
 		projection := fs.Material.Projection
 		projection.Origin.Sub(scaleOrigin).Mul(scale).Add(scaleOrigin)
@@ -285,12 +292,12 @@ func (fs *FacetStructure) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints
 	}
 
 	for _, facet := range fs.Facets {
-		facet.scale(scaleOrigin, scale, scaledPoints)
+		facet.scale(scaleOrigin, scale, scaledPoints, scaledNormals)
 	}
 
 	if len(fs.FacetStructures) > 0 {
 		for _, facetStructure := range fs.FacetStructures {
-			facetStructure.scale(scaleOrigin, scale, scaledPoints, scaledImageProjections)
+			facetStructure.scale(scaleOrigin, scale, scaledPoints, scaledNormals, scaledImageProjections)
 		}
 	}
 }
