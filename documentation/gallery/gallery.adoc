@@ -153,3 +153,7 @@ Render date:           2023-05-25
 Render duration:       16h41m15.241576791s
 ----
 
+The Cocktail logo is manually retraced in https://inkscape.org/[Inkscape] from an original (?) found on the world spanning interconnected computer network for data exchange and communication.
+
+.Retraced Cocktail logo. My edits and improvements(?)are in yellow and green over the bitmap logo i found.
+image::cocktail_logo_retrace.png[Retraced Cocktail logo]
