@@ -20,7 +20,7 @@ var projectionTextures = []projection{
 	{filename: "textures/planets/jupiter2_6k_contrast.png"},
 	{filename: "textures/planets/moonmap4k_2.png", emission: color.NewColorGrey(0.1)},
 	{filename: "textures/planets/mars.jpg"},
-	//{filename: "textures/planets/sun.jpg", emission: &color.Color{R: 32.0, G: 32.0, B: 32.0}, rayTerminator: true},
+	//{filename: "textures/planets/sun.jpg", emission: &color.NewColor(32.0, 32.0, 32.0}, rayTerminator: true),
 	{filename: "textures/planets/sunmap.jpg", emission: color.NewColorGrey(60.0)},
 	{filename: "textures/planets/venusmap.jpg"},
 	{filename: "textures/planets/makemake_fictional.jpg"},
@@ -68,7 +68,7 @@ func main() {
 
 		// Reflective Center Ball
 		// mirrorSphereRadius := ballRadius * 3.0
-		// mirrorMaterial := scn.NewMaterial().C(color.Color{R: 0.90, G: 0.90, B: 0.90}).M(0.975, 0.0)
+		// mirrorMaterial := scn.NewMaterial().C(color.NewColor(0.90, 0.90, 0.90)).M(0.975, 0.0)
 		// reflectiveCenterBall := scn.NewSphere(&vec3.T{0, mirrorSphereRadius * 1, 0}, mirrorSphereRadius, mirrorMaterial).N("Mirror sphere")
 
 		// Sky Dome

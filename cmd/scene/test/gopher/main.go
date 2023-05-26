@@ -20,17 +20,6 @@ var imageHeight = 500
 var magnification = 1.0
 
 func main() {
-	width := int(float64(imageWidth) * magnification)
-	height := int(float64(imageHeight) * magnification)
-
-	// Keep image proportions to an even amount of pixel for mp4 encoding
-	if width%2 == 1 {
-		width++
-	}
-	if height%2 == 1 {
-		height++
-	}
-
 	// Sky
 	groundMaterial := scn.NewMaterial().PP("textures/floor/Calacatta-Vena-French-Pattern-Architextures.jpg", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(150), vec3.UnitZ.Scaled(150))
 	ground := &scn.Disc{Name: "ground", Origin: &vec3.T{0, 0, 0}, Normal: &vec3.UnitY, Radius: 5000.0, Material: groundMaterial}
@@ -49,7 +38,7 @@ func main() {
 	gopher.Translate(&vec3.T{0, 0, 0})
 	gopher.UpdateBounds()
 
-	gopherLightMaterial := scn.NewMaterial().E(color.Color{R: 6.0, G: 5.3, B: 4.5}, 20, true)
+	gopherLightMaterial := scn.NewMaterial().E(color.NewColor(6.0, 5.3, 4.5), 20, true)
 	gopherLight := scn.NewSphere(&vec3.T{-150, 250, -175}, 15.0, gopherLightMaterial).N("Gopher light")
 
 	scene := scn.NewSceneNode().
@@ -57,7 +46,7 @@ func main() {
 		D(ground).
 		FS(gopher)
 
-	animation := scn.NewAnimation(animationName, width, height, magnification, false, false)
+	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
 	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
 		animationProgress := float64(frameIndex) / float64(amountFrames)

@@ -29,7 +29,7 @@ func main() {
 	room := obj.NewBox(obj.BoxCenteredYPositive)
 	room.Scale(&vec3.Zero, &vec3.T{roomWidth * 2, roomHeight * 2, roomDepth * 2})
 	room.Translate(&vec3.T{0, 0, -roomDepth / 3})
-	room.Material = scn.NewMaterial().C(color.Color{R: 0.9, G: 0.8, B: 0.7})
+	room.Material = scn.NewMaterial().C(color.NewColor(0.9, 0.8, 0.7))
 
 	room.GetObjectsBySubstructureName("xmin")[0].Material = scn.NewMaterial().C(color.NewColor(0.75, 0.25, 0.25))
 	room.GetObjectsBySubstructureName("xmax")[0].Material = scn.NewMaterial().C(color.NewColor(0.25, 0.25, 0.75))
@@ -101,7 +101,7 @@ func createWindow(windowX float64, windowHeightOverFloor float64, windowWidth fl
 		SubstructureName: "Window",
 		Facets:           windowGlass,
 		FacetStructures:  []*scn.FacetStructure{windowFrame},
-		Material:         scn.NewMaterial().C(color.Color{R: 0.75, G: 0.75, B: 1.0}).E(color.White, 24, true),
+		Material:         scn.NewMaterial().C(color.NewColor(0.75, 0.75, 1.0)).E(color.White, 24, true),
 	}
 	return window
 }

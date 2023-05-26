@@ -123,3 +123,33 @@ Render date             2023-03-19
 Frame render time:      10h20m29.731529458s
 ----
 
+== Cocktail
+
+This is a tribute to the blockbuster Cocktail. Some 80's nostalgia...
+
+Really produced to show off the xref:../functionality/functionality.adoc#image-projection-alpha-channel-transparency[transparency in texture with alpha channel].
+
+Do pay attention to the neon sign. It is located 7 cm off the brick wall and leave a nice soft colored illumination to the wall. The light from the neon tubes is a little dim or weak to the ambient lighting as I could not help myself to add more lights like the morning sun through window blinds and soft (warm) spotlights along the top of the wall.
+Remember they did not have led strips that gave a continuous light along the wall in those days but had to use a trail of low voltage tungsten light bulbs.
+
+The neon sign is actually three layers of transparent images stacked closely together (inter distance 3mm, thus "neon tube" is 6 mm thick). The middle layer is the light "halo" and layers in front and back of the halo are "core" light textures. They all emit light but the core is somewhat brighter than the halo. (See image at xref:../functionality/functionality.adoc#image-projection-alpha-channel-transparency[transparency in texture with alpha channel])
+
+The huge amount of samples per pixels is really needed to avoid light noise as the "sun" shining through the window blinds is a very small but bright light source at the end of a pretty long light shaping box.
+
+The "blinds" is actually cut-out shape of a texture image at the end of the light shaping box. It can be any shape defined by a png-image with alpha channel transparency. (See image at xref:../functionality/functionality.adoc#image-projection-alpha-channel-transparency[transparency in texture with alpha channel])
+
+.80's nostalgia with blockbuster Cocktail
+image::cocktail.png[Soda cans]
+
+.Cocktail
+----
+Image size:            800x600
+Amount samples/pixel:  24576
+Max recursion depth:   10
+Amount facets:         30
+Amount spheres:        1
+
+Render date:           2023-05-25
+Render duration:       16h41m15.241576791s
+----
+

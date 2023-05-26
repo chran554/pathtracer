@@ -27,11 +27,11 @@ func NewDrWhoAngel(scale float64, includeAngel bool, includePillar bool) *scn.Fa
 	angel.ScaleUniform(&vec3.Zero, scale/angel.Bounds.Ymax)
 
 	statueMaterial := scn.NewMaterial().N("angel").
-		C(color.Color{R: 0.9, G: 0.9, B: 0.9}).
+		C(color.NewColor(0.9, 0.9, 0.9)).
 		M(0.3, 0.6)
 
 	pillarMaterial := scn.NewMaterial().N("pillar").
-		C(color.Color{R: 0.8, G: 0.8, B: 0.8}).
+		C(color.NewColor(0.8, 0.8, 0.8)).
 		M(0.1, 0.8)
 
 	angel.ReplaceMaterial("angel", statueMaterial)

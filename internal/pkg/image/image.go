@@ -72,12 +72,13 @@ func LoadImageData(filename string) *FloatImage {
 	colorNormalizationFactor := 1.0 / 0xffff
 	for y := 0; y < height; y++ {
 		for x := 0; x < width; x++ {
-			r, g, b, _ := textureImage.At(x, y).RGBA()
+			r, g, b, a := textureImage.At(x, y).RGBA()
 
 			c := color.Color{
 				R: float32(float64(r) * colorNormalizationFactor),
 				G: float32(float64(g) * colorNormalizationFactor),
 				B: float32(float64(b) * colorNormalizationFactor),
+				A: float32(float64(a) * colorNormalizationFactor),
 			}
 
 			image.SetPixel(x, y, &c)
@@ -106,6 +107,7 @@ func WriteImage(filename string, floatImage *FloatImage) {
 	floatImage.GammaEncode(GammaDefault)
 
 	image := img.NewRGBA(img.Rect(0, 0, width, height))
+	// imageAlpha := img.NewRGBA(img.Rect(0, 0, width, height))
 
 	for x := 0; x < width; x++ {
 		for y := 0; y < height; y++ {
@@ -114,8 +116,10 @@ func WriteImage(filename string, floatImage *FloatImage) {
 			r := uint8(util.Clamp(0, 255, math.Round(float64(pixelValue.R)*255.0)))
 			g := uint8(util.Clamp(0, 255, math.Round(float64(pixelValue.G)*255.0)))
 			b := uint8(util.Clamp(0, 255, math.Round(float64(pixelValue.B)*255.0)))
+			a := uint8(util.Clamp(0, 255, math.Round(float64(pixelValue.A)*255.0)))
 
-			image.Set(x, y, col.RGBA{R: r, G: g, B: b, A: 255})
+			image.Set(x, y, col.RGBA{R: r, G: g, B: b, A: a})
+			// imageAlpha.Set(x, y, col.RGBA{R: a, G: a, B: a, A: 255})
 		}
 	}
 
@@ -132,6 +136,10 @@ func WriteImage(filename string, floatImage *FloatImage) {
 		fmt.Println("Oups, no image encode for you today.")
 		os.Exit(1)
 	}
+
+	// falpha, _ := os.Create(filename + ".alpha.png")
+	// defer falpha.Close()
+	// png.Encode(falpha, imageAlpha)
 }
 
 func WriteRawImage(filename string, image *FloatImage) {
@@ -230,6 +238,7 @@ func GammaEncodeColor(linearColor *color.Color, gamma float64) color.Color {
 		R: gammaCalculation(linearColor.R, invGamma),
 		G: gammaCalculation(linearColor.G, invGamma),
 		B: gammaCalculation(linearColor.B, invGamma),
+		A: linearColor.A,
 	}
 
 	return gammaColor
@@ -243,6 +252,7 @@ func GammaDecodeColor(gammaColor *color.Color, gamma float64) color.Color {
 		R: gammaCalculation(gammaColor.R, gamma),
 		G: gammaCalculation(gammaColor.G, gamma),
 		B: gammaCalculation(gammaColor.B, gamma),
+		A: gammaColor.A,
 	}
 	return linearColor
 }

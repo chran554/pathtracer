@@ -95,9 +95,11 @@ A lot of functionality is on display in the link:documentation/functionality/fun
 * Reading of `.ply` 3D object file format
 * xref:documentation/functionality/functionality.adoc#material-reflection-fresnel-dielectricnon-conducting[Reflection - Fresnel (dielectric/non-conducting)]
 * xref:documentation/functionality/functionality.adoc#material-reflection-glossy-and-roughness[Reflection - glossy & roughness] (mirror with roughness/brushed for metallic effects)
-* Color definitions by RGB
 * xref:documentation/functionality/functionality.adoc#importance-sampling-cosine-weighted-hemisphere[Importance sampling - cosine weighted hemisphere sampling] (instead of uniform sampling)
+* Color definitions by RGBA (A for alpha/transparency)
+* Rendered image with alpha channel. Parts of image not covered by any object will be transparent.
 * Gamma correction on loaded textures and on rendered image export.
+* Texture from images with alpha channels (png file format primarily) for transparency.
 * Texture projections: xref:documentation/functionality/functionality.adoc#image-projection---spherical[sphere] (equirectangular), xref:documentation/functionality/functionality.adoc#image-projection---cylindrical[cylindrical], xref:documentation/functionality/functionality.adoc#image-projection---parallel[parallel] (flat)
 * Free position camera with any direction and any focal length.
 * Super sampling: Anti-alias (random rays within the pixel for smooth edges)

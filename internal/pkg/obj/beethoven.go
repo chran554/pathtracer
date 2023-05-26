@@ -12,13 +12,13 @@ import (
 
 // NewBeethoven creates a new beethoven statue with the center of the statue bottom in origin (0,0,0).
 func NewBeethoven(scale float64) *scn.FacetStructure {
-	statue := beethoven()
+	statue := loadGopher()
 	statue.ScaleUniform(&vec3.Zero, scale)
 
 	return statue
 }
 
-func beethoven() *scn.FacetStructure {
+func loadBeethoven() *scn.FacetStructure {
 	statue := ply.ReadOrPanic(filepath.Join(PlyFileDir, "beethoven.ply"))
 
 	statue.CenterOn(&vec3.Zero)

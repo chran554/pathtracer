@@ -34,3 +34,10 @@ func CosinePositive(a *vec3.T, b *vec3.T) bool {
 func CosineNegative(a *vec3.T, b *vec3.T) bool {
 	return vec3.Dot(a, b) < 0
 }
+
+func Max32(a, b float32) float32 {
+	if a >= b {
+		return a
+	}
+	return b
+}

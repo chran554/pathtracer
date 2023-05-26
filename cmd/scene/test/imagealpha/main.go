@@ -9,37 +9,28 @@ import (
 	scn "pathtracer/internal/pkg/scene"
 )
 
-var animationName = "pokemon_tangela"
+var animationName = "imagealpha"
 
 var amountFrames = 1
 
-var amountSamples = 1024 * 3 * 3
+var amountSamples = 1024 * 6 * 2
 
 var imageWidth = 800
 var imageHeight = 600
 var magnification = 1.0
 
 func main() {
-	// Ground
-	groundMaterial := scn.NewMaterial().PP("textures/floor/Calacatta-Vena-French-Pattern-Architextures.jpg", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(150), vec3.UnitZ.Scaled(150))
-	ground := &scn.Disc{Name: "ground", Origin: &vec3.T{0, 0, 0}, Normal: &vec3.UnitY, Radius: 5000.0, Material: groundMaterial}
-
-	// Sky
-	skyMaterial := scn.NewMaterial().
-		E(color.White, 0.5, true).
-		SP("textures/equirectangular/wirebox 6192x3098.png", &vec3.T{0, 0, 0}, vec3.UnitX, vec3.UnitY)
-	skyDome := scn.NewSphere(&vec3.T{0, 0, 0}, 5000, skyMaterial).N("sky dome")
-
 	// Object
 	object := obj.NewPokemonTangela(200.0)
 	object.RotateY(&vec3.Zero, math.Pi*7.0/8.0)
 
-	lightMaterial := scn.NewMaterial().E(color.KelvinTemperatureColor2(5500), 40, true)
-	light := scn.NewSphere(&vec3.T{-150, 250, -175}, 45.0, lightMaterial).N("light")
+	lightMaterial1 := scn.NewMaterial().E(color.KelvinTemperatureColor2(5500), 40, true)
+	lightMaterial2 := scn.NewMaterial().E(color.KelvinTemperatureColor2(5500), 2, true)
+	light1 := scn.NewSphere(&vec3.T{-150, 250, -175}, 45.0, lightMaterial1).N("light")
+	light2 := scn.NewSphere(&vec3.T{150 * 2, 250, -175 * 2}, 45.0, lightMaterial2).N("light")
 
 	scene := scn.NewSceneNode().
-		S(light, skyDome).
-		D(ground).
+		S(light1, light2).
 		FS(object)
 
 	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)

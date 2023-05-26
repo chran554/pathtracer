@@ -42,7 +42,7 @@ var environmentEmissionFactor = 1.0
 //var environmentEmissionFactor = float32(3.0)
 
 var useLights = true
-var lightColor = color.Color{R: 1.0, G: 0.97, B: 0.95}
+var lightColor = color.NewColor(1.0, 0.97, 0.95)
 var lightOrigin = vec3.T{environmentRadius / 8, environmentRadius / 4, -environmentRadius / 1.5}
 var lightRadius = environmentRadius / 14
 var lightEmissionFactor = 2.0

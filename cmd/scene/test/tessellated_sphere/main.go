@@ -16,13 +16,13 @@ var environmentEnvironMap = "textures/equirectangular/sunset horizon 2800x1400.j
 var environmentRadius = 500.0 * 1000.0
 var environmentEmissionFactor = 1.0
 
-var amountFrames = 180
+var amountFrames = 1
 
 var imageWidth = 300
 var imageHeight = 300
-var magnification = 3.0
+var magnification = 0.5
 
-var amountSamples = 1000 * 24
+var amountSamples = 512
 var maxRecursion = 2
 
 var apertureSize = 1.5
@@ -31,7 +31,7 @@ func main() {
 	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
 	// Sphere
-	tessellatedSphere := obj.NewTessellatedSphere(5, false)
+	tessellatedSphere := obj.NewTessellatedSphere(2, false)
 
 	tessellatedSphere.Translate(&vec3.T{0, -tessellatedSphere.Bounds.Ymin, 0})
 	tessellatedSphere.ScaleUniform(&vec3.Zero, 30.0)

@@ -27,7 +27,7 @@ func main() {
 
 	groundOrigin := &vec3.T{0, 0, 0}
 	groundMaterial := scn.NewMaterial().
-		C(color.Color{R: 0.5, G: 0.5, B: 0.5}).
+		C(color.NewColor(0.5, 0.5, 0.5)).
 		PP("textures/white_marble.png", groundOrigin, vec3.UnitX.Scaled(50), vec3.UnitZ.Scaled(50))
 	ground := scn.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, 600, groundMaterial)
 

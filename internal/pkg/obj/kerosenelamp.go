@@ -16,8 +16,8 @@ func NewKeroseneLamp(scale float64, emission float64) *scn.FacetStructure {
 		C(color.NewColor(0.8/2, 0.60/2, 0.25/2)).
 		M(0.8, 0.3)
 	flameMaterial := scn.NewMaterial().N("flame").
-		C(color.Color{R: 1.0, G: 0.9, B: 0.6}).
-		E(color.Color{R: 1.0, G: 0.9, B: 0.6}, emission, true)
+		C(color.NewColor(1.0, 0.9, 0.6)).
+		E(color.NewColor(1.0, 0.9, 0.6), emission, true)
 	var glassColorFactor = 0.75
 	darkGlassMaterial := scn.NewMaterial().N("smudged_glass").
 		C(color.NewColor(0.93*glassColorFactor, 0.94*glassColorFactor, 0.95*glassColorFactor)).

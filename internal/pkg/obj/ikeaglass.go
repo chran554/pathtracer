@@ -18,7 +18,7 @@ func NewGlassIkeaPokal(scale float64) *scn.FacetStructure {
 
 	glass.Material = scn.NewMaterial().
 		N("glass").
-		C(color.Color{R: 0.95, G: 0.95, B: 0.97}).
+		C(color.NewColor(0.95, 0.95, 0.97)).
 		M(0.1, 0.05).
 		T(0.98, true, scn.RefractionIndex_Glass)
 
@@ -38,13 +38,13 @@ func NewGlassIkeaSkoja(scale float64, includeLiquid bool) *scn.FacetStructure {
 
 	glassMaterial := scn.NewMaterial().
 		N("glass").
-		C(color.Color{R: 0.95, G: 0.95, B: 0.97}).
+		C(color.NewColor(0.95, 0.95, 0.97)).
 		M(0.1, 0.05).
 		T(0.98, true, scn.RefractionIndex_Glass)
 
 	liquidMaterial := scn.NewMaterial().
 		N("red juice").
-		C(color.Color{R: 0.97, G: 0.45, B: 0.47}).
+		C(color.NewColor(0.97, 0.45, 0.47)).
 		M(0.2, 0.0).
 		T(0.98, true, scn.RefractionIndex_SugarSolution60)
 

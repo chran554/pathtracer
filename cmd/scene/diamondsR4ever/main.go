@@ -39,7 +39,7 @@ func main() {
 
 	diamondMaterial := scn.NewMaterial().
 		N("diamond").
-		C(color.Color{R: 1.0, G: 0.95, B: 0.8}).
+		C(color.NewColor(1.0, 0.95, 0.8)).
 		T(1.0, true, scn.RefractionIndex_Diamond).
 		M(0.3, 0.0)
 

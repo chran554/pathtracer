@@ -48,7 +48,7 @@ func writeDiamondObjFile(filename string, diamond *scn.FacetStructure, comments 
 func diamondMaterial() scn.Material {
 	m := scn.Material{
 		Name:            "Diamond",
-		Color:           &color.Color{R: 1.00, G: 0.99, B: 0.97}, // Very slight yellowish color
+		Color:           &color.NewColor(1.00, 0.99, 0.97), // Very slight yellowish color
 		Glossiness:      0.01,
 		Roughness:       0.01,
 		RefractionIndex: 2.42, // Refraction index of diamond material

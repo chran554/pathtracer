@@ -39,11 +39,11 @@ func main() {
 		SP(environmentEnvironMap, skyDomeOrigin, vec3.T{-0.55, 0, -0.45}, vec3.T{0, 1, 0})
 	skyDome := scn.NewSphere(skyDomeOrigin, environmentRadius, skyDomeMaterial).N("sky dome")
 
-	//moonColor := color.Color{R: 0.9, G: 0.9, B: 1.0}
+	//moonColor := color.NewColor(0.9, 0.9, 1.0)
 	//moonMaterial := scn.NewMaterial().C(moonColor).E(moonColor, 8.0, true)
 	//moon := scn.NewSphere(&vec3.T{-400, 500, -400}, 200, moonMaterial).N("moon")
 
-	//sunColor := color.Color{R: 1.0, G: 0.97, B: 0.8}
+	//sunColor := color.NewColor(1.0, 0.97, 0.8)
 	//sunMaterial := scn.NewMaterial().C(sunColor).E(sunColor, 10.0, true)
 	//sun := scn.NewSphere(&vec3.T{3000, 600, 1600}, 400, sunMaterial).N("sun")
 
@@ -58,10 +58,10 @@ func main() {
 	pathTextLines, _ := readLines("cmd/scene/aoc_2022_d12/resources/path.txt")
 	pathPositions, startPos, endPos := parsePath(pathTextLines)
 
-	boxColor := color.Color{R: 0.9, G: 0.9, B: 0.9}
-	pathColor := color.Color{R: 0.6, G: 0.5, B: 0.9}
-	startColor := color.Color{R: 0.9, G: 0.6, B: 0.5}
-	endColor := color.Color{R: 0.6, G: 0.9, B: 0.5}
+	boxColor := color.NewColor(0.9, 0.9, 0.9)
+	pathColor := color.NewColor(0.6, 0.5, 0.9)
+	startColor := color.NewColor(0.9, 0.6, 0.5)
+	endColor := color.NewColor(0.6, 0.9, 0.5)
 
 	pathEmissionFactor := 0.75
 

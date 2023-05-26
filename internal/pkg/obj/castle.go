@@ -13,7 +13,7 @@ func NewCastle(scale float64) *scn.FacetStructure {
 	object.PurgeEmptySubStructures()
 
 	stainedGlassMaterial := scn.NewMaterial().N("stained_glass").
-		C(color.Color{R: 0.95, G: 0.90, B: 0.60}).
+		C(color.NewColor(0.95, 0.90, 0.60)).
 		T(0.8, false, 0.0).
 		M(0.2, 0.3)
 	stainedGlassObjects := object.GetObjectsByMaterialName("colored_glass")
@@ -21,14 +21,14 @@ func NewCastle(scale float64) *scn.FacetStructure {
 		stainedGlassObject.Material = stainedGlassMaterial
 	}
 
-	roofMaterial := scn.NewMaterial().N("roof").C(color.Color{R: 0.30, G: 0.25, B: 0.10})
+	roofMaterial := scn.NewMaterial().N("roof").C(color.NewColor(0.30, 0.25, 0.10))
 	roofObjects := object.GetObjectsByMaterialName("erroded_cupper")
 	for _, roofObject := range roofObjects {
 		roofObject.Material = roofMaterial
 	}
 
 	glassMaterial := scn.NewMaterial().N("glass").
-		C(color.Color{R: 0.93, G: 0.93, B: 0.95}).
+		C(color.NewColor(0.93, 0.93, 0.95)).
 		T(0.8, false, 0.0).
 		M(0.2, 0.1)
 	glassObjects := object.GetObjectsByMaterialName("glass")

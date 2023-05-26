@@ -21,14 +21,14 @@ func (dice *Dice) BorderColor(c color.Color) {
 	dice.FacetStructure.Material.Color = &c
 }
 
-// NewDice creates a new dice object
+// NewDice creates a new box object
 func NewDice(scale float64) *scn.FacetStructure {
-	return dice(scale)
+	return box(scale)
 }
 
-func dice(scale float64) (dice *scn.FacetStructure) {
+func box(scale float64) (dice *scn.FacetStructure) {
 	dice = loadDice()
-	dice.Name = "dice"
+	dice.Name = "box"
 
 	dice.CenterOn(&vec3.Zero)
 	dice.Scale(&vec3.Zero, &vec3.T{1 / dice.Bounds.Xmax, 1 / dice.Bounds.Ymax, 1 / dice.Bounds.Zmax})
@@ -36,7 +36,7 @@ func dice(scale float64) (dice *scn.FacetStructure) {
 
 	fmt.Printf("Dice bounds: %+v\n", dice.Bounds)
 
-	diceMaterial := scn.NewMaterial().N("dice").
+	diceMaterial := scn.NewMaterial().N("box").
 		C(color.NewColorGrey(1.0)). // TODO Set to same color as texture background, should be 0.9 or something. Color should affect color diffuse textures (by operation multiplication)?
 		T(0.0, true, scn.RefractionIndex_AcrylicPlastic).
 		M(0.075, 0.2)
@@ -44,7 +44,7 @@ func dice(scale float64) (dice *scn.FacetStructure) {
 	dice.Material = diceMaterial
 
 	// TODO Fix. Awkward solution due to obj file loading bug, naming top structure after last material/group read.
-	facetStructures := dice.GetObjectsByName("dice")
+	facetStructures := dice.GetObjectsByName("box")
 	for _, fs := range facetStructures {
 		if len(fs.FacetStructures) == 0 {
 			fs.Material = nil
@@ -52,12 +52,12 @@ func dice(scale float64) (dice *scn.FacetStructure) {
 	}
 
 	b := dice.Bounds
-	diceMaterial1 := diceMaterial.Copy().N("1"). /*.C(color.NewColor(1, 0, 0))*/ PP("textures/dice/dice_1.png", &vec3.T{b.Xmax, b.Ymin, 0}, vec3.T{-scale, 0, 0}, vec3.T{0, scale, 0})
-	diceMaterial2 := diceMaterial.Copy().N("2"). /*.C(color.NewColor(0, 1, 0))*/ PP("textures/dice/dice_2.png", &vec3.T{0, b.Ymin, b.Zmin}, vec3.T{0, 0, scale}, vec3.T{0, scale, 0})
-	diceMaterial3 := diceMaterial.Copy().N("3"). /*.C(color.NewColor(0, 0, 1))*/ PP("textures/dice/dice_3.png", &vec3.T{b.Xmin, 0, b.Zmin}, vec3.T{scale, 0, 0}, vec3.T{0, 0, scale})
-	diceMaterial4 := diceMaterial.Copy().N("4"). /*.C(color.NewColor(1, 0, 1))*/ PP("textures/dice/dice_4.png", &vec3.T{b.Xmin, 0, b.Zmax}, vec3.T{scale, 0, 0}, vec3.T{0, 0, -scale})
-	diceMaterial5 := diceMaterial.Copy().N("5"). /*.C(color.NewColor(1, 1, 0))*/ PP("textures/dice/dice_5.png", &vec3.T{0, b.Ymin, b.Zmax}, vec3.T{0, 0, -scale}, vec3.T{0, scale, 0})
-	diceMaterial6 := diceMaterial.Copy().N("6"). /*.C(color.NewColor(0, 1, 1))*/ PP("textures/dice/dice_6.png", &vec3.T{b.Xmin, b.Ymin, 0}, vec3.T{scale, 0, 0}, vec3.T{0, scale, 0})
+	diceMaterial1 := diceMaterial.Copy().N("1"). /*.C(color.NewColor(1, 0, 0))*/ PP("textures/box/dice_1.png", &vec3.T{b.Xmax, b.Ymin, 0}, vec3.T{-scale, 0, 0}, vec3.T{0, scale, 0})
+	diceMaterial2 := diceMaterial.Copy().N("2"). /*.C(color.NewColor(0, 1, 0))*/ PP("textures/box/dice_2.png", &vec3.T{0, b.Ymin, b.Zmin}, vec3.T{0, 0, scale}, vec3.T{0, scale, 0})
+	diceMaterial3 := diceMaterial.Copy().N("3"). /*.C(color.NewColor(0, 0, 1))*/ PP("textures/box/dice_3.png", &vec3.T{b.Xmin, 0, b.Zmin}, vec3.T{scale, 0, 0}, vec3.T{0, 0, scale})
+	diceMaterial4 := diceMaterial.Copy().N("4"). /*.C(color.NewColor(1, 0, 1))*/ PP("textures/box/dice_4.png", &vec3.T{b.Xmin, 0, b.Zmax}, vec3.T{scale, 0, 0}, vec3.T{0, 0, -scale})
+	diceMaterial5 := diceMaterial.Copy().N("5"). /*.C(color.NewColor(1, 1, 0))*/ PP("textures/box/dice_5.png", &vec3.T{0, b.Ymin, b.Zmax}, vec3.T{0, 0, -scale}, vec3.T{0, scale, 0})
+	diceMaterial6 := diceMaterial.Copy().N("6"). /*.C(color.NewColor(0, 1, 1))*/ PP("textures/box/dice_6.png", &vec3.T{b.Xmin, b.Ymin, 0}, vec3.T{scale, 0, 0}, vec3.T{0, scale, 0})
 
 	dice.ReplaceMaterial("1", diceMaterial1)
 	dice.ReplaceMaterial("2", diceMaterial2)

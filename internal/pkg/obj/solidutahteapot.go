@@ -30,7 +30,7 @@ func NewSolidUtahTeapot(scale float64, includeBody bool, includeLid bool) *scn.F
 
 	// glassMaterial := scn.NewMaterial().
 	// 	N("Glass material").
-	// 	C(color.Color{R: 0.95, G: 0.95, B: 0.97}, 1.0).
+	// 	C(color.NewColor(0.95, 0.95, 0.97), 1.0).
 	// 	M(0.2, 0.05).
 	// 	T(1.0, true, scn.RefractionIndex_Glass)
 

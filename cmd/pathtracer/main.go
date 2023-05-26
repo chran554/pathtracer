@@ -526,7 +526,7 @@ func getRandomCosineWeightedHemisphereVector(n *vec3.T) *vec3.T {
 }
 
 func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDepth int, rayContexts []*scn.Material) color.Color {
-	outgoingEmission := color.Black
+	outgoingEmission := color.NewColorRGBA(0, 0, 0, 0)
 
 	if currentDepth > camera.RecursionDepth {
 		return outgoingEmission
@@ -580,6 +580,7 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 				R: ii.material.Color.R * float32(cosineIncomingRayAndNormal) * projectionColor.R,
 				G: ii.material.Color.G * float32(cosineIncomingRayAndNormal) * projectionColor.G,
 				B: ii.material.Color.B * float32(cosineIncomingRayAndNormal) * projectionColor.B,
+				A: ii.material.Color.A * projectionColor.A,
 			}
 
 		} else if camera.RenderType == scn.Pathtracing {
@@ -607,11 +608,14 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 					reflectionProbability = ii.material.Glossiness
 				}
 
-				probabilitySum := reflectionProbability + ii.material.Transparency + ii.material.Diffuse
+				transparencyProbability := 1.0 - ((1.0 - ii.material.Transparency) * float64(ii.material.Color.A) * float64(projectionColor.A))
+				diffuseProbability := ii.material.Diffuse * float64(ii.material.Color.A) * float64(projectionColor.A)
+
+				probabilitySum := reflectionProbability + transparencyProbability + diffuseProbability
 				probabilityValue := rand.Float64() * probabilitySum
 
 				useReflectionRay := probabilityValue < reflectionProbability
-				useTransparencyRay := !useReflectionRay && (probabilityValue < (reflectionProbability + ii.material.Transparency))
+				useTransparencyRay := !useReflectionRay && (probabilityValue < (reflectionProbability + transparencyProbability))
 				useDiffuseRay := !useReflectionRay && !useTransparencyRay
 
 				diffuseHeading := getRandomCosineWeightedHemisphereVector(ii.normalAtIntersection)
@@ -704,17 +708,21 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 				incomingEmissionOnSurface := incomingEmission
 				incomingEmissionOnSurface.Multiply(float32(cosineNewRayAndNormal))
 
+				alpha := ii.material.Color.A * projectionColor.A
 				outgoingEmission = color.Color{
-					R: incomingEmissionOnSurface.R * ii.material.Color.R * projectionColor.R,
-					G: incomingEmissionOnSurface.G * ii.material.Color.G * projectionColor.G,
-					B: incomingEmissionOnSurface.B * ii.material.Color.B * projectionColor.B,
+					R: incomingEmissionOnSurface.R * (alpha*ii.material.Color.R*projectionColor.R + (1.0 - alpha)),
+					G: incomingEmissionOnSurface.G * (alpha*ii.material.Color.G*projectionColor.G + (1.0 - alpha)),
+					B: incomingEmissionOnSurface.B * (alpha*ii.material.Color.B*projectionColor.B + (1.0 - alpha)),
+					A: util.Max32(alpha, incomingEmissionOnSurface.A),
 				}
 			}
 
 			if ii.material.Emission != nil {
-				outgoingEmission.R += ii.material.Emission.R * projectionColor.R
-				outgoingEmission.G += ii.material.Emission.G * projectionColor.G
-				outgoingEmission.B += ii.material.Emission.B * projectionColor.B
+				alpha := float32(1.0-ii.material.Transparency) * ii.material.Color.A * projectionColor.A
+				outgoingEmission.R += ii.material.Emission.R * projectionColor.R * alpha
+				outgoingEmission.G += ii.material.Emission.G * projectionColor.G * alpha
+				outgoingEmission.B += ii.material.Emission.B * projectionColor.B * alpha
+				outgoingEmission.A = util.Max32(outgoingEmission.A, alpha)
 			}
 		}
 	}

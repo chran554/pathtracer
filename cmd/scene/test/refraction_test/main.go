@@ -42,7 +42,7 @@ func main() {
 
 	// glassMaterial := scn.NewMaterial().
 	// 	N("glass material").
-	// 	C(color.Color{R: 0.98, G: 0.80, B: 0.75}).
+	// 	C(color.NewColor(0.98, 0.80, 0.75)).
 	// 	M(0.2, 0.05).
 	// 	T(0.95, true, scn.RefractionIndex_Glass)
 	utahTeapot := obj.NewSolidUtahTeapot(50.0, true, true)
@@ -79,7 +79,7 @@ func GetSpheres(amountSpheres int, translation *vec3.T) []*scn.Sphere {
 	var spheres []*scn.Sphere
 	sphereMaterial := scn.NewMaterial().
 		N("glass sphere").
-		C(color.Color{R: 0.95, G: 0.95, B: 0.99}).
+		C(color.NewColor(0.95, 0.95, 0.99)).
 		M(0.01, 0.05).
 		T(0.98, true, scn.RefractionIndex_Glass)
 
@@ -110,7 +110,7 @@ func GetCornellBox(scale *vec3.T, lightIntensityFactor float64) *scn.FacetStruct
 
 	cornellBox.Material = scn.NewMaterial().
 		N("Cornell box material").
-		C(color.Color{R: 0.95, G: 0.95, B: 0.95})
+		C(color.NewColor(0.95, 0.95, 0.95))
 
 	backWallMaterial := cornellBox.Material.Copy().
 		PP("textures/wallpaper/anemone-rose-flower-eucalyptus-leaves-pampas-grass.png", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale[0]), vec3.UnitY.Scaled(scale[0]*0.66))

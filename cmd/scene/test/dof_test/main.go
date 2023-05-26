@@ -31,7 +31,7 @@ func main() {
 	sphereSpread := ballRadius * 2.0 * (float64(amountSpheres) + 1)
 	sphereCC := sphereSpread / float64(amountSpheres)
 
-	sphereMaterial := scn.NewMaterial().C(color.Color{R: 0.85, G: 0.95, B: 0.80}).M(0.4, 0.05)
+	sphereMaterial := scn.NewMaterial().C(color.NewColor(0.85, 0.95, 0.80)).M(0.4, 0.05)
 
 	var spheres []*scn.Sphere
 	for i := 0; i <= amountSpheres; i++ {

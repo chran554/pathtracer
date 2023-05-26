@@ -46,20 +46,20 @@ func main() {
 		fmt.Printf("object bounds: %+v\n", objectBounds)
 
 		// external light
-		lamp := createLamp("dragon lamp", 70.0, 10.0, objectBounds.Center().Add(&vec3.T{-50, 200, -200}), color.Color{R: 0.9, G: 0.85, B: 0.8})
+		lamp := createLamp("dragon lamp", 70.0, 10.0, objectBounds.Center().Add(&vec3.T{-50, 200, -200}), color.NewColor(0.9, 0.85, 0.8))
 		lamp.RotateY(object.Bounds.Center(), -math.Pi/4)
 	*/
 
 	object := NewCorner(50)
 	objectBounds := object.Bounds
-	lamp := createLamp("corner lamp", 20.0, 300.0, &vec3.T{-175, 200, -200}, color.Color{R: 0.9, G: 0.85, B: 0.8})
+	lamp := createLamp("corner lamp", 20.0, 300.0, &vec3.T{-175, 200, -200}, color.NewColor(0.9, 0.85, 0.8))
 	cameraHeight := 25.0
 	cameraDistance := 550.0
 
 	/*
 		object := obj.NewCastle(&vec3.T{80, 80, 80})
 		objectBounds := object.Bounds
-		lampColor := color.Color{R: 1.0, G: 0.87, B: 0.5}
+		lampColor := color.NewColor(1.0, 0.87, 0.5)
 		castleLamp := createLamp("castle_lamp", 6.5, 15.0, objectBounds.Center().Add(&vec3.T{13, -8, -2}), lampColor)
 		entranceLamp1 := createLamp("entrance_lamp_1", 3.0, 6.0, objectBounds.Center().Add(&vec3.T{0, -21, -3}), lampColor)
 		entranceLamp2 := createLamp("entrance_lamp_2", 3.0, 4.0, objectBounds.Center().Add(&vec3.T{-15, -25, -3}), lampColor)

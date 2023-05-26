@@ -274,6 +274,13 @@ Parallel projection can be used from any image that is plainly/straight projecte
 .Parallel projection. A circular disc and three spheres, all with parallel projection. One sphere share the exact same projection as the disc. The second has a checker pattern and the third has a tree rings pattern projected on them from different angles.
 image::projection_parallel.png[Parallel projection]
 
+== Image projection - Alpha channel transparency
+
+Textures defined by images that support alpha channel (most common png file format) can define transparency in the projected image. Surface parts of any object with a projected texture where alpha = 0 (transparent) will be treated as a transparent object and will be see-through, with or without any refraction depending on material setup.
+
+.Transparency through texture image alpha channel.
+image::projection_alpha.png[Projection using alpha channel for transparancy]
+
 == Smooth vertex normals
 
 Vertex normals, as opposed to facet normals, can be interpolated over the facet for each intersection point to produce a visually smooth surface.

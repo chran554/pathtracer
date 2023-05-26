@@ -88,7 +88,7 @@ func main() {
 	spherePodium.Scale(&vec3.Zero, &vec3.T{podiumWidth, podiumHeight, podiumWidth})
 	spherePodium.Translate(&sphereLocation)
 
-	sphereMaterial := scn.NewMaterial().C(color.Color{R: 0.70, G: 1.00, B: 0.70}).M(0.1, 0.2)
+	sphereMaterial := scn.NewMaterial().C(color.NewColor(0.70, 1.00, 0.70)).M(0.1, 0.2)
 	sphere := scn.NewSphere(&vec3.T{0, 0, 0}, sphereRadius, sphereMaterial).N("Sphere primitive")
 	sphere.Translate(&vec3.T{0.0, podiumHeight + sphereRadius, 0.0})
 	sphere.Translate(&sphereLocation)
@@ -112,7 +112,7 @@ func main() {
 	discPodium.Scale(&vec3.Zero, &vec3.T{podiumWidth, podiumHeight, podiumWidth})
 	discPodium.Translate(&discLocation) // Move podium to location
 
-	discMaterial := scn.NewMaterial().C(color.Color{R: 1.00, G: 0.70, B: 0.70}).M(0.1, 0.2)
+	discMaterial := scn.NewMaterial().C(color.NewColor(1.00, 0.70, 0.70)).M(0.1, 0.2)
 	disc := scn.NewDisc(&vec3.T{0, 0, 0}, &vec3.T{0, 0, -1}, discRadius, discMaterial).N("Disc primitive")
 	disc.RotateX(&vec3.Zero, -math.Pi/8)
 	disc.RotateY(&vec3.Zero, -math.Pi*2/8)
@@ -143,7 +143,7 @@ func main() {
 }
 
 func trianglePrimitive() *scn.FacetStructure {
-	material := scn.NewMaterial().C(color.Color{R: 0.70, G: 0.70, B: 1.00}).M(0.1, 0.2)
+	material := scn.NewMaterial().C(color.NewColor(0.70, 0.70, 1.00)).M(0.1, 0.2)
 	triangleHeight := 1.0
 	triangleWidth := triangleHeight / (2.0 * math.Cos(math.Pi/6.0))
 	triangle := scn.Facet{
