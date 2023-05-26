@@ -9,11 +9,11 @@ import (
 	scn "pathtracer/internal/pkg/scene"
 )
 
-var animationName = "texturealpha"
+var animationName = "cocktail"
 
 var amountFrames = 1
 
-var amountSamples = 256 // 1024 * 2 * 12
+var amountSamples = 1024 * 2 * 12
 
 var imageWidth = 800
 var imageHeight = 600
