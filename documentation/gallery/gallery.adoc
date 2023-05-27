@@ -136,7 +136,7 @@ The neon sign is actually three layers of transparent images stacked closely tog
 
 The huge amount of samples per pixels is really needed to avoid light noise as the "sun" shining through the window blinds is a very small but bright light source at the end of a pretty long light shaping box.
 
-The "blinds" is actually cut-out shape of a texture image at the end of the light shaping box. It can be any shape defined by a png-image with alpha channel transparency. (See image at xref:../functionality/functionality.adoc#image-projection-alpha-channel-transparency[transparency in texture with alpha channel])
+The "blinds" are actually like a "cut-out" shape from a cardboard at the front of a light shaping box. Well, of course it is not cardboard but a texture image at the front of the light shaping box. It can be any desired shape or form defined by a png-image with alpha channel transparency. Nifty and simple way of faking a window with blinds in wall with morning sunlight outside. (See image at xref:../functionality/functionality.adoc#image-projection-alpha-channel-transparency[transparency in texture with alpha channel])
 
 .80's nostalgia with blockbuster Cocktail
 image::cocktail.png[Soda cans]
