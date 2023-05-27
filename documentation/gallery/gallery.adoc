@@ -5,7 +5,7 @@ Some _show off_ gems. Not that many really, as I usually produce images to show 
 
 == Cornell box
 
-It doesn't look much to the world, but it is the hello world of path tracing.
+It doesn't look much to the world, but it is the "hello world" of path tracing.
 
 Just look at 'em bleed'n walls!
 
@@ -20,7 +20,7 @@ Amount facets:          18
 Amount spheres:         2
 
 Render date:            2023-03-14
-Frame render time:      22h59m38.170794209s
+Frame render time:      22h59m
 ----
 
 == Advent of code 2022 day 12
@@ -89,7 +89,7 @@ Amount facets:          24
 Amount spheres:         17
 
 Render date:            2023-03-15
-Frame render time:      12h44m3.190926s
+Frame render time:      12h44m
 ----
 
 == Lonesome gopher in love
@@ -125,7 +125,7 @@ Frame render time:      10h20m29.731529458s
 
 == Cocktail
 
-This is a tribute to the blockbuster Cocktail. Some 80's nostalgia...
+This is a tribute to the blockbuster https://www.imdb.com/title/tt0094889/[Cocktail (1988)]. Some 80's nostalgia... (https://www.youtube.com/watch?v=78pGiQ2oC6k&ab_channel=TrailerChan[movie trailer])
 
 Really produced to show off the xref:../functionality/functionality.adoc#image-projection-alpha-channel-transparency[transparency in texture with alpha channel].
 
@@ -150,10 +150,10 @@ Amount facets:         30
 Amount spheres:        1
 
 Render date:           2023-05-25
-Render duration:       16h41m15.241576791s
+Render duration:       16h41m
 ----
 
 The Cocktail logo is manually retraced in https://inkscape.org/[Inkscape] from an original (?) found on the world spanning interconnected computer network for data exchange and communication.
 
-.Retraced Cocktail logo. My edits and improvements(?)are in yellow and green over the bitmap logo i found.
+.Retraced Cocktail logo. My edits and improvements(?) are in yellow and green over the bitmap logo i found.
 image::cocktail_logo_retrace.png[Retraced Cocktail logo]
