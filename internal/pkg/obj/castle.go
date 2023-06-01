@@ -2,13 +2,14 @@ package obj
 
 import (
 	"github.com/ungerik/go3d/float64/vec3"
+	"math"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
 	scn "pathtracer/internal/pkg/scene"
 )
 
-func NewCastle(scale float64) *scn.FacetStructure {
+func NewCastle(scale float64, lightColor color.Color, lightEmission float64) *scn.FacetStructure {
 	object := loadCastle(scale)
 	object.PurgeEmptySubStructures()
 
@@ -36,7 +37,7 @@ func NewCastle(scale float64) *scn.FacetStructure {
 		glassObject.Material = glassMaterial
 	}
 
-	lightMaterial := scn.NewMaterial().N("light").E(color.White, 20, true)
+	lightMaterial := scn.NewMaterial().N("light").E(lightColor, lightEmission, true)
 	object.ReplaceMaterial("chapel_light", lightMaterial)
 	object.ReplaceMaterial("hall_light", lightMaterial)
 	object.ReplaceMaterial("hall_tower_left_light", lightMaterial)
@@ -46,12 +47,14 @@ func NewCastle(scale float64) *scn.FacetStructure {
 	object.ReplaceMaterial("tower_middle_short_light", lightMaterial)
 	object.ReplaceMaterial("tower_middle_tall_light", lightMaterial)
 
+	object.RotateY(&vec3.Zero, math.Pi)
+
 	return object
 }
 
 func loadCastle(scale float64) *scn.FacetStructure {
 	castle := wavefrontobj.ReadOrPanic(filepath.Join(ObjEvaluationFileDir, "castle_03.obj"))
-	castle.Scale(&vec3.Zero, &vec3.T{-1, 1, 1}) // Flip along x-axis
+	// castle.Scale(&vec3.Zero, &vec3.T{-1, 1, 1}) // Flip along x-axis
 	castle.CenterOn(&vec3.Zero)
 
 	ymin := castle.Bounds.Ymin
