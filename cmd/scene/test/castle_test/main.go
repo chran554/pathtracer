@@ -31,8 +31,7 @@ var cameraDistance = 100.0
 var cameraHeight = 25.0
 
 func main() {
-
-	castle := obj.NewCastle(80)
+	castle := obj.NewCastle(80, color.NewColorKelvin(2500), 10)
 	castle.UpdateVertexNormalsWithThreshold(false, 0)
 	castleBounds := castle.Bounds
 
