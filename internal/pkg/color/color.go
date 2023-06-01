@@ -38,19 +38,19 @@ func NewColorGrey(greyIntensity float64) Color {
 // Without prefix the string have to be 6 or 8 hex characters long as RGBA values
 // are specified in the range 0x00 (0) to 0xFF (255).
 func NewColorHex(colorHex string) Color {
-	colorHex = strings.TrimSpace(strings.Replace(colorHex, "#", "", -1))
-	if (len(colorHex) != 6) && (len(colorHex) != 8) {
-		panic(fmt.Sprintf("Could not convert hex '%s' to RGB value. Illegal length %d was not expected 6 or 8.", colorHex, len(colorHex)))
+	hex := strings.TrimSpace(strings.Replace(strings.Replace(colorHex, "#", "", -1), "0x", "", -1))
+	if (len(hex) != 6) && (len(hex) != 8) {
+		panic(fmt.Sprintf("Could not convert hex '%s' to RGB value. Illegal length %d of hex value. Expected length of 6 or 8.", colorHex, len(hex)))
 	}
 
-	r, err1 := strconv.ParseInt(colorHex[0:2], 16, 16)
-	g, err2 := strconv.ParseInt(colorHex[2:4], 16, 16)
-	b, err3 := strconv.ParseInt(colorHex[4:6], 16, 16)
+	r, err1 := strconv.ParseInt(hex[0:2], 16, 16)
+	g, err2 := strconv.ParseInt(hex[2:4], 16, 16)
+	b, err3 := strconv.ParseInt(hex[4:6], 16, 16)
 
 	var a int64 = 255
 	var err4 error = nil
-	if len(colorHex) == 8 {
-		a, err4 = strconv.ParseInt(colorHex[6:8], 16, 16)
+	if len(hex) == 8 {
+		a, err4 = strconv.ParseInt(hex[6:8], 16, 16)
 	}
 
 	if (err1 != nil) || (err2 != nil) || (err3 != nil) || (err4 != nil) {
