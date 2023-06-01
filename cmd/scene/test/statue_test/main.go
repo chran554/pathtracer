@@ -62,6 +62,7 @@ func main() {
 		FS(pillar2, dragon02).
 		FS(pillar3, drWhoAngel).
 		FS(pillar4, bunny)
+
 	frame := scn.NewFrame(animation.AnimationName, -1, camera, scene)
 	animation.AddFrame(frame)
 
@@ -93,18 +94,15 @@ func createPillar(pillarWidth float64, pillarHeight float64) *scn.FacetStructure
 func setCornellBoxMaterial(cornellBox *scn.FacetStructure) {
 	scale := cornellBox.Bounds.SizeY()
 
-	backWallMaterial := *cornellBox.Material
-	backWallMaterial.PP("textures/wallpaper/VintagePalms_Image_Tile_Item_9454w.jpg", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(1.66*scale), vec3.UnitY.Scaled(scale))
-	//backWallMaterial.PP("textures/wallpaper/DarkFloral_Image_Tile_Item_9419w.jpg", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(2*scale), vec3.UnitY.Scaled(2*scale*0.66))
-	cornellBox.GetFirstObjectBySubstructureName("Back::Back").Material = &backWallMaterial
+	backWallMaterial := scn.NewMaterial().N("back").PP("textures/wallpaper/anemone-rose-flower-eucalyptus-leaves-pampas-grass.png", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(1.66*scale), vec3.UnitY.Scaled(scale))
+	// backWallMaterial := scn.NewMaterial().N("back").PP("textures/wallpaper/VintagePalms_Image_Tile_Item_9454w.jpg", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(1.66*scale), vec3.UnitY.Scaled(scale))
+	cornellBox.GetFirstObjectBySubstructureName("Back").Material = backWallMaterial
 
-	sideWallMaterial := *cornellBox.Material
-	sideWallMaterial.PP("textures/wallpaper/VintagePalms_Image_Tile_Item_9454w.jpg", &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(1.66*scale), vec3.UnitY.Scaled(scale))
-	//sideWallMaterial.PP("textures/wallpaper/DarkFloral_Image_Tile_Item_9419w.jpg", &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(2*scale), vec3.UnitY.Scaled(2*scale*0.66))
-	cornellBox.GetFirstObjectBySubstructureName("Left::Left").Material = &sideWallMaterial
-	cornellBox.GetFirstObjectBySubstructureName("Right::Right").Material = &sideWallMaterial
+	sideWallMaterial := scn.NewMaterial().N("wall").PP("textures/wallpaper/anemone-rose-flower-eucalyptus-leaves-pampas-grass.png", &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(1.66*scale), vec3.UnitY.Scaled(scale))
+	// sideWallMaterial := scn.NewMaterial().N("wall").PP("textures/wallpaper/VintagePalms_Image_Tile_Item_9454w.jpg", &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(1.66*scale), vec3.UnitY.Scaled(scale))
+	cornellBox.GetFirstObjectBySubstructureName("Left").Material = sideWallMaterial
+	cornellBox.GetFirstObjectBySubstructureName("Right").Material = sideWallMaterial
 
-	floorMaterial := *cornellBox.Material
-	floorMaterial.M(0.3, 0.1).PP("textures/marble/marble white tiles 1000x1000.jpg", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale/4), vec3.UnitZ.Scaled(scale/4))
-	cornellBox.GetFirstObjectBySubstructureName("Floor::Floor").Material = &floorMaterial
+	floorMaterial := scn.NewMaterial().N("floor").M(0.3, 0.1).PP("textures/marble/marble white tiles 1000x1000.jpg", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale/4), vec3.UnitZ.Scaled(scale/4))
+	cornellBox.GetFirstObjectBySubstructureName("Floor").Material = floorMaterial
 }

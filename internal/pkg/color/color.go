@@ -46,14 +46,15 @@ func NewColorHex(colorHex string) Color {
 	r, err1 := strconv.ParseInt(colorHex[0:2], 16, 16)
 	g, err2 := strconv.ParseInt(colorHex[2:4], 16, 16)
 	b, err3 := strconv.ParseInt(colorHex[4:6], 16, 16)
-	a, err4 := strconv.ParseInt(colorHex[6:8], 16, 16)
 
-	if (err1 != nil) || (err2 != nil) || (err3 != nil) {
-		panic(fmt.Sprintf("Could not convert hex '%s' to RGB value.", colorHex))
+	var a int64 = 255
+	var err4 error = nil
+	if len(colorHex) == 8 {
+		a, err4 = strconv.ParseInt(colorHex[6:8], 16, 16)
 	}
 
-	if err4 != nil {
-		a = 1.0
+	if (err1 != nil) || (err2 != nil) || (err3 != nil) || (err4 != nil) {
+		panic(fmt.Sprintf("Could not convert hex '%s' to RGB value.", colorHex))
 	}
 
 	return NewColorRGBA(float64(r)/255.0, float64(g)/255.0, float64(b)/255.0, float64(a)/255.0)

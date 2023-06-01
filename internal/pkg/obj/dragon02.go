@@ -23,12 +23,9 @@ func NewDragon02(scale float64, includeDragon bool, includePillar bool) *scn.Fac
 	dragon.CenterOn(&vec3.Zero)
 	dragon.RotateX(&vec3.Zero, math.Pi/2)
 	dragon.RotateY(&vec3.Zero, math.Pi)
-	dragon.CenterOn(&vec3.Zero)
 	dragon.Translate(&vec3.T{0, -dragon.Bounds.Ymin, 0})
-	dragon.UpdateBounds()
 
 	dragon.ScaleUniform(&vec3.Zero, scale/dragon.Bounds.Ymax)
-	dragon.UpdateBounds()
 
 	skinMaterial := scn.NewMaterial().N("skin").
 		C(color.NewColor(0.6, 0.5, 0.2)).
