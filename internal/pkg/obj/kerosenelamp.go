@@ -12,24 +12,41 @@ import (
 func NewKeroseneLamp(scale float64, emission float64) *scn.FacetStructure {
 	keroseneLamp := loadKeroseneLamp(scale)
 
+	flame := keroseneLamp.GetFirstObjectByMaterialName("flame")
+	flameCenterBounds := flame.Bounds.Center()
+
+	glass := keroseneLamp.GetFirstObjectByMaterialName("glass")
+	glassCenterBounds := glass.Bounds.Center()
+
 	brassMaterial := scn.NewMaterial().N("brass").
 		C(color.NewColor(0.8/2, 0.60/2, 0.25/2)).
 		M(0.8, 0.3)
 	flameMaterial := scn.NewMaterial().N("flame").
-		C(color.NewColor(1.0, 0.9, 0.6)).
-		E(color.NewColor(1.0, 0.9, 0.6), emission, true)
-	var glassColorFactor = 0.75
-	darkGlassMaterial := scn.NewMaterial().N("smudged_glass").
-		C(color.NewColor(0.93*glassColorFactor, 0.94*glassColorFactor, 0.95*glassColorFactor)).
-		T(0.96, false, scn.RefractionIndex_Glass).
-		M(0.01, 0.05)
+		C(color.White).
+		E(color.White, emission, false).
+		CP("textures/misc/kerosenelamp/kerosenelamp_flame_wave.png", &vec3.T{flameCenterBounds[0], flame.Bounds.Ymin, flameCenterBounds[2]}, vec3.UnitZ, (vec3.UnitY).Scaled(flame.Bounds.SizeY()), false)
+	glassMaterial := scn.NewMaterial().N("glass").
+		C(color.NewColor(0.93, 0.94, 0.95)).
+		T(0.95, false, scn.RefractionIndex_Glass).
+		M(0.05, 0.05)
+	glassMaterial.Diffuse = 0.0
+
+	smudgedGlassMaterial := scn.NewMaterial().N("smudged_glass").
+		C(color.White).
+		T(1.0, false, scn.RefractionIndex_Air).
+		CP("textures/misc/kerosenelamp/kerosenelamp_glass_wave_mod2.png", &vec3.T{glassCenterBounds[0], glass.Bounds.Ymin, glassCenterBounds[2]}, vec3.UnitX, (vec3.UnitY).Scaled(glass.Bounds.SizeY()), false)
 
 	keroseneLamp.GetFirstObjectByMaterialName("base").Material = brassMaterial
 	keroseneLamp.GetFirstObjectByMaterialName("handle").Material = brassMaterial
 	keroseneLamp.GetFirstObjectByMaterialName("knob").Material = brassMaterial
 	keroseneLamp.GetFirstObjectByMaterialName("wick_holder").Material = brassMaterial
 	keroseneLamp.GetFirstObjectByMaterialName("flame").Material = flameMaterial
-	keroseneLamp.GetFirstObjectByMaterialName("glass").Material = darkGlassMaterial
+	keroseneLamp.GetFirstObjectByMaterialName("glass").Material = glassMaterial
+
+	innerGlassSmudge := loadKeroseneLamp(scale).GetFirstObjectByMaterialName("glass")
+	innerGlassSmudge.Scale(innerGlassSmudge.Bounds.Center(), &vec3.T{0.999, 1, 0.999})
+	innerGlassSmudge.Material = smudgedGlassMaterial
+	keroseneLamp.FacetStructures = append(keroseneLamp.FacetStructures, innerGlassSmudge)
 
 	if emission == 0.0 {
 		keroseneLamp.RemoveObjectsByMaterialName("flame")

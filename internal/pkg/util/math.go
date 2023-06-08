@@ -41,3 +41,24 @@ func Max32(a, b float32) float32 {
 	}
 	return b
 }
+
+func Min32(a, b float32) float32 {
+	if a <= b {
+		return a
+	}
+	return b
+}
+
+func MaxInt(a, b int) int {
+	if a >= b {
+		return a
+	}
+	return b
+}
+
+func MinInt(a, b int) int {
+	if a <= b {
+		return a
+	}
+	return b
+}

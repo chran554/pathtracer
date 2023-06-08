@@ -49,7 +49,11 @@ Render date:            2023-02-19
 Animation render time:  aproximately (drum roll...) 72 hours
 ----
 
+.A still image of my "Advent of code" problem (and solution) 2022 day 12.
 image::aoc_2022_d12.png[Advent of code 2022 day 12]
+
+.The problem input. A heightmap with levels described from 'a' to 'z'. 'S' and 'E' mark start and end position respectively.
+image::aoc_2022_d12_map.png[Advent of code 2022 day 12 - map input]
 
 == Billiard table with a die
 
@@ -120,7 +124,7 @@ Amount facets:          208780
 Amount spheres:         2
 
 Render date             2023-03-19
-Frame render time:      10h20m29.731529458s
+Frame render time:      10h20m
 ----
 
 == Cocktail
@@ -157,3 +161,52 @@ The Cocktail logo is manually retraced in https://inkscape.org/[Inkscape] from a
 
 .Retraced Cocktail logo. My edits and improvements(?) are in yellow and green over the bitmap logo i found.
 image::cocktail_logo_retrace.png[Retraced Cocktail logo]
+
+== Early morning tea at the cottage
+
+It took me a weekend to tweak the lighting, but it was soo worth it.
+
+I used two equirectangular "sky domes". One for the morning sky exterior and one for the cottage room interior. You can see the interior giving the room ambient light and reflecting in the porcelain tea pot, roughly in the kerosene lamp base and in the window glass. It is a quite important detail at a unconscious level that probably is missed at first glance, but it gives the scene a whole new level realism.
+The soot smudge is on a separate facet structure just inside the kerosene lamp glass to make sure the glass can still reflect the ambient room.
+
+The wall paper and the table cloth are actual wall paper test images from a wall paper manufacturer.
+
+There is no "tea" in the cup nor in the tea pot. Camera angle is chosen with care to avoid a peek inside...
+
+.Early morning tea at the cottage
+image::cottage_tea.png[Morning tea at the cottage]
+
+.Early morning tea at the cottage
+----
+Render algorithm:      Pathtracing
+Image size:            1200x900
+Amount samples/pixel:  43008
+Max recursion depth:   10
+
+Amount facets:         510546
+Amount spheres:        1
+
+Render date:           2023-06-01
+Render duration:       61h43m
+----
+
+=== Kerosene lamp
+
+This image is a spin-off from the "Early morning tea at the cottage" when I fiddled with parameters to get the materials right for the kerosene lamp.
+
+.Kerosene lamp
+image::cottage_tea_kerosene_lamp.png[Kerosene lamp]
+
+.Kerosene lamp
+----
+Render algorithm:      Pathtracing
+Image size:            600x800
+Amount samples/pixel:  24576
+Max recursion depth:   10
+
+Amount facets:         7250
+Amount spheres:        1
+
+Render date:           2023-05-31
+Render duration:       7h56m
+----
