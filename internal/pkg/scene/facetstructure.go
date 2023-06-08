@@ -609,10 +609,10 @@ func (fs *FacetStructure) UpdateVertexNormals(keepExistingVertexNormals bool) {
 // A value of 0 degrees will only include all facets that share the same vertex and have the same normal.
 // https://iquilezles.org/articles/normals/
 // https://computergraphics.stackexchange.com/questions/4031/programmatically-generating-vertex-normals
-func (fs *FacetStructure) UpdateVertexNormalsWithThreshold(keepExistingVertexNormals bool, facetAngleThreshold float64) {
+func (fs *FacetStructure) UpdateVertexNormalsWithThreshold(keepExistingVertexNormals bool, facetDegreeAngleThreshold float64) {
 	fs.UpdateNormals()
 
-	angleCosineThreshold := math.Cos((math.Pi / 180) * facetAngleThreshold)
+	angleCosineThreshold := math.Cos((math.Pi / 180) * facetDegreeAngleThreshold)
 
 	vertexToFacetMap := fs.getVertexToFacetMap()
 	facets := fs.getFacets()
