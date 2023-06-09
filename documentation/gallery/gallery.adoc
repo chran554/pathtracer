@@ -167,7 +167,10 @@ image::cocktail_logo_retrace.png[Retraced Cocktail logo]
 It took me a weekend to tweak the lighting, but it was soo worth it.
 
 I used two equirectangular "sky domes". One for the morning sky exterior and one for the cottage room interior. You can see the interior giving the room ambient light and reflecting in the porcelain tea pot, roughly in the kerosene lamp base and in the window glass. It is a quite important detail at a unconscious level that probably is missed at first glance, but it gives the scene a whole new level realism.
-The soot smudge is on a separate facet structure just inside the kerosene lamp glass to make sure the glass can still reflect the ambient room.
+
+The soot smudge on the kerosene lamp glass is on a separate facet structure just inside the lamp glass to make sure the glass can still reflect the ambient room.
+
+The tea pot is of course *https://en.wikipedia.org/wiki/Utah_teapot[The Utah Tea Pot]*, but not the original set of facets but a high resolution and "water tight" version. Along with the matching tea cup and spoon. The tea cup object is altered to have bottom facets and separate structures for the saucer and the cup.
 
 The wall paper and the table cloth are actual wall paper test images from a wall paper manufacturer.
 
@@ -189,6 +192,11 @@ Amount spheres:        1
 Render date:           2023-06-01
 Render duration:       61h43m
 ----
+
+NOTE: The https://en.wikipedia.org/wiki/Utah_teapot[Utah teapot] is originally from a http://www.holmes3d.net/graphics/teapot/[bezier patch data set] created by https://en.wikipedia.org/wiki/Martin_Newell_(computer_scientist)[Martin Edward Newell] in 1975 and rendered images of the tea set can be found in the journal article "https://collections.lib.utah.edu/ark:/87278/s6hh73p6[The utilization of procedure models in digital image synthesis]" (1976).
+A https://www.cs.utah.edu/~natevm/newell_teaset/newell_teaset.zip[facet based data set] is more often used than the original bezier data.
+The https://frieslandversand.de/teekanne-1-4l-weiss-utah-teapot[real tea pot is still in production] by the Friesland Porzellan companey, once part of the German Melitta group.
+The reason rendered versions of the teapot is 3/4 the height of the real teapot is that it was considered more pleasing to look at as https://en.wikipedia.org/wiki/Jim_Blinn[Jim Blinn] (yes, creator of Blinn-Phong) rescaled it as a demonstration that the computer model could be manipulated.
 
 === Kerosene lamp
 
