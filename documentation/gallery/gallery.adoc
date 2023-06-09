@@ -193,7 +193,7 @@ Render date:           2023-06-01
 Render duration:       61h43m
 ----
 
-NOTE: The https://en.wikipedia.org/wiki/Utah_teapot[Utah teapot] is originally from a http://www.holmes3d.net/graphics/teapot/[bezier patch data set] created by https://en.wikipedia.org/wiki/Martin_Newell_(computer_scientist)[Martin Edward Newell] in 1975 and rendered images of the tea set can be found in the journal article "https://collections.lib.utah.edu/ark:/87278/s6hh73p6[The utilization of procedure models in digital image synthesis]" (1976).
+NOTE: The https://en.wikipedia.org/wiki/Utah_teapot[Utah teapot] (as well as tea cup and spoon) is originally from a http://www.holmes3d.net/graphics/teapot/[bezier patch data set] created by https://en.wikipedia.org/wiki/Martin_Newell_(computer_scientist)[Martin Edward Newell] in 1975 and rendered images of the tea set can be found in the journal article "https://collections.lib.utah.edu/ark:/87278/s6hh73p6[The utilization of procedure models in digital image synthesis]" (1976).
 A https://www.cs.utah.edu/~natevm/newell_teaset/newell_teaset.zip[facet based data set] is more often used than the original bezier data.
 The https://frieslandversand.de/teekanne-1-4l-weiss-utah-teapot[real tea pot is still in production] by the Friesland Porzellan companey, once part of the German Melitta group.
 The reason rendered versions of the teapot is 3/4 the height of the real teapot is that it was considered more pleasing to look at as https://en.wikipedia.org/wiki/Jim_Blinn[Jim Blinn] (yes, creator of Blinn-Phong) rescaled it as a demonstration that the computer model could be manipulated.
