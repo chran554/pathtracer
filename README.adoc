@@ -119,4 +119,7 @@ A lot of functionality is on display in the link:documentation/functionality/fun
 * Fake haze (testing a spin-off idea from Beer-Lambert)
 * Normal maps (and maybe bump maps)
 * Multi textures with operations `average` (really `add` with normalize), `subtract` (with min level 0.0), and `multiply`.
+* Vertex mapping to textures for facets.
+* Texture pixel interpolation. Nearest neighbour, Bilinear, and Bicubic (using Cubic Hermite Spline)
+* Validate obj-file writing for complex objects.
 * ...

@@ -69,19 +69,20 @@ func LoadImageData(filename string) *FloatImage {
 	height := textureImage.Bounds().Max.Y
 
 	image := NewFloatImage(filename, width, height)
-	colorNormalizationFactor := 1.0 / 0xffff
+	colorNormalizationFactor := 1.0 / 0xff
 	for y := 0; y < height; y++ {
 		for x := 0; x < width; x++ {
-			r, g, b, a := textureImage.At(x, y).RGBA()
+			c1 := textureImage.At(x, y)
+			nrgbaColor := col.NRGBAModel.Convert(c1).(col.NRGBA)
 
-			c := color.Color{
-				R: float32(float64(r) * colorNormalizationFactor),
-				G: float32(float64(g) * colorNormalizationFactor),
-				B: float32(float64(b) * colorNormalizationFactor),
-				A: float32(float64(a) * colorNormalizationFactor),
+			c2 := color.Color{
+				R: float32(float64(nrgbaColor.R) * colorNormalizationFactor),
+				G: float32(float64(nrgbaColor.G) * colorNormalizationFactor),
+				B: float32(float64(nrgbaColor.B) * colorNormalizationFactor),
+				A: float32(float64(nrgbaColor.A) * colorNormalizationFactor),
 			}
 
-			image.SetPixel(x, y, &c)
+			image.SetPixel(x, y, &c2)
 		}
 	}
 
@@ -106,7 +107,7 @@ func WriteImage(filename string, floatImage *FloatImage) {
 
 	floatImage.GammaEncode(GammaDefault)
 
-	image := img.NewRGBA(img.Rect(0, 0, width, height))
+	image := img.NewNRGBA(img.Rect(0, 0, width, height))
 	// imageAlpha := img.NewRGBA(img.Rect(0, 0, width, height))
 
 	for x := 0; x < width; x++ {
@@ -118,7 +119,7 @@ func WriteImage(filename string, floatImage *FloatImage) {
 			b := uint8(util.Clamp(0, 255, math.Round(float64(pixelValue.B)*255.0)))
 			a := uint8(util.Clamp(0, 255, math.Round(float64(pixelValue.A)*255.0)))
 
-			image.Set(x, y, col.RGBA{R: r, G: g, B: b, A: a})
+			image.Set(x, y, col.NRGBA{R: r, G: g, B: b, A: a})
 			// imageAlpha.Set(x, y, col.RGBA{R: a, G: a, B: a, A: 255})
 		}
 	}
@@ -130,8 +131,10 @@ func WriteImage(filename string, floatImage *FloatImage) {
 	}
 	defer f.Close()
 
-	// Encode to `PNG` with `DefaultCompression` level then save to file
-	err = png.Encode(f, image)
+	// Encode to `PNG` with `BestCompression` level then save to file
+	var encoder png.Encoder
+	encoder.CompressionLevel = png.BestCompression
+	err = encoder.Encode(f, image)
 	if err != nil {
 		fmt.Println("Oups, no image encode for you today.")
 		os.Exit(1)
@@ -139,7 +142,7 @@ func WriteImage(filename string, floatImage *FloatImage) {
 
 	// falpha, _ := os.Create(filename + ".alpha.png")
 	// defer falpha.Close()
-	// png.Encode(falpha, imageAlpha)
+	// encoder.Encode(falpha, imageAlpha)
 }
 
 func WriteRawImage(filename string, image *FloatImage) {
