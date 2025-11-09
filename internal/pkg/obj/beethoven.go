@@ -19,7 +19,7 @@ func NewBeethoven(scale float64) *scn.FacetStructure {
 }
 
 func loadBeethoven() *scn.FacetStructure {
-	statue := ply.ReadOrPanic(filepath.Join(PlyFileDir, "beethoven.ply"))
+	statue := ply.ReadFacetStructureOrPanic(filepath.Join(PlyFileDir, "beethoven.ply"))
 
 	statue.CenterOn(&vec3.Zero)
 	statue.RotateY(&vec3.Zero, math.Pi-math.Pi/12.0)

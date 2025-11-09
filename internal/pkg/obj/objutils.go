@@ -15,5 +15,6 @@ var (
 func SetResourceRoot(resourceRoot string) {
 	resourcesRoot = resourceRoot
 	ObjFileDir = filepath.Join(resourcesRoot, "objects/obj")
+	PlyFileDir = filepath.Join(resourcesRoot, "objects/ply")
 	ObjEvaluationFileDir = filepath.Join(resourcesRoot, "objects")
 }
