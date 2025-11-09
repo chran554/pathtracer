@@ -1,7 +1,7 @@
 package rendermonitor
 
 import (
-	"encoding/json"
+	"bytes"
 	"errors"
 	"fmt"
 	"math"
@@ -12,6 +12,8 @@ import (
 	"pathtracer/internal/pkg/util"
 	"sync"
 	"time"
+
+	"github.com/vmihailenco/msgpack/v5"
 )
 
 type RenderMonitor struct {
@@ -23,9 +25,22 @@ type RenderMonitor struct {
 	lock       sync.Mutex
 }
 
-func NewRenderMonitor() RenderMonitor {
+type PixelData struct {
+	ImageGroup  string  `msgpack:"imageGroup"`
+	ImageName   string  `msgpack:"imageName"`
+	ImageWidth  int     `msgpack:"imageWidth"`
+	ImageHeight int     `msgpack:"imageHeight"`
+	Progress    float64 `msgpack:"progress"`
+	X           int     `msgpack:"x"`
+	Y           int     `msgpack:"y"`
+	PixelWidth  int     `msgpack:"pixelWidth"`
+	PixelHeight int     `msgpack:"pixelHeight"`
+	Color       []int   `msgpack:"color"`
+}
+
+func NewRenderMonitor() *RenderMonitor {
 	// In IPv4, any address between 224.0.0.0 to 239.255.255.255 can be used as a multicast address.
-	address := "230.0.0.0:9999"
+	address := "127.0.0.1:5050"
 
 	connection, err := net.Dial("udp", address)
 	if err != nil {
@@ -33,7 +48,7 @@ func NewRenderMonitor() RenderMonitor {
 		os.Exit(2)
 	}
 
-	return RenderMonitor{connection: connection}
+	return &RenderMonitor{connection: connection}
 }
 
 func (renderMonitor *RenderMonitor) Close() {
@@ -42,12 +57,12 @@ func (renderMonitor *RenderMonitor) Close() {
 	renderMonitor.connection.Close()
 }
 
-func (renderMonitor *RenderMonitor) SetPixel(x int, y int, pixelWidth int, pixelHeight int, color *color.Color, amountSamples int) {
+func (renderMonitor *RenderMonitor) SetPixel(x int, y int, pixelWidth int, pixelHeight int, color *color.Color, amountSamples int, progress float64) {
 	message := getMessage(
 		renderMonitor.groupName, renderMonitor.imageName, renderMonitor.width, renderMonitor.height,
-		x, y, pixelWidth, pixelHeight, color, amountSamples)
+		x, y, pixelWidth, pixelHeight, color, amountSamples, progress)
 
-	//	fmt.Println("x:", x, "y:", y, "color:", color)
+	// fmt.Println("x:", x, "y:", y, "color:", color)
 
 	renderMonitor.lock.Lock()
 	defer renderMonitor.lock.Unlock()
@@ -68,42 +83,33 @@ func (renderMonitor *RenderMonitor) Initialize(imageGroup string, imageName stri
 	renderMonitor.width = width
 	renderMonitor.height = height
 
-	renderMonitor.SetPixel(-1, -1, -1, -1, &color.Black, -1)
+	renderMonitor.SetPixel(-1, -1, -1, -1, &color.Black, -1, 0)
 
 	time.Sleep(100 * time.Millisecond)
 }
 
-func getMessage(imageGroup string, imageName string,
-	imageWidth int, imageHeight int,
-	x int, y int, pixelWidth int, pixelHeight int, color *color.Color,
-	amountSamples int) []byte {
-
+func getMessage(imageGroup string, imageName string, imageWidth int, imageHeight int, x int, y int, pixelWidth int, pixelHeight int, color *color.Color, amountSamples int, progress float64) []byte {
 	c := *color
 	c.Multiply(1.0 / float32(amountSamples))
 	c = image.GammaEncodeColor(&c, image.GammaDefault)
 	c.Multiply(255.0)
 
-	r := uint8(util.Clamp(0, 255, math.Round(float64(c.R))))
-	g := uint8(util.Clamp(0, 255, math.Round(float64(c.G))))
-	b := uint8(util.Clamp(0, 255, math.Round(float64(c.B))))
+	r := int(util.ClampFloat64(0, 255, math.Round(float64(c.R))))
+	g := int(util.ClampFloat64(0, 255, math.Round(float64(c.G))))
+	b := int(util.ClampFloat64(0, 255, math.Round(float64(c.B))))
 
-	rawColor := [3]uint8{r, g, b}
+	rawColor := []int{r, g, b, 255}
 
-	message := struct {
-		ImageGroup  string   `json:"imageGroup"`
-		ImageName   string   `json:"imageName"`
-		ImageWidth  int      `json:"imageWidth"`
-		ImageHeight int      `json:"imageHeight"`
-		X           int      `json:"x"`
-		Y           int      `json:"y"`
-		PixelWidth  int      `json:"pixelWidth"`
-		PixelHeight int      `json:"pixelHeight"`
-		Color       [3]uint8 `json:"color"`
-	}{
+	buffer := &bytes.Buffer{}
+	enc := msgpack.NewEncoder(buffer)
+	enc.SetCustomStructTag("msgpack")
+
+	pd := PixelData{
 		ImageGroup:  imageGroup,
 		ImageName:   imageName,
 		ImageWidth:  imageWidth,
 		ImageHeight: imageHeight,
+		Progress:    progress,
 		X:           x,
 		Y:           y,
 		PixelWidth:  pixelWidth,
@@ -111,10 +117,9 @@ func getMessage(imageGroup string, imageName string,
 		Color:       rawColor,
 	}
 
-	jsonMessage, err := json.Marshal(message)
-	if err != nil {
-		fmt.Printf("Could not marshal data: %+v\n", message)
+	if err := enc.Encode(pd); err != nil {
+		fmt.Printf("Could not marshal data: %+v\n", pd)
 	}
 
-	return jsonMessage
+	return buffer.Bytes()
 }
