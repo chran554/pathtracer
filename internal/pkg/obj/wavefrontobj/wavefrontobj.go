@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"github.com/ungerik/go3d/float64/vec2"
 	"io"
 	"math"
 	"os"
@@ -260,7 +261,7 @@ func parseLines(lines []string, file *os.File) (*scene.FacetStructure, error) {
 
 	var vertices []*vec3.T
 	var normals []*vec3.T
-	var textureVertices []*vec3.T
+	var textureCoordinates []*vec2.T
 
 	materialMap := make(map[string]*scene.Material)
 
@@ -300,6 +301,7 @@ func parseLines(lines []string, file *os.File) (*scene.FacetStructure, error) {
 
 		var err error
 		var vertex *vec3.T
+		var textureCoordinate *vec2.T
 		var normal *vec3.T
 		var face *scene.Facet
 
@@ -314,13 +316,13 @@ func parseLines(lines []string, file *os.File) (*scene.FacetStructure, error) {
 			vertex, err = parseVertex(arguments)
 			vertices = append(vertices, vertex)
 		case "vt":
-			vertex, err = parseTextureVertex(arguments)
-			textureVertices = append(textureVertices, vertex)
+			textureCoordinate, err = parseTextureCoordinate(arguments)
+			textureCoordinates = append(textureCoordinates, textureCoordinate)
 		case "vn":
 			normal, err = parseNormal(arguments)
 			normals = append(normals, normal)
 		case "f":
-			face, err = parseFace(arguments, vertices, normals, textureVertices)
+			face, err = parseFace(arguments, vertices, normals, textureCoordinates)
 			faceTriangleFacets := face.SplitMultiPointFacet()
 
 			if len(currentGroups) > 0 {
@@ -682,6 +684,7 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 			newMaterial := scene.NewMaterial().N(materialName)
 			materialMap[materialName] = newMaterial
 			currentMaterial = newMaterial
+
 		case "sharpness":
 			// sharpness value
 			//
@@ -692,6 +695,7 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 			//
 			// "value" can be a number from 0 to 1000.  The default is 60.  A high
 			// value results in a clear reflection of objects in the reflection map.
+
 		case "Ns":
 			// Ns exponent
 			//
@@ -703,7 +707,8 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 			// from 0 to 1000.
 
 			// Blender software export "Roughness" material parameter as mtl-file parameter "Ns".
-			currentMaterial.Roughness = util.Clamp(0.0, 1.0, (1000.0-parseFloat64(tokens[1]))/1000.0)
+			currentMaterial.Roughness = util.ClampFloat64(0.0, 1.0, (1000.0-parseFloat64(tokens[1]))/1000.0)
+
 		case "refl":
 			// Blender software export "Metallic" material parameter as mtl-file parameter "refl".
 			// This is NOT part of the mtl-file specification as "refl" is not supposed to be used for scalar values but
@@ -713,6 +718,7 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 
 			// Blender software export "Metallic" material parameter as mtl-file parameter "refl".
 			currentMaterial.Glossiness = parseFloat64(tokens[1])
+
 		case "Ks":
 			// To specify the specular reflectivity of the current material
 			// Ks r g b
@@ -721,6 +727,7 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 			//
 			// "Specularity / Glossiness" [0.0 .. 1.0]
 			currentMaterial.Glossiness = parseFloat64(tokens[1])
+
 		case "Tf":
 			// To specify the transmission filter of the current material
 			// Tf r g b
@@ -731,11 +738,13 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 			// filter, which only allows the specific colors to pass through.
 			// For example, Tf 0 1 0 allows all the green to pass through and
 			// filters out all the red and blue.
+
 		case "Ke":
 			// Proprietary parameter for "emission" (not present in mtl-file specification)
 			// "emission" [0.0 ..[
 			emission := color.NewColor(parseFloat64(tokens[1]), parseFloat64(tokens[2]), parseFloat64(tokens[3]))
 			currentMaterial.Emission = &emission
+
 		case "Ni":
 			// Ni optical_density
 			//
@@ -743,6 +752,7 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 			// This is also known as index of refraction.
 			currentMaterial.RefractionIndex = parseFloat64(tokens[1])
 			currentMaterial.SolidObject = true
+
 		case "d":
 			// d factor
 			//
@@ -756,8 +766,21 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 			// Unlike a real transparent material, the dissolve does not depend upon
 			// material thickness nor does it have any spectral character.  Dissolve
 			// works on all illumination models.
+			//
+			// It is the inverted factor of "Tr" parameter.
 			currentMaterial.Transparency = 1.0 - parseFloat64(tokens[1])
 			currentMaterial.SolidObject = false
+
+		case "Tr":
+			// Specifies the transparency for the current material.
+			//
+			// A factor of 0.0 is fully opaque.
+			// This is the default when a new material is created.
+			// A factor of 1.0 is fully dissolved (completely transparent).
+			// This is a non-standard parameter for mtl-files. It is the inverted factor of "d" parameter.
+			currentMaterial.Transparency = parseFloat64(tokens[1])
+			currentMaterial.SolidObject = false
+
 		case "illum":
 			// illum illum_#
 			//
@@ -780,10 +803,12 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 			// 9				Transparency: Glass on, Reflection: Ray trace off
 			// 10				Casts shadows onto invisible surfaces
 			//
+
 		case "Pr":
 			// Proprietary parameter for "roughness" (not present in mtl-file specification)
 			// "Roughness" [0.0 .. 1.0]
 			currentMaterial.Roughness = parseFloat64(tokens[1])
+
 		case "Ka":
 			// To specify the ambient reflectivity of the current material
 			// Ka r g b
@@ -791,6 +816,7 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 			// Ka xyz x y z
 			//
 			// "Ambient color" [[0.0 .. 1.0] [0.0 .. 1.0] [0.0 .. 1.0]]
+
 		case "Kd":
 			// To specify the diffuse reflectivity of the current material
 			// Kd r g b
@@ -798,9 +824,16 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 			// Kd xyz x y z
 			//
 			// "Diffuse color" [[0.0 .. 1.0] [0.0 .. 1.0] [0.0 .. 1.0]]
-
 			c := color.NewColor(parseFloat64(tokens[1]), parseFloat64(tokens[2]), parseFloat64(tokens[3]))
 			currentMaterial.Color = &c
+
+		case "map_Kd":
+			// To specify the diffuse reflectivity of the current material
+			// map_Kd filename
+
+			textureMappingImageProjection := scene.NewTextureMappingImageProjection(tokens[1])
+			currentMaterial.P(&textureMappingImageProjection)
+
 		default:
 			err = fmt.Errorf("unknown/unexpected line type: '%s'", line)
 		}
@@ -849,7 +882,7 @@ func readLines(r io.Reader) ([]string, error) {
 	return lines, scanner.Err()
 }
 
-func parseFace(pointTokens []string, vertices []*vec3.T, normals []*vec3.T, textureVertices []*vec3.T) (*scene.Facet, error) {
+func parseFace(pointTokens []string, vertices []*vec3.T, normals []*vec3.T, textureVertices []*vec2.T) (*scene.Facet, error) {
 	var face scene.Facet
 
 	for _, pointToken := range pointTokens {
@@ -863,7 +896,7 @@ func parseFace(pointTokens []string, vertices []*vec3.T, normals []*vec3.T, text
 		}
 
 		if textureVertexIndex > 0 {
-			face.TextureVertices = append(face.TextureVertices, textureVertices[textureVertexIndex-1])
+			face.TextureCoordinates = append(face.TextureCoordinates, textureVertices[textureVertexIndex-1])
 		}
 
 		if vertexNormalIndex > 0 {
@@ -924,7 +957,7 @@ func parseNormal(tokens []string) (*vec3.T, error) {
 	return &normal, nil
 }
 
-func parseTextureVertex(tokens []string) (*vec3.T, error) {
+func parseTextureCoordinate(tokens []string) (*vec2.T, error) {
 	var err error
 
 	amountTokens := len(tokens)
@@ -933,7 +966,7 @@ func parseTextureVertex(tokens []string) (*vec3.T, error) {
 		return nil, err
 	}
 
-	var vertex vec3.T
+	var vertex vec2.T
 
 	//TODO: merge errors together, check all fields
 	if vertex[0], err = strconv.ParseFloat(tokens[0], 64); err != nil {
@@ -944,12 +977,13 @@ func parseTextureVertex(tokens []string) (*vec3.T, error) {
 		err = errors.New("unable to parse V coordinate")
 		return nil, err
 	}
-	if len(tokens) == 3 {
-		if vertex[2], err = strconv.ParseFloat(tokens[2], 64); err != nil {
-			err = errors.New("unable to parse W coordinate")
-			return nil, err
-		}
-	}
+
+	//if len(tokens) == 3 {
+	//	if vertex[2], err = strconv.ParseFloat(tokens[2], 64); err != nil {
+	//		err = errors.New("unable to parse W coordinate")
+	//		return nil, err
+	//	}
+	//}
 
 	return &vertex, nil
 }
