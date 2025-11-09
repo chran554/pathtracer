@@ -2,13 +2,15 @@ package scene
 
 import (
 	"fmt"
-	"github.com/ungerik/go3d/float64/mat3"
-	"github.com/ungerik/go3d/float64/vec2"
-	"github.com/ungerik/go3d/float64/vec3"
 	"math"
 	"os"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/image"
+	"pathtracer/internal/pkg/util"
+
+	"github.com/ungerik/go3d/float64/mat3"
+	"github.com/ungerik/go3d/float64/vec2"
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 const (
@@ -22,9 +24,10 @@ const (
 type ProjectionType string
 
 const (
-	ProjectionTypeParallel    ProjectionType = "Parallel"
-	ProjectionTypeCylindrical ProjectionType = "Cylindrical"
-	ProjectionTypeSpherical   ProjectionType = "Spherical"
+	ProjectionTypeParallel       ProjectionType = "Parallel"
+	ProjectionTypeCylindrical    ProjectionType = "Cylindrical"
+	ProjectionTypeSpherical      ProjectionType = "Spherical"
+	ProjectionTypeTextureMapping ProjectionType = "TextureMapping"
 )
 
 type ImageProjection struct {
@@ -53,6 +56,10 @@ func NewSphericalImageProjection(textureFilename string, origin *vec3.T, u vec3.
 	return NewImageProjection(ProjectionTypeSpherical, textureFilename, origin, u, v, false, true, false, false)
 }
 
+func NewTextureMappingImageProjection(textureFilename string) ImageProjection {
+	return NewImageProjection(ProjectionTypeTextureMapping, textureFilename, &vec3.T{}, vec3.T{}, vec3.T{}, false, false, false, false)
+}
+
 func NewImageProjection(projectionType ProjectionType, textureFilename string, origin *vec3.T, u vec3.T, v vec3.T, repeatU bool, repeatV bool, flipU bool, flipV bool) ImageProjection {
 	return ImageProjection{
 		ProjectionType: projectionType,
@@ -77,8 +84,15 @@ func (imageProjection *ImageProjection) GetColor(point *vec3.T) *color.Color {
 	if imageProjection.ProjectionType == ProjectionTypeSpherical {
 		return imageProjection.getSphericalColor(point)
 	}
+	// ProjectionTypeTextureMapping is not handled here
 
 	return &color.BlackTransparent
+}
+
+func (imageProjection *ImageProjection) GetColorAt(coordinate *vec2.T) *color.Color {
+	textureX := util.ClampInt(0, imageProjection._image.Width-1, int(coordinate[0]*float64(imageProjection._image.Width)))
+	textureY := util.ClampInt(0, imageProjection._image.Height-1, int((1.0-coordinate[1])*float64(imageProjection._image.Height)))
+	return imageProjection._image.GetPixel(textureX, textureY)
 }
 
 func (imageProjection *ImageProjection) getSphericalColor2(point *vec3.T) *color.Color {
@@ -246,14 +260,6 @@ func (imageProjection *ImageProjection) getParallelColor(point *vec3.T) *color.C
 	return imageProjection._image.GetPixel(textureX, textureY)
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	} else {
-		return b
-	}
-}
-
 func (imageProjection *ImageProjection) ClearProjection() {
 	imageProjection._image = nil
 	imageProjection._invertedCoordinateSystemMatrix = nil
@@ -272,14 +278,21 @@ func (imageProjection *ImageProjection) Initialize() {
 		imageProjection.initializeCylindricalProjection()
 
 	case ProjectionTypeParallel:
-		imageProjection.initializeParallellProjection()
+		imageProjection.initializeParallelProjection()
+
+	case ProjectionTypeTextureMapping:
+		imageProjection.initializeTextureMapping()
 
 	default:
 		fmt.Printf("can not initialize unknown projection type \"%s\"\n", imageProjection.ProjectionType)
 	}
 }
 
-func (imageProjection *ImageProjection) initializeParallellProjection() {
+func (imageProjection *ImageProjection) initializeTextureMapping() {
+	// Nothing by intention
+}
+
+func (imageProjection *ImageProjection) initializeParallelProjection() {
 	if imageProjection._invertedCoordinateSystemMatrix == nil || *imageProjection._invertedCoordinateSystemMatrix == mat3.Zero {
 		W := vec3.Cross(imageProjection.U, imageProjection.V)
 		imageProjection._invertedCoordinateSystemMatrix = &mat3.T{*imageProjection.U, *imageProjection.V, W}

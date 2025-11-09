@@ -164,7 +164,7 @@ bool rayTriangleIntersect(
 }
 */
 
-func FacetIntersection2(line *Ray, facet *Facet) (intersection bool, intersectionPoint *vec3.T, intersectionNormal *vec3.T) {
+func FacetIntersection2(line *Ray, facet *Facet) (intersection bool, intersectionPoint *vec3.T, vertexWeights *vec3.T) {
 	plane := Plane{
 		Origin: facet.Vertices[0],
 		Normal: facet.Normal,
@@ -175,28 +175,11 @@ func FacetIntersection2(line *Ray, facet *Facet) (intersection bool, intersectio
 	if intersection {
 		withinTriangle, vertexWeights := isPointWithinTriangleFacet(intersectionPoint, facet)
 		if withinTriangle {
-			normal := interpolateTriangleFacetNormal(facet, vertexWeights)
-			return true, intersectionPoint, &normal
+			return true, intersectionPoint, vertexWeights
 		}
 	}
 
 	return false, nil, nil
-}
-
-// interpolateTriangleFacetNormal interpolates intersection point normal from facet (triangle) vertex normals
-func interpolateTriangleFacetNormal(facet *Facet, vertexWeights *vec3.T) vec3.T {
-	normal := vec3.T{0, 0, 0}
-	amountVertexNormals := len(facet.VertexNormals)
-	if (amountVertexNormals > 0) && (amountVertexNormals <= len(vertexWeights)) {
-		for i := 0; i < amountVertexNormals; i++ {
-			weightedVertexNormal := facet.VertexNormals[i].Scaled(vertexWeights[i])
-			normal.Add(&weightedVertexNormal)
-		}
-		normal.Normalize()
-	} else {
-		normal = *facet.Normal
-	}
-	return normal
 }
 
 func isPointWithinTriangleFacet(point *vec3.T, facet *Facet) (isWithin bool, vertexWeights *vec3.T) {
@@ -258,7 +241,7 @@ func isPointWithinTriangle2(point *vec3.T, facet *Facet) (isWithin bool, vertexW
 }
 */
 
-func FacetStructureIntersection(line *Ray, facetStructure *FacetStructure, parentMaterial *Material) (intersection bool, intersectionFacet *Facet, intersectionPoint *vec3.T, intersectionNormal *vec3.T, intersectionMaterial *Material) {
+func FacetStructureIntersection(line *Ray, facetStructure *FacetStructure, parentMaterial *Material) (intersection bool, intersectionFacet *Facet, intersectionPoint *vec3.T, intersectionVertexWeights *vec3.T, intersectionMaterial *Material) {
 	if facetStructure.IgnoreBounds || BoundsIntersection(line, facetStructure.Bounds) {
 		var closestIntersectionDistance = math.MaxFloat64
 
@@ -268,7 +251,7 @@ func FacetStructureIntersection(line *Ray, facetStructure *FacetStructure, paren
 		}
 
 		for _, facet := range facetStructure.Facets {
-			facetIntersection, facetIntersectionPoint, facetIntersectionNormal := FacetIntersection2(line, facet)
+			facetIntersection, facetIntersectionPoint, facetIntersectionVertexWeights := FacetIntersection2(line, facet)
 
 			if facetIntersection {
 				tempIntersectionDistance := vec3.Distance(line.Origin, facetIntersectionPoint)
@@ -277,7 +260,7 @@ func FacetStructureIntersection(line *Ray, facetStructure *FacetStructure, paren
 					intersection = facetIntersection
 					intersectionFacet = facet
 					intersectionPoint = facetIntersectionPoint
-					intersectionNormal = facetIntersectionNormal
+					intersectionVertexWeights = facetIntersectionVertexWeights
 					intersectionMaterial = currentMaterial
 					closestIntersectionDistance = tempIntersectionDistance
 				}
@@ -286,7 +269,7 @@ func FacetStructureIntersection(line *Ray, facetStructure *FacetStructure, paren
 		}
 
 		for _, facetSubStructure := range facetStructure.FacetStructures {
-			subStructureIntersection, subStructureIntersectionFacet, subStructureIntersectionPoint, subStructureIntersectionNormal, subStructureIntersectionMaterial := FacetStructureIntersection(line, facetSubStructure, currentMaterial)
+			subStructureIntersection, subStructureIntersectionFacet, subStructureIntersectionPoint, subStructureVertexWeights, subStructureIntersectionMaterial := FacetStructureIntersection(line, facetSubStructure, currentMaterial)
 
 			if subStructureIntersection {
 				tempIntersectionDistance := vec3.Distance(line.Origin, subStructureIntersectionPoint)
@@ -295,7 +278,7 @@ func FacetStructureIntersection(line *Ray, facetStructure *FacetStructure, paren
 					intersection = subStructureIntersection
 					intersectionFacet = subStructureIntersectionFacet
 					intersectionPoint = subStructureIntersectionPoint
-					intersectionNormal = subStructureIntersectionNormal
+					intersectionVertexWeights = subStructureVertexWeights
 					intersectionMaterial = subStructureIntersectionMaterial
 					closestIntersectionDistance = tempIntersectionDistance
 				}
@@ -303,7 +286,7 @@ func FacetStructureIntersection(line *Ray, facetStructure *FacetStructure, paren
 		}
 	}
 
-	return intersection, intersectionFacet, intersectionPoint, intersectionNormal, intersectionMaterial
+	return intersection, intersectionFacet, intersectionPoint, intersectionVertexWeights, intersectionMaterial
 }
 
 func DiscIntersection(line *Ray, disc *Disc) (intersection bool, intersectionPoint *vec3.T, intersectionNormal *vec3.T) {

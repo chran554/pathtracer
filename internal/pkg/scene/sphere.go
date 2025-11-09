@@ -178,7 +178,7 @@ func (s *Sphere) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPo
 
 			if projectionType == ProjectionTypeParallel {
 				imageProjection._invertedCoordinateSystemMatrix = nil
-				imageProjection.initializeParallellProjection()
+				imageProjection.initializeParallelProjection()
 
 			} else if projectionType == ProjectionTypeSpherical {
 				imageProjection._invertedCoordinateSystemMatrix = nil

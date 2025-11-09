@@ -1,9 +1,10 @@
 package scene
 
 import (
-	"github.com/ungerik/go3d/float64/vec3"
 	"math"
 	"pathtracer/internal/pkg/color"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 type Material struct {
@@ -12,7 +13,7 @@ type Material struct {
 	Diffuse         float64          `json:"Diffuse,omitempty"`
 	Emission        *color.Color     `json:"Emission,omitempty"`
 	Glossiness      float64          `json:"Glossiness,omitempty"` // Glossiness is the percent amount that will make out specular reflection. Values [0.0 .. 1.0] with default 0.0. Lower value the more diffuse color will appear and higher value the more mirror reflection will appear.
-	Roughness       float64          `json:"Roughness,omitempty"`  // Roughness is the diffuse spread of the specular reflection. Values [0.0 .. 1.0] with default 0.0. Lower is like "brushed metal" or "foggy/hazy reflection" and higher value give a more mirror like reflection. A value of 0.0 is perfect mirror reflection and a value of 0.0 is a perfect diffuse material (no mirror at al).
+	Roughness       float64          `json:"Roughness,omitempty"`  // Roughness is the diffuse spread of the specular reflection. Values [0.0 .. 1.0] with default 0.0. Lower is like "brushed metal" or "foggy/hazy reflection" and higher value give a more mirror like reflection. A value of 1.0 is perfect mirror reflection and a value of 0.0 is a perfect diffuse material (no mirror at al).
 	Projection      *ImageProjection `json:"Projection,omitempty"`
 	RefractionIndex float64          `json:"RefractionIndex,omitempty"`
 	SolidObject     bool             `json:"SolidObject,omitempty"`   // SolidObject is if the material denotes a solid object with volume, not a hollow or open object or object nor an object with plane-thin walls. Solid transparent objects can refract light, hollow objects don't.
@@ -97,6 +98,13 @@ func (m *Material) PP(textureFilename string, origin *vec3.T, u vec3.T, v vec3.T
 func (m *Material) SP(textureFilename string, origin *vec3.T, u vec3.T, v vec3.T) *Material {
 	sphericalImageProjection := NewSphericalImageProjection(textureFilename, origin, u, v)
 	m.Projection = &sphericalImageProjection
+	return m
+}
+
+// TP is texture projection
+func (m *Material) TP(textureFilename string) *Material {
+	textureMappingImageProjection := NewTextureMappingImageProjection(textureFilename)
+	m.Projection = &textureMappingImageProjection
 	return m
 }
 

@@ -54,38 +54,38 @@ func (b *Bounds) SizeZ() float64 {
 }
 
 func (b *Bounds) Max() float64 {
-	return math.Max(b.Xmax, math.Max(b.Ymax, b.Zmax))
+	return max(b.Xmax, max(b.Ymax, b.Zmax))
 }
 
 func (b *Bounds) Min() float64 {
-	return math.Min(b.Xmax, math.Min(b.Ymax, b.Zmax))
+	return min(b.Xmax, min(b.Ymax, b.Zmax))
 }
 
 func (b *Bounds) AddDiscBounds(d *Disc) {
-	b.Xmin = math.Min(b.Xmin, d.Origin[0]-d.Radius)
-	b.Xmax = math.Max(b.Xmax, d.Origin[0]+d.Radius)
-	b.Ymin = math.Min(b.Ymin, d.Origin[1]-d.Radius)
-	b.Ymax = math.Max(b.Ymax, d.Origin[1]+d.Radius)
-	b.Zmin = math.Min(b.Zmin, d.Origin[2]-d.Radius)
-	b.Zmax = math.Max(b.Zmax, d.Origin[2]+d.Radius)
+	b.Xmin = min(b.Xmin, d.Origin[0]-d.Radius)
+	b.Xmax = max(b.Xmax, d.Origin[0]+d.Radius)
+	b.Ymin = min(b.Ymin, d.Origin[1]-d.Radius)
+	b.Ymax = max(b.Ymax, d.Origin[1]+d.Radius)
+	b.Zmin = min(b.Zmin, d.Origin[2]-d.Radius)
+	b.Zmax = max(b.Zmax, d.Origin[2]+d.Radius)
 }
 
 func (b *Bounds) AddBounds(bounds *Bounds) {
-	b.Xmin = math.Min(b.Xmin, bounds.Xmin)
-	b.Xmax = math.Max(b.Xmax, bounds.Xmax)
-	b.Ymin = math.Min(b.Ymin, bounds.Ymin)
-	b.Ymax = math.Max(b.Ymax, bounds.Ymax)
-	b.Zmin = math.Min(b.Zmin, bounds.Zmin)
-	b.Zmax = math.Max(b.Zmax, bounds.Zmax)
+	b.Xmin = min(b.Xmin, bounds.Xmin)
+	b.Xmax = max(b.Xmax, bounds.Xmax)
+	b.Ymin = min(b.Ymin, bounds.Ymin)
+	b.Ymax = max(b.Ymax, bounds.Ymax)
+	b.Zmin = min(b.Zmin, bounds.Zmin)
+	b.Zmax = max(b.Zmax, bounds.Zmax)
 }
 
 func (b *Bounds) IncludeVertex(vertex *vec3.T) {
-	b.Xmin = math.Min(b.Xmin, vertex[0])
-	b.Xmax = math.Max(b.Xmax, vertex[0])
-	b.Ymin = math.Min(b.Ymin, vertex[1])
-	b.Ymax = math.Max(b.Ymax, vertex[1])
-	b.Zmin = math.Min(b.Zmin, vertex[2])
-	b.Zmax = math.Max(b.Zmax, vertex[2])
+	b.Xmin = min(b.Xmin, vertex[0])
+	b.Xmax = max(b.Xmax, vertex[0])
+	b.Ymin = min(b.Ymin, vertex[1])
+	b.Ymax = max(b.Ymax, vertex[1])
+	b.Zmin = min(b.Zmin, vertex[2])
+	b.Zmax = max(b.Zmax, vertex[2])
 }
 
 func BoundingBoxIntersection1(line *Ray, bounds *Bounds) bool {
@@ -197,8 +197,8 @@ func BoundingBoxIntersection2(line *Ray, bounds *Bounds) bool {
 		return noHit
 	}
 
-	tmin = math.Max(tmin, tzmin)
-	tmax = math.Min(tmax, tzmax)
+	tmin = max(tmin, tzmin)
+	tmax = min(tmax, tzmax)
 
 	return hit
 }
