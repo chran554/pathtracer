@@ -2,254 +2,363 @@ package ply
 
 import (
 	"bufio"
+	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
-	"os"
-	"path/filepath"
-	"pathtracer/internal/pkg/scene"
 	"strconv"
 	"strings"
-
-	"github.com/ungerik/go3d/float64/vec3"
 )
 
-// propertyDefinition holds the definition from the ply file header of a property of an element.
-// This property definition can hold both single property definitions and "reference list" definitions.
+type header struct {
+	format             plyFormat
+	elementDefinitions []elementDefinition
+}
+
+type plyFormat struct {
+	Format  string
+	Version string
+}
+
+// propertyDefinition holds the definition from the ply file header of a Property of an Element.
+// This Property definition can hold both single Property definitions and "reference list" definitions.
+//
+// Valid data types for a scalar Property, field dataType (according to https://paulbourke.net/dataformats/ply/):
+//
+//	name        type        number of bytes
+//	---------------------------------------
+//	char       character                 1
+//	uchar      unsigned character        1
+//	short      short integer             2
+//	ushort     unsigned short integer    2
+//	int        integer                   4
+//	uint       unsigned integer          4
+//	float      single-precision float    4
+//	double     double-precision float    8
 type propertyDefinition struct {
-	// Single property definition
+	// Single Property definition
 	name     string
 	dataType string
 	index    int
+}
 
-	// Reference list definition
-	listProperty             bool   // listProperty holds whether this property definition is a reference list definition or a single property definition
-	listCountDataType        string // listCountDataType is data type for the amount of references in the list. Should always be some kind of integer type(?)
-	listElementIndexDataType string // listElementIndexDataType is the data type for index references. Should always be some kind of integer type(?)
-	listElementType          string // listElementType the type of element that the index references in the list refer to. (Like a facet element with list property refer to index of element type vertex (vertices).
+type referenceListDefinition struct {
+	countDataType  string // referenceCountDataType is data type for the amount of references in the list. Should always be some kind of integer type(?)
+	referencedType string // referencedType the type of Element that the index references in the list refer to. (Like a facet Element with list Property refer to index of Element type vertex (vertices).)
+	idDataType     string // referenceIDDataType is the data type for index references. Should always be some kind of integer type(?)
 }
 
 type elementDefinition struct {
-	name       string
-	count      int
-	properties []*propertyDefinition
+	name          string
+	count         int
+	properties    []*propertyDefinition
+	referenceList *referenceListDefinition
 }
 
-type propertyValue struct {
-	name       string
-	valueType  valueType
-	intValue   int
-	floatValue float64
+type Property struct {
+	Name       string
+	Type       PropertyType
+	IntValue   int
+	FloatValue float64
 }
 
-type elementValue struct {
-	name   string
-	index  int
-	values []*propertyValue
+type Element struct {
+	Name          string
+	ID            int
+	Properties    []*Property
+	References    []indexReference
+	ReferenceType string
 }
 
-type valueType string
+type PropertyType string
+type indexReference int
 
 const (
-	Unknown        valueType = "?"
-	Int                      = "int"
-	Float                    = "float"
-	IndexReference           = "indexReference"
+	PropertyTypeUnknown        PropertyType = "unknown"
+	PropertyTypeInt            PropertyType = "int"
+	PropertyTypeFloat          PropertyType = "float"
+	PropertyTypeIndexReference PropertyType = "indexReference"
 )
 
-func ReadOrPanic(plyFilenamePath string) *scene.FacetStructure {
-	objFile, err := os.Open(plyFilenamePath)
-	if err != nil {
-		message := fmt.Sprintf("Could not open ply file: '%s'\n%s\n", plyFilenamePath, err.Error())
-		panic(message)
-	}
-	defer objFile.Close()
-
-	ply, err := Read(objFile)
-	if err != nil {
-		message := fmt.Sprintf("Could not read ply file: '%s'\n%s\n", objFile.Name(), err.Error())
-		panic(message)
-	}
-
-	return ply
+func (f *plyFormat) Binary() bool {
+	return strings.HasPrefix(strings.ToLower(f.Format), "binary")
 }
 
-func Read(file *os.File) (*scene.FacetStructure, error) {
-	reader := bufio.NewReader(file)
-	_, elementValues, err := readPly(reader)
-	if err != nil {
-		return nil, fmt.Errorf("could read ply file '%s': %w", file.Name(), err)
-	}
-
-	var facetStructure *scene.FacetStructure
-	if facetStructure, err = convertToFacetStructure(elementValues); err != nil {
-		return nil, fmt.Errorf("could not convert ply file '%s' values to facet structure: %w", file.Name(), err)
-	}
-
-	facetStructure.UpdateBounds()
-	facetStructure.UpdateNormals()
-
-	name := strings.TrimSuffix(strings.TrimSuffix(filepath.Base(file.Name()), ".ply"), ".PLY")
-	facetStructure.Name = strings.ToLower(name)
-	facetStructure.Material = scene.NewMaterial().N(strings.ToLower(name))
-
-	return facetStructure, nil
+func (f *plyFormat) ASCII() bool {
+	return strings.HasPrefix(strings.ToLower(f.Format), "ascii")
 }
 
-func convertToFacetStructure(values []*elementValue) (*scene.FacetStructure, error) {
-	var vertices []*vec3.T
-	var facets []*scene.Facet
-	var err error
-
-	if vertices, err = extractVertices(values); err != nil {
-		return nil, fmt.Errorf("could not extract verticies from ply values: %w", err)
+func (f *plyFormat) ByteOrder() binary.ByteOrder {
+	var byteOrder binary.ByteOrder = binary.LittleEndian
+	if strings.HasSuffix(strings.ToLower(f.Format), "big_endian") {
+		byteOrder = binary.BigEndian
 	}
 
-	if facets, err = extractFacets(values, vertices); err != nil {
-		return nil, fmt.Errorf("could not extract facets from ply values: %w", err)
-	}
-
-	return &scene.FacetStructure{Facets: facets}, nil
+	return byteOrder
 }
 
-func extractFacets(values []*elementValue, vertices []*vec3.T) ([]*scene.Facet, error) {
-	var facets []*scene.Facet
+// String implementation for debugging and logging clarity
+func (pd *propertyDefinition) String() string {
+	if pd == nil {
+		return "<nil propertyDefinition>"
+	}
+	return fmt.Sprintf("Property [%d]:'%s' (%s)", pd.index, pd.name, pd.dataType)
+}
 
-	for _, value := range values {
-		if (value.name == "facet") || (value.name == "face") {
-			if value.index != len(facets) {
-				return nil, fmt.Errorf("illegal facet value index (%d), it do not match slice index (%d)", value.index, len(vertices))
-			}
+func (rld *referenceListDefinition) getReferenceType() string {
+	s := rld.referencedType
 
-			var facet scene.Facet
-			for _, propertyValue := range value.values {
-				if (propertyValue.valueType == IndexReference) && (propertyValue.name == "vertex") {
-					facet.Vertices = append(facet.Vertices, vertices[propertyValue.intValue])
-				} else {
-					// If facet vertices is not a list of vertex indices in ply file, what is it then?
-					return nil, fmt.Errorf("unknown ply format for face data (not a vertex index reference list): %+v", *value)
-				}
-			}
-			facets = append(facets, &facet)
+	etr := strings.ToLower(s)
+	lastIndex := strings.LastIndex(etr, "_")
+	if (lastIndex != -1) && (etr[lastIndex:] == "_index" || etr[lastIndex:] == "_indices") {
+		s = s[:lastIndex]
+	}
+
+	return s
+}
+
+// String implementation for debugging and logging clarity
+func (rld *referenceListDefinition) String() string {
+	if rld == nil {
+		return "<nil referenceListDefinition>"
+	}
+	return fmt.Sprintf("Property list %s %s %s", rld.countDataType, rld.idDataType, rld.referencedType)
+}
+
+func (ed *elementDefinition) String() string {
+	if ed == nil {
+		return "<nil elementDefinition>"
+	}
+	var props []string
+	for _, p := range ed.properties {
+		if p == nil {
+			props = append(props, "<nil>")
+			continue
 		}
+		props = append(props, p.String())
 	}
-
-	return facets, nil
+	return fmt.Sprintf("Element %s (count:%d) { %s }", ed.name, ed.count, strings.Join(props, ", "))
 }
 
-func extractVertices(values []*elementValue) ([]*vec3.T, error) {
-	var vertices []*vec3.T
+func (pt PropertyType) String() string { return string(pt) }
 
-	for _, value := range values {
-		if value.name == "vertex" {
-			if value.index != len(vertices) {
-				return nil, fmt.Errorf("illegal vertex value index (%d), it do not match slice index (%d)", value.index, len(vertices))
-			}
+func (p *Property) String() string {
+	if p == nil {
+		return "<nil Property>"
+	}
+	switch p.Type {
+	case PropertyTypeInt, PropertyTypeIndexReference:
+		return fmt.Sprintf("%s=%d(%s)", p.Name, p.IntValue, p.Type)
+	case PropertyTypeFloat:
+		return fmt.Sprintf("%s=%g(%s)", p.Name, p.FloatValue, p.Type)
+	default:
+		return fmt.Sprintf("%s<?>(%s)", p.Name, p.Type)
+	}
+}
 
-			vertex := vec3.T{}
-			for _, propertyValue := range value.values {
-				switch propertyValue.name {
-				case "x":
-					vertex[0] = getPropertyValue(propertyValue)
-				case "y":
-					vertex[1] = getPropertyValue(propertyValue)
-				case "z":
-					vertex[2] = getPropertyValue(propertyValue)
-				}
-			}
-			vertices = append(vertices, &vertex)
+func (e *Element) String() string {
+	if e == nil {
+		return "<nil Element>"
+	}
+	var vals []string
+	for _, v := range e.Properties {
+		if v == nil {
+			vals = append(vals, "<nil>")
+			continue
 		}
+		vals = append(vals, v.String())
 	}
-
-	return vertices, nil
+	return fmt.Sprintf("%s[%d]{ %s }", e.Name, e.ID, strings.Join(vals, ", "))
 }
 
-func getPropertyValue(propertyValue *propertyValue) float64 {
-	var value float64
-
-	if propertyValue.valueType == Int {
-		value = float64(propertyValue.intValue)
-	} else if propertyValue.valueType == Float {
-		value = propertyValue.floatValue
-	}
-
-	return value
-}
-
-// readPly
+// Read
 // https://web.archive.org/web/20161204152348/http://www.dcs.ed.ac.uk/teaching/cs4/www/graphics/Web/ply.html
 // https://www.mathworks.com/help/vision/ug/the-ply-format.html
 // http://paulbourke.net/dataformats/ply/
-func readPly(reader io.Reader) ([]*elementDefinition, []*elementValue, error) {
-	lines, err := readLines(reader)
+func Read(r *bufio.Reader) ([]*elementDefinition, []*Element, error) {
+	var elementValues []*Element
+
+	format, elementDefinitions, _, err := parsePlyHeaderSection(r)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	elementDefinitions, dataStartLineIndex, err := parsePlyHeaderSection(lines)
-	if err != nil {
-		return nil, nil, err
-	}
+	// Parse PLY in ASCII format
+	if format.ASCII() && format.Version == "1.0" {
+		fmt.Printf("Reading ascii ply: %s v%s\nStructure:\n", format.Format, format.Version)
+		if elementValues, err = parsePlyASCIIDataSection(r, elementDefinitions); err != nil {
+			return nil, nil, fmt.Errorf("could not parse ascii ply: %w", err)
+		}
 
-	var elementValues []*elementValue
-	if elementValues, err = parsePlyDataSection(elementDefinitions, dataStartLineIndex, lines); err != nil {
-		return nil, nil, fmt.Errorf("could not parse ply: %w", err)
+	} else if format.Binary() && format.Version == "1.0" {
+		fmt.Printf("Reading binary ply: %s v%s\nStructure:\n", format.Format, format.Version)
+		for _, elementDef := range elementDefinitions {
+			fmt.Printf("\t%+v\n", elementDef)
+		}
+
+		if elementValues, err = parsePlyBinaryDataSection(r, elementDefinitions, format.ByteOrder()); err != nil {
+			return nil, nil, fmt.Errorf("could not parse binary ply: %w", err)
+		}
+
+	} else {
+		return nil, nil, fmt.Errorf("unsupported ply format: %s v%s", format.Format, format.Version)
 	}
 
 	return elementDefinitions, elementValues, nil
 }
 
-func parsePlyDataSection(elementDefinitions []*elementDefinition, dataStartIndex int, lines []string) (elementValues []*elementValue, error error) {
-	for lineIndex := dataStartIndex; lineIndex < len(lines); lineIndex++ {
-		line := lines[lineIndex]
-		dataLineIndex := lineIndex - dataStartIndex
-		dataLineNumber := dataLineIndex + 1
+func parsePlyBinaryDataSection(r io.Reader, elementDefinitions []*elementDefinition, byteOrder binary.ByteOrder) (elements []*Element, error error) {
+	for _, elementDef := range elementDefinitions {
+		fmt.Printf("\tReading %d %s\n", elementDef.count, elementDef.name)
 
-		currentElementDefinition, elementValueIndex := elementDefinitionAtDataLine(elementDefinitions, dataLineNumber)
-
-		elementValue := &elementValue{name: currentElementDefinition.name, index: elementValueIndex}
-		tokens := parseTokens(line, ' ')
-
-		if currentElementDefinition.properties[0].listProperty {
-			// Definition: property list <numerical-type> <numerical-type> <property-name>
-			expectedAmountReferences, err := strconv.Atoi(tokens[0])
+		for elementIndex := 0; elementIndex < elementDef.count; elementIndex++ {
+			element, err := parseBinaryElement(r, elementIndex, elementDef, byteOrder)
 			if err != nil {
-				return nil, fmt.Errorf("could not parse '%s' (from %s line '%s') to expected amount references of value reference list: %w", tokens[0], currentElementDefinition.name, line, err)
-			}
-			if expectedAmountReferences != (len(tokens) - 1) {
-				return nil, fmt.Errorf("expected amount references %d did not match actual amount %d references (tokens %+v)", expectedAmountReferences, len(tokens)-1, tokens)
-			}
-			propertyDefinition := currentElementDefinition.properties[0]
-			elementReferenceType := getElementReferenceType(propertyDefinition.listElementType)
-			for _, token := range tokens[1:] {
-				propertyValue := &propertyValue{
-					name:       strings.ToLower(elementReferenceType),
-					valueType:  IndexReference,
-					intValue:   getIntValue(IndexReference, token),
-					floatValue: 0,
+				if errors.Is(err, io.EOF) {
+					break
 				}
-				elementValue.values = append(elementValue.values, propertyValue)
+				return nil, err
 			}
-		} else {
-			// Definition: property <data-type> <property-name-1>
-			for tokenIndex, token := range tokens {
-				propertyDefinition := currentElementDefinition.properties[tokenIndex]
-				valueType := getValueType(propertyDefinition.dataType)
-				propertyValue := &propertyValue{
-					name:       strings.ToLower(propertyDefinition.name),
-					valueType:  valueType,
-					intValue:   getIntValue(valueType, token),
-					floatValue: getFloatValue(valueType, token),
-				}
-				elementValue.values = append(elementValue.values, propertyValue)
-			}
+
+			elements = append(elements, element)
 		}
-
-		// TODO handle odd-looking references...
-
-		elementValues = append(elementValues, elementValue)
 	}
 
-	return
+	return elements, nil
+}
+
+func parseBinaryElement(r io.Reader, elementID int, elementDefinition *elementDefinition, byteOrder binary.ByteOrder) (*Element, error) {
+	element := &Element{Name: elementDefinition.name, ID: elementID}
+
+	if elementDefinition.referenceList != nil {
+		expectedAmountReferences, err := readInt(r, elementDefinition.referenceList.countDataType, byteOrder)
+		if err != nil {
+			return nil, err
+		}
+
+		element.ReferenceType = strings.ToLower(elementDefinition.referenceList.getReferenceType())
+
+		for referenceIndex := 0; referenceIndex < expectedAmountReferences; referenceIndex++ {
+			val, err := readInt(r, elementDefinition.referenceList.idDataType, byteOrder)
+			if err != nil {
+				return nil, err
+			}
+			referenceID := indexReference(val)
+			element.References = append(element.References, referenceID)
+		}
+	}
+
+	if len(elementDefinition.properties) > 0 {
+		for _, elementProperty := range elementDefinition.properties {
+
+			// name        type        number of bytes
+			// ---------------------------------------
+			// char       character                 1
+			// uchar      unsigned character        1
+			// short      short integer             2
+			// ushort     unsigned short integer    2
+			// int        integer                   4
+			// uint       unsigned integer          4
+			// float      single-precision float    4
+			// double     double-precision float    8
+
+			var iVal int
+			var fVal float64
+
+			switch elementProperty.dataType {
+			case "char", "uchar", "short", "ushort", "int", "uint":
+				val, err := readInt(r, elementProperty.dataType, byteOrder)
+				if err != nil {
+					return nil, err
+				}
+				iVal = val
+			case "float", "double":
+				val, err := readFloat(r, elementProperty.dataType, byteOrder)
+				if err != nil {
+					return nil, err
+				}
+				fVal = val
+
+			default:
+				return nil, fmt.Errorf("could not recognize binary Property data type '%s' for Property '%s'", elementProperty.dataType, elementProperty.name)
+			}
+
+			element.Properties = append(element.Properties, &Property{
+				Name:       elementProperty.name,
+				Type:       PropertyType(elementProperty.dataType),
+				IntValue:   iVal,
+				FloatValue: fVal,
+			})
+		}
+	}
+
+	return element, nil
+}
+
+func parsePlyASCIIDataSection(r *bufio.Reader, elementDefinitions []*elementDefinition) (elements []*Element, error error) {
+	scanner := bufio.NewScanner(r)
+
+	for _, elementDef := range elementDefinitions {
+		fmt.Printf("\tReading %d %s\n", elementDef.count, elementDef.name)
+
+		for elementIndex := 0; elementIndex < elementDef.count; elementIndex++ {
+			if !scanner.Scan() {
+				return nil, fmt.Errorf("ran out of ply lines before expected end of file")
+			}
+			line := scanner.Text()
+
+			if strings.TrimSpace(line) == "" {
+				continue
+			}
+
+			element, err := parseAsciiElement(line, elementIndex, elementDef)
+			if err != nil {
+				return nil, err
+			}
+
+			elements = append(elements, element)
+		}
+	}
+
+	return elements, nil
+}
+
+func parseAsciiElement(line string, elementID int, elementDefinition *elementDefinition) (*Element, error) {
+	element := &Element{Name: elementDefinition.name, ID: elementID}
+
+	tokens := parseTokens(line, ' ')
+
+	if elementDefinition.referenceList != nil {
+		expectedAmountReferences, err := strconv.Atoi(tokens[0])
+		if err != nil {
+			return nil, fmt.Errorf("could not parse '%s' (from %s line '%s') to expected amount references of value reference list: %w", tokens[0], elementDefinition.name, line, err)
+		}
+		if expectedAmountReferences != (len(tokens) - 1) {
+			return nil, fmt.Errorf("expected amount references %d did not match actual amount %d references (tokens %+v)", expectedAmountReferences, len(tokens)-1, tokens)
+		}
+
+		element.ReferenceType = strings.ToLower(elementDefinition.referenceList.getReferenceType())
+		for _, token := range tokens[1:] {
+			referenceID := indexReference(getIntValue(PropertyTypeIndexReference, token))
+			element.References = append(element.References, referenceID)
+		}
+	}
+
+	if len(elementDefinition.properties) > 0 {
+		for tokenIndex, token := range tokens {
+			propertyDef := elementDefinition.properties[tokenIndex]
+			propertyType := getPropertyType(propertyDef.dataType)
+			propertyValue := &Property{
+				Name:       strings.ToLower(propertyDef.name),
+				Type:       propertyType,
+				IntValue:   getIntValue(propertyType, token),
+				FloatValue: getFloatValue(propertyType, token),
+			}
+			element.Properties = append(element.Properties, propertyValue)
+		}
+	}
+
+	return element, nil
 }
 
 func getElementReferenceType(elementTypeReference string) string {
@@ -264,97 +373,75 @@ func getElementReferenceType(elementTypeReference string) string {
 	return s
 }
 
-func getIntValue(valueType valueType, text string) int {
-	if (valueType == Int) || (valueType == IndexReference) {
+func getIntValue(valueType PropertyType, text string) int {
+	if valueType == PropertyTypeIndexReference || valueType == PropertyTypeInt {
 		value, err := strconv.Atoi(text)
 		if err != nil {
 			fmt.Printf("could not parse text '%s' to int value.\n", text)
 			return 0
 		}
-
 		return value
 	}
 	return 0
 }
 
-func getFloatValue(valueType valueType, text string) float64 {
-	if valueType == Float {
+func getFloatValue(valueType PropertyType, text string) float64 {
+	if valueType == PropertyTypeFloat {
 		value, err := strconv.ParseFloat(text, 64)
 		if err != nil {
 			fmt.Printf("could not parse text '%s' to float value.\n", text)
 			return 0
 		}
-
 		return value
 	}
+
 	return 0
 }
 
-/*
-name	type	   number of bytes
-----    ------     ---------------
-char    character                1
-uchar   unsigned character       1
-short   short integer            2
-ushort  unsigned short integer	 2
-int     integer                  4
-uint    unsigned integer         4
-float   single-precision float   4
-double  double-precision float   8
-*/
-func getValueType(dataType string) valueType {
+// getPropertyType gets the value data type to use in runtime data structure based on ply storage format.
+// A parsed ply property value is stored (runtime) in a data type that large enough to contain all datatypes of either
+// integer or float type.
+//
+//	name    type       number of bytes
+//	----    ------     ---------------
+//	char    character                1
+//	uchar   unsigned character       1
+//	short   short integer            2
+//	ushort  unsigned short integer   2
+//	int     integer                  4
+//	uint    unsigned integer         4
+//	float   single-precision float   4
+//	double  double-precision float   8
+func getPropertyType(dataType string) PropertyType {
 	switch dataType {
-	case "char":
-		fallthrough
-	case "uchar":
-		fallthrough
-	case "short":
-		fallthrough
-	case "ushort":
-		fallthrough
-	case "int":
-		fallthrough
-	case "uint":
-		return Int // Map data types to int in internal handling
+	case "char", "uchar", "short", "ushort", "int", "uint":
+		return PropertyTypeInt // Map data types to int in internal handling
 
-	case "float":
-		fallthrough
-	case "double":
-		return Float // Map data types to float (float64) in internal handling
+	case "float", "double":
+		return PropertyTypeFloat // Map data types to float (float64) in internal handling
 
-	case "int32": // Unspecified int data type by specification
-		fallthrough
-	case "uint32": // Unspecified int data type by specification
-		fallthrough
-	case "int64": // Unspecified int data type by specification
-		fallthrough
-	case "uint64": // Unspecified int data type by specification
-		return Int
+	case "int32", "uint32", "int64", "uint64": // Unspecified int data type by specification
+		return PropertyTypeInt
 
-	case "float32": // Unspecified float data types by specification
-		fallthrough
-	case "float64": // Unspecified float data types by specification
-		return Float
+	case "float32", "float64": // Unspecified float data types by specification
+		return PropertyTypeFloat
 
 	default:
 		fmt.Printf("unknown data type: '%s'\n", dataType)
-		return Unknown
+		return PropertyTypeUnknown
 	}
 }
 
-func elementDefinitionAtDataLine(elementSections []*elementDefinition, lineNumber int) (currentElementSection *elementDefinition, elementValueIndex int) {
-	elementSectionLineStart := 1
-	for _, elementSection := range elementSections {
-		if (lineNumber >= elementSectionLineStart) && (lineNumber < (elementSectionLineStart + elementSection.count)) {
-			currentElementSection = elementSection
-			elementValueIndex = lineNumber - elementSectionLineStart
-			break
+func elementDefinitionForElementIndex(elementDefinitions []*elementDefinition, elementIndex int) (definition *elementDefinition, elementID int, err error) {
+	elementDataStartIndex := 0
+	for _, elementDef := range elementDefinitions {
+		if (elementIndex >= elementDataStartIndex) && (elementIndex < (elementDataStartIndex + elementDef.count)) {
+			return elementDef, elementIndex - elementDataStartIndex + 1, nil
 		}
 
-		elementSectionLineStart += elementSection.count
+		elementDataStartIndex += elementDef.count
 	}
-
-	return currentElementSection, elementValueIndex
+	return nil, -1, fmt.Errorf("could not find Element definition for Element with index %d", elementIndex)
 }
 
 // readLines reads a whole file into memory
@@ -368,19 +455,28 @@ func readLines(r io.Reader) ([]string, error) {
 	return lines, scanner.Err()
 }
 
-func parsePlyHeaderSection(lines []string) (elementDefinitions []*elementDefinition, dataStartIndex int, error error) {
-	if (len(lines) > 0) && !(lines[0] == "ply" || lines[0] == "Ply" || lines[0] == "PLY") {
-		return nil, -1, fmt.Errorf("can notrecognise PLY file as it do not start with magic number 'ply'")
-	}
-
+func parsePlyHeaderSection(r *bufio.Reader) (format *plyFormat, elementDefinitions []*elementDefinition, dataStartIndex int, error error) {
 	headerLines := true
 
-	for lineIndex, line := range lines {
-		if !headerLines {
-			break
-		}
+	firstLine, err := r.ReadString('\n')
+	if err != nil {
+		return nil, nil, 0, err
+	}
+	firstLine = strings.TrimSpace(firstLine)
+	if !(firstLine == "ply" || firstLine == "Ply" || firstLine == "PLY") {
+		return nil, nil, -1, fmt.Errorf("can not recognise PLY file as it do not start with magic number 'ply'")
+	}
 
+	format = &plyFormat{}
+
+	lineIndex := 1
+	for {
+		line, err := r.ReadString('\n')
+		if err != nil {
+			return nil, nil, 0, err
+		}
 		line = strings.TrimSpace(line)
+		lineIndex++
 
 		commentIndex := strings.Index(line, "comment")
 
@@ -411,35 +507,33 @@ func parsePlyHeaderSection(lines []string) (elementDefinitions []*elementDefinit
 		case "ply":
 			// Nothing by intention, already handled "magic number" before parsing
 		case "format":
-			if (tokens[1] != "ascii") || (tokens[2] != "1.0") {
-				error = fmt.Errorf("can not parse unknown ply file format '%s %s'", tokens[1], tokens[2])
-			}
+			format.Format = tokens[1]
+			format.Version = tokens[2]
 		case "element":
-			// Definition: element <element-name> <number-in-file>
+			// Definition: Element <Element-name> <number-in-file>
 			count, _ := strconv.Atoi(tokens[2])
 			elementSection := elementDefinition{name: tokens[1], count: count, properties: nil}
 			elementDefinitions = append(elementDefinitions, &elementSection)
 		case "property":
 			if tokens[1] == "list" {
-				// Definition: property list <numerical-type> <numerical-type> <property-name>
+				// Definition: Property list <numerical-type> <numerical-type> <Property-name>
 				//
 				// Example:
-				// property list uchar int vertex_index
-				// This means that the property "vertex_index" contains first an unsigned char telling how many indices the property contains,
+				// Property list uchar int vertex_index
+				// This means that the Property "vertex_index" contains first an unsigned char telling how many indices the Property contains,
 				// followed by a list containing that many integers. Each integer in this variable-length list is an index to a vertex.
 				lastElementSection := elementDefinitions[len(elementDefinitions)-1]
-				property := propertyDefinition{
-					listProperty:             true,
-					listCountDataType:        tokens[2],
-					listElementIndexDataType: tokens[3],
-					listElementType:          tokens[4],
+				referenceList := &referenceListDefinition{
+					countDataType:  tokens[2],
+					idDataType:     tokens[3],
+					referencedType: tokens[4],
 				}
-				lastElementSection.properties = append(lastElementSection.properties, &property)
+				lastElementSection.referenceList = referenceList
 			} else {
 				// Definition:
-				// property <data-type> <property-name-1>
-				// property <data-type> <property-name-2>
-				// property <data-type> <property-name-3>
+				// Property <data-type> <Property-name-1>
+				// Property <data-type> <Property-name-2>
+				// Property <data-type> <Property-name-3>
 				// ...
 				lastElementSection := elementDefinitions[len(elementDefinitions)-1]
 				property := propertyDefinition{
@@ -458,11 +552,16 @@ func parsePlyHeaderSection(lines []string) (elementDefinitions []*elementDefinit
 		}
 
 		if error != nil {
-			return nil, -1, fmt.Errorf("encountered parse error on line %d: %s", lineIndex, error)
+			return nil, nil, -1, fmt.Errorf("encountered parse error on line %d: %s", lineIndex, error)
 		}
+
+		if !headerLines {
+			break
+		}
+
 	}
 
-	return elementDefinitions, dataStartIndex, nil
+	return format, elementDefinitions, dataStartIndex, nil
 }
 
 func parseTokens(line string, delimiter rune) []string {
@@ -470,4 +569,82 @@ func parseTokens(line string, delimiter rune) []string {
 		return c == delimiter
 	}
 	return strings.FieldsFunc(line, f)
+}
+
+func readFloat(r io.Reader, floatType string, byteOrder binary.ByteOrder) (float64, error) {
+	var fVal float64
+
+	switch floatType {
+	case "float":
+		var val float32
+		err := binary.Read(r, byteOrder, &val)
+		if err != nil {
+			return 0, err
+		}
+		fVal = float64(val)
+	case "double":
+		var val float64
+		err := binary.Read(r, byteOrder, &val)
+		if err != nil {
+			return 0, err
+		}
+		fVal = val
+	default:
+		return 0, fmt.Errorf("could not recognize float type '%s' when reading binary value", floatType)
+	}
+
+	return fVal, nil
+}
+
+func readInt(r io.Reader, intType string, byteOrder binary.ByteOrder) (int, error) {
+	var iVal int
+
+	switch intType {
+	case "char":
+		var val int8
+		err := binary.Read(r, byteOrder, &val)
+		if err != nil {
+			return 0, err
+		}
+		iVal = int(val)
+	case "uchar":
+		var val uint8
+		err := binary.Read(r, byteOrder, &val)
+		if err != nil {
+			return 0, err
+		}
+		iVal = int(val)
+	case "short":
+		var val int16
+		err := binary.Read(r, byteOrder, &val)
+		if err != nil {
+			return 0, err
+		}
+		iVal = int(val)
+	case "ushort":
+		var val uint16
+		err := binary.Read(r, byteOrder, &val)
+		if err != nil {
+			return 0, err
+		}
+		iVal = int(val)
+	case "int":
+		var val int32
+		err := binary.Read(r, byteOrder, &val)
+		if err != nil {
+			return 0, err
+		}
+		iVal = int(val)
+	case "uint":
+		var val uint32
+		err := binary.Read(r, byteOrder, &val)
+		if err != nil {
+			return 0, err
+		}
+		iVal = int(val)
+	default:
+		return 0, fmt.Errorf("could not recognize integer type '%s' when reading binary value", intType)
+	}
+
+	return iVal, nil
 }
