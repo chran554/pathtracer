@@ -1,0 +1,121 @@
+{
+    "identifier":{
+        "identifier":"10.25039/CIE.DS.xvudnb9b",
+        "identifierType":"DOI"
+    },
+    "creators":[
+        {
+            "name":"International Commission on Illumination (CIE)",
+            "nameType":"Organizational"
+        }
+    ],
+    "titles":[
+        {
+            "title":"CIE 1931 colour-matching functions , 2 degree  observer"
+}
+    ],
+    "publisher":"International Commission on Illumination (CIE), Vienna, AT",
+    "publicationYear":"2019",
+    "subjects":[
+        {
+            "subject":"Photometry"
+},
+        {
+            "subject":"Objective photometry"
+},
+        {
+            "subject":"Units. Constants"
+}
+    ],
+    "language":"en",
+    "alternateIdentifiers":[
+        {
+            "alternateIdentifier":"CIE_xyz_1931_2deg.csv",
+            "alternateIdentifierType":"fileName"
+        }
+    ],
+    "relatedIdentifiers":[
+        {
+            "relatedIdentifier":"10.25039/tr.018.2019",
+            "relatedIdentifierType":"DOI",
+            "relationType":"IsPartOf",
+            "resourceTypeGeneral":"Report"
+        },
+        {
+            "relatedIdentifier":"10.25039/IS.ISO_CIE.11664-1.2019",
+            "relatedIdentifierType":"DOI",
+            "relationType":"IsPartOf",
+            "resourceTypeGeneral":"Report"
+        },
+        {
+            "relatedIdentifier":"10.25039/tr.015.2018",
+            "relatedIdentifierType":"DOI",
+            "relationType":"IsReferencedBy",
+            "resourceTypeGeneral":"Report"
+        }
+    ],
+    "formats":[
+        "text/csv"
+    ],
+    "types":{
+        "resourceType":"dataTable",
+        "resourceTypeGeneral":"Dataset"
+    },
+    "descriptions":[
+        {
+            "description":"CIE 1931 colour-matching functions (x_bar, y_bar, z_bar), 2 degree observer, 1 nm wavelength steps, original source: CIE 018:2019, Table 6",
+            "descriptionType":"Abstract"
+        }
+    ],
+    "checksums":[
+        {
+            "hashMethod":"md5",
+            "checksum":"17cca777db64b17170f06f67ce9d3ab7"
+        },
+        {
+            "hashMethod":"sha256",
+            "checksum":"fa663e3535a7e0763a745993a1f0a192eb0275ac46ad2d1befd7626841e713c1"
+        }
+    ],
+    "datatableInfo":{
+        "validations":[
+            {
+                "validationType":"sumOfColumns",
+                "validationValue":"[280245,106.865469489595,106.8569171011719,106.892251278636]"
+            },
+            {
+                "validationType":"sampleRow",
+                "validationParameter":"120",
+                "validationValue":"[479,0.104297900000,0.1334528000000,0.856619300000]"
+            }
+        ],
+        "interpolationMethod":"linear",
+        "extrapolationMethod":"zero",
+        "dataQuality":"nominal",
+        "columnHeaders":[
+            {
+                "title":"lambda",
+                "unit":"nm",
+                "quantity":"wavelength"
+},
+            {
+                "title":"x_bar(lambda)",
+                "unit":"dimensionless",
+                "quantity":"colour-matching function"
+},
+            {
+                "title":"y_bar(lambda)",
+                "unit":"dimensionless",
+                "quantity":"colour-matching function"
+},
+            {
+                "title":"z_bar(lambda)",
+                "unit":"dimensionless",
+                "quantity":"colour-matching function"
+}
+        ]
+    },
+    "schemaName":"CIEmetaDigitalProduct",
+    "schemaVersion":3,
+    "schemaURL":"https://doi.org/10.25039/CIE.SC.4taqevcd"
+}

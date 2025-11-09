@@ -1,0 +1,99 @@
+{
+    "identifier":{
+        "identifier":"10.25039/CIE.DS.8jsxjrsn",
+        "identifierType":"DOI"
+    },
+    "creators":[
+        {
+            "name":"International Commission on Illumination (CIE)",
+            "nameType":"Organizational"
+        }
+    ],
+    "titles":[
+        {
+            "title":"CIE standard illuminant A - 1 nm"
+}
+    ],
+    "publisher":"International Commission on Illumination (CIE), Vienna, AT",
+    "publicationYear":"2018",
+    "subjects":[
+        {
+            "subject":"Photometry"
+},
+        {
+            "subject":"Objective photometry"
+},
+        {
+            "subject":"Units. Constants"
+}
+    ],
+    "language":"en",
+    "alternateIdentifiers":[
+        {
+            "alternateIdentifier":"CIE_std_illum_A_1nm.csv",
+            "alternateIdentifierType":"fileName"
+        }
+    ],
+    "relatedIdentifiers":[
+        {
+            "relatedIdentifier":"10.25039/tr.015.2018",
+            "relatedIdentifierType":"DOI",
+            "relationType":"IsDerivedFrom",
+            "resourceTypeGeneral":"Report"
+        }
+    ],
+    "formats":[
+        "text/csv"
+    ],
+    "types":{
+        "resourceType":"dataTable",
+        "resourceTypeGeneral":"Dataset"
+    },
+    "descriptions":[
+        {
+            "description":"Table of the CIE standard illuminant A, 1 nm wavelength steps. The values are calculated using equation 4.1 of CIE 015:2018, original source: CIE 015:2018, equation 4.1",
+            "descriptionType":"Abstract"
+        }
+    ],
+    "checksums":[
+        {
+            "hashMethod":"md5",
+            "checksum":"6c33a1c3caff2d774f0f2025f3001a56"
+        },
+        {
+            "hashMethod":"sha256",
+            "checksum":"5500799d66ffedd3ef2760e2ea29aeb3a034316499f386cce1b3913f750dce"
+        }
+    ],
+    "datatableInfo":{
+        "validations":[
+            {
+                "validationType":"sumOfColumns",
+                "validationValue":"[300015,60210.114316]"
+            },
+            {
+                "validationType":"sampleRow",
+                "validationParameter":"120",
+                "validationValue":"[419,20.647]"
+            }
+        ],
+        "interpolationMethod":"useRelatedFormula",
+        "extrapolationMethod":"zero",
+        "dataQuality":"approximated",
+        "columnHeaders":[
+            {
+                "title":"lambda",
+                "unit":"nm",
+                "quantity":"wavelength"
+},
+            {
+                "title":"S_A(lambda)",
+                "unit":"dimensionless",
+                "quantity":"spectral distribution"
+}
+        ]
+    },
+    "schemaName":"CIEmetaDigitalProduct",
+    "schemaVersion":3,
+    "schemaURL":"https://doi.org/10.25039/CIE.SC.4taqevcd"
+}

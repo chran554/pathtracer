@@ -1,0 +1,91 @@
+{
+    "identifier":{
+        "identifier":"10.25039/CIE.DS.hjfjmt59",
+        "identifierType":"DOI"
+    },
+    "creators":[
+        {
+            "name":"International Commission on Illumination (CIE)",
+            "nameType":"Organizational"
+        }
+    ],
+    "titles":[
+        {
+            "title":"CIE standard illuminant D65"
+}
+    ],
+    "publisher":"International Commission on Illumination (CIE), Vienna, AT",
+    "publicationYear":"2019",
+    "subjects":[
+        {
+            "subject":"Photometry"
+},
+        {
+            "subject":"Objective photometry"
+},
+        {
+            "subject":"Units. Constants"
+}
+    ],
+    "language":"en",
+    "alternateIdentifiers":[
+        {
+            "alternateIdentifier":"CIE_std_illum_D65.csv",
+            "alternateIdentifierType":"fileName"
+        }
+    ],
+    "formats":[
+        "text/csv"
+    ],
+    "types":{
+        "resourceType":"dataTable",
+        "resourceTypeGeneral":"Dataset"
+    },
+    "descriptions":[
+        {
+            "description":"CIE standard illuminant D50, 1 nm wavelength steps, original source: ISO/CIE FDIS 11664-2:2022, Table B.1",
+            "descriptionType":"Abstract"
+        }
+    ],
+    "checksums":[
+        {
+            "hashMethod":"md5",
+            "checksum":"03d4eb9b837c60671627c946fb534deb"
+        },
+        {
+            "hashMethod":"sha256",
+            "checksum":"e76f21bffff3d552ef7113025da5f325d5dfec200dd4b878b1a2f3a507032cb"
+        }
+    ],
+    "datatableInfo":{
+        "validations":[
+            {
+                "validationType":"sumOfColumns",
+                "validationValue":"[300015,40852.20400]"
+            },
+            {
+                "validationType":"sampleRow",
+                "validationParameter":"120",
+                "validationValue":"[419,93.2372]"
+            }
+        ],
+        "interpolationMethod":"linear",
+        "extrapolationMethod":"zero",
+        "dataQuality":"nominal",
+        "columnHeaders":[
+            {
+                "title":"lambda",
+                "unit":"nm",
+                "quantity":"wavelength"
+},
+            {
+                "title":"S_D65(lambda)",
+                "unit":"dimensionless",
+                "quantity":"spectral distribution"
+}
+        ]
+    },
+    "schemaName":"CIEmetaDigitalProduct",
+    "schemaVersion":3,
+    "schemaURL":"https://doi.org/10.25039/CIE.SC.4taqevcd"
+}

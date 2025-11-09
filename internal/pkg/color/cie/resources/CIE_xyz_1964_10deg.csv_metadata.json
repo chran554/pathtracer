@@ -1,0 +1,109 @@
+{
+    "identifier":{
+        "identifier":"10.25039/CIE.DS.sqksu2n5",
+        "identifierType":"DOI"
+    },
+    "creators":[
+        {
+            "name":"International Commission on Illumination (CIE)",
+            "nameType":"Organizational"
+        }
+    ],
+    "titles":[
+        {
+            "title":"CIE 1964 colour-matching functions , 10 degree  observer"
+}
+    ],
+    "publisher":"International Commission on Illumination (CIE), Vienna, AT",
+    "publicationYear":"2019",
+    "subjects":[
+        {
+            "subject":"Photometry"
+},
+        {
+            "subject":"Objective photometry"
+},
+        {
+            "subject":"Units. Constants"
+}
+    ],
+    "language":"en",
+    "alternateIdentifiers":[
+        {
+            "alternateIdentifier":"CIE_xyz_1964_10deg.csv",
+            "alternateIdentifierType":"fileName"
+        }
+    ],
+    "relatedIdentifiers":[
+        {
+            "relatedIdentifier":"10.25039/IS.ISO_CIE.11664-1.2019",
+            "relatedIdentifierType":"DOI",
+            "relationType":"IsPartOf",
+            "resourceTypeGeneral":"Report"
+        }
+    ],
+    "formats":[
+        "text/csv"
+    ],
+    "types":{
+        "resourceType":"dataTable",
+        "resourceTypeGeneral":"Dataset"
+    },
+    "descriptions":[
+        {
+            "description":"CIE 1964 colour-matching functions (x_bar, y_bar, z_bar), 10 degree observer, 1 nm wavelength steps, original source: ISO/CIE 11664-1:2019, Table 2",
+            "descriptionType":"Abstract"
+        }
+    ],
+    "checksums":[
+        {
+            "hashMethod":"md5",
+            "checksum":"cd6135a724480eb8c5e7668bae914445"
+        },
+        {
+            "hashMethod":"sha256",
+            "checksum":"c800ae88d20868427e09482d7b5c026e7f5001dc00bec18cd9dcd3a0006da396"
+        }
+    ],
+    "datatableInfo":{
+        "validations":[
+            {
+                "validationType":"sumOfColumns",
+                "validationValue":"[280245,116.648519508908,116.661874102312,116.673980514647]"
+            },
+            {
+                "validationType":"sampleRow",
+                "validationParameter":"120",
+                "validationValue":"[479,0.089388,0.245997,0.818280]"
+            }
+        ],
+        "interpolationMethod":"linear",
+        "extrapolationMethod":"zero",
+        "dataQuality":"nominal",
+        "columnHeaders":[
+            {
+                "title":"lambda",
+                "unit":"nm",
+                "quantity":"wavelength"
+},
+            {
+                "title":"xbar_10(lambda)",
+                "unit":"dimensionless",
+                "quantity":"colour-matching function"
+},
+            {
+                "title":"ybar_10(lambda)",
+                "unit":"dimensionless",
+                "quantity":"colour-matching function"
+},
+            {
+                "title":"zbar_10(lambda)",
+                "unit":"dimensionless",
+                "quantity":"colour-matching function"
+}
+        ]
+    },
+    "schemaName":"CIEmetaDigitalProduct",
+    "schemaVersion":3,
+    "schemaURL":"https://doi.org/10.25039/CIE.SC.4taqevcd"
+}

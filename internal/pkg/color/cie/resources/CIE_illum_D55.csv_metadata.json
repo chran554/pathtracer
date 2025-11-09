@@ -1,0 +1,102 @@
+{
+    "identifier":{
+        "identifier":"10.25039/CIE.DS.qewfb3kp",
+        "identifierType":"DOI"
+    },
+    "creators":[
+        {
+            "name":"International Commission on Illumination (CIE)",
+            "nameType":"Organizational"
+        }
+    ],
+    "titles":[
+        {
+            "title":"Relative spectral power distributions of CIE illuminant D55"
+}
+    ],
+    "publisher":"International Commission on Illumination (CIE), Vienna, AT",
+    "publicationYear":"2018",
+    "subjects":[
+        {
+            "subject":"Colorimetry"
+},
+        {
+            "subject":"Colour of objects"
+},
+        {
+            "subject":"Colour vision"
+},
+        {
+            "subject":"Perception of colour"
+}
+    ],
+    "language":"en",
+    "alternateIdentifiers":[
+        {
+            "alternateIdentifier":"CIE_illum_D55.csv",
+            "alternateIdentifierType":"fileName"
+        }
+    ],
+    "relatedIdentifiers":[
+        {
+            "relatedIdentifier":"10.25039/tr.015.2018",
+            "relatedIdentifierType":"DOI",
+            "relationType":"IsPartOf",
+            "resourceTypeGeneral":"Report"
+        }
+    ],
+    "formats":[
+        "text/csv"
+    ],
+    "types":{
+        "resourceType":"dataTable",
+        "resourceTypeGeneral":"Dataset"
+    },
+    "descriptions":[
+        {
+            "description":"Relative spectral power distributions of CIE illuminant D55, original source: CIE 015:2018 table 5",
+            "descriptionType":"Abstract"
+        }
+    ],
+    "checksums":[
+        {
+            "hashMethod":"md5",
+            "checksum":"8b5678358f265567a0759b9800f17d7f"
+        },
+        {
+            "hashMethod":"sha256",
+            "checksum":"3e5aa1a8d5514df1928effef1615ab90e16c9a368ccfe513372cd8556c37bf4b"
+        }
+    ],
+    "datatableInfo":{
+        "validations":[
+            {
+                "validationType":"sumOfColumns",
+                "validationValue":"[52380,7276.149]"
+            },
+            {
+                "validationType":"sampleRow",
+                "validationParameter":"26",
+                "validationValue":"[425,69.746]"
+            }
+        ],
+        "interpolationMethod":"linear",
+        "extrapolationMethod":"zero",
+        "dataQuality":"approximated",
+        "columnHeaders":[
+            {
+                "title":"lambda",
+                "unit":"nm",
+                "quantity":"  "
+},
+            {
+                "title":"CIE Illuminant D55",
+                "unit":"dimensionless",
+                "quantity":"spectral distribution"
+}
+        ]
+    },
+    "schemaName":"CIEmetaDigitalProduct",
+    "schemaVersion":3,
+    "schemaURL":"https://doi.org/10.25039/CIE.SC.4taqevcd"
+}

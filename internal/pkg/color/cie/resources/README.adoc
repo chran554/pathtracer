@@ -1,0 +1,27 @@
+= CIE data tables
+
+Data tables downloaded from CIE https://cie.co.at/data-tables[data tables].
+
+== Illuminants
+
+|===
+| File | Download date
+
+| CIE_std_illum_D50.csv | 2023-07-12
+| CIE_std_illum_D65.csv | 2023-07-12
+| CIE_std_illum_A_1nm.csv | 2023-07-12
+| CIE_illum_C.csv | 2023-07-12
+| CIE_illum_D50.csv | 2023-07-12
+| CIE_illum_D55.csv | 2023-07-12
+| CIE_illum_D75.csv | 2023-07-12
+|===
+
+== Observers
+
+|===
+| File | Download date
+
+| CIE_xyz_1931_2deg.csv | 2023-07-12
+| CIE_xyz_1964_10deg.csv | 2023-07-12
+|===
+
