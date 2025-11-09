@@ -114,10 +114,10 @@ func WriteImage(filename string, floatImage *FloatImage) {
 		for y := 0; y < height; y++ {
 			pixelValue := floatImage.GetPixel(x, y)
 
-			r := uint8(util.Clamp(0, 255, math.Round(float64(pixelValue.R)*255.0)))
-			g := uint8(util.Clamp(0, 255, math.Round(float64(pixelValue.G)*255.0)))
-			b := uint8(util.Clamp(0, 255, math.Round(float64(pixelValue.B)*255.0)))
-			a := uint8(util.Clamp(0, 255, math.Round(float64(pixelValue.A)*255.0)))
+			r := uint8(util.ClampFloat64(0, 255, math.Round(float64(pixelValue.R)*255.0)))
+			g := uint8(util.ClampFloat64(0, 255, math.Round(float64(pixelValue.G)*255.0)))
+			b := uint8(util.ClampFloat64(0, 255, math.Round(float64(pixelValue.B)*255.0)))
+			a := uint8(util.ClampFloat64(0, 255, math.Round(float64(pixelValue.A)*255.0)))
 
 			image.Set(x, y, col.NRGBA{R: r, G: g, B: b, A: a})
 			// imageAlpha.Set(x, y, col.RGBA{R: a, G: a, B: a, A: 255})
@@ -141,7 +141,7 @@ func WriteImage(filename string, floatImage *FloatImage) {
 	}
 
 	// falpha, _ := os.Create(filename + ".alpha.png")
-	// defer falpha.Close()
+	// defer falpha.CloseRGB()
 	// encoder.Encode(falpha, imageAlpha)
 }
 
