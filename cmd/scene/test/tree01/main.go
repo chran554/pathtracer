@@ -1,0 +1,57 @@
+package main
+
+import (
+	anm "pathtracer/internal/pkg/animation"
+	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/obj"
+	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/util"
+
+	"github.com/ungerik/go3d/float64/vec3"
+)
+
+var animationName = "tree01"
+
+var imageWidth = 800
+var imageHeight = 1200
+var magnification = 1.0
+
+var amountSamples = 1024
+
+var apertureSize = 0.2
+
+var skyDomeEmission = 1.5
+
+var maxRayDepth = 10
+
+func main() {
+	skyDome := scn.NewSphere(&vec3.T{0, 0, 0}, 200*100, scn.NewMaterial().
+		E(color.White, skyDomeEmission, true).
+		SP("textures/equirectangular/336_PDM_BG7.jpg", &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+	skyDome.RotateY(&vec3.Zero, util.DegToRad(-20))
+
+	lightMaterial := scn.NewMaterial().N("light").E(color.KelvinTemperatureColor2(5000), 10, true)
+	light := scn.NewSphere(&vec3.T{-200, 150, -200}, 80, lightMaterial)
+
+	tree := obj.NewTree01(300)
+
+	scene := scn.NewSceneNode().S(skyDome).FS(tree).S(light)
+
+	cameraOrigin := &vec3.T{-20, 15, -40}
+	cameraOrigin.Scale(5)
+	focusPoint := tree.Bounds.Center().Add(&vec3.T{0, 0, 0})
+
+	viewVector := focusPoint.Subed(cameraOrigin)
+	focusDistance := viewVector.Length()
+
+	camera := scn.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).
+		A(apertureSize, "").
+		F(focusDistance).
+		D(maxRayDepth)
+
+	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, true)
+	frame := scn.NewFrame(animation.AnimationName, -1, camera, scene)
+	animation.AddFrame(frame)
+
+	anm.WriteAnimationToFile(animation, false)
+}
