@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ungerik/go3d/float64/mat3"
 	"math"
 	"math/rand"
 	"os"
@@ -18,7 +17,11 @@ import (
 	"pathtracer/internal/pkg/util"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
+
+	"github.com/ungerik/go3d/float64/mat3"
+	"github.com/ungerik/go3d/float64/vec2"
 
 	progressbar2 "github.com/schollz/progressbar/v3"
 	"github.com/ungerik/go3d/float64/vec3"
@@ -40,6 +43,7 @@ type IntersectionInformation struct {
 	shortestDistance     float64
 	material             *scn.Material
 	normalAtIntersection *vec3.T
+	facetVertexWeights   *vec3.T
 	intersectedFacet     *scn.Facet
 	intersectedSphere    *scn.Sphere
 	intersectedDisc      *scn.Disc
@@ -150,7 +154,7 @@ func main() {
 		renderedPixelData := image.NewFloatImage(animation.AnimationName, animation.Width, animation.Height)
 
 		fmt.Println(frameInformationProgressSummary(frameInformation))
-		render(frame.Camera, scene, animation.Width, animation.Height, renderedPixelData, &renderMonitor)
+		render(frame.Camera, scene, animation.Width, animation.Height, renderedPixelData, renderMonitor)
 
 		fmt.Println("Releasing resources...")
 		deInitializeScene(scene)
@@ -381,11 +385,13 @@ func render(camera *scn.Camera, scene *scn.SceneNode, width int, height int, ren
 
 	progressbar.Add(1) // Indicate start
 
+	pixelCounter := &atomic.Int64{}
+
 	renderPasses := renderpass.CreateRenderPasses(20)
 	for _, renderPass := range renderPasses.RenderPasses {
 		for y := 0; (y + renderPass.Dy) < height; y += renderPasses.MaxPixelHeight {
 			wg.Add(1)
-			go parallelPixelRendering(renderedPixelData, camera, scene, width, height, y, renderPass, renderPasses.MaxPixelWidth, amountSamples, &wg, progressbar, rm)
+			go parallelPixelRendering(renderedPixelData, camera, scene, width, height, y, renderPass, renderPasses.MaxPixelWidth, amountSamples, &wg, pixelCounter, progressbar, rm)
 		}
 		wg.Wait()
 	}
@@ -402,9 +408,7 @@ func render(camera *scn.Camera, scene *scn.SceneNode, width int, height int, ren
 	}
 }
 
-func parallelPixelRendering(renderedPixelData *image.FloatImage, camera *scn.Camera, scene *scn.SceneNode, width int, height int,
-	y int, renderPass renderpass.RenderPass, maxPixelWidth int, amountSamples int, wg *sync.WaitGroup, progressbar *progressbar2.ProgressBar, rm *rendermonitor.RenderMonitor) {
-
+func parallelPixelRendering(renderedPixelData *image.FloatImage, camera *scn.Camera, scene *scn.SceneNode, width int, height int, y int, renderPass renderpass.RenderPass, maxPixelWidth int, amountSamples int, wg *sync.WaitGroup, pixelCounter *atomic.Int64, progressbar *progressbar2.ProgressBar, rm *rendermonitor.RenderMonitor) {
 	defer wg.Done()
 
 	defaultRenderContext := scn.NewMaterial().N("default render context").C(color.White).T(1.0, true, scn.RefractionIndex_Air)
@@ -429,7 +433,10 @@ func parallelPixelRendering(renderedPixelData *image.FloatImage, camera *scn.Cam
 
 		// "Log" progress to render monitor
 		pixelColor := renderedPixelData.GetPixel(x+renderPass.Dx, y+renderPass.Dy)
-		rm.SetPixel(x+renderPass.Dx, y+renderPass.Dy, renderPass.PaintWidth, renderPass.PaintHeight, pixelColor, amountSamples)
+		pixelCounter.Add(1)
+		progress := float64(pixelCounter.Load()) / float64(width*height)
+		// fmt.Printf("progress: %0.02f%%     %f\n", progress*100, progress)
+		rm.SetPixel(x+renderPass.Dx, y+renderPass.Dy, renderPass.PaintWidth, renderPass.PaintHeight, pixelColor, amountSamples, progress)
 	}
 }
 
@@ -525,11 +532,11 @@ func getRandomCosineWeightedHemisphereVector(n *vec3.T) *vec3.T {
 	return &hemisphereVector
 }
 
-func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDepth int, rayContexts []*scn.Material) color.Color {
+func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDepth int, rayContexts []*scn.Material) *color.Color {
 	outgoingEmission := color.NewColorRGBA(0, 0, 0, 0)
 
 	if currentDepth > camera.RecursionDepth {
-		return outgoingEmission
+		return &outgoingEmission
 	}
 
 	ii := NewIntersectionInformation() // Information on the closest intersection
@@ -569,7 +576,12 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 
 		projectionColor := &color.White // Default value if no projection is applied
 		if ii.material.Projection != nil {
-			projectionColor = ii.material.Projection.GetColor(ii.intersectionPoint)
+			if (ii.intersectedFacet != nil) && (ii.facetVertexWeights != nil) && (ii.material.Projection.ProjectionType == scn.ProjectionTypeTextureMapping) {
+				textureCoordinate := interpolateTriangleTextureCoordinate(ii.intersectedFacet, ii.facetVertexWeights)
+				projectionColor = ii.material.Projection.GetColorAt(textureCoordinate)
+			} else {
+				projectionColor = ii.material.Projection.GetColor(ii.intersectionPoint)
+			}
 		}
 
 		if camera.RenderType == scn.Raycasting || camera.RenderType == "" {
@@ -580,7 +592,7 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 				R: ii.material.Color.R * float32(cosineIncomingRayAndNormal) * projectionColor.R,
 				G: ii.material.Color.G * float32(cosineIncomingRayAndNormal) * projectionColor.G,
 				B: ii.material.Color.B * float32(cosineIncomingRayAndNormal) * projectionColor.B,
-				A: ii.material.Color.A * projectionColor.A,
+				A: 1.0,
 			}
 
 		} else if camera.RenderType == scn.Pathtracing {
@@ -608,8 +620,10 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 					reflectionProbability = ii.material.Glossiness
 				}
 
-				transparencyProbability := 1.0 - ((1.0 - ii.material.Transparency) * float64(ii.material.Color.A) * float64(projectionColor.A))
-				diffuseProbability := ii.material.Diffuse * float64(ii.material.Color.A) * float64(projectionColor.A)
+				alpha := (1.0 - ii.material.Transparency) * float64(ii.material.Color.A) * float64(projectionColor.A)
+				transparencyProbability := 1.0 - alpha
+				diffuseProbability := max(0, ii.material.Diffuse-reflectionProbability) * alpha
+				reflectionProbability = reflectionProbability * alpha
 
 				probabilitySum := reflectionProbability + transparencyProbability + diffuseProbability
 				probabilityValue := rand.Float64() * probabilitySum
@@ -708,30 +722,75 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 				incomingEmissionOnSurface := incomingEmission
 				incomingEmissionOnSurface.Multiply(float32(cosineNewRayAndNormal))
 
-				alpha := ii.material.Color.A * projectionColor.A
-				outgoingEmission = color.Color{
-					R: incomingEmissionOnSurface.R * (alpha*ii.material.Color.R*projectionColor.R + (1.0 - alpha)),
-					G: incomingEmissionOnSurface.G * (alpha*ii.material.Color.G*projectionColor.G + (1.0 - alpha)),
-					B: incomingEmissionOnSurface.B * (alpha*ii.material.Color.B*projectionColor.B + (1.0 - alpha)),
-					A: util.Max32(alpha, incomingEmissionOnSurface.A),
+				if useDiffuseRay || useReflectionRay {
+					projectionCol := fixTransparentColor(projectionColor)
+					materialCol := fixTransparentColor(ii.material.Color)
+
+					projectionCol = projectionCol.Fade(color.White, 1-projectionCol.A)
+					materialCol = materialCol.Fade(color.White, 1-materialCol.A)
+
+					outgoingEmission = color.Color{
+						R: incomingEmissionOnSurface.R * materialCol.R * projectionCol.R,
+						G: incomingEmissionOnSurface.G * materialCol.G * projectionCol.G,
+						B: incomingEmissionOnSurface.B * materialCol.B * projectionCol.B,
+						A: 1.0,
+					}
+				} else if useTransparencyRay {
+					// TODO is the following correct?
+					// Is the color calculation correct for a ray going through a transparent object?
+					// Should it be coloured as if the color is on the surface of the object or from travelling through the object?
+					// If it is colored from the surface of the object, the color will be the same as the color of the object?
+					// Or should it be colored twice, first when entering the object and then once more when leaving the object?
+					// If it is going through a single layer of transparent material,
+					// the color should be the same as the color of the object?
+
+					projectionCol := fixTransparentColor(projectionColor)
+					materialCol := fixTransparentColor(ii.material.Color)
+
+					projectionCol = projectionCol.Fade(color.White, 1-projectionCol.A)
+					materialCol = materialCol.Fade(color.White, 1-materialCol.A)
+
+					outgoingEmission = color.Color{
+						R: incomingEmissionOnSurface.R * materialCol.R * projectionCol.R,
+						G: incomingEmissionOnSurface.G * materialCol.G * projectionCol.G,
+						B: incomingEmissionOnSurface.B * materialCol.B * projectionCol.B,
+						A: 1.0,
+					}
 				}
 			}
 
 			if ii.material.Emission != nil {
-				alpha := float32(1.0-ii.material.Transparency) * ii.material.Color.A * projectionColor.A
-				outgoingEmission.R += ii.material.Emission.R * projectionColor.R * alpha
-				outgoingEmission.G += ii.material.Emission.G * projectionColor.G * alpha
-				outgoingEmission.B += ii.material.Emission.B * projectionColor.B * alpha
-				outgoingEmission.A = util.Max32(outgoingEmission.A, alpha)
+				projectionCol := fixTransparentColor(projectionColor)
+				materialCol := fixTransparentColor(ii.material.Color)
+
+				projectionCol = projectionCol.Fade(color.White, 1-projectionCol.A)
+				materialCol = materialCol.Fade(color.White, 1-materialCol.A)
+
+				outgoingEmission.R += ii.material.Emission.R * materialCol.R * projectionCol.R
+				outgoingEmission.G += ii.material.Emission.G * materialCol.G * projectionCol.G
+				outgoingEmission.B += ii.material.Emission.B * materialCol.B * projectionCol.B
+				outgoingEmission.A = 1.0
 			}
 		}
 	}
 
-	return outgoingEmission
+	return &outgoingEmission
+}
+
+// fixTransparentColor fixes colors where an alpha channel is 0. The color information (RGB) values
+// cannot be used in calculations as they can have any value.
+// This normalizes "black transparency" often used in pixel-based images into "white transparency" which
+//
+//	keeps light calculations when using multiplication.
+func fixTransparentColor(c *color.Color) *color.Color {
+	if *c == color.BlackTransparent {
+		return &color.WhiteTransparent
+	}
+	return c
 }
 
 func processFacetStructureIntersection(ray *scn.Ray, facetStructure *scn.FacetStructure, ii *IntersectionInformation) {
-	tempIntersection, tmpIntersectionFacet, tempIntersectionPoint, tempIntersectionNormal, tempMaterial := scn.FacetStructureIntersection(ray, facetStructure, nil)
+	tempIntersection, tmpIntersectionFacet, tempIntersectionPoint, tempIntersectionVertexWeights, tempMaterial := scn.FacetStructureIntersection(ray, facetStructure, nil)
 
 	if tempIntersection {
 		distance := vec3.Distance(ray.Origin, tempIntersectionPoint)
@@ -740,7 +799,8 @@ func processFacetStructureIntersection(ray *scn.Ray, facetStructure *scn.FacetSt
 			ii.intersection = tempIntersection           // Set to true, there has been an intersection
 			ii.intersectionPoint = tempIntersectionPoint // Save the intersection point of the closest intersection
 			ii.material = tempMaterial
-			ii.normalAtIntersection = tempIntersectionNormal // Should be normalized from initialization
+			ii.facetVertexWeights = tempIntersectionVertexWeights                                                         // If a facet is intersected then you get the weights (based on proximity) to the triangle facet corners.
+			ii.normalAtIntersection = interpolateTriangleFacetNormal(tmpIntersectionFacet, tempIntersectionVertexWeights) // Should be normalized from initialization
 
 			ii.intersectedFacet = tmpIntersectionFacet
 			ii.intersectedSphere = nil
@@ -752,10 +812,41 @@ func processFacetStructureIntersection(ray *scn.Ray, facetStructure *scn.FacetSt
 			}
 
 			if vec3.Dot(ii.normalAtIntersection, tmpIntersectionFacet.Normal) < 0 {
-				fmt.Println("rotten normals")
+				//normalAngle := vec3.Angle(ii.normalAtIntersection, tmpIntersectionFacet.Normal)
+				//fmt.Println("Illegal facet inter normal angle (interpolated normal and normal) (in degrees): ", util.RadToDeg(normalAngle))
 			}
 		}
 	}
+}
+
+// interpolateTriangleFacetNormal interpolates intersection point normal from facet (triangle) vertex normals
+func interpolateTriangleFacetNormal(facet *scn.Facet, vertexWeights *vec3.T) *vec3.T {
+	normal := vec3.T{0, 0, 0}
+	amountVertexNormals := len(facet.VertexNormals)
+	if (amountVertexNormals > 0) && (amountVertexNormals <= len(vertexWeights)) {
+		for i := 0; i < amountVertexNormals; i++ {
+			weightedVertexNormal := facet.VertexNormals[i].Scaled(vertexWeights[i])
+			normal.Add(&weightedVertexNormal)
+		}
+		normal.Normalize()
+	} else {
+		normal = *facet.Normal
+	}
+	return &normal
+}
+
+// interpolateTriangleTextureCoordinate interpolates intersection point texture coordinate from facet (triangle) vertex texture coordinates
+func interpolateTriangleTextureCoordinate(facet *scn.Facet, vertexWeights *vec3.T) *vec2.T {
+	textureCoordinate := vec2.T{0, 0}
+	amountVertexTextureCoordinates := len(facet.TextureCoordinates)
+	if (amountVertexTextureCoordinates > 0) && (amountVertexTextureCoordinates <= len(vertexWeights)) {
+		for i := 0; i < amountVertexTextureCoordinates; i++ {
+			weightedTextureCoordinate := facet.TextureCoordinates[i].Scaled(vertexWeights[i])
+			textureCoordinate.Add(&weightedTextureCoordinate)
+		}
+	}
+
+	return &textureCoordinate
 }
 
 func processDiscIntersection(ray *scn.Ray, disc *scn.Disc, ii *IntersectionInformation) {
