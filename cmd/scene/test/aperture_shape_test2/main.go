@@ -1,13 +1,16 @@
 package main
 
 import (
-	"github.com/ungerik/go3d/float64/vec3"
+	"fmt"
 	"math"
 	"math/rand"
-	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 var animationName = "aperture_shape_test2"
@@ -77,7 +80,11 @@ func main() {
 		animation.AddFrame(frame)
 	}
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func GetCornellBox(scale *vec3.T, lightIntensityFactor float64) *scn.FacetStructure {
@@ -99,7 +106,7 @@ func GetCornellBox(scale *vec3.T, lightIntensityFactor float64) *scn.FacetStruct
 	cornellBox.GetFirstObjectBySubstructureName("Lamp_4_-_right_close").Material = lampMaterial
 
 	projectionZoom := 0.33
-	floorProjection := scn.NewParallelImageProjection("textures/floor/7451-diffuse 02 low contrast.png", &vec3.T{-scale[0] * projectionZoom / 8, 0, -scale[0] * projectionZoom / 8}, vec3.UnitX.Scaled(scale[0]*projectionZoom), vec3.UnitZ.Scaled(scale[0]*projectionZoom))
+	floorProjection := scn.NewParallelImageProjection(floatimage.Load("textures/floor/7451-diffuse 02 low contrast.png"), &vec3.T{-scale[0] * projectionZoom / 8, 0, -scale[0] * projectionZoom / 8}, vec3.UnitX.Scaled(scale[0]*projectionZoom), vec3.UnitZ.Scaled(scale[0]*projectionZoom))
 	floorMaterial := *cornellBox.Material
 	floorMaterial.M(0.0, 1.0)
 	floorMaterial.P(&floorProjection)
@@ -115,13 +122,13 @@ func getCamera(animationProgress float64, apertureShape string) *scn.Camera {
 
 	focusDistance := vec3.Distance(&cameraOrigin, &vec3.T{0, sphereRadius, -distanceFactor * 12.0})
 
-	// Animation
+	// AnimationInformation
 	angle := (math.Pi / 2.0) * animationProgress
 	scn.RotateY(&cameraOrigin, &vec3.Zero, angle)
 	scn.RotateY(&viewPoint, &vec3.Zero, angle)
 
 	return scn.NewCamera(&cameraOrigin, &viewPoint, amountSamples, magnification).
 		V(viewPlaneDistance).
-		A(apertureRadius, apertureShape).
+		A(apertureRadius, floatimage.Load(apertureShape)).
 		F(focusDistance)
 }

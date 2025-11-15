@@ -1,9 +1,11 @@
 package main
 
 import (
-	anm "pathtracer/internal/pkg/animation"
+	"fmt"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
 	"pathtracer/internal/pkg/util"
 
@@ -26,7 +28,7 @@ var skyDomeEmission = 1.5
 func main() {
 	skyDome := scn.NewSphere(&vec3.T{0, 0, 0}, 200*100, scn.NewMaterial().
 		E(color.White, skyDomeEmission, true).
-		SP("textures/equirectangular/331_PDM_BG1.jpg", &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+		SP(floatimage.Load("textures/equirectangular/331_PDM_BG1.jpg"), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 	skyDome.RotateY(&vec3.Zero, util.DegToRad(-20))
 
 	tableBoard := obj.NewBox(obj.BoxCentered)
@@ -34,7 +36,7 @@ func main() {
 	tableBoard.Translate(&vec3.T{0, -tableBoard.Bounds.Ymax + 80, 0})
 	tableBoard.Material = scn.NewMaterial().
 		C(color.NewColorGrey(1.0)).
-		PP("textures/wallpaper/Blossom2_Image_Tile_Item_9471w.jpg", &vec3.T{0, 0, 0}, vec3.T{60, 0, 0}, vec3.T{0, 0, 40})
+		PP(floatimage.Load("textures/wallpaper/Blossom2_Image_Tile_Item_9471w.jpg"), &vec3.T{0, 0, 0}, vec3.T{60, 0, 0}, vec3.T{0, 0, 40})
 
 	keroseneLamp := obj.NewKeroseneLamp(40, keroseneLampEmission)
 	keroseneLamp.RotateY(&vec3.Zero, util.DegToRad(-90))
@@ -49,7 +51,7 @@ func main() {
 	focusDistance := viewVector.Length()
 
 	camera := scn.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).
-		A(apertureSize, "").
+		A(apertureSize, nil).
 		F(focusDistance).
 		D(10)
 
@@ -57,5 +59,9 @@ func main() {
 	frame := scn.NewFrame(animation.AnimationName, -1, camera, scene)
 	animation.AddFrame(frame)
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }

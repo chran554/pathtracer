@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"math"
-	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -36,12 +38,12 @@ func main() {
 		environmentSphereOrigin := &vec3.T{0, 0, 0}
 		environmentSphereMaterial := scn.NewMaterial().
 			E(color.White, environmentEmissionFactor, true).
-			SP("textures/equirectangular/sunset horizon 2800x1400.jpg", environmentSphereOrigin, vec3.T{-0.2, 0, -1}, vec3.T{0, 1, 0})
+			SP(floatimage.Load("textures/equirectangular/sunset horizon 2800x1400.jpg"), environmentSphereOrigin, vec3.T{-0.2, 0, -1}, vec3.T{0, 1, 0})
 		environmentSphere := scn.NewSphere(environmentSphereOrigin, environmentRadius, environmentSphereMaterial).N("Environment mapping")
 
 		// Ground
 		groundMaterial := scn.NewMaterial().N("Ground material").
-			PP("textures/ground/soil-cracked.png", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(150), vec3.UnitZ.Scaled(150))
+			PP(floatimage.Load("textures/ground/soil-cracked.png"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(150), vec3.UnitZ.Scaled(150))
 		ground := scn.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
 
 		// Gopher
@@ -64,7 +66,7 @@ func main() {
 		cameraOrigin := gopher.Bounds.Center().Add(&vec3.T{0, 0, -250})
 		cameraFocusPoint := gopherBounds.Center().Add(&vec3.T{0, lampPost.Bounds.SizeY() * 0.4, 0})
 		camera := scn.NewCamera(cameraOrigin, cameraFocusPoint, amountSamples, magnification).
-			A(apertureSize, "").D(maxRecursion)
+			A(apertureSize, nil).D(maxRecursion)
 
 		scene := scn.NewSceneNode().
 			S(environmentSphere).
@@ -76,5 +78,9 @@ func main() {
 		animation.Frames = append(animation.Frames, frame)
 	}
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }

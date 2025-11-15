@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/ungerik/go3d/float64/vec3"
-	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 var animationName = "erik_test"
@@ -57,7 +58,7 @@ func main() {
 	origin.Scale(cameraDistanceFactor)
 	focusPoint := vec3.T{0, 30, 0}
 	camera := scn.NewCamera(&origin, &focusPoint, amountSamples, magnification).
-		A(lensRadius, "").
+		A(lensRadius, nil).
 		V(viewPlaneDistance).
 		D(maxRecursionDepth)
 
@@ -66,7 +67,11 @@ func main() {
 	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 	animation.AddFrame(frame)
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func createWindow(windowX float64, windowHeightOverFloor float64, windowWidth float64, windowHeight float64) *scn.FacetStructure {

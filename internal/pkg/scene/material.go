@@ -3,6 +3,7 @@ package scene
 import (
 	"math"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -88,29 +89,29 @@ func (m *Material) P(projection *ImageProjection) *Material {
 }
 
 // PP is parallel projection properties
-func (m *Material) PP(textureFilename string, origin *vec3.T, u vec3.T, v vec3.T) *Material {
-	parallelImageProjection := NewParallelImageProjection(textureFilename, origin, u, v)
+func (m *Material) PP(texture *floatimage.FloatImage, origin *vec3.T, u vec3.T, v vec3.T) *Material {
+	parallelImageProjection := NewParallelImageProjection(texture, origin, u, v)
 	m.Projection = &parallelImageProjection
 	return m
 }
 
 // SP is spherical projection (of equirectangular images) properties
-func (m *Material) SP(textureFilename string, origin *vec3.T, u vec3.T, v vec3.T) *Material {
-	sphericalImageProjection := NewSphericalImageProjection(textureFilename, origin, u, v)
+func (m *Material) SP(texture *floatimage.FloatImage, origin *vec3.T, u vec3.T, v vec3.T) *Material {
+	sphericalImageProjection := NewSphericalImageProjection(texture, origin, u, v)
 	m.Projection = &sphericalImageProjection
 	return m
 }
 
 // TP is texture projection
-func (m *Material) TP(textureFilename string) *Material {
-	textureMappingImageProjection := NewTextureMappingImageProjection(textureFilename)
+func (m *Material) TP(texture *floatimage.FloatImage) *Material {
+	textureMappingImageProjection := NewTextureMappingImageProjection(texture)
 	m.Projection = &textureMappingImageProjection
 	return m
 }
 
 // CP is cylindrical projection properties
-func (m *Material) CP(textureFilename string, origin *vec3.T, u vec3.T, v vec3.T, repeat bool) *Material {
-	sphericalImageProjection := NewCylindricalImageProjection(textureFilename, origin, u, v)
+func (m *Material) CP(texture *floatimage.FloatImage, origin *vec3.T, u vec3.T, v vec3.T, repeat bool) *Material {
+	sphericalImageProjection := NewCylindricalImageProjection(texture, origin, u, v)
 	sphericalImageProjection.RepeatV = repeat
 	m.Projection = &sphericalImageProjection
 	return m

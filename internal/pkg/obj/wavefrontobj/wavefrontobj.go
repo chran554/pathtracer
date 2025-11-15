@@ -4,18 +4,20 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"github.com/ungerik/go3d/float64/vec2"
 	"io"
 	"math"
 	"os"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/scene"
 	"pathtracer/internal/pkg/util"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/ungerik/go3d/float64/vec2"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -831,7 +833,8 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 			// To specify the diffuse reflectivity of the current material
 			// map_Kd filename
 
-			textureMappingImageProjection := scene.NewTextureMappingImageProjection(tokens[1])
+			texture := floatimage.Load(tokens[1])
+			textureMappingImageProjection := scene.NewTextureMappingImageProjection(texture)
 			currentMaterial.P(&textureMappingImageProjection)
 
 		default:

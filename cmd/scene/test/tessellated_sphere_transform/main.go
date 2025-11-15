@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"math"
-	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -49,17 +51,17 @@ func main() {
 	skyDomeOrigin := vec3.T{0, 0, 0}
 	skyDomeMaterial := scn.NewMaterial().
 		E(color.White, environmentEmissionFactor, true).
-		SP(environmentEnvironMap, &skyDomeOrigin, vec3.T{-0.2, 0, -1}, vec3.T{0, 1, 0})
+		SP(floatimage.Load(environmentEnvironMap), &skyDomeOrigin, vec3.T{-0.2, 0, -1}, vec3.T{0, 1, 0})
 	skyDome := scn.NewSphere(&skyDomeOrigin, environmentRadius, skyDomeMaterial).N("sky dome")
 
 	// Ground
-	groundMaterial := scn.NewMaterial().N("Ground material").PP("textures/ground/soil-cracked.png", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(150), vec3.UnitZ.Scaled(150))
+	groundMaterial := scn.NewMaterial().N("Ground material").PP(floatimage.Load("textures/ground/soil-cracked.png"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(150), vec3.UnitZ.Scaled(150))
 	ground := scn.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
 
 	// Camera
 	cameraOrigin := tessellatedSphereBounds.Center().Add(&vec3.T{25, 10, -250})
 	cameraFocusPoint := tessellatedSphereBounds.Center().Add(&vec3.T{0, 0, -(tessellatedSphereBounds.SizeZ() / 2) * 0.8})
-	camera := scn.NewCamera(cameraOrigin, cameraFocusPoint, amountSamples, magnification).D(maxRecursion).A(apertureSize, "")
+	camera := scn.NewCamera(cameraOrigin, cameraFocusPoint, amountSamples, magnification).D(maxRecursion).A(apertureSize, nil)
 
 	//for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
 	for frameIndex := 88; frameIndex < 89; frameIndex++ {
@@ -75,5 +77,9 @@ func main() {
 		animation.AddFrame(frame)
 	}
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }

@@ -1,18 +1,23 @@
-package image
+package floatimage
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/binary"
 	"fmt"
 	img "image"
 	col "image/color"
 	_ "image/jpeg"
 	"image/png"
+	"io"
 	"math"
 	"os"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/util"
 	"strconv"
+
+	"github.com/vmihailenco/msgpack/v5"
 )
 
 var (
@@ -25,6 +30,7 @@ type FloatImage struct {
 	pixels []color.Color
 	Width  int
 	Height int
+	_hash  string
 }
 
 func NewFloatImage(name string, width, height int) *FloatImage {
@@ -37,38 +43,73 @@ func NewFloatImage(name string, width, height int) *FloatImage {
 	return &floatImage
 }
 
-func (image *FloatImage) Clear() {
-	image.pixels = nil
-	image.Width = 0
-	image.Height = 0
+func (fi *FloatImage) String() string {
+	return fmt.Sprintf("%s (%dx%d)", fi.name, fi.Width, fi.Height)
 }
 
-func (image *FloatImage) ContainImageData() bool {
-	return (image.Width > 0) && (image.Height > 0) && (image.pixels != nil)
-}
-
-func (image *FloatImage) GetPixel(x, y int) *color.Color {
-	if (x >= image.Width) || (y >= image.Height) || (x < 0) || (y < 0) {
-		fmt.Printf("Illegal pixel access in image \"%s\" of size (%d x %d). There is no pixel at (%d x %d).\n", image.name, image.Width, image.Height, x, y)
+func (fi *FloatImage) Copy() *FloatImage {
+	return &FloatImage{
+		name:   fi.name,
+		pixels: append([]color.Color{}, fi.pixels...),
+		Width:  fi.Width,
+		Height: fi.Height,
 	}
-	return &image.pixels[y*image.Width+x]
 }
 
-func (image *FloatImage) SetPixel(x, y int, color *color.Color) {
-	image.pixels[y*image.Width+x] = *color
+func (fi *FloatImage) Hash() string {
+	if fi._hash == "" {
+		data, _ := msgpack.Marshal(fi.pixels)
+		sum256 := sha256.Sum256(data)
+		fi._hash = base64.URLEncoding.EncodeToString(sum256[:])
+	}
+	return fi._hash
 }
 
-func LoadImageData(filename string) *FloatImage {
+func (fi *FloatImage) Name() string {
+	return fi.name
+}
+
+func (fi *FloatImage) ContainImageData() bool {
+	return (fi.Width > 0) && (fi.Height > 0) && (fi.pixels != nil)
+}
+
+func (fi *FloatImage) GetPixel(x, y int) *color.Color {
+	if (x >= fi.Width) || (y >= fi.Height) || (x < 0) || (y < 0) {
+		fmt.Printf("Illegal pixel access in image \"%s\" of size (%d x %d). There is no pixel at (%d x %d).\n", fi.name, fi.Width, fi.Height, x, y)
+	}
+	return &fi.pixels[y*fi.Width+x]
+}
+
+func (fi *FloatImage) SetPixel(x, y int, color *color.Color) {
+	fi.pixels[y*fi.Width+x] = *color
+}
+
+func Load(filename string) *FloatImage {
 	textureImage, err := getImageFromFilePath(filename)
 	if err != nil {
 		message := fmt.Sprintf("image file \"%s\" could not be loaded: %s", filename, err.Error())
 		panic(message)
 	}
 
+	image := ConvertImageToFloatImage(filename, textureImage)
+	return image
+}
+
+func Read(imageName string, r io.Reader) (*FloatImage, error) {
+	image, _, err := img.Decode(r)
+	if err != nil {
+		return nil, fmt.Errorf("could not decode image \"%s\": %w", imageName, err)
+	}
+
+	floatImage := ConvertImageToFloatImage(imageName, image)
+	return floatImage, nil
+}
+
+func ConvertImageToFloatImage(imageName string, textureImage img.Image) *FloatImage {
 	width := textureImage.Bounds().Max.X
 	height := textureImage.Bounds().Max.Y
 
-	image := NewFloatImage(filename, width, height)
+	image := NewFloatImage(imageName, width, height)
 	colorNormalizationFactor := 1.0 / 0xff
 	for y := 0; y < height; y++ {
 		for x := 0; x < width; x++ {
@@ -87,7 +128,6 @@ func LoadImageData(filename string) *FloatImage {
 	}
 
 	image.GammaDecode(GammaDefault)
-
 	return image
 }
 
@@ -105,14 +145,15 @@ func WriteImage(filename string, floatImage *FloatImage) {
 	width := floatImage.Width
 	height := floatImage.Height
 
-	floatImage.GammaEncode(GammaDefault)
+	tmp := floatImage.Copy()
+	tmp.GammaEncode(GammaDefault)
 
 	image := img.NewNRGBA(img.Rect(0, 0, width, height))
 	// imageAlpha := img.NewRGBA(img.Rect(0, 0, width, height))
 
 	for x := 0; x < width; x++ {
 		for y := 0; y < height; y++ {
-			pixelValue := floatImage.GetPixel(x, y)
+			pixelValue := tmp.GetPixel(x, y)
 
 			r := uint8(util.ClampFloat64(0, 255, math.Round(float64(pixelValue.R)*255.0)))
 			g := uint8(util.ClampFloat64(0, 255, math.Round(float64(pixelValue.G)*255.0)))
@@ -145,6 +186,32 @@ func WriteImage(filename string, floatImage *FloatImage) {
 	// encoder.Encode(falpha, imageAlpha)
 }
 
+func (fi *FloatImage) Image() *img.NRGBA {
+	width := fi.Width
+	height := fi.Height
+
+	tmp := fi.Copy()
+	tmp.GammaEncode(GammaDefault)
+
+	newImage := img.NewNRGBA(img.Rect(0, 0, width, height))
+	// imageAlpha := img.NewRGBA(img.Rect(0, 0, width, height))
+
+	for x := 0; x < width; x++ {
+		for y := 0; y < height; y++ {
+			pixelValue := tmp.GetPixel(x, y)
+
+			r := uint8(util.ClampFloat64(0, 255, math.Round(float64(pixelValue.R)*255.0)))
+			g := uint8(util.ClampFloat64(0, 255, math.Round(float64(pixelValue.G)*255.0)))
+			b := uint8(util.ClampFloat64(0, 255, math.Round(float64(pixelValue.B)*255.0)))
+			a := uint8(util.ClampFloat64(0, 255, math.Round(float64(pixelValue.A)*255.0)))
+
+			newImage.Set(x, y, col.NRGBA{R: r, G: g, B: b, A: a})
+			// imageAlpha.Set(x, y, col.RGBA{R: a, G: a, B: a, A: 255})
+		}
+	}
+	return newImage
+}
+
 func WriteRawImage(filename string, image *FloatImage) {
 	var byteBuffer bytes.Buffer
 
@@ -171,7 +238,7 @@ func WriteRawImage(filename string, image *FloatImage) {
 		fmt.Println("could not write raw image file:", filename)
 		os.Exit(1)
 	} else {
-		fmt.Println("Wrote raw image file \"" + filename + "\" of size " + ByteCountIEC(int64(length)) + " (" + strconv.Itoa(length) + " bytes)")
+		fmt.Println("Wrote raw image file \"" + filename + "\" of size " + util.ByteCountIEC(int64(length)) + " (" + strconv.Itoa(length) + " bytes)")
 	}
 }
 
@@ -193,73 +260,28 @@ func writeBinaryInt32(buffer *bytes.Buffer, value int32) {
 	}
 }
 
-func ByteCountIEC(b int64) string {
-	const unit = 1024
-	if b < unit {
-		return fmt.Sprintf("%d B", b)
-	}
-	div, exp := int64(unit), 0
-	for n := b / unit; n >= unit; n /= unit {
-		div *= unit
-		exp++
-	}
-	return fmt.Sprintf("%.1f %ciB", float64(b)/float64(div), "KMGTPE"[exp])
-}
-
-// GammaEncode (or gamma compression) converts an image with values in linear space to an image with values in gamma space.
+// GammaEncode (or gamma compression) converts this image with values in linear space to have values in gamma space.
 //
 // https://blog.johnnovak.net/2016/09/21/what-every-coder-should-know-about-gamma/
-func (image *FloatImage) GammaEncode(gamma float64) {
-	for y := 0; y < image.Height; y++ {
-		for x := 0; x < image.Width; x++ {
-			linearPixelValue := image.GetPixel(x, y)
-			gammaPixelValue := GammaEncodeColor(linearPixelValue, gamma)
-			image.SetPixel(x, y, &gammaPixelValue)
+func (fi *FloatImage) GammaEncode(gamma float64) {
+	for y := 0; y < fi.Height; y++ {
+		for x := 0; x < fi.Width; x++ {
+			linearPixelValue := fi.GetPixel(x, y)
+			gammaPixelValue := linearPixelValue.GammaEncode(gamma)
+			fi.SetPixel(x, y, gammaPixelValue)
 		}
 	}
 }
 
-// GammaDecode (or gamma expansion) converts an image with values in gamma space to an image with values in linear space.
+// GammaDecode (or gamma expansion) converts this image with values in gamma space to have values in linear space.
 //
 // https://blog.johnnovak.net/2016/09/21/what-every-coder-should-know-about-gamma/
-func (image *FloatImage) GammaDecode(gamma float64) {
-	for y := 0; y < image.Height; y++ {
-		for x := 0; x < image.Width; x++ {
-			gammaPixelValue := image.GetPixel(x, y)
-			linearPixelValue := GammaDecodeColor(gammaPixelValue, gamma)
-			image.SetPixel(x, y, &linearPixelValue)
+func (fi *FloatImage) GammaDecode(gamma float64) {
+	for y := 0; y < fi.Height; y++ {
+		for x := 0; x < fi.Width; x++ {
+			gammaPixelValue := fi.GetPixel(x, y)
+			linearPixelValue := gammaPixelValue.GammaDecode(gamma)
+			fi.SetPixel(x, y, linearPixelValue)
 		}
 	}
-}
-
-// GammaEncodeColor (or gamma compression) converts a color with values in linear space to a color with values in gamma space.
-//
-// https://blog.johnnovak.net/2016/09/21/what-every-coder-should-know-about-gamma/
-func GammaEncodeColor(linearColor *color.Color, gamma float64) color.Color {
-	invGamma := 1.0 / gamma
-	gammaColor := color.Color{
-		R: gammaCalculation(linearColor.R, invGamma),
-		G: gammaCalculation(linearColor.G, invGamma),
-		B: gammaCalculation(linearColor.B, invGamma),
-		A: linearColor.A,
-	}
-
-	return gammaColor
-}
-
-// GammaDecodeColor (or gamma expansion) converts a color with values in gamma space to a color with values in linear space.
-//
-// https://blog.johnnovak.net/2016/09/21/what-every-coder-should-know-about-gamma/
-func GammaDecodeColor(gammaColor *color.Color, gamma float64) color.Color {
-	linearColor := color.Color{
-		R: gammaCalculation(gammaColor.R, gamma),
-		G: gammaCalculation(gammaColor.G, gamma),
-		B: gammaCalculation(gammaColor.B, gamma),
-		A: gammaColor.A,
-	}
-	return linearColor
-}
-
-func gammaCalculation(value float32, gamma float64) float32 {
-	return float32(math.Pow(float64(value), gamma))
 }

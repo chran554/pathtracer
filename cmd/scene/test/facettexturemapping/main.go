@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"math"
-	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
 	"pathtracer/internal/pkg/util"
 
@@ -26,14 +28,14 @@ var maxRayDepth = 3
 func main() {
 	skyDome := scn.NewSphere(&vec3.T{0, 0, 0}, 200*100, scn.NewMaterial().
 		E(color.White, skyDomeEmission, true).
-		SP("textures/equirectangular/dimples.png", &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+		SP(floatimage.Load("textures/equirectangular/dimples.png"), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 	skyDome.RotateY(&vec3.Zero, util.DegToRad(-20))
 
 	frontSideFacets := obj.NewSquare(obj.XYPlane, true)
 	backSideFacets := obj.NewSquare(obj.XYPlane, true)
 
-	leafMaterial1 := scn.NewMaterial().C(color.NewColorRGBA(0.85, 0.8, 0.9, 1.0)).TP("test_alpha_transparency.png")
-	leafMaterial2 := scn.NewMaterial().C(color.NewColorRGBA(0.8, 0.65, 0.9, 1.0)).TP("Leaves0120_35_S_02.png").T(0.05, false, 1.0)
+	leafMaterial1 := scn.NewMaterial().C(color.NewColorRGBA(0.85, 0.8, 0.9, 1.0)).TP(floatimage.Load("test_alpha_transparency.png"))
+	leafMaterial2 := scn.NewMaterial().C(color.NewColorRGBA(0.8, 0.65, 0.9, 1.0)).TP(floatimage.Load("Leaves0120_35_S_02.png")).T(0.05, false, 1.0)
 	//leafMaterial := scn.NewMaterial().TP("Leaves0120_35_S.png")
 
 	frontSide := &scn.FacetStructure{Facets: frontSideFacets, Material: leafMaterial1}
@@ -60,5 +62,9 @@ func main() {
 	frame := scn.NewFrame(animation.AnimationName, -1, camera, scene)
 	animation.AddFrame(frame)
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }

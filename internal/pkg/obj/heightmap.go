@@ -4,7 +4,7 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 	"math"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/image"
+	"pathtracer/internal/pkg/floatimage"
 	scn "pathtracer/internal/pkg/scene"
 	"strconv"
 )
@@ -25,7 +25,7 @@ func loadHeightMap(filename string) *scn.FacetStructure {
 	landscape := &scn.FacetStructure{}
 	landscape.Material = scn.NewMaterial()
 
-	img := image.GetCachedImage(filename)
+	img := floatimage.GetCachedImage(filename)
 
 	pointMap := map[string]*vec3.T{}
 

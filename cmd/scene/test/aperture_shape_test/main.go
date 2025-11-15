@@ -1,11 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
-	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -44,7 +46,7 @@ func main() {
 	skyDomeOrigin := vec3.T{0, 0, 0}
 	skyDomeMaterial := scn.NewMaterial().
 		E(color.White, environmentEmissionFactor, true).
-		SP(environmentEnvironMap, &skyDomeOrigin, vec3.T{0, 0, 1}, vec3.T{0, 1, 0})
+		SP(floatimage.Load(environmentEnvironMap), &skyDomeOrigin, vec3.T{0, 0, 1}, vec3.T{0, 1, 0})
 	skyDome := scn.NewSphere(&skyDomeOrigin, environmentRadius, skyDomeMaterial).N("sky dome")
 
 	// Gopher
@@ -61,7 +63,7 @@ func main() {
 
 	// Ground
 
-	groundProjection := scn.NewParallelImageProjection("textures/ground/soil-cracked.png", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(gopher.Bounds.SizeY()*2), vec3.UnitZ.Scaled(gopher.Bounds.SizeY()*2))
+	groundProjection := scn.NewParallelImageProjection(floatimage.Load("textures/ground/soil-cracked.png"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(gopher.Bounds.SizeY()*2), vec3.UnitZ.Scaled(gopher.Bounds.SizeY()*2))
 	groundMaterial := scn.NewMaterial().N("Ground material").P(&groundProjection)
 	ground := scn.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
 
@@ -97,7 +99,7 @@ func main() {
 		cameraOrigin := vec3.T{xPos, yPos, -600}
 
 		camera := scn.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).
-			A(apertureSize, "textures/aperture/heart.png").
+			A(apertureSize, floatimage.Load("textures/aperture/heart.png")).
 			V(600)
 
 		frame := scn.NewFrame(animationName, frameIndex, camera, scene)
@@ -105,7 +107,11 @@ func main() {
 		animation.AddFrame(frame)
 	}
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func getSphere(radius float64, minDistance, maxDistance float64) *scn.Sphere {

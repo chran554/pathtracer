@@ -3,8 +3,9 @@ package main
 import (
 	"fmt"
 	"math"
-	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -55,7 +56,7 @@ func main() {
 		environmentOrigin := &vec3.T{0, 0, 0}
 		environmentMaterial := scn.NewMaterial().
 			E(color.White, environmentEmissionFactor, true).
-			SP("textures/equirectangular/forest_sunny_day.jpg", environmentOrigin, vec3.UnitZ, vec3.UnitY)
+			SP(floatimage.Load("textures/equirectangular/forest_sunny_day.jpg"), environmentOrigin, vec3.UnitZ, vec3.UnitY)
 		environmentSphere := scn.NewSphere(environmentOrigin, environmentRadius, environmentMaterial).N("Environment mapping")
 
 		scene := scn.NewSceneNode().S(spheres...).S(environmentSphere)
@@ -68,7 +69,11 @@ func main() {
 		animation.AddFrame(frame)
 	}
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func getKnotBalls(ballRadius float64, amountBalls int, scale float64, animationProgress float64, ballSpeed float64) []*scn.Sphere {

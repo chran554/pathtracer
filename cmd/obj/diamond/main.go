@@ -46,9 +46,10 @@ func writeDiamondObjFile(filename string, diamond *scn.FacetStructure, comments 
 }
 
 func diamondMaterial() scn.Material {
+	c := color.NewColor(1.00, 0.99, 0.97)
 	m := scn.Material{
 		Name:            "Diamond",
-		Color:           &color.NewColor(1.00, 0.99, 0.97), // Very slight yellowish color
+		Color:           &c, // Very slight yellowish color
 		Glossiness:      0.01,
 		Roughness:       0.01,
 		RefractionIndex: 2.42, // Refraction index of diamond material
@@ -79,7 +80,8 @@ func fileComments(scale float64, d diamond.Diamond, m scn.Material, b *scn.Bound
 func prettyPrintedStruct(anyStruct any) []string {
 	empJSON, err := json.MarshalIndent(anyStruct, "", "  ")
 	if err != nil {
-		log.Fatalf(err.Error())
+		errText := err.Error()
+		log.Panic(errText)
 	}
 
 	return strings.Split(string(empJSON), "\n")

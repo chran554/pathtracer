@@ -3,7 +3,7 @@ package sunflower
 import (
 	"math/rand"
 	"pathtracer/internal/pkg/color"
-	img "pathtracer/internal/pkg/image"
+	img "pathtracer/internal/pkg/floatimage"
 	"strconv"
 	"testing"
 	"time"

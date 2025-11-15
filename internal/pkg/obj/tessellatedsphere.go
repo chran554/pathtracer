@@ -2,23 +2,22 @@ package obj
 
 import (
 	"fmt"
-	"github.com/ungerik/go3d/float64/vec3"
 	"math"
 	"pathtracer/internal/pkg/scene"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 // NewTessellatedSphere creates a tessellated sphere (tessellated by triangles).
+// The tessellated sphere is centered on origin (0,0,0) and has radius 1.
+//
 // Level is the tesselation level (triangle subdivision level).
+//   - Level 0 is an icosahedron with 20 triangles.
+//   - Level 1 is a tessellated sphere with 20*4=80 triangles.
+//   - Level 2 is a tessellated sphere with 20*4*4=320 triangles.
+//   - Level 3 is a tessellated sphere with 20*4*4*4=1280 triangles.
 //
-// Level 0 is an icosahedron with 20 triangles.
-//
-// Level 1 is a tessellated sphere with 20*4=80 triangles.
-//
-// Level 2 is a tessellated sphere with 20*4*4=320 triangles.
-//
-// Level 3 is a tessellated sphere with 20*4*4*4=1280 triangles.
-//
-// Amount triangles at each level is: <triangle count> = <start_amount_sides == 4> * (4^level)
+// Amount triangles at each level is: <triangle count> = <start_amount_sides == 20> * (4^level)
 func NewTessellatedSphere(level int, useVertexNormals bool) *scene.FacetStructure {
 	tessellatedSphere := NewIcosahedron()
 	tessellatedSphere.SubstructureName = fmt.Sprintf("tessellated sphere level %d from icosahedron", level)

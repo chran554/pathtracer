@@ -2,11 +2,13 @@ package obj
 
 import (
 	"fmt"
-	"github.com/ungerik/go3d/float64/vec3"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
 	scn "pathtracer/internal/pkg/scene"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 type Dice struct {
@@ -52,12 +54,12 @@ func box(scale float64) (dice *scn.FacetStructure) {
 	}
 
 	b := dice.Bounds
-	diceMaterial1 := diceMaterial.Copy().N("1"). /*.C(color.NewColor(1, 0, 0))*/ PP("textures/box/dice_1.png", &vec3.T{b.Xmax, b.Ymin, 0}, vec3.T{-scale, 0, 0}, vec3.T{0, scale, 0})
-	diceMaterial2 := diceMaterial.Copy().N("2"). /*.C(color.NewColor(0, 1, 0))*/ PP("textures/box/dice_2.png", &vec3.T{0, b.Ymin, b.Zmin}, vec3.T{0, 0, scale}, vec3.T{0, scale, 0})
-	diceMaterial3 := diceMaterial.Copy().N("3"). /*.C(color.NewColor(0, 0, 1))*/ PP("textures/box/dice_3.png", &vec3.T{b.Xmin, 0, b.Zmin}, vec3.T{scale, 0, 0}, vec3.T{0, 0, scale})
-	diceMaterial4 := diceMaterial.Copy().N("4"). /*.C(color.NewColor(1, 0, 1))*/ PP("textures/box/dice_4.png", &vec3.T{b.Xmin, 0, b.Zmax}, vec3.T{scale, 0, 0}, vec3.T{0, 0, -scale})
-	diceMaterial5 := diceMaterial.Copy().N("5"). /*.C(color.NewColor(1, 1, 0))*/ PP("textures/box/dice_5.png", &vec3.T{0, b.Ymin, b.Zmax}, vec3.T{0, 0, -scale}, vec3.T{0, scale, 0})
-	diceMaterial6 := diceMaterial.Copy().N("6"). /*.C(color.NewColor(0, 1, 1))*/ PP("textures/box/dice_6.png", &vec3.T{b.Xmin, b.Ymin, 0}, vec3.T{scale, 0, 0}, vec3.T{0, scale, 0})
+	diceMaterial1 := diceMaterial.Copy().N("1"). /*.C(color.NewColor(1, 0, 0))*/ PP(floatimage.Load("textures/box/dice_1.png"), &vec3.T{b.Xmax, b.Ymin, 0}, vec3.T{-scale, 0, 0}, vec3.T{0, scale, 0})
+	diceMaterial2 := diceMaterial.Copy().N("2"). /*.C(color.NewColor(0, 1, 0))*/ PP(floatimage.Load("textures/box/dice_2.png"), &vec3.T{0, b.Ymin, b.Zmin}, vec3.T{0, 0, scale}, vec3.T{0, scale, 0})
+	diceMaterial3 := diceMaterial.Copy().N("3"). /*.C(color.NewColor(0, 0, 1))*/ PP(floatimage.Load("textures/box/dice_3.png"), &vec3.T{b.Xmin, 0, b.Zmin}, vec3.T{scale, 0, 0}, vec3.T{0, 0, scale})
+	diceMaterial4 := diceMaterial.Copy().N("4"). /*.C(color.NewColor(1, 0, 1))*/ PP(floatimage.Load("textures/box/dice_4.png"), &vec3.T{b.Xmin, 0, b.Zmax}, vec3.T{scale, 0, 0}, vec3.T{0, 0, -scale})
+	diceMaterial5 := diceMaterial.Copy().N("5"). /*.C(color.NewColor(1, 1, 0))*/ PP(floatimage.Load("textures/box/dice_5.png"), &vec3.T{0, b.Ymin, b.Zmax}, vec3.T{0, 0, -scale}, vec3.T{0, scale, 0})
+	diceMaterial6 := diceMaterial.Copy().N("6"). /*.C(color.NewColor(0, 1, 1))*/ PP(floatimage.Load("textures/box/dice_6.png"), &vec3.T{b.Xmin, b.Ymin, 0}, vec3.T{scale, 0, 0}, vec3.T{0, scale, 0})
 
 	dice.ReplaceMaterial("1", diceMaterial1)
 	dice.ReplaceMaterial("2", diceMaterial2)

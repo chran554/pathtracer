@@ -1,22 +1,17 @@
 package main
 
 import (
+	"fmt"
 	"math"
-	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
 var animationName = "sierpinski_pyramids"
-
-// var environmentEnvironMap = "textures/equirectangular/open_grassfield_sunny_day.jpg"
-// var environmentEnvironMap = "textures/equirectangular/5792766093_8153225334_o.jpg"
-//var environmentEnvironMap = "textures/equirectangular/white room 02 612x612.jpg"
-
-// var environmentEnvironMap = "textures/equirectangular/nightsky.png"
-var environmentEnvironMap = "textures/equirectangular/sunset horizon 2800x1400.jpg"
 
 var skyDomeRadius = 200.0 * 100.0 // radius
 var skyDomeEmissionFactor = 1.0
@@ -87,6 +82,13 @@ func (p *Pyramid) SierpinskiSubPyramids() []*Pyramid {
 }
 
 func main() {
+	// var environmentEnvironMap = "textures/equirectangular/open_grassfield_sunny_day.jpg"
+	// var environmentEnvironMap = "textures/equirectangular/5792766093_8153225334_o.jpg"
+	//var environmentEnvironMap = "textures/equirectangular/white room 02 612x612.jpg"
+
+	// var environmentEnvironMap = "textures/equirectangular/nightsky.png"
+	environmentEnvironMap := floatimage.Load("textures/equirectangular/sunset horizon 2800x1400.jpg")
+
 	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
 	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
@@ -115,7 +117,7 @@ func main() {
 
 		cameraOrigin := pyramidsBounds.Center().Add(&vec3.T{0, 150, -700})
 		cameraFocusPoint := pyramidsBounds.Center().Add(&vec3.T{0, 0, -1.0 * (pyramidsBounds.SizeZ() / 2.0) * 0.8})
-		camera := scn.NewCamera(cameraOrigin, cameraFocusPoint, amountSamples, magnification).A(apertureSize, "").V(700)
+		camera := scn.NewCamera(cameraOrigin, cameraFocusPoint, amountSamples, magnification).A(apertureSize, nil).V(700)
 
 		scene := scn.NewSceneNode().S(skyDome).SN(sierpinskiPyramid)
 
@@ -126,7 +128,11 @@ func main() {
 		animation.Frames = append(animation.Frames, frame)
 	}
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func getSierpinskiPyramid() *scn.SceneNode {

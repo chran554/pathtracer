@@ -1,7 +1,9 @@
 package main
 
 import (
-	anm "pathtracer/internal/pkg/animation"
+	"fmt"
+	"pathtracer/internal/pkg/floatimage"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -32,9 +34,9 @@ func main() {
 	projectionU := vec3.T{0, 0, -ballRadius}
 	projectionV := vec3.T{0, ballRadius, 0}
 
-	projection1 := scn.NewSphericalImageProjection("textures/planets/earth_daymap.jpg", &projection1Origin, projectionU.Inverted(), projectionV)
-	projection2 := scn.NewSphericalImageProjection("textures/checkered 360x180 with lines.png", &projection2Origin, projectionU, projectionV)
-	projection3 := scn.NewSphericalImageProjection("textures/equirectangular/2560px-Plate_Carrée_with_Tissot's_Indicatrices_of_Distortion.svg.png", &projection3Origin, projectionU.Inverted(), projectionV)
+	projection1 := scn.NewSphericalImageProjection(floatimage.Load("textures/planets/earth_daymap.jpg"), &projection1Origin, projectionU.Inverted(), projectionV)
+	projection2 := scn.NewSphericalImageProjection(floatimage.Load("textures/checkered 360x180 with lines.png"), &projection2Origin, projectionU, projectionV)
+	projection3 := scn.NewSphericalImageProjection(floatimage.Load("textures/equirectangular/2560px-Plate_Carrée_with_Tissot's_Indicatrices_of_Distortion.svg.png"), &projection3Origin, projectionU.Inverted(), projectionV)
 
 	sphere1 := scn.NewSphere(&sphere1Origin, ballRadius, scn.NewMaterial().P(&projection1)).N("Textured sphere - Earth")
 	sphere2 := scn.NewSphere(&sphere2Origin, ballRadius, scn.NewMaterial().P(&projection2)).N("Textured sphere - checkered")
@@ -42,9 +44,13 @@ func main() {
 
 	scene := scn.NewSceneNode().S(sphere1, sphere2, sphere3)
 
-	camera := scn.NewCamera(&cameraOrigin, &vec3.T{0, 0, 0}, amountSamples, magnification).V(viewPlaneDistance).A(lensRadius, "")
+	camera := scn.NewCamera(&cameraOrigin, &vec3.T{0, 0, 0}, amountSamples, magnification).V(viewPlaneDistance).A(lensRadius, nil)
 	frame := scn.NewFrame(animation.AnimationName, -1, camera, scene)
 	animation.AddFrame(frame)
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }

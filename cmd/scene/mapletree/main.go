@@ -1,11 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"math"
 	"math/rand/v2"
-	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
 	"pathtracer/internal/pkg/util"
 
@@ -29,7 +31,7 @@ func main() {
 
 	skydomeMaterial := scn.NewMaterial().
 		E(color.White, skyDomeEmission, true).
-		SP("textures/equirectangular/336_PDM_BG7.jpg", &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+		SP(floatimage.Load("textures/equirectangular/336_PDM_BG7.jpg"), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
 
 	skyDome := scn.NewSphere(&vec3.T{0, 0, 0}, skyDomeRadius, skydomeMaterial).N("sky dome")
 	skyDome.RotateY(&vec3.Zero, util.DegToRad(-20))
@@ -39,7 +41,7 @@ func main() {
 	ground.Translate(&vec3.T{-0.5, 0, -0.5})
 	ground.ScaleUniform(&vec3.T{0, 0, 0}, skyDomeRadius*2)
 	ground.Translate(&vec3.T{0, -2, 0})
-	groundMaterial := scn.NewMaterial().E(color.White, skyDomeEmission, true).SP("textures/equirectangular/336_PDM_BG7.jpg", &vec3.T{0, skyDomeRadius, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+	groundMaterial := scn.NewMaterial().E(color.White, skyDomeEmission, true).SP(floatimage.Load("textures/equirectangular/336_PDM_BG7.jpg"), &vec3.T{0, skyDomeRadius, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
 
 	ground.Material = groundMaterial
 
@@ -47,7 +49,7 @@ func main() {
 	var leaves []*scn.FacetStructure
 
 	leafCount := 100
-	leafMaterial := scn.NewMaterial().TP("Leaves0120_35_S_02.png").
+	leafMaterial := scn.NewMaterial().TP(floatimage.Load("Leaves0120_35_S_02.png")).
 		C(color.NewColorRGBA(1.0, 1.0, 1.0, 1.0)).
 		T(0.05, false, 1.0).
 		M(0.15, 0.85)
@@ -108,7 +110,11 @@ func main() {
 	frame := scn.NewFrame(animation.AnimationName, -1, camera, scene)
 	animation.AddFrame(frame)
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func random(min, max float64) float64 {

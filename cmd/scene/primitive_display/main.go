@@ -1,12 +1,14 @@
 package main
 
 import (
-	"github.com/ungerik/go3d/float64/vec3"
+	"fmt"
 	"math"
-	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 var animationName = "primitive_display"
@@ -139,7 +141,11 @@ func main() {
 		animation.AddFrame(frame)
 	}
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func trianglePrimitive() *scn.FacetStructure {
@@ -192,5 +198,5 @@ func getCamera(animationProgress float64, focusHeight float64) *scn.Camera {
 	// origin.Scale(cameraDistanceFactor)
 	// cameraFocus = vec3.T{0, focusHeight * 1.5, 0}
 
-	return scn.NewCamera(&origin, &cameraFocus, amountSamples, magnification).V(viewPlaneDistance).A(cameraAperture, "")
+	return scn.NewCamera(&origin, &cameraFocus, amountSamples, magnification).V(viewPlaneDistance).A(cameraAperture, nil)
 }

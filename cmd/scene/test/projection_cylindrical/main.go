@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"math"
-	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -32,7 +34,7 @@ func main() {
 	skyDome := scn.NewSphere(&vec3.T{0, 0, 0}, 4*100, scn.NewMaterial().
 		E(color.White, 1, true).
 		//C(color.NewColorGrey(0.2))).
-		SP("textures/equirectangular/las-vegas-hotell-lobby.png", &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+		SP(floatimage.Load("textures/equirectangular/las-vegas-hotell-lobby.png"), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 	skyDome.RotateY(&vec3.Zero, math.Pi+(math.Pi*6/8))
 
 	lamp1 := scn.NewSphere(&vec3.T{-50, 150 + dy, -75}, 60, scn.NewMaterial().E(color.NewColorKelvin(4000), 12, true)).N("lamp")
@@ -44,7 +46,7 @@ func main() {
 	tableBoard.Material = scn.NewMaterial().
 		C(color.NewColorGrey(1.0)).
 		M(0.15, 0.3).
-		PP("textures/wood/darkwood.png", &vec3.T{0, 0, 0}, vec3.T{30, 0, 0}, vec3.T{0, 0, 20})
+		PP(floatimage.Load("textures/wood/darkwood.png"), &vec3.T{0, 0, 0}, vec3.T{30, 0, 0}, vec3.T{0, 0, 20})
 
 	sodaCanHeight := 11.6
 
@@ -79,12 +81,16 @@ func main() {
 		focusDistance := subed.Length()
 
 		camera := scn.NewCamera(cameraOrigin, &focusPoint, amountSamples, magnification).
-			A(apertureSize, "").
+			A(apertureSize, nil).
 			F(focusDistance)
 
 		frame := scn.NewFrame(animation.AnimationName, animationFrameIndex, camera, scene)
 		animation.AddFrame(frame)
 	}
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }

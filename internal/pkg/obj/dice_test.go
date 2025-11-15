@@ -2,8 +2,9 @@ package obj
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func Test_LoadDice(t *testing.T) {
@@ -24,7 +25,7 @@ func Test_Dice(t *testing.T) {
 		require.NotNil(t, obj)
 		assertFacetStructure(t, obj, "Cube", "", "", 0, 7)
 
-		dice := getSubstructure(t, obj, "", "", "box")
+		dice := getSubstructure(t, obj, "", "", "dice")
 		side1 := getSubstructure(t, obj, "", "", "1")
 		side2 := getSubstructure(t, obj, "", "", "2")
 		side3 := getSubstructure(t, obj, "", "", "3")
@@ -32,7 +33,7 @@ func Test_Dice(t *testing.T) {
 		side5 := getSubstructure(t, obj, "", "", "5")
 		side6 := getSubstructure(t, obj, "", "", "6")
 
-		assertFacetStructure(t, dice, "", "", "box", -1, 0)
+		assertFacetStructure(t, dice, "", "", "dice", -1, 0)
 		assertFacetStructure(t, side1, "", "", "1", -1, 0)
 		assertFacetStructure(t, side2, "", "", "2", -1, 0)
 		assertFacetStructure(t, side3, "", "", "3", -1, 0)

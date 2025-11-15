@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"math"
-	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
 	"pathtracer/internal/pkg/util"
 
@@ -28,7 +30,7 @@ var maxRayDepth = 4
 func main() {
 	skyDome := scn.NewSphere(&vec3.T{0, 0, 0}, 200*100, scn.NewMaterial().
 		E(color.White, skyDomeEmission, true).
-		SP("textures/equirectangular/336_PDM_BG7.jpg", &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+		SP(floatimage.Load("textures/equirectangular/336_PDM_BG7.jpg"), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 	skyDome.RotateY(&vec3.Zero, util.DegToRad(-20))
 
 	lightMaterial := scn.NewMaterial().N("light").E(color.KelvinTemperatureColor2(5000), 10, true)
@@ -48,7 +50,7 @@ func main() {
 	focusDistance := viewVector.Length()
 
 	camera := scn.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).
-		A(apertureSize, "").
+		A(apertureSize, nil).
 		F(focusDistance).
 		D(maxRayDepth)
 
@@ -56,5 +58,9 @@ func main() {
 	frame := scn.NewFrame(animation.AnimationName, -1, camera, scene)
 	animation.AddFrame(frame)
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -9,7 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/image"
+	"pathtracer/internal/pkg/floatimage"
+	anm "pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/rendermonitor"
 	"pathtracer/internal/pkg/renderpass"
 	scn "pathtracer/internal/pkg/scene"
@@ -20,10 +20,9 @@ import (
 	"sync/atomic"
 	"time"
 
+	progressbar2 "github.com/schollz/progressbar/v3"
 	"github.com/ungerik/go3d/float64/mat3"
 	"github.com/ungerik/go3d/float64/vec2"
-
-	progressbar2 "github.com/schollz/progressbar/v3"
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
@@ -116,20 +115,14 @@ func main() {
 
 	startTimestamp := time.Now()
 
-	var animationJSON, err = os.ReadFile(animationFilename)
-	if err != nil {
-		panic(err)
-	}
-
-	animation := scn.Animation{}
-	err = json.Unmarshal(animationJSON, &animation)
+	animation, err := anm.ReadRenderFile(animationFilename)
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Println("-----------------------------------------------")
-	fmt.Println("Animation file: ", animationFilename)
-	fmt.Println("Animation name: ", animation.AnimationName)
+	fmt.Println("AnimationInformation file: ", animationFilename)
+	fmt.Println("AnimationInformation name: ", animation.AnimationName)
 	fmt.Println("Amount frames:  ", len(animation.Frames))
 	fmt.Println()
 
@@ -137,7 +130,7 @@ func main() {
 	defer renderMonitor.Close()
 
 	for frameIndex, frame := range animation.Frames {
-		frameInformation := NewRenderFrameInformation(frame.SceneNode, &animation, frame)
+		frameInformation := NewRenderFrameInformation(frame.SceneNode, animation, frame)
 		frameInformation.frameIndex = frameIndex
 		frameInformation.renderStartTime = time.Now()
 
@@ -151,7 +144,7 @@ func main() {
 		scene := frame.SceneNode
 		initializeScene(scene)
 
-		renderedPixelData := image.NewFloatImage(animation.AnimationName, animation.Width, animation.Height)
+		renderedPixelData := floatimage.NewFloatImage(animation.AnimationName, animation.Width, animation.Height)
 
 		fmt.Println(frameInformationProgressSummary(frameInformation))
 		render(frame.Camera, scene, animation.Width, animation.Height, renderedPixelData, renderMonitor)
@@ -218,6 +211,7 @@ func frameInformationPreRenderText(frameInformation RenderFrameInformation) stri
 	stringBuilder.WriteString(fmt.Sprintf("Amount samples/pixel:  %d\n", frameInformation.samplesPerPixel))
 	stringBuilder.WriteString(fmt.Sprintf("Max recursion depth:   %d\n", frameInformation.maxRecursionDepth))
 	stringBuilder.WriteString("\n")
+
 	if frameInformation.amountFacets > 0 {
 		stringBuilder.WriteString(fmt.Sprintf("Amount facets:         %d\n", frameInformation.amountFacets))
 	}
@@ -231,16 +225,16 @@ func frameInformationPreRenderText(frameInformation RenderFrameInformation) stri
 	return stringBuilder.String()
 }
 
-func writeRenderedImage(animation scn.Animation, frame *scn.Frame, renderedPixelData *image.FloatImage, frameInformation RenderFrameInformation) {
+func writeRenderedImage(animation *scn.Animation, frame *scn.Frame, renderedPixelData *floatimage.FloatImage, frameInformation RenderFrameInformation) {
 	animationDirectory := filepath.Join(".", "rendered", animation.AnimationName)
 
 	animationFrameFilename := filepath.Join(animationDirectory, frame.Filename+".png")
 	os.MkdirAll(animationDirectory, os.ModePerm)
-	image.WriteImage(animationFrameFilename, renderedPixelData)
+	floatimage.WriteImage(animationFrameFilename, renderedPixelData)
 
 	if animation.WriteRawImageFile {
 		animationFrameRawFilename := filepath.Join(animationDirectory, frame.Filename+".praw")
-		image.WriteRawImage(animationFrameRawFilename, renderedPixelData)
+		floatimage.WriteRawImage(animationFrameRawFilename, renderedPixelData)
 	}
 
 	if animation.WriteImageInfoFile {
@@ -369,7 +363,7 @@ func deInitializeScene(scene *scn.SceneNode) {
 	}
 }
 
-func render(camera *scn.Camera, scene *scn.SceneNode, width int, height int, renderedPixelData *image.FloatImage, rm *rendermonitor.RenderMonitor) {
+func render(camera *scn.Camera, scene *scn.SceneNode, width int, height int, renderedPixelData *floatimage.FloatImage, rm *rendermonitor.RenderMonitor) {
 	var wg sync.WaitGroup
 
 	amountSamples := camera.Samples
@@ -408,7 +402,7 @@ func render(camera *scn.Camera, scene *scn.SceneNode, width int, height int, ren
 	}
 }
 
-func parallelPixelRendering(renderedPixelData *image.FloatImage, camera *scn.Camera, scene *scn.SceneNode, width int, height int, y int, renderPass renderpass.RenderPass, maxPixelWidth int, amountSamples int, wg *sync.WaitGroup, pixelCounter *atomic.Int64, progressbar *progressbar2.ProgressBar, rm *rendermonitor.RenderMonitor) {
+func parallelPixelRendering(renderedPixelData *floatimage.FloatImage, camera *scn.Camera, scene *scn.SceneNode, width int, height int, y int, renderPass renderpass.RenderPass, maxPixelWidth int, amountSamples int, wg *sync.WaitGroup, pixelCounter *atomic.Int64, progressbar *progressbar2.ProgressBar, rm *rendermonitor.RenderMonitor) {
 	defer wg.Done()
 
 	defaultRenderContext := scn.NewMaterial().N("default render context").C(color.White).T(1.0, true, scn.RefractionIndex_Air)

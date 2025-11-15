@@ -1,9 +1,11 @@
 package main
 
 import (
-	anm "pathtracer/internal/pkg/animation"
+	"fmt"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -23,7 +25,7 @@ func main() {
 	cylinder := obj.NewCylinder(obj.CylinderYPositive, cylinderRadius, cylinderRadius/2.2)
 	cylinder.Material = scn.NewMaterial().
 		E(color.White, 4.0, true).
-		CP("textures/floor/checkered.jpg", projectionOrigin, projectionU, projectionV, false)
+		CP(floatimage.Load("textures/floor/checkered.jpg"), projectionOrigin, projectionU, projectionV, false)
 
 	// Ground
 	// groundMaterial := scn.NewMaterial().N("Ground material").
@@ -38,7 +40,7 @@ func main() {
 	skyDome := scn.NewSphere(&vec3.T{0, 0, 0}, 10*100, scn.NewMaterial().
 		E(color.White, 1, true).
 		//C(color.NewColorGrey(0.2))).
-		SP("textures/equirectangular/leaf_trees_by_lake.jpg", &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+		SP(floatimage.Load("textures/equirectangular/leaf_trees_by_lake.jpg"), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 
 	scene := scn.NewSceneNode().
 		// D(ground).
@@ -52,5 +54,9 @@ func main() {
 	frame := scn.NewFrame(animation.AnimationName, -1, camera, scene)
 	animation.AddFrame(frame)
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }

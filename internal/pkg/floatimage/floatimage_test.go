@@ -1,4 +1,4 @@
-package image
+package floatimage
 
 import (
 	"github.com/stretchr/testify/assert"

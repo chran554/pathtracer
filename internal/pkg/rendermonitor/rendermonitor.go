@@ -8,7 +8,7 @@ import (
 	"net"
 	"os"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/image"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/util"
 	"sync"
 	"time"
@@ -88,10 +88,10 @@ func (renderMonitor *RenderMonitor) Initialize(imageGroup string, imageName stri
 	time.Sleep(100 * time.Millisecond)
 }
 
-func getMessage(imageGroup string, imageName string, imageWidth int, imageHeight int, x int, y int, pixelWidth int, pixelHeight int, color *color.Color, amountSamples int, progress float64) []byte {
-	c := *color
+func getMessage(imageGroup string, imageName string, imageWidth int, imageHeight int, x int, y int, pixelWidth int, pixelHeight int, c *color.Color, amountSamples int, progress float64) []byte {
+	c = c.Copy()
 	c.Multiply(1.0 / float32(amountSamples))
-	c = image.GammaEncodeColor(&c, image.GammaDefault)
+	c = c.GammaEncode(floatimage.GammaDefault)
 	c.Multiply(255.0)
 
 	r := int(util.ClampFloat64(0, 255, math.Round(float64(c.R))))

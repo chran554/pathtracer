@@ -13,7 +13,7 @@ echo "Building and running scene \"$SCENE_NAME\""
 
 RENDER_RESULT_DIR=$SCENE_NAME
 SCENE_BIN=$SCENE_NAME
-SCENE_DEFINITION=$SCENE_NAME.animation.json
+SCENE_DEFINITION=$SCENE_NAME.render.zip
 
 echo "-----------------------------------------------------------------------------"
 echo "Building executables:"

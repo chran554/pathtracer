@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/ungerik/go3d/float64/mat3"
 	"math"
-	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
+
+	"github.com/ungerik/go3d/float64/mat3"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -52,23 +54,25 @@ var cameraOrigin = vec3.T{cameraDistance / 1.0, cameraDistance * 4 / 5, -cameraD
 var viewPlaneDistance = 500.0
 
 func main() {
-	// filename := "objects/lamppost.obj.3ds.obj"
-	// filename := "objects/Diamond.obj"
-	//filename := "/Users/christian/projects/code/go/pathtracer/objects/go_gopher_color.obj"
-	filename := "/Users/christian/projects/code/go/pathtracer/objects/" + objectFilename
-	// filename := "/Users/christian/projects/code/go/pathtracer/objects/cube_smooth.obj"
-	// filename := "/Users/christian/projects/code/go/pathtracer/objects/cube.obj"
-	//filename := "/Users/christian/projects/code/go/pathtracer/objects/facet.obj"
-	// filename := "/Users/christian/projects/code/go/pathtracer/objects/triangle.obj"
-	// filename := "objects/go_gopher_high.obj"
+	objectPath := "/Users/christian/projects/code/go/pathtracer/objects/"
+
+	// objectFilename = "objects/lamppost.obj.3ds.obj"
+	// objectFilename = "objects/Diamond.obj"
+	// objectFilename = objectPath + "go_gopher_color.obj"
+	objectFilename = objectPath + objectFilename
+	// objectFilename = objectPath + "cube_smooth.obj"
+	// objectFilename = objectPath + "cube.obj"
+	// objectFilename = objectPath + "facet.obj"
+	// objectFilename = objectPath + "triangle.obj"
+	// objectFilename = "objects/go_gopher_high.obj"
 
 	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
 	for imageIndex := 0; imageIndex < amountImages; imageIndex++ {
 		fmt.Printf("\n\nCostructing frame %d\n", imageIndex)
-		fmt.Printf("Reading file: %s\n", filename)
+		fmt.Printf("Reading file: %s\n", objectFilename)
 
-		facetStructure := wavefrontobj.ReadOrPanic(filename)
+		facetStructure := wavefrontobj.ReadOrPanic(objectFilename)
 
 		facetStructure.UpdateBounds()
 		fmt.Printf("Object in file \"%s\" has bounds %+v.\n", objectFilename, facetStructure.Bounds)
@@ -89,7 +93,7 @@ func main() {
 		skyDomeOrigin := vec3.T{0, 0, 0}
 		skyDomeMaterial := scn.NewMaterial().
 			E(color.White, environmentEmissionFactor, true).
-			SP("textures/equirectangular/white room 01 1836x918.png", &skyDomeOrigin, vec3.UnitZ, vec3.UnitY)
+			SP(floatimage.Load("textures/equirectangular/white room 01 1836x918.png"), &skyDomeOrigin, vec3.UnitZ, vec3.UnitY)
 		skyDome := scn.NewSphere(&skyDomeOrigin, environmentRadius, skyDomeMaterial).N("sky dome")
 		scene.S(skyDome)
 
@@ -102,7 +106,11 @@ func main() {
 		animation.AddFrame(frame)
 	}
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func getCamera(cameraOrigin *vec3.T, focusPoint *vec3.T, yRotationAngle float64, heightFactor float64) *scn.Camera {

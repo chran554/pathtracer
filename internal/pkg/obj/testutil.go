@@ -27,7 +27,7 @@ func assertFacetStructure(t *testing.T, f *scn.FacetStructure, name, substructur
 	assert.Equalf(t, name, f.Name, "Facet structure \"%s\" do not have expected name.", f.StructureNames())
 	assert.Equalf(t, substructureName, f.SubstructureName, "Facet structure \"%s\" do not have expected sub structure name.", f.StructureNames())
 	if f.Material == nil {
-		assert.Equal(t, materialName, "")
+		assert.Equal(t, "", materialName)
 	} else {
 		assert.Equal(t, materialName, f.Material.Name)
 	}

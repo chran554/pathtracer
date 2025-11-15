@@ -2,6 +2,7 @@ package scene
 
 import (
 	"fmt"
+
 	"github.com/ungerik/go3d/float64/mat3"
 	"github.com/ungerik/go3d/float64/vec2"
 	"github.com/ungerik/go3d/float64/vec3"
@@ -230,8 +231,8 @@ func (f *Facet) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3
 func (f *Facet) ChangeWindingOrder() {
 	amountVertices := len(f.Vertices)
 	if amountVertices == 3 {
-		// Flip second and third vertex in triangle (facet) to change winding order of facet vertices
-		f.Vertices[0], f.Vertices[1], f.Vertices[2] = f.Vertices[2], f.Vertices[1], f.Vertices[0]
+		// Flip the second and third vertex in triangle (facet) to change the winding order of facet vertices
+		f.Vertices[0], f.Vertices[2] = f.Vertices[2], f.Vertices[0]
 	} else if amountVertices > 3 {
 		for i := 0; i < amountVertices/2; i++ {
 			f.Vertices[i], f.Vertices[amountVertices-i-1] = f.Vertices[amountVertices-i-1], f.Vertices[i]
@@ -243,7 +244,7 @@ func (f *Facet) ChangeWindingOrder() {
 // Returns the subdividing four facets or nil with an error if the facet is not a triangle.
 func (f *Facet) Tessellate() ([]*Facet, error) {
 	if len(f.Vertices) != 3 {
-		return nil, fmt.Errorf(fmt.Sprintf("facet is not a triangle but has %d vertices", len(f.Vertices)))
+		return nil, fmt.Errorf("facet is not a triangle (vertex count is %d not 3)", len(f.Vertices))
 	}
 
 	var newFacets []*Facet = nil

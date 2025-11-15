@@ -2,10 +2,11 @@ package scene
 
 import (
 	"fmt"
-	"github.com/ungerik/go3d/float64/mat3"
-	"github.com/ungerik/go3d/float64/vec3"
 	_ "image/jpeg"
 	_ "image/png"
+
+	"github.com/ungerik/go3d/float64/mat3"
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 // RenderType is the type used to define different render types
@@ -84,10 +85,10 @@ func (a *Animation) AddFrame(frame *Frame) *Animation {
 }
 
 type Frame struct {
-	Filename   string
-	FrameIndex int
-	Camera     *Camera
-	SceneNode  *SceneNode
+	Filename  string
+	Index     int
+	Camera    *Camera
+	SceneNode *SceneNode
 }
 
 func NewFrame(fileName string, frameIndex int, camera *Camera, scene *SceneNode) *Frame {
@@ -97,10 +98,10 @@ func NewFrame(fileName string, frameIndex int, camera *Camera, scene *SceneNode)
 	}
 
 	return &Frame{
-		Filename:   frameFileName,
-		FrameIndex: frameIndex,
-		Camera:     camera,
-		SceneNode:  scene,
+		Filename:  frameFileName,
+		Index:     frameIndex,
+		Camera:    camera,
+		SceneNode: scene,
 	}
 }
 

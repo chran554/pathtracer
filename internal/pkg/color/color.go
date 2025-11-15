@@ -112,3 +112,49 @@ func (c *Color) CloseRGB(compareColor Color, delta float64) bool {
 	bD := float64(c.B - compareColor.B)
 	return math.Sqrt(rD*rD+gD*gD+bD*bD) <= delta
 }
+
+// GammaEncode (or gamma compression) converts this color with values in linear space to a new color with values in gamma space.
+//
+// https://blog.johnnovak.net/2016/09/21/what-every-coder-should-know-about-gamma/
+func (c *Color) GammaEncode(gamma float64) *Color {
+	return GammaEncodeColor(c, gamma)
+}
+
+// GammaDecode (or gamma expansion) converts this color with values in gamma space to a new color with values in linear space.
+//
+// https://blog.johnnovak.net/2016/09/21/what-every-coder-should-know-about-gamma/
+func (c *Color) GammaDecode(gamma float64) *Color {
+	return GammaDecodeColor(c, gamma)
+}
+
+// GammaEncodeColor (or gamma compression) converts a color with values in linear space to a new color with values in gamma space.
+//
+// https://blog.johnnovak.net/2016/09/21/what-every-coder-should-know-about-gamma/
+func GammaEncodeColor(linearColor *Color, gamma float64) *Color {
+	invGamma := 1.0 / gamma
+	gammaColor := &Color{
+		R: gammaCalculation(linearColor.R, invGamma),
+		G: gammaCalculation(linearColor.G, invGamma),
+		B: gammaCalculation(linearColor.B, invGamma),
+		A: linearColor.A,
+	}
+
+	return gammaColor
+}
+
+// GammaDecodeColor (or gamma expansion) converts a color with values in gamma space to a new color with values in linear space.
+//
+// https://blog.johnnovak.net/2016/09/21/what-every-coder-should-know-about-gamma/
+func GammaDecodeColor(gammaColor *Color, gamma float64) *Color {
+	linearColor := &Color{
+		R: gammaCalculation(gammaColor.R, gamma),
+		G: gammaCalculation(gammaColor.G, gamma),
+		B: gammaCalculation(gammaColor.B, gamma),
+		A: gammaColor.A,
+	}
+	return linearColor
+}
+
+func gammaCalculation(value float32, gamma float64) float32 {
+	return float32(math.Pow(float64(value), gamma))
+}
