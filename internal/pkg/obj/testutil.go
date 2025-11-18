@@ -1,11 +1,12 @@
 package obj
 
 import (
+	scn "pathtracer/internal/pkg/scene"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/ungerik/go3d/float64/vec3"
-	scn "pathtracer/internal/pkg/scene"
-	"testing"
 )
 
 func setTestResourcesRoot() {

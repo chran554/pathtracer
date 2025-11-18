@@ -1,12 +1,14 @@
 package obj
 
 import (
-	"github.com/ungerik/go3d/float64/vec3"
 	"math"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
 	scn "pathtracer/internal/pkg/scene"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 func NewLightBox(scale *vec3.T, c color.Color, emission float64, formFilename string) *scn.FacetStructure {
@@ -18,7 +20,7 @@ func NewLightBox(scale *vec3.T, c color.Color, emission float64, formFilename st
 
 	lightBox.GetFirstMaterialByName("cube").C(color.Black).E(color.Black, 0.0, true)
 	lightBox.GetFirstMaterialByName("lightpanel").E(c, emission, true)
-	lightBox.GetFirstMaterialByName("front").PP(formFilename, &vec3.T{0.5, -0.5, 0}, vec3.UnitX.Scaled(-1), vec3.UnitY)
+	lightBox.GetFirstMaterialByName("front").PP(floatimage.Load(formFilename), &vec3.T{0.5, -0.5, 0}, vec3.UnitX.Scaled(-1), vec3.UnitY)
 
 	lightBox.Scale(&vec3.Zero, scale)
 

@@ -1,16 +1,17 @@
 package obj
 
 import (
-	"github.com/ungerik/go3d/float64/vec3"
 	"math"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/image"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/floatimage"
+	"pathtracer/internal/pkg/scene"
 	"strconv"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 // NewHeightMap todo
-func NewHeightMap(filename string, scale vec3.T) *scn.FacetStructure {
+func NewHeightMap(filename string, scale vec3.T) *scene.FacetStructure {
 	landscape := loadHeightMap(filename)
 
 	landscape.CenterOn(&vec3.Zero)
@@ -21,11 +22,11 @@ func NewHeightMap(filename string, scale vec3.T) *scn.FacetStructure {
 	return landscape
 }
 
-func loadHeightMap(filename string) *scn.FacetStructure {
-	landscape := &scn.FacetStructure{}
-	landscape.Material = scn.NewMaterial()
+func loadHeightMap(filename string) *scene.FacetStructure {
+	landscape := &scene.FacetStructure{}
+	landscape.Material = scene.NewMaterial()
 
-	img := image.GetCachedImage(filename)
+	img := floatimage.GetCachedImage(filename)
 
 	pointMap := map[string]*vec3.T{}
 
@@ -76,7 +77,7 @@ func loadHeightMap(filename string) *scn.FacetStructure {
 				p4 = point
 			}
 
-			var facets []*scn.Facet
+			var facets []*scene.Facet
 			// Split the "square" facet into two triangles depending on the distance (in height) between opposite corners.
 			if math.Abs(p1[1]-p3[1]) > math.Abs(p2[1]-p4[1]) {
 				// If height difference of p1 and p3 is greater than the difference between p2 and p4
@@ -105,7 +106,7 @@ func averageIntensity(c *color.Color) float64 {
 // The result is two triangles side by side (p1,p2,p4) and (p4,p2,p3).
 // Normal direction is calculated as pointing towards observer if the points are listed in counter-clockwise order.
 // No test nor calculation is made that the points are exactly in the same plane.
-func getRectangleFacets(p1, p2, p3, p4 *vec3.T) []*scn.Facet {
+func getRectangleFacets(p1, p2, p3, p4 *vec3.T) []*scene.Facet {
 	//       p1
 	//       *
 	//      / \
@@ -128,7 +129,7 @@ func getRectangleFacets(p1, p2, p3, p4 *vec3.T) []*scn.Facet {
 	normal2 := vec3.Cross(&n2v1, &n2v2)
 	normal2.Normalize()
 
-	return []*scn.Facet{
+	return []*scene.Facet{
 		{Vertices: []*vec3.T{p1, p2, p4}, Normal: &normal1},
 		{Vertices: []*vec3.T{p4, p2, p3}, Normal: &normal2},
 	}

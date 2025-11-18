@@ -8,7 +8,7 @@ import (
 	"net"
 	"os"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/image"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/util"
 	"sync"
 	"time"
@@ -75,17 +75,18 @@ func (renderMonitor *RenderMonitor) Initialize(imageGroup string, imageName stri
 
 func getMessage(imageGroup string, imageName string,
 	imageWidth int, imageHeight int,
-	x int, y int, pixelWidth int, pixelHeight int, color *color.Color,
+	x int, y int, pixelWidth int, pixelHeight int, c *color.Color,
 	amountSamples int) []byte {
 
-	c := *color
+	newColor := c.Copy()
+	c = &newColor
 	c.Multiply(1.0 / float32(amountSamples))
-	c = image.GammaEncodeColor(&c, image.GammaDefault)
+	c = c.GammaEncode(floatimage.GammaDefault)
 	c.Multiply(255.0)
 
-	r := uint8(util.Clamp(0, 255, math.Round(float64(c.R))))
-	g := uint8(util.Clamp(0, 255, math.Round(float64(c.G))))
-	b := uint8(util.Clamp(0, 255, math.Round(float64(c.B))))
+	r := uint8(util.ClampFloat64(0, 255, math.Round(float64(c.R))))
+	g := uint8(util.ClampFloat64(0, 255, math.Round(float64(c.G))))
+	b := uint8(util.ClampFloat64(0, 255, math.Round(float64(c.B))))
 
 	rawColor := [3]uint8{r, g, b}
 

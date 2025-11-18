@@ -1,8 +1,9 @@
 package util
 
 import (
-	"github.com/ungerik/go3d/float64/vec3"
 	"math"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 const (
@@ -13,7 +14,17 @@ func DegToRad(degrees float64) float64 {
 	return radPerDeg * degrees
 }
 
-func Clamp(min float64, max float64, value float64) float64 {
+func ClampFloat64(min float64, max float64, value float64) float64 {
+	if value < min {
+		return min
+	} else if value > max {
+		return max
+	} else {
+		return value
+	}
+}
+
+func ClampInt(min int, max int, value int) int {
 	if value < min {
 		return min
 	} else if value > max {

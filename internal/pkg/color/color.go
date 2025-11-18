@@ -72,7 +72,7 @@ func KelvinTemperatureColor(kelvinTemperature float64) Color {
 	var r, g, b float64
 
 	// Temperature must fall between 1000 and 40000 degrees
-	kelvinTemperature = util.Clamp(1000, 40000, kelvinTemperature)
+	kelvinTemperature = util.ClampFloat64(1000, 40000, kelvinTemperature)
 
 	// All calculations below require kelvinTemperature to be in hundreds of actual value
 	kelvinTemperature /= 100.0
@@ -105,9 +105,9 @@ func KelvinTemperatureColor(kelvinTemperature float64) Color {
 	}
 
 	// Normalize r,g, and b values to range [0,1] and clamp them to make sure they stay in range.
-	r = util.Clamp(0.0, 1.0, r/255.0)
-	g = util.Clamp(0.0, 1.0, g/255.0)
-	b = util.Clamp(0.0, 1.0, b/255.0)
+	r = util.ClampFloat64(0.0, 1.0, r/255.0)
+	g = util.ClampFloat64(0.0, 1.0, g/255.0)
+	b = util.ClampFloat64(0.0, 1.0, b/255.0)
 
 	return NewColor(r, g, b)
 }
@@ -155,7 +155,7 @@ func (c *Color) Multiply(factor float32) *Color {
 // https://github.com/neilbartlett/color-temperature/blob/master/index.js
 func KelvinTemperatureColor2(kelvinTemperature float64) Color {
 	// Temperature must fall between 1000 and 40000 degrees
-	kelvinTemperature = util.Clamp(1000, 40000, kelvinTemperature)
+	kelvinTemperature = util.ClampFloat64(1000, 40000, kelvinTemperature)
 
 	var temperature = kelvinTemperature / 100.0
 	var red, green, blue float64
@@ -208,9 +208,9 @@ func KelvinTemperatureColor2(kelvinTemperature float64) Color {
 		}
 	}
 
-	red = util.Clamp(0.0, 1.0, red/255.0)
-	green = util.Clamp(0.0, 1.0, green/255.0)
-	blue = util.Clamp(0.0, 1.0, blue/255.0)
+	red = util.ClampFloat64(0.0, 1.0, red/255.0)
+	green = util.ClampFloat64(0.0, 1.0, green/255.0)
+	blue = util.ClampFloat64(0.0, 1.0, blue/255.0)
 
 	return NewColor(red, green, blue)
 }
@@ -234,4 +234,50 @@ func KelvinTemperatureCCT(c Color) float64 {
 	}
 
 	return temperature
+}
+
+// GammaEncode (or gamma compression) converts this color with values in linear space to a new color with values in gamma space.
+//
+// https://blog.johnnovak.net/2016/09/21/what-every-coder-should-know-about-gamma/
+func (c *Color) GammaEncode(gamma float64) *Color {
+	return GammaEncodeColor(c, gamma)
+}
+
+// GammaDecode (or gamma expansion) converts this color with values in gamma space to a new color with values in linear space.
+//
+// https://blog.johnnovak.net/2016/09/21/what-every-coder-should-know-about-gamma/
+func (c *Color) GammaDecode(gamma float64) *Color {
+	return GammaDecodeColor(c, gamma)
+}
+
+// GammaEncodeColor (or gamma compression) converts a color with values in linear space to a new color with values in gamma space.
+//
+// https://blog.johnnovak.net/2016/09/21/what-every-coder-should-know-about-gamma/
+func GammaEncodeColor(linearColor *Color, gamma float64) *Color {
+	invGamma := 1.0 / gamma
+	gammaColor := &Color{
+		R: gammaCalculation(linearColor.R, invGamma),
+		G: gammaCalculation(linearColor.G, invGamma),
+		B: gammaCalculation(linearColor.B, invGamma),
+		A: linearColor.A,
+	}
+
+	return gammaColor
+}
+
+// GammaDecodeColor (or gamma expansion) converts a color with values in gamma space to a new color with values in linear space.
+//
+// https://blog.johnnovak.net/2016/09/21/what-every-coder-should-know-about-gamma/
+func GammaDecodeColor(gammaColor *Color, gamma float64) *Color {
+	linearColor := &Color{
+		R: gammaCalculation(gammaColor.R, gamma),
+		G: gammaCalculation(gammaColor.G, gamma),
+		B: gammaCalculation(gammaColor.B, gamma),
+		A: gammaColor.A,
+	}
+	return linearColor
+}
+
+func gammaCalculation(value float32, gamma float64) float32 {
+	return float32(math.Pow(float64(value), gamma))
 }

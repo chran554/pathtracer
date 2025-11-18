@@ -62,7 +62,7 @@ func Test_SphericalProjection(t *testing.T) {
 			}
 
 			for _, testSetup := range testSetups {
-				projection := NewSphericalImageProjection("", &projectionSetup.origin, projectionSetup.u, projectionSetup.v)
+				projection := NewSphericalImageProjection(nil, &projectionSetup.origin, projectionSetup.u, projectionSetup.v)
 				projection.Initialize()
 
 				fmt.Println(testSetup.name)
@@ -133,7 +133,7 @@ func Test_SphericalProjection2(t *testing.T) {
 			})
 
 			for _, testSetup := range testSetups {
-				projection := NewSphericalImageProjection("", &projectionSetup.origin, projectionSetup.u, projectionSetup.v)
+				projection := NewSphericalImageProjection(nil, &projectionSetup.origin, projectionSetup.u, projectionSetup.v)
 				projection.Initialize()
 
 				fmt.Println(testSetup.name)

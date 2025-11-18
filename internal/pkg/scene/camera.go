@@ -4,9 +4,8 @@ import (
 	"math"
 	"math/rand"
 	"pathtracer/internal/pkg/color"
-	img "pathtracer/internal/pkg/image"
+	img "pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/sunflower"
-	"strings"
 
 	"github.com/ungerik/go3d/float64/mat3"
 	"github.com/ungerik/go3d/float64/vec2"
@@ -19,8 +18,8 @@ type Camera struct {
 	ViewUp            *vec3.T
 	ViewPlaneDistance float64 // ViewPlaneDistance determine the focal length, the view angle of the camera.
 	_coordinateSystem *mat3.T
-	ApertureSize      float64 // ApertureSize is the size of the aperture opening. The wider the aperture the less focus depth. Value 0.0 is infinite focus depth.
-	ApertureShape     string  // ApertureShape is the file path to a black and white image where white define the aperture shape. Aperture size determine the size of the longest side (width or height) of the image. If empty string then a default round aperture shape is used.
+	ApertureSize      float64         // ApertureSize is the size of the aperture opening. The wider the aperture the less focus depth. Value 0.0 is infinite focus depth.
+	ApertureShape     *img.FloatImage // ApertureShape is a black and white image where white defines the aperture shape. Aperture size determines the size of the longest side (width or height) of the image. If nil, then a default round aperture shape is used.
 	FocusDistance     float64
 	Samples           int
 	AntiAlias         bool
@@ -40,7 +39,7 @@ func NewCamera(origin *vec3.T, viewPoint *vec3.T, amountSamples int, magnificati
 		ViewUp:            &vec3.UnitY,
 		ViewPlaneDistance: 800,
 		ApertureSize:      0.0, // Use default aperture, with no "Depth of Field" (DOF).
-		ApertureShape:     "",  // Use default, round aperture.
+		ApertureShape:     nil, // Use default, round aperture.
 		FocusDistance:     focusDistance,
 		Samples:           amountSamples,
 		AntiAlias:         true,
@@ -73,7 +72,7 @@ func (camera *Camera) D(maxRayDepth int) *Camera {
 	return camera
 }
 
-func (camera *Camera) A(apertureSize float64, apertureShape string) *Camera {
+func (camera *Camera) A(apertureSize float64, apertureShape *img.FloatImage) *Camera {
 	camera.ApertureSize = apertureSize
 	camera.ApertureShape = apertureShape
 	return camera
@@ -156,13 +155,12 @@ func (camera *Camera) GetCameraCoordinateSystem() *mat3.T {
 	return camera._coordinateSystem
 }
 
-func getCameraLensPoint(radius float64, apertureShapeImageFilepath string, amountSamples int, sample int) vec3.T {
+func getCameraLensPoint(radius float64, apertureShape *img.FloatImage, amountSamples int, sample int) vec3.T {
 	xOffset := 0.0
 	yOffset := 0.0
 
-	if strings.TrimSpace(apertureShapeImageFilepath) != "" {
-		apertureShapeImage := img.GetCachedImage(apertureShapeImageFilepath)
-		xOffset, yOffset = shapedApertureOffset(apertureShapeImage)
+	if apertureShape != nil {
+		xOffset, yOffset = shapedApertureOffset(apertureShape)
 	} else {
 		xOffset, yOffset = roundApertureOffset(amountSamples, sample)
 	}

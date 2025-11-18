@@ -2,11 +2,13 @@ package obj
 
 import (
 	"fmt"
-	"github.com/ungerik/go3d/float64/vec3"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
 	scn "pathtracer/internal/pkg/scene"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 func NewKeroseneLamp(scale float64, emission float64) *scn.FacetStructure {
@@ -24,7 +26,7 @@ func NewKeroseneLamp(scale float64, emission float64) *scn.FacetStructure {
 	flameMaterial := scn.NewMaterial().N("flame").
 		C(color.White).
 		E(color.White, emission, false).
-		CP("textures/misc/kerosenelamp/kerosenelamp_flame_wave.png", &vec3.T{flameCenterBounds[0], flame.Bounds.Ymin, flameCenterBounds[2]}, vec3.UnitZ, (vec3.UnitY).Scaled(flame.Bounds.SizeY()), false)
+		CP(floatimage.Load("textures/misc/kerosenelamp/kerosenelamp_flame_wave.png"), &vec3.T{flameCenterBounds[0], flame.Bounds.Ymin, flameCenterBounds[2]}, vec3.UnitZ, (vec3.UnitY).Scaled(flame.Bounds.SizeY()), false)
 	glassMaterial := scn.NewMaterial().N("glass").
 		C(color.NewColor(0.93, 0.94, 0.95)).
 		T(0.95, false, scn.RefractionIndex_Glass).
@@ -34,7 +36,7 @@ func NewKeroseneLamp(scale float64, emission float64) *scn.FacetStructure {
 	smudgedGlassMaterial := scn.NewMaterial().N("smudged_glass").
 		C(color.White).
 		T(1.0, false, scn.RefractionIndex_Air).
-		CP("textures/misc/kerosenelamp/kerosenelamp_glass_wave_mod2.png", &vec3.T{glassCenterBounds[0], glass.Bounds.Ymin, glassCenterBounds[2]}, vec3.UnitX, (vec3.UnitY).Scaled(glass.Bounds.SizeY()), false)
+		CP(floatimage.Load("textures/misc/kerosenelamp/kerosenelamp_glass_wave_mod2.png"), &vec3.T{glassCenterBounds[0], glass.Bounds.Ymin, glassCenterBounds[2]}, vec3.UnitX, (vec3.UnitY).Scaled(glass.Bounds.SizeY()), false)
 
 	keroseneLamp.GetFirstObjectByMaterialName("base").Material = brassMaterial
 	keroseneLamp.GetFirstObjectByMaterialName("handle").Material = brassMaterial

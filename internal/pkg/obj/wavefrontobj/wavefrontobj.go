@@ -703,7 +703,7 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 			// from 0 to 1000.
 
 			// Blender software export "Roughness" material parameter as mtl-file parameter "Ns".
-			currentMaterial.Roughness = util.Clamp(0.0, 1.0, (1000.0-parseFloat64(tokens[1]))/1000.0)
+			currentMaterial.Roughness = util.ClampFloat64(0.0, 1.0, (1000.0-parseFloat64(tokens[1]))/1000.0)
 		case "refl":
 			// Blender software export "Metallic" material parameter as mtl-file parameter "refl".
 			// This is NOT part of the mtl-file specification as "refl" is not supposed to be used for scalar values but

@@ -1,10 +1,12 @@
 package obj
 
 import (
-	"github.com/ungerik/go3d/float64/vec3"
 	"path/filepath"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
 	scn "pathtracer/internal/pkg/scene"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 func NewPokemonTangela(scale float64) *scn.FacetStructure {
@@ -16,7 +18,7 @@ func NewPokemonTangela(scale float64) *scn.FacetStructure {
 	tangela.Scale(&vec3.Zero, &vec3.T{-1.0, 1.0, 1.0})
 
 	body := tangela.GetFirstObjectBySubstructureName("body")
-	body.ReplaceMaterial("body", scn.NewMaterial().N("body").SP("textures/pokemon/pokemon_tangela_texture.png", body.Bounds.Center(), vec3.UnitZ.Scaled(-1), vec3.UnitY))
+	body.ReplaceMaterial("body", scn.NewMaterial().N("body").SP(floatimage.Load("textures/pokemon/pokemon_tangela_texture.png"), body.Bounds.Center(), vec3.UnitZ.Scaled(-1), vec3.UnitY))
 
 	return tangela
 }
