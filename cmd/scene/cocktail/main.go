@@ -1,12 +1,15 @@
 package main
 
 import (
-	"github.com/ungerik/go3d/float64/vec3"
+	"fmt"
 	"math"
-	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 var animationName = "cocktail"
@@ -66,18 +69,22 @@ func main() {
 		animation.AddFrame(frame)
 	}
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func createCeilingLight(emission float64) *scn.FacetStructure {
-	lightPanel := &scn.FacetStructure{Facets: obj.NewSquare(obj.XZPlane)}
+	lightPanel := &scn.FacetStructure{Facets: obj.NewSquare(obj.XZPlane, false)}
 	lightPanel.Material = scn.NewMaterial().N("light strip").
 		E(color.KelvinTemperatureColor2(3000), emission, true).
-		PP("textures/misc/cocktail/lightstrip_1_2.png", &vec3.T{0, 0, 0}, vec3.UnitX, vec3.UnitZ)
+		PP(floatimage.Load("textures/misc/cocktail/lightstrip_1_2.png"), &vec3.T{0, 0, 0}, vec3.UnitX, vec3.UnitZ)
 
-	shadePanel := &scn.FacetStructure{Facets: obj.NewSquare(obj.XZPlane)}
+	shadePanel := &scn.FacetStructure{Facets: obj.NewSquare(obj.XZPlane, false)}
 	shadePanel.Material = scn.NewMaterial().N("shade strip").
-		PP("textures/misc/cocktail/lightstrip_1_2_shade.png", &vec3.T{0, 0, 0}, vec3.UnitX, vec3.UnitZ)
+		PP(floatimage.Load("textures/misc/cocktail/lightstrip_1_2_shade.png"), &vec3.T{0, 0, 0}, vec3.UnitX, vec3.UnitZ)
 
 	lightPanel.Translate(&vec3.T{0, 4, 0})
 
@@ -87,9 +94,9 @@ func createCeilingLight(emission float64) *scn.FacetStructure {
 }
 
 func createNeonSign(neonSignWidth float64, coreEmission, haloEmission float64, lowerLeftCorner vec3.T) *scn.FacetStructure {
-	core1 := &scn.FacetStructure{SubstructureName: "core1", Facets: obj.NewSquare(obj.XYPlane)}
-	core2 := &scn.FacetStructure{SubstructureName: "core2", Facets: obj.NewSquare(obj.XYPlane)}
-	halo := &scn.FacetStructure{SubstructureName: "halo", Facets: obj.NewSquare(obj.XYPlane)}
+	core1 := &scn.FacetStructure{SubstructureName: "core1", Facets: obj.NewSquare(obj.XYPlane, false)}
+	core2 := &scn.FacetStructure{SubstructureName: "core2", Facets: obj.NewSquare(obj.XYPlane, false)}
+	halo := &scn.FacetStructure{SubstructureName: "halo", Facets: obj.NewSquare(obj.XYPlane, false)}
 
 	core1.UpdateBounds()
 	core1.UpdateNormals()
@@ -98,7 +105,7 @@ func createNeonSign(neonSignWidth float64, coreEmission, haloEmission float64, l
 	core1.Translate(&vec3.T{0, 0, -0.3})
 	core1.Material = scn.NewMaterial().N("core").
 		E(color.White, coreEmission, false).
-		PP("textures/misc/cocktail/cocktails_mod03_core.png", &lowerLeftCorner, vec3.UnitX.Scaled((neonSignWidth/2)*1.6), vec3.UnitY.Scaled(neonSignWidth/2))
+		PP(floatimage.Load("textures/misc/cocktail/cocktails_mod03_core.png"), &lowerLeftCorner, vec3.UnitX.Scaled((neonSignWidth/2)*1.6), vec3.UnitY.Scaled(neonSignWidth/2))
 	core1.Material.Projection.RepeatU = false
 	core1.Material.Projection.RepeatV = false
 	core1.Material.SolidObject = false
@@ -110,7 +117,7 @@ func createNeonSign(neonSignWidth float64, coreEmission, haloEmission float64, l
 	core2.Translate(&vec3.T{0, 0, +0.3})
 	core2.Material = scn.NewMaterial().N("core").
 		E(color.White, coreEmission*1.5, false).
-		PP("textures/misc/cocktail/cocktails_mod03_core.png", &lowerLeftCorner, vec3.UnitX.Scaled((neonSignWidth/2)*1.6), vec3.UnitY.Scaled(neonSignWidth/2))
+		PP(floatimage.Load("textures/misc/cocktail/cocktails_mod03_core.png"), &lowerLeftCorner, vec3.UnitX.Scaled((neonSignWidth/2)*1.6), vec3.UnitY.Scaled(neonSignWidth/2))
 	core2.Material.Projection.RepeatU = false
 	core2.Material.Projection.RepeatV = false
 	core2.Material.SolidObject = false
@@ -121,7 +128,7 @@ func createNeonSign(neonSignWidth float64, coreEmission, haloEmission float64, l
 	halo.Translate(&lowerLeftCorner)
 	halo.Material = scn.NewMaterial().N("halo").
 		E(color.White, haloEmission, false).
-		PP("textures/misc/cocktail/cocktails_mod03_halo.png", &lowerLeftCorner, vec3.UnitX.Scaled((neonSignWidth/2)*1.6), vec3.UnitY.Scaled(neonSignWidth/2))
+		PP(floatimage.Load("textures/misc/cocktail/cocktails_mod03_halo.png"), &lowerLeftCorner, vec3.UnitX.Scaled((neonSignWidth/2)*1.6), vec3.UnitY.Scaled(neonSignWidth/2))
 	halo.Material.Projection.RepeatU = false
 	halo.Material.Projection.RepeatV = false
 	halo.Material.SolidObject = false
@@ -132,7 +139,7 @@ func createNeonSign(neonSignWidth float64, coreEmission, haloEmission float64, l
 }
 
 func createWall(wallScale float64) *scn.FacetStructure {
-	wall := &scn.FacetStructure{Name: "wall", Facets: obj.NewSquare(obj.XYPlane)}
+	wall := &scn.FacetStructure{Name: "wall", Facets: obj.NewSquare(obj.XYPlane, false)}
 	wall.UpdateBounds()
 	wall.UpdateNormals()
 	wall.CenterOn(&vec3.Zero)
@@ -140,17 +147,17 @@ func createWall(wallScale float64) *scn.FacetStructure {
 	wall.Material = scn.NewMaterial().N("wall").
 		M(0.05, 0.8).
 		//PP("textures/tapeter 2/WhiteBrickWall_Image_Tile_Item_9459w.jpg", &vec3.Zero, vec3.UnitX.Scaled(75), vec3.UnitY.Scaled(75))
-		PP("textures/misc/cocktail/bricks.png", &vec3.Zero, vec3.UnitX.Scaled(75), vec3.UnitY.Scaled(75))
+		PP(floatimage.Load("textures/misc/cocktail/bricks.png"), &vec3.Zero, vec3.UnitX.Scaled(75), vec3.UnitY.Scaled(75))
 	return wall
 }
 
 func createPoster(posterLocation vec3.T) *scn.FacetStructure {
-	poster := &scn.FacetStructure{Name: "poster", Facets: obj.NewSquare(obj.XYPlane)}
+	poster := &scn.FacetStructure{Name: "poster", Facets: obj.NewSquare(obj.XYPlane, false)}
 	poster.UpdateBounds()
 	poster.UpdateNormals()
 	poster.Material = scn.NewMaterial().N("poster").
 		M(0.05, 0.4).
-		PP("textures/misc/cocktail/cocktailposter_worn.png", &vec3.T{0, 0, 0}, vec3.UnitX, vec3.UnitY)
+		PP(floatimage.Load("textures/misc/cocktail/cocktailposter_worn.png"), &vec3.T{0, 0, 0}, vec3.UnitX, vec3.UnitY)
 	poster.Material.Projection.RepeatU = false
 	poster.Material.Projection.RepeatV = false
 	poster.Material.SolidObject = false
@@ -168,7 +175,7 @@ func getCamera(animationProgress float64) *scn.Camera {
 	focusPoint := &vec3.T{-10, 0, 0}
 	// focusPoint := &vec3.T{30, 0, 0}
 
-	// Animation
+	// AnimationInformation
 	angle := (math.Pi / 2.0) * animationProgress
 	scn.RotateY(cameraOrigin, &vec3.Zero, angle)
 	scn.RotateY(focusPoint, &vec3.Zero, angle)
@@ -180,5 +187,5 @@ func getCamera(animationProgress float64) *scn.Camera {
 		F(focusDistance).
 		V(800).
 		D(10).
-		A(0.05, "")
+		A(0.05, nil)
 }

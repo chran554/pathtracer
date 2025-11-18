@@ -1,9 +1,10 @@
 package main
 
 import (
-	anm "pathtracer/internal/pkg/animation"
+	"fmt"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -44,5 +45,9 @@ func main() {
 	frame := scn.NewFrame(animationName, -1, camera, scene)
 	animation.AddFrame(frame)
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }

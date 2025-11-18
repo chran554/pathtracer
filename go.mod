@@ -1,6 +1,6 @@
 module pathtracer
 
-go 1.19
+go 1.23.5
 
 require (
 	github.com/schollz/progressbar/v3 v3.8.6

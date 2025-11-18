@@ -1,11 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"math"
-	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
 	"strconv"
 
@@ -27,12 +29,22 @@ var magnification = 2.0
 func main() {
 	cornellBox := GetCornellBox(&vec3.T{300, 300, 300}, 10.0) // cm, as units. I.e. a 5x3x5m room
 
-	spheres := GetSpheres(1, &vec3.T{0, 0, 0})
+	spheres1 := GetSpheres(1, &vec3.T{0, 0, 0})
 	spheres2 := GetSpheres(1, &vec3.T{0, 0, 0})
-	spheres2[0].Origin.Add(&vec3.T{40, 0, -20})
-	spheres2[0].Material.C(color.NewColor(0.95, 0.6, 0.5))
+	spheres3 := GetSpheres(1, &vec3.T{0, 0, 0})
 
+	spheres2[0].Origin.Add(&vec3.T{40, 0, -20})
+	spheres2[0].Material.C(color.NewColor(0.95, 0.85, 0.85))
+
+	spheres3[0].Origin.Add(&vec3.T{-10, 0, -100})
+	spheres3[0].Material.C(color.NewColor(0.85, 0.85, 0.95))
+	spheres3[0].Radius = spheres3[0].Radius * 0.5
+	spheres3[0].Translate(&vec3.T{0, -spheres3[0].Radius, 0})
+
+	var spheres []*scn.Sphere
+	spheres = append(spheres, spheres1...)
 	spheres = append(spheres, spheres2...)
+	spheres = append(spheres, spheres3...)
 
 	glassPokal := obj.NewGlassIkeaPokal(50.0)
 	glassPokal.Translate(&vec3.T{10, 0, -20})
@@ -58,13 +70,13 @@ func main() {
 
 	scene := scn.NewSceneNode().
 		S(spheres...).
-		S(pixarBall).
-		FS(cornellBox /*glassPokal, glassSkoja,*/, utahTeapot)
+		//S(pixarBall).
+		FS(cornellBox /*glassPokal, glassSkoja, utahTeapot*/)
 
 	sphereBounds := spheres[0].Bounds()
 	cameraOrigin := &vec3.T{sphereBounds.Center()[1], sphereBounds.Center()[1], -200}
-	cameraFocusPoint := sphereBounds.Center().Added(&vec3.T{0, 0, -ballRadius / 3.0})
-	camera := scn.NewCamera(cameraOrigin, &cameraFocusPoint, amountSamples, magnification).D(maxRecursionDepth).A(lensRadius, "")
+	cameraFocusPoint := sphereBounds.Center().Added(&vec3.T{0, -ballRadius / 2, -ballRadius})
+	camera := scn.NewCamera(cameraOrigin, &cameraFocusPoint, amountSamples, magnification).D(maxRecursionDepth).A(lensRadius, nil)
 
 	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
@@ -72,7 +84,11 @@ func main() {
 
 	animation.AddFrame(frame)
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func GetSpheres(amountSpheres int, translation *vec3.T) []*scn.Sphere {
@@ -113,11 +129,11 @@ func GetCornellBox(scale *vec3.T, lightIntensityFactor float64) *scn.FacetStruct
 		C(color.NewColor(0.95, 0.95, 0.95))
 
 	backWallMaterial := cornellBox.Material.Copy().
-		PP("textures/wallpaper/anemone-rose-flower-eucalyptus-leaves-pampas-grass.png", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale[0]), vec3.UnitY.Scaled(scale[0]*0.66))
+		PP(floatimage.Load("textures/wallpaper/anemone-rose-flower-eucalyptus-leaves-pampas-grass.png"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale[0]), vec3.UnitY.Scaled(scale[0]*0.66))
 	sideWallMaterial := cornellBox.Material.Copy().
-		PP("textures/wallpaper/anemone-rose-flower-eucalyptus-leaves-pampas-grass.png", &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(scale[0]), vec3.UnitY.Scaled(scale[0]*0.66))
+		PP(floatimage.Load("textures/wallpaper/anemone-rose-flower-eucalyptus-leaves-pampas-grass.png"), &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(scale[0]), vec3.UnitY.Scaled(scale[0]*0.66))
 	floorMaterial := cornellBox.Material.Copy().
-		PP("textures/floor/7451-diffuse 02 low contrast.png", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale[0]*0.25), vec3.UnitZ.Scaled(scale[0]*0.25))
+		PP(floatimage.Load("textures/floor/7451-diffuse 02 low contrast.png"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale[0]*0.25), vec3.UnitZ.Scaled(scale[0]*0.25))
 
 	lampMaterial := scn.NewMaterial().N("Lamp").
 		C(color.White).

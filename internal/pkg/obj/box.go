@@ -1,8 +1,12 @@
 package obj
 
 import (
-	"github.com/ungerik/go3d/float64/vec3"
+	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	scn "pathtracer/internal/pkg/scene"
+
+	"github.com/ungerik/go3d/float64/vec2"
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 type BoxType int
@@ -13,9 +17,21 @@ const (
 	BoxCenteredYPositive                // BoxCenteredYPositive is a box centered on origin (0,0,0) on the x and z axes (but not y-axis). Each side is 1 unit in length from [-0.5, 0.5], and [0, 1] for y axis.
 )
 
+// NewBoxWithEmission return a box which sides all have unit length 1.
+// The box has a material called "light" on each side and a color emission.
+// The sides of the box have prepared texture coordinates at each vertex: [0,0], [1,0], [1,1], [0,1].
+func NewBoxWithEmission(boxType BoxType, c color.Color, scaleEmission float64, texture *floatimage.FloatImage) (*scn.FacetStructure, *scn.Material) {
+	box := NewBox(boxType)
+
+	box.Material = scn.NewMaterial().E(c, scaleEmission, true)
+	if texture != nil {
+		box.Material.TP(texture)
+	}
+
+	return box, box.Material
+}
+
 // NewBox return a box which sides all have the unit length 1.
-// It is placed with one corner ni origin (0, 0, 0) and opposite corner in (1, 1, 1).
-// Side normals point outwards from each side.
 func NewBox(boxType BoxType) *scn.FacetStructure {
 	p1 := vec3.T{1, 1, 0} // Top right close            3----------2
 	p2 := vec3.T{1, 1, 1} // Top right away            /          /|
@@ -78,7 +94,7 @@ func GetRectangleFacets(p1, p2, p3, p4 *vec3.T) []*scn.Facet {
 	normal2.Normalize()
 
 	return []*scn.Facet{
-		{Vertices: []*vec3.T{p1, p2, p4}, Normal: &normal1},
-		{Vertices: []*vec3.T{p4, p2, p3}, Normal: &normal2},
+		{Vertices: []*vec3.T{p1, p2, p4}, Normal: &normal1, TextureCoordinates: []*vec2.T{{1, 0}, {1, 1}, {0, 0}}},
+		{Vertices: []*vec3.T{p4, p2, p3}, Normal: &normal2, TextureCoordinates: []*vec2.T{{0, 0}, {1, 1}, {0, 1}}},
 	}
 }

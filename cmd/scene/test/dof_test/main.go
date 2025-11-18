@@ -1,9 +1,10 @@
 package main
 
 import (
-	anm "pathtracer/internal/pkg/animation"
+	"fmt"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
 	"strconv"
 
@@ -49,12 +50,16 @@ func main() {
 	cameraOrigin := vec3.T{0, ballRadius * 3, -800}
 	cameraOrigin.Scale(cameraDistanceFactor)
 	focusPoint := vec3.T{0, ballRadius, 0}
-	camera := scn.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).V(viewPlaneDistance).A(lensRadius, "")
+	camera := scn.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).V(viewPlaneDistance).A(lensRadius, nil)
 
 	frame := scn.NewFrame(animationName, -1, camera, scene)
 
 	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 	animation.AddFrame(frame)
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }

@@ -1,11 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"path/filepath"
-	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
 	"pathtracer/internal/pkg/util"
 
@@ -35,7 +37,7 @@ func main() {
 	skyDome := scn.NewSphere(&vec3.T{0, 0, 0}, 200*100, scn.NewMaterial().
 		E(color.White, skyDomeEmission, true).
 		//C(color.NewColorGrey(0.2))).
-		SP("textures/equirectangular/331_PDM_BG1.jpg", &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+		SP(floatimage.Load("textures/equirectangular/331_PDM_BG1.jpg"), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 	// SP("textures/equirectangular/white room 02 612x612.jpg", &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 	skyDome.RotateY(&vec3.Zero, util.DegToRad(-20))
 
@@ -44,7 +46,7 @@ func main() {
 	tableBoard.Translate(&vec3.T{0, -tableBoard.Bounds.Ymax + 80, 0})
 	tableBoard.Material = scn.NewMaterial().
 		C(color.NewColorGrey(1.0)).
-		PP("textures/wallpaper/Blossom2_Image_Tile_Item_9471w.jpg", &vec3.T{0, 0, 0}, vec3.T{60, 0, 0}, vec3.T{0, 0, 40})
+		PP(floatimage.Load("textures/wallpaper/Blossom2_Image_Tile_Item_9471w.jpg"), &vec3.T{0, 0, 0}, vec3.T{60, 0, 0}, vec3.T{0, 0, 40})
 
 	wallZ := tableBoard.Bounds.Zmax + 2.0
 
@@ -62,7 +64,7 @@ func main() {
 
 	wall := createWindowWall(wallWidth, wallHeight, windowXPos, windowYPos, windowWidth, windowHeight)
 	wall.Translate(&vec3.T{-wallWidth / 2, 0, wallZ})
-	wall.Material = scn.NewMaterial().PP("textures/wallpaper/Slottsteatern_Image_Flatshot_Item_4507.jpg", &vec3.T{0, 0, 0}, vec3.T{52, 0, 0}, vec3.T{0, 52, 0})
+	wall.Material = scn.NewMaterial().PP(floatimage.Load("textures/wallpaper/Slottsteatern_Image_Flatshot_Item_4507.jpg"), &vec3.T{0, 0, 0}, vec3.T{52, 0, 0}, vec3.T{0, 52, 0})
 	//wall.Material = scn.NewMaterial().PP("textures/wallpaper/Ester_Image_Flatshot_Item_7659.jpg", &vec3.T{0, 0, 0}, vec3.T{100, 0, 0}, vec3.T{0, 100, 0})
 	//wall.Material = scn.NewMaterial().PP("textures/wallpaper/RoseGarden_Image_Tile_Item_7464.jpg", &vec3.T{0, 0, 0}, vec3.T{100, 0, 0}, vec3.T{0, 50, 0})
 
@@ -103,7 +105,7 @@ func main() {
 	room.ScaleUniform(&vec3.Zero, 5.5*100)
 	room.RotateY(&vec3.Zero, util.DegToRad(-90))
 	room.Translate(&vec3.T{0, wallHeight / 2, -100})
-	room.Material = scn.NewMaterial().E(color.NewColorKelvin(2000), 0.2, true).SP("textures/equirectangular/medieval_kitchen.png", room.Bounds.Center(), vec3.UnitX.Scaled(-1), vec3.UnitY)
+	room.Material = scn.NewMaterial().E(color.NewColorKelvin(2000), 0.2, true).SP(floatimage.Load("textures/equirectangular/medieval_kitchen.png"), room.Bounds.Center(), vec3.UnitX.Scaled(-1), vec3.UnitY)
 
 	scene := scn.NewSceneNode().
 		S(skyDome).
@@ -125,7 +127,7 @@ func main() {
 	focusDistance := viewVector.Length()
 
 	camera := scn.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).
-		A(apertureSize, "").
+		A(apertureSize, nil).
 		F(focusDistance).
 		D(10)
 
@@ -133,7 +135,11 @@ func main() {
 	frame := scn.NewFrame(animation.AnimationName, -1, camera, scene)
 	animation.AddFrame(frame)
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func createWindowWall(wallWidth float64, wallHeight float64, windowXPos float64, windowYPos float64, windowWidth float64, windowHeight float64) *scn.FacetStructure {

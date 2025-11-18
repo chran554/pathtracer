@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"math"
-	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -28,7 +30,7 @@ func main() {
 	groundOrigin := &vec3.T{0, 0, 0}
 	groundMaterial := scn.NewMaterial().
 		C(color.NewColor(0.5, 0.5, 0.5)).
-		PP("textures/white_marble.png", groundOrigin, vec3.UnitX.Scaled(50), vec3.UnitZ.Scaled(50))
+		PP(floatimage.Load("textures/white_marble.png"), groundOrigin, vec3.UnitX.Scaled(50), vec3.UnitZ.Scaled(50))
 	ground := scn.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, 600, groundMaterial)
 
 	nominalFocusDistance := cameraOrigin.Length()
@@ -61,7 +63,7 @@ func main() {
 		}
 
 		camera := scn.NewCamera(&cameraOrigin, &vec3.T{0, ballRadius, 0}, amountSamples, magnification).
-			A(lensRadius, "").
+			A(lensRadius, nil).
 			V(viewPlaneDistance).
 			F(focusDistance)
 
@@ -70,5 +72,9 @@ func main() {
 		animation.Frames = append(animation.Frames, frame)
 	}
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }

@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"math"
-	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
 	"pathtracer/internal/pkg/util"
 
@@ -41,7 +43,7 @@ func main() {
 	// environmentSphere := addEnvironmentMapping("textures/equirectangular/nightsky.png")
 
 	// Ground
-	groundProjection := scn.NewParallelImageProjection("textures/ground/grass_short.png", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(80/2), vec3.UnitZ.Scaled(50/2))
+	groundProjection := scn.NewParallelImageProjection(floatimage.Load("textures/ground/grass_short.png"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(80/2), vec3.UnitZ.Scaled(50/2))
 	groundMaterial := scn.NewMaterial().N("Ground material").P(&groundProjection)
 	ground := scn.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
 
@@ -70,20 +72,24 @@ func main() {
 		cameraOrigin := castleBounds.Center().Add(cameraOffsetFromCastleCenter)
 		cameraFocusPoint := castleBounds.Center().Add(&focusPointOffset).Add(&vec3.T{0, -5, 0})
 
-		camera := scn.NewCamera(cameraOrigin, cameraFocusPoint, amountSamples, magnification).D(maxRecursion).A(apertureSize, "")
+		camera := scn.NewCamera(cameraOrigin, cameraFocusPoint, amountSamples, magnification).D(maxRecursion).A(apertureSize, nil)
 
 		frame := scn.NewFrame(animationName, frameIndex, camera, scene)
 		animation.AddFrame(frame)
 	}
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func addEnvironmentMapping(filename string) *scn.Sphere {
 	origin := vec3.T{0, 0, 0}
 	u := vec3.T{-0.2, 0, -1}
 	v := vec3.T{0, 1, 0}
-	material := scn.NewMaterial().E(color.White, environmentEmissionFactor, true).SP(filename, &origin, u, v)
+	material := scn.NewMaterial().E(color.White, environmentEmissionFactor, true).SP(floatimage.Load(filename), &origin, u, v)
 	sphere := scn.NewSphere(&origin, environmentRadius, material).N("Environment mapping")
 
 	return sphere

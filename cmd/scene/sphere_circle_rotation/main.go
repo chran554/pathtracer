@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"math"
-	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -74,7 +76,7 @@ func main() {
 		// Sky Dome
 		skyDomeRadius := 100.0 * 1000.0
 		skyDomeOrigin := &vec3.T{0, 0, 0}
-		skyDomeMaterial := scn.NewMaterial().E(color.White, 1.0, true).SP(environmentEnvironMap, skyDomeOrigin, vec3.UnitX, vec3.UnitY)
+		skyDomeMaterial := scn.NewMaterial().E(color.White, 1.0, true).SP(floatimage.Load(environmentEnvironMap), skyDomeOrigin, vec3.UnitX, vec3.UnitY)
 		skyDome := scn.NewSphere(skyDomeOrigin, skyDomeRadius, skyDomeMaterial)
 
 		camera := getCamera(magnification, animationProgress)
@@ -89,7 +91,11 @@ func main() {
 		animation.Frames = append(animation.Frames, frame)
 	}
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func addBallsToScene(deltaBallAngle float64, projectionAngle float64, projectionData []projection) []*scn.Sphere {
@@ -116,7 +122,7 @@ func addBallsToScene(deltaBallAngle float64, projectionAngle float64, projection
 
 		material := scn.NewMaterial().
 			E(projectionData[projectionTextureIndex].emission, 1.0, projectionData[projectionTextureIndex].rayTerminator).
-			SP(projectionData[projectionTextureIndex].filename, &ballOrigin, vec3.T{projectionU, 0, projectionV}, vec3.T{0, 1, 0})
+			SP(floatimage.Load(projectionData[projectionTextureIndex].filename), &ballOrigin, vec3.T{projectionU, 0, projectionV}, vec3.T{0, 1, 0})
 
 		sphere := scn.NewSphere(&ballOrigin, ballRadius, material)
 
@@ -144,5 +150,5 @@ func getCamera(magnification float64, progress float64) *scn.Camera {
 	focusDistance := heading.Length() - circleRadius - 0.5*ballRadius
 
 	return scn.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).
-		V(viewPlaneDistance).A(lensRadius, "").F(focusDistance)
+		V(viewPlaneDistance).A(lensRadius, nil).F(focusDistance)
 }

@@ -1,7 +1,9 @@
 package main
 
 import (
-	anm "pathtracer/internal/pkg/animation"
+	"fmt"
+	"pathtracer/internal/pkg/floatimage"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -22,7 +24,7 @@ func main() {
 	projectionU := vec3.T{0, 0, ballRadius}
 	projectionV := vec3.T{0, 2 * ballRadius, 0}
 
-	projection := scn.NewCylindricalImageProjection("textures/planets/earth_daymap.jpg", &projectionOrigin, projectionU, projectionV)
+	projection := scn.NewCylindricalImageProjection(floatimage.Load("textures/planets/earth_daymap.jpg"), &projectionOrigin, projectionU, projectionV)
 
 	sphere1 := scn.NewSphere(&sphereOrigin, ballRadius, scn.NewMaterial().P(&projection)).N("Textured sphere")
 
@@ -36,5 +38,9 @@ func main() {
 	frame := scn.NewFrame(animation.AnimationName, -1, camera, scene)
 	animation.AddFrame(frame)
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }

@@ -18,8 +18,8 @@ func NewCornellBox(scale *vec3.T, singleLight bool, lightIntensityFactor float64
 	redColor := color.NewColor(0.95, 0.05, 0.05)
 
 	cornellBox := loadCornellBox(scale, singleLight, lightIntensityFactor)
-	cornellBox.GetFirstMaterialByName("left").C(blueColor)
-	cornellBox.GetFirstMaterialByName("right").C(redColor)
+	cornellBox.GetFirstMaterialByName("Left").C(blueColor)
+	cornellBox.GetFirstMaterialByName("Right").C(redColor)
 
 	return cornellBox
 }

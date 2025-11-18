@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/ungerik/go3d/float64/vec3"
-	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 var animationName = "reflective_test_glossy_roughness"
@@ -64,11 +65,15 @@ func main() {
 	cameraOrigin := vec3.T{0, 400, -400}
 	cameraOrigin.Scale(cameraDistanceFactor)
 	focusPoint := vec3.T{0, ballRadius, -ballRadius * 2}
-	camera := scn.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).V(viewPlaneDistance).A(lensRadius, "").D(maxRecursionDepth)
+	camera := scn.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).V(viewPlaneDistance).A(lensRadius, nil).D(maxRecursionDepth)
 
 	frame := scn.NewFrame(animation.AnimationName, -1, camera, scene)
 
 	animation.AddFrame(frame)
 
-	anm.WriteAnimationToFile(animation, true)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }

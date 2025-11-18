@@ -3,8 +3,9 @@ package main
 import (
 	"fmt"
 	"math"
-	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -12,30 +13,29 @@ import (
 
 var animationName = "recursive_spheres"
 
-var environmentEnvironMap = "textures/equirectangular/open_grassfield_sunny_day.jpg"
+// var environmentEnvironMap = "textures/equirectangular/sunset horizon 2800x1400.jpg"
+var skyDomeRadius = 100.0 * 1000.0
 
 //var environmentEnvironMap = "textures/equirectangular/nightsky.png"
 
-// var environmentEnvironMap = "textures/equirectangular/sunset horizon 2800x1400.jpg"
-var skyDomeRadius = 100.0 * 1000.0
 var skyDomeEmissionFactor = 1.0
-
 var amountFrames = 1
 
 var imageWidth = 1280
+
 var imageHeight = 1024
 var magnification = 1.0
-
 var amountSamples = 1024 * 3
 
 var startSphereRadius = 150.0
-var maxSphereRecursionDepth = 6
 
+var maxSphereRecursionDepth = 6
 var apertureSize = 3.0
 
 var sphereMaterial = scn.NewMaterial().C(color.NewColorGrey(0.8)).M(0.70, 0.07)
 
 func main() {
+	environmentEnvironMap := floatimage.Load("textures/equirectangular/open_grassfield_sunny_day.jpg")
 	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
 	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
@@ -62,7 +62,7 @@ func main() {
 
 		cameraOrigin := ballsBounds.Center().Add(&vec3.T{0, ballsBounds.SizeY() * 1.5 / 10.0, -800})
 		cameraFocusPoint := ballsBounds.Center().Add(&vec3.T{0, ballsBounds.SizeY() / 10.0, -ballsBounds.SizeZ() / 2.0 * 0.8})
-		camera := scn.NewCamera(cameraOrigin, cameraFocusPoint, amountSamples, magnification).A(apertureSize, "").V(700)
+		camera := scn.NewCamera(cameraOrigin, cameraFocusPoint, amountSamples, magnification).A(apertureSize, nil).V(700)
 
 		scene := scn.NewSceneNode().S(skyDome).SN(recursiveBalls)
 
@@ -71,7 +71,11 @@ func main() {
 		animation.Frames = append(animation.Frames, frame)
 	}
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func getRecursiveBalls(middleSphereRadius float64, maxRecursionDepth int) *scn.SceneNode {

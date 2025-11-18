@@ -23,7 +23,7 @@ var imageWidth = 1024  // 1280
 var imageHeight = 1280 // 1024
 var magnification = 0.5
 
-var amountSamples = 512 * 2 * 16 // * 2
+var amountSamples = 512 * 2 * 8 // 16 // * 2
 var maxRecursion = 8
 
 var apertureSize = 0.5

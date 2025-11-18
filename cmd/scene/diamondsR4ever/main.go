@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"math"
 	dmd "pathtracer/cmd/obj/diamond/pkg/diamond"
-	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -31,7 +33,7 @@ func main() {
 
 	environmentSphere := scn.NewSphere(&vec3.T{0, 0, 0}, 1000*1000*1000, scn.NewMaterial().
 		E(color.White, 1, true).
-		SP("textures/planets/environmentmap/Stellarium3.jpeg", &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+		SP(floatimage.Load("textures/planets/environmentmap/Stellarium3.jpeg"), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 
 	lamp1 := scn.NewSphere(&vec3.T{roomScale * 2.0, roomScale * 0.5, -roomScale * 1.0}, roomScale*0.8, scn.NewMaterial().E(color.White, 20, true)).N("Lamp1")
 
@@ -57,7 +59,7 @@ func main() {
 	diamond2.UpdateBounds()
 	floorLevel := diamond2.Bounds.Ymin
 
-	floorMaterial := scn.NewMaterial().M(0.8, 0.1).PP("textures/marble/white_marble.png", &vec3.T{0, 0, 0}, vec3.T{roomScale * 1.5 * 2, 0, 0}, vec3.T{0, 0, roomScale * 1.5 * 2})
+	floorMaterial := scn.NewMaterial().M(0.8, 0.1).PP(floatimage.Load("textures/marble/white_marble.png"), &vec3.T{0, 0, 0}, vec3.T{roomScale * 1.5 * 2, 0, 0}, vec3.T{0, 0, roomScale * 1.5 * 2})
 	floor := scn.NewDisc(&vec3.T{0, floorLevel, 0}, &vec3.T{0, 1, 0}, roomScale*1.5, floorMaterial).N("Floor")
 
 	animationStep := 1.0 / float64(amountAnimationFrames)
@@ -85,5 +87,9 @@ func main() {
 		animation.AddFrame(frame)
 	}
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }

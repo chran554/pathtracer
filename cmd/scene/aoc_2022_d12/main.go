@@ -3,19 +3,20 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/ungerik/go3d/float64/vec3"
 	"os"
-	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
 	"regexp"
 	"strconv"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 var animationName = "aoc_2022_d12"
 
-var environmentEnvironMap = "textures/equirectangular/sunset horizon 2800x1400.jpg"
 var environmentRadius = 500.0 * 1000.0
 var environmentEmissionFactor = 0.8
 
@@ -31,6 +32,8 @@ var amountSamples = 200 // 200 * 4 * 3 // 2000 * 2 * 4
 var apertureSize = 2.0
 
 func main() {
+	environmentEnvironMap := floatimage.Load("textures/equirectangular/sunset horizon 2800x1400.jpg")
+
 	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
 	skyDomeOrigin := &vec3.T{0, 0, 0}
@@ -48,7 +51,7 @@ func main() {
 	//sun := scn.NewSphere(&vec3.T{3000, 600, 1600}, 400, sunMaterial).N("sun")
 
 	// Ground
-	groundMaterial := scn.NewMaterial().N("Ground material").PP("textures/ground/soil-cracked.png", &vec3.Zero, vec3.UnitX.Scaled(150*3), vec3.UnitZ.Scaled(150*3))
+	groundMaterial := scn.NewMaterial().N("Ground material").PP(floatimage.Load("textures/ground/soil-cracked.png"), &vec3.Zero, vec3.UnitX.Scaled(150*3), vec3.UnitZ.Scaled(150*3))
 	ground := scn.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
 
 	mapTextLines, _ := readLines("cmd/scene/aoc_2022_d12/resources/map.txt")
@@ -73,7 +76,7 @@ func main() {
 		C(color.White).
 		E(color.White, 1.5, false).
 		M(0.2, 0.3).
-		SP("textures/planets/sun.jpg", &vec3.T{1540 / 2, -1540 / 2, 820 / 2}, vec3.UnitX.Scaled(-100), vec3.UnitZ.Scaled(100))
+		SP(floatimage.Load("textures/planets/sun.jpg"), &vec3.T{1540 / 2, -1540 / 2, 820 / 2}, vec3.UnitX.Scaled(-100), vec3.UnitZ.Scaled(100))
 
 	pathMaterial := scn.NewMaterial().
 		C(pathColor).
@@ -163,7 +166,7 @@ func main() {
 
 		cameraOrigin.Add(&vec3.T{0.0, 100.0, 0.0}) // Raise the camera above the focus point
 		cameraFocusPoint := focusPoint
-		camera := scn.NewCamera(&cameraOrigin, cameraFocusPoint, amountSamples, magnification).A(apertureSize, "")
+		camera := scn.NewCamera(&cameraOrigin, cameraFocusPoint, amountSamples, magnification).A(apertureSize, nil)
 
 		// Still image camera settings
 		// cameraOrigin = vec3.T{-300, 350, 150}
@@ -174,7 +177,11 @@ func main() {
 		animation.AddFrame(frame)
 	}
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func parsePath(lines []string) ([]Pos, Pos, Pos) {

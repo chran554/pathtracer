@@ -3,7 +3,7 @@ package sunflower
 import (
 	"math/rand"
 	"pathtracer/internal/pkg/color"
-	img "pathtracer/internal/pkg/image"
+	"pathtracer/internal/pkg/floatimage"
 	"strconv"
 	"testing"
 	"time"
@@ -36,7 +36,7 @@ func Test_sunflower(t *testing.T) {
 		halfWidth := float64(width / 2)
 		halfHeight := float64(height / 2)
 
-		image := img.NewFloatImage("sunflower", width, height)
+		image := floatimage.NewFloatImage("sunflower", width, height)
 
 		for i := 0; i < amount; i++ {
 			//x, y := Sunflower(amount, 2.0, i+1, randomize)
@@ -46,7 +46,7 @@ func Test_sunflower(t *testing.T) {
 			image.SetPixel(x2, y2, &colors[i*len(colors)/amount])
 		}
 
-		img.WriteImage("sunflower_["+strconv.Itoa(width)+"x"+strconv.Itoa(height)+"]x"+strconv.Itoa(amount)+"_random.png", image)
+		floatimage.WriteImage("sunflower_["+strconv.Itoa(width)+"x"+strconv.Itoa(height)+"]x"+strconv.Itoa(amount)+"_random.png", image)
 
 		//fmt.Printf("%+v\n", test)
 	})

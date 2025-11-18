@@ -1,12 +1,15 @@
 package main
 
 import (
-	"github.com/ungerik/go3d/float64/mat3"
+	"fmt"
 	"math"
-	anm "pathtracer/internal/pkg/animation"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
+
+	"github.com/ungerik/go3d/float64/mat3"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -35,7 +38,7 @@ func main() {
 	scale := 100.0
 	cornellBox := NewCornellBox(100.0)
 
-	footballMaterial := scn.NewMaterial().C(color.White).M(0.1, 0.6).SP("textures/equirectangular/football.png", &vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+	footballMaterial := scn.NewMaterial().C(color.White).M(0.1, 0.6).SP(floatimage.Load("textures/equirectangular/football.png"), &vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
 	football := scn.NewSphere(&vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0}, ballRadius, footballMaterial).N("football")
 
 	sphere2Material := scn.NewMaterial().C(color.NewColorGrey(0.9))
@@ -77,7 +80,11 @@ func main() {
 		animation.AddFrame(frame)
 	}
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func NewCornellBox(scale float64) *scn.FacetStructure {
@@ -90,7 +97,7 @@ func NewCornellBox(scale float64) *scn.FacetStructure {
 	cornellBox.ReplaceMaterial("Ceiling", scn.NewMaterial().N("Ceiling").C(color.NewColorGrey(0.9)))
 	cornellBox.ReplaceMaterial("Floor", scn.NewMaterial().N("Floor").C(color.NewColorGrey(0.8)).M(0.3, 0.05))
 
-	cornellBox.GetFirstObjectBySubstructureName("Floor").Material.PP("textures/marble/white_marble.png", &vec3.T{0, 0, 0}, vec3.T{200 * 2, 0, 0}, vec3.T{0, 0, 200 * 2})
+	cornellBox.GetFirstObjectBySubstructureName("Floor").Material.PP(floatimage.Load("textures/marble/white_marble.png"), &vec3.T{0, 0, 0}, vec3.T{200 * 2, 0, 0}, vec3.T{0, 0, 200 * 2})
 
 	lampMaterial := scn.NewMaterial().N("Lamp").E(color.White, 6, true)
 	cornellBox.ReplaceMaterial("Lamp_1", lampMaterial)

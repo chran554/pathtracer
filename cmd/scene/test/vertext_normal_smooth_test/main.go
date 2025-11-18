@@ -1,9 +1,11 @@
 package main
 
 import (
-	anm "pathtracer/internal/pkg/animation"
+	"fmt"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
+	anm "pathtracer/internal/pkg/renderfile"
 	scn "pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -31,7 +33,7 @@ func main() {
 	pillar.Material = scn.NewMaterial().
 		C(color.NewColorGrey(0.9)).
 		M(0.4, 0.1).
-		PP("textures/concrete/Polished-Concrete-Architextures.jpg", &vec3.T{0, 0, 0}, (&vec3.UnitX).Scaled(pillarWidth), (&vec3.UnitZ).Add(&vec3.T{0, 0.5, 0}).Scaled(pillarWidth))
+		PP(floatimage.Load("textures/concrete/Polished-Concrete-Architextures.jpg"), &vec3.T{0, 0, 0}, (&vec3.UnitX).Scaled(pillarWidth), (&vec3.UnitZ).Add(&vec3.T{0, 0.5, 0}).Scaled(pillarWidth))
 	pillar.Translate(&vec3.T{-0.5, 0, -0.5})
 
 	pillar.Scale(&vec3.Zero, &vec3.T{pillarWidth, pillarHeight, pillarWidth})
@@ -54,28 +56,32 @@ func main() {
 		cameraOrigin := beethoven.Bounds.Center().Add(&vec3.T{0, 0, -100})
 		cameraOrigin.Scale(cameraDistanceFactor)
 		focusPoint := beethoven.Bounds.Center()
-		camera := scn.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).A(lensRadius, "")
+		camera := scn.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).A(lensRadius, nil)
 
 		frame := scn.NewFrame(animation.AnimationName, degree, camera, scene)
 		animation.AddFrame(frame)
 	}
 
-	anm.WriteAnimationToFile(animation, false)
+	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	err := anm.WriteRenderFile(filename, animation)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func setCornellBoxMaterial(cornellBox *scn.FacetStructure) {
 	scale := cornellBox.Bounds.SizeX() / 2
 
 	backWallMaterial := *cornellBox.Material
-	backWallMaterial.PP("textures/wallpaper/geometric-yellow.jpg", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale), vec3.UnitY.Scaled(scale*0.66))
+	backWallMaterial.PP(floatimage.Load("textures/wallpaper/geometric-yellow.jpg"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale), vec3.UnitY.Scaled(scale*0.66))
 	cornellBox.GetFirstObjectByName("Back").Material = &backWallMaterial
 
 	sideWallMaterial := *cornellBox.Material
-	sideWallMaterial.PP("textures/wallpaper/geometric-yellow.jpg", &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(scale), vec3.UnitY.Scaled(scale*0.66))
+	sideWallMaterial.PP(floatimage.Load("textures/wallpaper/geometric-yellow.jpg"), &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(scale), vec3.UnitY.Scaled(scale*0.66))
 	cornellBox.GetFirstObjectByName("Left").Material = &sideWallMaterial
 	cornellBox.GetFirstObjectByName("Right").Material = &sideWallMaterial
 
 	floorMaterial := *cornellBox.Material
-	floorMaterial.M(0.6, 0.1).PP("textures/floor/Calacatta-Vena-French-Pattern-Architextures.jpg", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale/2), vec3.UnitZ.Scaled(scale/2))
+	floorMaterial.M(0.6, 0.1).PP(floatimage.Load("textures/floor/Calacatta-Vena-French-Pattern-Architextures.jpg"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale/2), vec3.UnitZ.Scaled(scale/2))
 	cornellBox.GetFirstObjectByName("Floor").Material = &floorMaterial
 }
