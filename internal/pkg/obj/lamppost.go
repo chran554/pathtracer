@@ -5,21 +5,21 @@ import (
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-func NewLamppost(scale float64, emission float64) *scn.FacetStructure {
+func NewLamppost(scale float64, emission float64) *scene.FacetStructure {
 	lamppost := loadLamppost(scale)
 	lamppost.ClearMaterials()
 
-	lamppostMaterial := scn.NewMaterial().N("lamppost").C(color.NewColor(0.20, 0.10, 0.08)).M(0.2, 0.3)
+	lamppostMaterial := scene.NewMaterial().N("lamppost").C(color.NewColor(0.20, 0.10, 0.08)).M(0.2, 0.3)
 
-	lampMaterial0 := scn.NewMaterial().N("lamp_0").C(color.White).E(color.White, emission, true)
-	lampMaterial1 := scn.NewMaterial().N("lamp_1").C(color.White).E(color.White, emission, true)
-	lampMaterial2 := scn.NewMaterial().N("lamp_2").C(color.White).E(color.White, emission, true)
-	lampMaterial3 := scn.NewMaterial().N("lamp_3").C(color.White).E(color.White, emission, true)
+	lampMaterial0 := scene.NewMaterial().N("lamp_0").C(color.White).E(color.White, emission, true)
+	lampMaterial1 := scene.NewMaterial().N("lamp_1").C(color.White).E(color.White, emission, true)
+	lampMaterial2 := scene.NewMaterial().N("lamp_2").C(color.White).E(color.White, emission, true)
+	lampMaterial3 := scene.NewMaterial().N("lamp_3").C(color.White).E(color.White, emission, true)
 
 	lamppost.Material = lamppostMaterial
 
@@ -31,7 +31,7 @@ func NewLamppost(scale float64, emission float64) *scn.FacetStructure {
 	return lamppost
 }
 
-func loadLamppost(scale float64) *scn.FacetStructure {
+func loadLamppost(scale float64) *scene.FacetStructure {
 	lamppost := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "lamppost.obj"))
 
 	ymin := lamppost.Bounds.Ymin

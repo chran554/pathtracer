@@ -9,14 +9,15 @@ import (
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/floatimage"
-	anm "pathtracer/internal/pkg/renderfile"
+	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/rendermonitor"
 	"pathtracer/internal/pkg/renderpass"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/scene"
 	"pathtracer/internal/pkg/sunflower"
 	"pathtracer/internal/pkg/util"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/ungerik/go3d/float64/mat3"
@@ -39,18 +40,18 @@ type IntersectionInformation struct {
 	intersection         bool
 	intersectionPoint    *vec3.T
 	shortestDistance     float64
-	material             *scn.Material
+	material             *scene.Material
 	normalAtIntersection *vec3.T
-	intersectedFacet     *scn.Facet
-	intersectedSphere    *scn.Sphere
-	intersectedDisc      *scn.Disc
+	intersectedFacet     *scene.Facet
+	intersectedSphere    *scene.Sphere
+	intersectedDisc      *scene.Disc
 }
 
 type RenderFrameInformation struct {
 	frameIndex          int
 	animationFrameCount int
 	imageFilename       string
-	renderAlgorithm     scn.RenderType
+	renderAlgorithm     scene.RenderType
 	imageWidth          int
 	imageHeight         int
 
@@ -65,7 +66,7 @@ type RenderFrameInformation struct {
 	renderEndTime   time.Time
 }
 
-func NewRenderFrameInformation(scene *scn.SceneNode, animation *scn.Animation, frame *scn.Frame) RenderFrameInformation {
+func NewRenderFrameInformation(scene *scene.SceneNode, animation *scene.Animation, frame *scene.Frame) RenderFrameInformation {
 	return RenderFrameInformation{
 		// frameIndex:          frameIndex,
 		animationFrameCount: len(animation.Frames),
@@ -113,7 +114,7 @@ func main() {
 
 	startTimestamp := time.Now()
 
-	animation, err := anm.ReadRenderFile(animationFilename)
+	animation, err := renderfile.ReadRenderFile(animationFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -139,16 +140,17 @@ func main() {
 
 		fmt.Println()
 		fmt.Println("Initialize scene...")
-		scene := frame.SceneNode
-		initializeScene(scene)
+		scn := frame.SceneNode
+		initializeScene(scn)
 
 		renderedPixelData := floatimage.NewFloatImage(animation.AnimationName, animation.Width, animation.Height)
+		renderedPixelData.Fill(color.NewColorRGBA(0, 0, 0, 0))
 
 		fmt.Println(frameInformationProgressSummary(frameInformation))
-		render(frame.Camera, scene, animation.Width, animation.Height, renderedPixelData, &renderMonitor)
+		render(frame.Camera, scn, animation.Width, animation.Height, renderedPixelData, renderMonitor)
 
 		fmt.Println("Releasing resources...")
-		deInitializeScene(scene)
+		deInitializeScene(scn)
 		frame.SceneNode = nil
 
 		frameInformation.renderEndTime = time.Now()
@@ -222,7 +224,7 @@ func frameInformationPreRenderText(frameInformation RenderFrameInformation) stri
 	return stringBuilder.String()
 }
 
-func writeRenderedImage(animation *scn.Animation, frame *scn.Frame, renderedPixelData *floatimage.FloatImage, frameInformation RenderFrameInformation) {
+func writeRenderedImage(animation *scene.Animation, frame *scene.Frame, renderedPixelData *floatimage.FloatImage, frameInformation RenderFrameInformation) {
 	animationDirectory := filepath.Join(".", "rendered", animation.AnimationName)
 
 	animationFrameFilename := filepath.Join(animationDirectory, frame.Filename+".png")
@@ -244,12 +246,12 @@ func writeRenderedImage(animation *scn.Animation, frame *scn.Frame, renderedPixe
 	}
 }
 
-func initializeScene(scene *scn.SceneNode) {
-	_initializeScene(scene)
-	scene.UpdateBounds()
+func initializeScene(scn *scene.SceneNode) {
+	_initializeScene(scn)
+	scn.UpdateBounds()
 }
 
-func _initializeScene(scene *scn.SceneNode) {
+func _initializeScene(scene *scene.SceneNode) {
 	// fmt.Printf("Scene: %+v\n", scene)
 
 	discs := scene.GetDiscs()
@@ -292,14 +294,14 @@ func _initializeScene(scene *scn.SceneNode) {
 	}
 }
 
-func subdivideSpheres(spheres []*scn.Sphere) []*scn.SceneNode {
-	bounds := scn.NewBounds()
+func subdivideSpheres(spheres []*scene.Sphere) []*scene.SceneNode {
+	bounds := scene.NewBounds()
 	for _, sphere := range spheres {
 		bounds.AddBounds(sphere.Bounds())
 	}
 
 	center := bounds.Center()
-	subSceneNodeStructures := make([]*scn.SceneNode, 8)
+	subSceneNodeStructures := make([]*scene.SceneNode, 8)
 
 	for _, sphere := range spheres {
 		substructureIndex := 0
@@ -315,7 +317,7 @@ func subdivideSpheres(spheres []*scn.Sphere) []*scn.SceneNode {
 		}
 
 		if subSceneNodeStructures[substructureIndex] == nil {
-			subSceneNodeStructures[substructureIndex] = &scn.SceneNode{}
+			subSceneNodeStructures[substructureIndex] = &scene.SceneNode{}
 		}
 
 		//fmt.Printf("Substructure: %d   Center: %+v   Bounds:%+v\n", substructureIndex, center, bounds)
@@ -338,7 +340,7 @@ func subdivideSpheres(spheres []*scn.Sphere) []*scn.SceneNode {
 	return subSceneNodeStructures
 }
 
-func deInitializeScene(scene *scn.SceneNode) {
+func deInitializeScene(scene *scene.SceneNode) {
 	scene.Clear()
 
 	discs := scene.GetDiscs()
@@ -360,7 +362,7 @@ func deInitializeScene(scene *scn.SceneNode) {
 	}
 }
 
-func render(camera *scn.Camera, scene *scn.SceneNode, width int, height int, renderedPixelData *floatimage.FloatImage, rm *rendermonitor.RenderMonitor) {
+func render(camera *scene.Camera, scene *scene.SceneNode, width int, height int, renderedPixelData *floatimage.FloatImage, rm *rendermonitor.RenderMonitor) {
 	var wg sync.WaitGroup
 
 	amountSamples := camera.Samples
@@ -376,11 +378,13 @@ func render(camera *scn.Camera, scene *scn.SceneNode, width int, height int, ren
 
 	progressbar.Add(1) // Indicate start
 
+	pixelCounter := &atomic.Int64{}
+
 	renderPasses := renderpass.CreateRenderPasses(20)
 	for _, renderPass := range renderPasses.RenderPasses {
 		for y := 0; (y + renderPass.Dy) < height; y += renderPasses.MaxPixelHeight {
 			wg.Add(1)
-			go parallelPixelRendering(renderedPixelData, camera, scene, width, height, y, renderPass, renderPasses.MaxPixelWidth, amountSamples, &wg, progressbar, rm)
+			go parallelPixelRendering(renderedPixelData, camera, scene, width, height, y, renderPass, renderPasses.MaxPixelWidth, amountSamples, &wg, pixelCounter, progressbar, rm)
 		}
 		wg.Wait()
 	}
@@ -397,26 +401,24 @@ func render(camera *scn.Camera, scene *scn.SceneNode, width int, height int, ren
 	}
 }
 
-func parallelPixelRendering(renderedPixelData *floatimage.FloatImage, camera *scn.Camera, scene *scn.SceneNode, width int, height int,
-	y int, renderPass renderpass.RenderPass, maxPixelWidth int, amountSamples int, wg *sync.WaitGroup, progressbar *progressbar2.ProgressBar, rm *rendermonitor.RenderMonitor) {
-
+func parallelPixelRendering(renderedPixelData *floatimage.FloatImage, camera *scene.Camera, scn *scene.SceneNode, width int, height int, y int, renderPass renderpass.RenderPass, maxPixelWidth int, amountSamples int, wg *sync.WaitGroup, pixelCounter *atomic.Int64, progressbar *progressbar2.ProgressBar, rm *rendermonitor.RenderMonitor) {
 	defer wg.Done()
 
-	defaultRenderContext := scn.NewMaterial().N("default render context").C(color.White).T(1.0, true, scn.RefractionIndex_Air)
-	rayContexts := []*scn.Material{defaultRenderContext}
+	defaultRenderContext := scene.NewMaterial().N("default render context").C(color.White).T(1.0, true, scene.RefractionIndex_Air)
+	rayContexts := []*scene.Material{defaultRenderContext}
 
 	// Debug ray at specified pixel
 	if debugPixel.y == y && debugPixel.x >= 0 && debugPixel.y >= 0 {
 		fmt.Printf("debugging at pixel (%d, %d)...\n", debugPixel.x, debugPixel.y)
 
-		cameraRay := scn.CreateCameraRay(debugPixel.x, debugPixel.y, width, height, camera, 1)
-		tracePath(cameraRay, camera, scene, 0, rayContexts)
+		cameraRay := scene.CreateCameraRay(debugPixel.x, debugPixel.y, width, height, camera, 1)
+		tracePath(cameraRay, camera, scn, 0, rayContexts)
 	}
 
 	for x := 0; (x + renderPass.Dx) < width; x += maxPixelWidth {
 		for sampleIndex := 0; sampleIndex < amountSamples; sampleIndex++ {
-			cameraRay := scn.CreateCameraRay(x+renderPass.Dx, y+renderPass.Dy, width, height, camera, sampleIndex)
-			col := tracePath(cameraRay, camera, scene, 0, rayContexts)
+			cameraRay := scene.CreateCameraRay(x+renderPass.Dx, y+renderPass.Dy, width, height, camera, sampleIndex)
+			col := tracePath(cameraRay, camera, scn, 0, rayContexts)
 			renderedPixelData.GetPixel(x+renderPass.Dx, y+renderPass.Dy).ChannelAdd(col)
 
 			progressbar.Add(1)
@@ -424,7 +426,10 @@ func parallelPixelRendering(renderedPixelData *floatimage.FloatImage, camera *sc
 
 		// "Log" progress to render monitor
 		pixelColor := renderedPixelData.GetPixel(x+renderPass.Dx, y+renderPass.Dy)
-		rm.SetPixel(x+renderPass.Dx, y+renderPass.Dy, renderPass.PaintWidth, renderPass.PaintHeight, pixelColor, amountSamples)
+		pixelCounter.Add(1)
+		progress := float64(pixelCounter.Load()) / float64(width*height)
+		// fmt.Printf("progress: %0.02f%%     %f\n", progress*100, progress)
+		rm.SetPixel(x+renderPass.Dx, y+renderPass.Dy, renderPass.PaintWidth, renderPass.PaintHeight, pixelColor, amountSamples, progress)
 	}
 }
 
@@ -520,7 +525,7 @@ func getRandomCosineWeightedHemisphereVector(n *vec3.T) *vec3.T {
 	return &hemisphereVector
 }
 
-func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDepth int, rayContexts []*scn.Material) color.Color {
+func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, currentDepth int, rayContexts []*scene.Material) *color.Color {
 	outgoingEmission := color.NewColorRGBA(0, 0, 0, 0)
 
 	if currentDepth > camera.RecursionDepth {
@@ -529,13 +534,13 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 
 	ii := NewIntersectionInformation() // Information on the closest intersection
 
-	var sceneNodeStack scn.SceneNodeStack
-	sceneNodeStack.Push(scene) // Put the root scene node initially onto the scene node stack
+	var sceneNodeStack scene.SceneNodeStack
+	sceneNodeStack.Push(scn) // Put the root scene node initially onto the scene node stack
 
 	for !sceneNodeStack.IsEmpty() {
 		currentSceneNode, _ := sceneNodeStack.Pop()
 
-		traverseCurrentSceneNode := (currentSceneNode.Bounds == nil) || scn.BoundingBoxIntersection1(ray, currentSceneNode.Bounds)
+		traverseCurrentSceneNode := (currentSceneNode.Bounds == nil) || scene.BoundingBoxIntersection1(ray, currentSceneNode.Bounds)
 		if traverseCurrentSceneNode {
 
 			if currentSceneNode.HasChildNodes() {
@@ -559,26 +564,26 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 
 	if ii.intersection {
 		if ii.material == nil {
-			ii.material = scn.NewMaterial() // Default material, if not specified, is matte diffuse white
+			ii.material = scene.NewMaterial() // Default material, if not specified, is matte diffuse white
 		}
 
-		projectionColor := &color.White // Default value if no projection is applied
+		projectionColor := color.White // Default value if no projection is applied
 		if ii.material.Projection != nil {
 			projectionColor = ii.material.Projection.GetColor(ii.intersectionPoint)
 		}
 
-		if camera.RenderType == scn.Raycasting || camera.RenderType == "" {
+		if camera.RenderType == scene.Raycasting || camera.RenderType == "" {
 			incomingRayInverted := ray.Heading.Inverted()
 			cosineIncomingRayAndNormal := util.Cosine(ii.normalAtIntersection, &incomingRayInverted)
 
-			outgoingEmission = color.Color{
+			outgoingEmission = &color.Color{
 				R: ii.material.Color.R * float32(cosineIncomingRayAndNormal) * projectionColor.R,
 				G: ii.material.Color.G * float32(cosineIncomingRayAndNormal) * projectionColor.G,
 				B: ii.material.Color.B * float32(cosineIncomingRayAndNormal) * projectionColor.B,
 				A: ii.material.Color.A * projectionColor.A,
 			}
 
-		} else if camera.RenderType == scn.Pathtracing {
+		} else if camera.RenderType == scene.Pathtracing {
 
 			if !ii.material.RayTerminator {
 				var newRayHeading *vec3.T
@@ -697,14 +702,14 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 				}
 
 				newRayOrigin := ii.intersectionPoint.Added(&rayStartOffset)
-				newRay := scn.Ray{Origin: &newRayOrigin, Heading: newRayHeading}
+				newRay := scene.Ray{Origin: &newRayOrigin, Heading: newRayHeading}
 
-				incomingEmission := tracePath(&newRay, camera, scene, currentDepth+1, rayContexts)
+				incomingEmission := tracePath(&newRay, camera, scn, currentDepth+1, rayContexts)
 				incomingEmissionOnSurface := incomingEmission
 				incomingEmissionOnSurface.Multiply(float32(cosineNewRayAndNormal))
 
 				alpha := ii.material.Color.A * projectionColor.A
-				outgoingEmission = color.Color{
+				outgoingEmission = &color.Color{
 					R: incomingEmissionOnSurface.R * (alpha*ii.material.Color.R*projectionColor.R + (1.0 - alpha)),
 					G: incomingEmissionOnSurface.G * (alpha*ii.material.Color.G*projectionColor.G + (1.0 - alpha)),
 					B: incomingEmissionOnSurface.B * (alpha*ii.material.Color.B*projectionColor.B + (1.0 - alpha)),
@@ -725,8 +730,8 @@ func tracePath(ray *scn.Ray, camera *scn.Camera, scene *scn.SceneNode, currentDe
 	return outgoingEmission
 }
 
-func processFacetStructureIntersection(ray *scn.Ray, facetStructure *scn.FacetStructure, ii *IntersectionInformation) {
-	tempIntersection, tmpIntersectionFacet, tempIntersectionPoint, tempIntersectionNormal, tempMaterial := scn.FacetStructureIntersection(ray, facetStructure, nil)
+func processFacetStructureIntersection(ray *scene.Ray, facetStructure *scene.FacetStructure, ii *IntersectionInformation) {
+	tempIntersection, tmpIntersectionFacet, tempIntersectionPoint, tempIntersectionNormal, tempMaterial := scene.FacetStructureIntersection(ray, facetStructure, nil)
 
 	if tempIntersection {
 		distance := vec3.Distance(ray.Origin, tempIntersectionPoint)
@@ -742,19 +747,19 @@ func processFacetStructureIntersection(ray *scn.Ray, facetStructure *scn.FacetSt
 			ii.intersectedDisc = nil
 
 			if ii.material == nil {
-				ii.material = scn.NewMaterial() // If, for some erroneous reason there is an intersection without any material, use default (diffuse white).
+				ii.material = scene.NewMaterial() // If, for some erroneous reason there is an intersection without any material, use default (diffuse white).
 				fmt.Printf("Warning: Could not find any material for intersection point on facet structure '%s' ('%s').\n", facetStructure.Name, facetStructure.SubstructureName)
 			}
 
 			if vec3.Dot(ii.normalAtIntersection, tmpIntersectionFacet.Normal) < 0 {
-				fmt.Println("rotten normals")
+				// fmt.Println("rotten normals")
 			}
 		}
 	}
 }
 
-func processDiscIntersection(ray *scn.Ray, disc *scn.Disc, ii *IntersectionInformation) {
-	tempIntersection, tempIntersectionPoint, tempIntersectionNormal := scn.DiscIntersection(ray, disc)
+func processDiscIntersection(ray *scene.Ray, disc *scene.Disc, ii *IntersectionInformation) {
+	tempIntersection, tempIntersectionPoint, tempIntersectionNormal := scene.DiscIntersection(ray, disc)
 
 	if tempIntersection {
 		distance := vec3.Distance(ray.Origin, tempIntersectionPoint)
@@ -777,8 +782,8 @@ func processDiscIntersection(ray *scn.Ray, disc *scn.Disc, ii *IntersectionInfor
 	}
 }
 
-func processSphereIntersection(ray *scn.Ray, sphere *scn.Sphere, ii *IntersectionInformation) {
-	tempIntersectionPoint, tempIntersection := scn.SphereIntersection(ray, sphere)
+func processSphereIntersection(ray *scene.Ray, sphere *scene.Sphere, ii *IntersectionInformation) {
+	tempIntersectionPoint, tempIntersection := scene.SphereIntersection(ray, sphere)
 
 	if tempIntersection {
 		distance := vec3.Distance(ray.Origin, tempIntersectionPoint)

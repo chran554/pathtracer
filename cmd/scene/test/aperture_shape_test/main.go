@@ -7,8 +7,8 @@ import (
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
-	anm "pathtracer/internal/pkg/renderfile"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/renderfile"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -44,10 +44,10 @@ func main() {
 	// Environment sphere
 
 	skyDomeOrigin := vec3.T{0, 0, 0}
-	skyDomeMaterial := scn.NewMaterial().
+	skyDomeMaterial := scene.NewMaterial().
 		E(color.White, environmentEmissionFactor, true).
 		SP(floatimage.Load(environmentEnvironMap), &skyDomeOrigin, vec3.T{0, 0, 1}, vec3.T{0, 1, 0})
-	skyDome := scn.NewSphere(&skyDomeOrigin, environmentRadius, skyDomeMaterial).N("sky dome")
+	skyDome := scene.NewSphere(&skyDomeOrigin, environmentRadius, skyDomeMaterial).N("sky dome")
 
 	// Gopher
 
@@ -58,24 +58,24 @@ func main() {
 	gopher.UpdateBounds()
 
 	gopherLightPosition := vec3.T{gopher.Bounds.Center()[0] - 350, gopher.Bounds.Center()[1] + 350, gopher.Bounds.Center()[2] - 700}
-	gopherLightMaterial := scn.NewMaterial().E(color.NewColorKelvin(5000), gopherLightEmissionFactor, true)
-	gopherLight := scn.NewSphere(&gopherLightPosition, 80, gopherLightMaterial).N("Gopher light")
+	gopherLightMaterial := scene.NewMaterial().E(color.NewColorKelvin(5000), gopherLightEmissionFactor, true)
+	gopherLight := scene.NewSphere(&gopherLightPosition, 80, gopherLightMaterial).N("Gopher light")
 
 	// Ground
 
-	groundProjection := scn.NewParallelImageProjection(floatimage.Load("textures/ground/soil-cracked.png"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(gopher.Bounds.SizeY()*2), vec3.UnitZ.Scaled(gopher.Bounds.SizeY()*2))
-	groundMaterial := scn.NewMaterial().N("Ground material").P(&groundProjection)
-	ground := scn.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
+	groundProjection := scene.NewParallelImageProjection(floatimage.Load("textures/ground/soil-cracked.png"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(gopher.Bounds.SizeY()*2), vec3.UnitZ.Scaled(gopher.Bounds.SizeY()*2))
+	groundMaterial := scene.NewMaterial().N("Ground material").P(&groundProjection)
+	ground := scene.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
 
 	// Spheres
 
-	childSceneNode := scn.NewSceneNode()
+	childSceneNode := scene.NewSceneNode()
 	for sphereIndex := 0; sphereIndex < amountSpheres; sphereIndex++ {
 		sphere := getSphere(sphereRadius, sphereMinDistance, sphereMaxDistance)
 		childSceneNode.S(sphere)
 	}
 
-	scene := scn.NewSceneNode().
+	scn := scene.NewSceneNode().
 		S(skyDome, gopherLight).
 		FS(gopher).
 		D(ground).
@@ -86,7 +86,7 @@ func main() {
 	yPosMax := gopher.Bounds.SizeY() * 0.75
 	yPosMin := gopher.Bounds.SizeY() * 0.15
 
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
+	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
 	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
@@ -98,30 +98,30 @@ func main() {
 		yPos := yPosMin + (yPosMax-yPosMin)*(math.Sin(angle+startAngle)+1.0)/2.0
 		cameraOrigin := vec3.T{xPos, yPos, -600}
 
-		camera := scn.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).
+		camera := scene.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).
 			A(apertureSize, floatimage.Load("textures/aperture/heart.png")).
 			V(600)
 
-		frame := scn.NewFrame(animationName, frameIndex, camera, scene)
+		frame := scene.NewFrame(animationName, frameIndex, camera, scn)
 
 		animation.AddFrame(frame)
 	}
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := anm.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func getSphere(radius float64, minDistance, maxDistance float64) *scn.Sphere {
+func getSphere(radius float64, minDistance, maxDistance float64) *scene.Sphere {
 	r := 0.50 + rand.Float64()*0.50
 	g := 0.35 + rand.Float64()*0.45
 	b := 0.35 + rand.Float64()*0.45
 
 	sphereColor := color.NewColor(r, g, b)
 
-	sphereMaterial := scn.NewMaterial().
+	sphereMaterial := scene.NewMaterial().
 		C(sphereColor).
 		E(sphereColor, lampEmissionFactor, true)
 
@@ -131,5 +131,5 @@ func getSphere(radius float64, minDistance, maxDistance float64) *scn.Sphere {
 
 	origin := vec3.T{x, y, z}
 
-	return scn.NewSphere(&origin, radius, sphereMaterial)
+	return scene.NewSphere(&origin, radius, sphereMaterial)
 }

@@ -1,15 +1,16 @@
 package obj
 
 import (
-	"github.com/ungerik/go3d/float64/vec3"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/scene"
 	"pathtracer/internal/pkg/util"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
-func NewStanfordBunny(scale float64) *scn.FacetStructure {
+func NewStanfordBunny(scale float64) *scene.FacetStructure {
 	bunny := loadStanfordBunny()
 
 	bunny.Scale(&vec3.Zero, &vec3.T{-1, 1, 1})
@@ -19,7 +20,7 @@ func NewStanfordBunny(scale float64) *scn.FacetStructure {
 
 	bunny.ScaleUniform(&vec3.Zero, scale/bunny.Bounds.Ymax)
 
-	skinMaterial := scn.NewMaterial().N("stanfordbunny").
+	skinMaterial := scene.NewMaterial().N("stanfordbunny").
 		C(color.NewColorHex("#A1887F")).
 		M(0.1, 0.75)
 
@@ -28,6 +29,6 @@ func NewStanfordBunny(scale float64) *scn.FacetStructure {
 	return bunny
 }
 
-func loadStanfordBunny() *scn.FacetStructure {
+func loadStanfordBunny() *scene.FacetStructure {
 	return wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "stanfordbunny.obj"))
 }

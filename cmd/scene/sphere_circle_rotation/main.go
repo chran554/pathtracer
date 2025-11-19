@@ -5,15 +5,15 @@ import (
 	"math"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/floatimage"
-	anm "pathtracer/internal/pkg/renderfile"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/renderfile"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
 type projection struct {
 	filename      string
-	emission      color.Color
+	emission      *color.Color
 	rayTerminator bool
 }
 
@@ -55,7 +55,7 @@ var lensRadius = 0.05
 var amountBallsToRotateBeforeMovieLoop = len(projectionTextures)
 
 func main() {
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, true)
+	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, true)
 
 	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
@@ -70,36 +70,36 @@ func main() {
 
 		// Reflective Center Ball
 		// mirrorSphereRadius := ballRadius * 3.0
-		// mirrorMaterial := scn.NewMaterial().C(color.NewColor(0.90, 0.90, 0.90)).M(0.975, 0.0)
-		// reflectiveCenterBall := scn.NewSphere(&vec3.T{0, mirrorSphereRadius * 1, 0}, mirrorSphereRadius, mirrorMaterial).N("Mirror sphere")
+		// mirrorMaterial := scene.NewMaterial().C(color.NewColor(0.90, 0.90, 0.90)).M(0.975, 0.0)
+		// reflectiveCenterBall := scene.NewSphere(&vec3.T{0, mirrorSphereRadius * 1, 0}, mirrorSphereRadius, mirrorMaterial).N("Mirror sphere")
 
 		// Sky Dome
 		skyDomeRadius := 100.0 * 1000.0
 		skyDomeOrigin := &vec3.T{0, 0, 0}
-		skyDomeMaterial := scn.NewMaterial().E(color.White, 1.0, true).SP(floatimage.Load(environmentEnvironMap), skyDomeOrigin, vec3.UnitX, vec3.UnitY)
-		skyDome := scn.NewSphere(skyDomeOrigin, skyDomeRadius, skyDomeMaterial)
+		skyDomeMaterial := scene.NewMaterial().E(color.White, 1.0, true).SP(floatimage.Load(environmentEnvironMap), skyDomeOrigin, vec3.UnitX, vec3.UnitY)
+		skyDome := scene.NewSphere(skyDomeOrigin, skyDomeRadius, skyDomeMaterial)
 
 		camera := getCamera(magnification, animationProgress)
 
-		scene := scn.NewSceneNode().
+		scn := scene.NewSceneNode().
 			S(balls...).
 			//S(reflectiveCenterBall).
 			S(skyDome)
 
-		frame := scn.NewFrame(animationName, frameIndex, camera, scene)
+		frame := scene.NewFrame(animationName, frameIndex, camera, scn)
 
 		animation.Frames = append(animation.Frames, frame)
 	}
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := anm.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func addBallsToScene(deltaBallAngle float64, projectionAngle float64, projectionData []projection) []*scn.Sphere {
-	var balls []*scn.Sphere
+func addBallsToScene(deltaBallAngle float64, projectionAngle float64, projectionData []projection) []*scene.Sphere {
+	var balls []*scene.Sphere
 
 	for ballIndex := 0; ballIndex < amountBalls; ballIndex++ {
 		s := 2.0 * math.Pi
@@ -120,11 +120,11 @@ func addBallsToScene(deltaBallAngle float64, projectionAngle float64, projection
 		projectionU := math.Cos(projectionAngle)
 		projectionV := math.Sin(projectionAngle)
 
-		material := scn.NewMaterial().
+		material := scene.NewMaterial().
 			E(projectionData[projectionTextureIndex].emission, 1.0, projectionData[projectionTextureIndex].rayTerminator).
 			SP(floatimage.Load(projectionData[projectionTextureIndex].filename), &ballOrigin, vec3.T{projectionU, 0, projectionV}, vec3.T{0, 1, 0})
 
-		sphere := scn.NewSphere(&ballOrigin, ballRadius, material)
+		sphere := scene.NewSphere(&ballOrigin, ballRadius, material)
 
 		balls = append(balls, sphere)
 	}
@@ -132,7 +132,7 @@ func addBallsToScene(deltaBallAngle float64, projectionAngle float64, projection
 	return balls
 }
 
-func getCamera(magnification float64, progress float64) *scn.Camera {
+func getCamera(magnification float64, progress float64) *scene.Camera {
 	degrees45 := math.Pi / 4.0
 	strideAngle := degrees45 * math.Sin(2.0*math.Pi*progress)
 	cameraDistance := 200.0 * cameraDistanceFactor
@@ -149,6 +149,6 @@ func getCamera(magnification float64, progress float64) *scn.Camera {
 	heading := focusPoint.Subed(&cameraOrigin)
 	focusDistance := heading.Length() - circleRadius - 0.5*ballRadius
 
-	return scn.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).
+	return scene.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).
 		V(viewPlaneDistance).A(lensRadius, nil).F(focusDistance)
 }

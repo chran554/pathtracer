@@ -2,11 +2,12 @@ package obj
 
 import (
 	"fmt"
-	"github.com/ungerik/go3d/float64/vec3"
 	"math"
 	"path/filepath"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/scene"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 type CylinderType int
@@ -19,7 +20,7 @@ const (
 // NewCylinder return a box which sides all have the unit length 1.
 // It is placed with one corner ni origin (0, 0, 0) and opposite corner in (1, 1, 1).
 // Side normals point outwards from each side.
-func NewCylinder(cylinderType CylinderType, radius float64, height float64) *scn.FacetStructure {
+func NewCylinder(cylinderType CylinderType, radius float64, height float64) *scene.FacetStructure {
 	cylinder := loadCylinder()
 
 	switch cylinderType {
@@ -34,7 +35,7 @@ func NewCylinder(cylinderType CylinderType, radius float64, height float64) *scn
 	return cylinder
 }
 
-func loadCylinder() *scn.FacetStructure {
+func loadCylinder() *scene.FacetStructure {
 	cylinder := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "cylinder_no_caps.obj"))
 
 	cylinder.CenterOn(&vec3.Zero)

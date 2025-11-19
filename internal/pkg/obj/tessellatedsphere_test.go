@@ -2,13 +2,14 @@ package obj
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/ungerik/go3d/float64/vec3"
 	"math"
 	"os"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
 	"pathtracer/internal/pkg/scene"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 func Test_tessellateSphere(t *testing.T) {

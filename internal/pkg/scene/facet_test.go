@@ -1,9 +1,10 @@
 package scene
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/ungerik/go3d/float64/vec3"
-	"testing"
 )
 
 func TestFacet_ChangeWindingOrder_triangle(t *testing.T) {

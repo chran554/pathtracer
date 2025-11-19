@@ -3,19 +3,19 @@ package obj
 import (
 	"path/filepath"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-func NewTree01(scale float64) *scn.FacetStructure {
+func NewTree01(scale float64) *scene.FacetStructure {
 	tree := loadTree01()
 	tree.ScaleUniform(&vec3.Zero, scale)
 
 	return tree
 }
 
-func loadTree01() *scn.FacetStructure {
+func loadTree01() *scene.FacetStructure {
 	tree := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "tree/Tree1 - middle.obj"))
 
 	ymin := tree.Bounds.Ymin
@@ -27,11 +27,11 @@ func loadTree01() *scn.FacetStructure {
 }
 
 /*
-func NewTree02(scale float64) *scn.FacetStructure {
+func NewTree02(scale float64) *scene.FacetStructure {
 
-	tree := &scn.FacetStructure{
+	tree := &scene.FacetStructure{
 		Name:            "Tree",
-		FacetStructures: []*scn.FacetStructure{stem, branches},
+		FacetStructures: []*scene.FacetStructure{stem, branches},
 		IgnoreBounds:    false,
 	}
 

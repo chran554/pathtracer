@@ -7,8 +7,8 @@ import (
 	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
-	anm "pathtracer/internal/pkg/renderfile"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/renderfile"
+	"pathtracer/internal/pkg/scene"
 	"pathtracer/internal/pkg/util"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -32,9 +32,9 @@ var keroseneLampEmission = 450.0
 var skyDomeEmission = 1.5
 
 func main() {
-	//lamp := scn.NewSphere(&vec3.T{0, 300, -300}, 100, scn.NewMaterial().N("lamp").E(color.White, 10*0, true))
+	//lamp := scene.NewSphere(&vec3.T{0, 300, -300}, 100, scene.NewMaterial().N("lamp").E(color.White, 10*0, true))
 
-	skyDome := scn.NewSphere(&vec3.T{0, 0, 0}, 200*100, scn.NewMaterial().
+	skyDome := scene.NewSphere(&vec3.T{0, 0, 0}, 200*100, scene.NewMaterial().
 		E(color.White, skyDomeEmission, true).
 		//C(color.NewColorGrey(0.2))).
 		SP(floatimage.Load("textures/equirectangular/331_PDM_BG1.jpg"), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
@@ -44,7 +44,7 @@ func main() {
 	tableBoard := obj.NewBox(obj.BoxCentered)
 	tableBoard.Scale(&vec3.Zero, &vec3.T{110 / 2, 3 / 2, 150 / 2})
 	tableBoard.Translate(&vec3.T{0, -tableBoard.Bounds.Ymax + 80, 0})
-	tableBoard.Material = scn.NewMaterial().
+	tableBoard.Material = scene.NewMaterial().
 		C(color.NewColorGrey(1.0)).
 		PP(floatimage.Load("textures/wallpaper/Blossom2_Image_Tile_Item_9471w.jpg"), &vec3.T{0, 0, 0}, vec3.T{60, 0, 0}, vec3.T{0, 0, 40})
 
@@ -64,24 +64,24 @@ func main() {
 
 	wall := createWindowWall(wallWidth, wallHeight, windowXPos, windowYPos, windowWidth, windowHeight)
 	wall.Translate(&vec3.T{-wallWidth / 2, 0, wallZ})
-	wall.Material = scn.NewMaterial().PP(floatimage.Load("textures/wallpaper/Slottsteatern_Image_Flatshot_Item_4507.jpg"), &vec3.T{0, 0, 0}, vec3.T{52, 0, 0}, vec3.T{0, 52, 0})
-	//wall.Material = scn.NewMaterial().PP("textures/wallpaper/Ester_Image_Flatshot_Item_7659.jpg", &vec3.T{0, 0, 0}, vec3.T{100, 0, 0}, vec3.T{0, 100, 0})
-	//wall.Material = scn.NewMaterial().PP("textures/wallpaper/RoseGarden_Image_Tile_Item_7464.jpg", &vec3.T{0, 0, 0}, vec3.T{100, 0, 0}, vec3.T{0, 50, 0})
+	wall.Material = scene.NewMaterial().PP(floatimage.Load("textures/wallpaper/Slottsteatern_Image_Flatshot_Item_4507.jpg"), &vec3.T{0, 0, 0}, vec3.T{52, 0, 0}, vec3.T{0, 52, 0})
+	//wall.Material = scene.NewMaterial().PP("textures/wallpaper/Ester_Image_Flatshot_Item_7659.jpg", &vec3.T{0, 0, 0}, vec3.T{100, 0, 0}, vec3.T{0, 100, 0})
+	//wall.Material = scene.NewMaterial().PP("textures/wallpaper/RoseGarden_Image_Tile_Item_7464.jpg", &vec3.T{0, 0, 0}, vec3.T{100, 0, 0}, vec3.T{0, 50, 0})
 
 	keroseneLamp := obj.NewKeroseneLamp(40, keroseneLampEmission)
 	keroseneLamp.RotateY(&vec3.Zero, util.DegToRad(-90))
 	keroseneLamp.Translate(&vec3.T{20, tableBoard.Bounds.Ymax, -20})
 
-	porcelainMaterial := scn.NewMaterial().
+	porcelainMaterial := scene.NewMaterial().
 		N("Porcelain").
 		C(color.NewColorGrey(0.85)).
 		M(0.1, 0.1).
-		T(0.0, true, scn.RefractionIndex_Porcelain)
+		T(0.0, true, scene.RefractionIndex_Porcelain)
 	var steelColorFactor = 0.8
-	steelCutleryMaterial := scn.NewMaterial().N("steel").
+	steelCutleryMaterial := scene.NewMaterial().N("steel").
 		C(color.NewColor(0.93*steelColorFactor, 0.93*steelColorFactor, 0.95*steelColorFactor)).
 		M(0.9, 0.2).
-		T(0.0, true, scn.RefractionIndex_Glass)
+		T(0.0, true, scene.RefractionIndex_Glass)
 
 	teapot := obj.NewSolidUtahTeapot(21, true, true)
 	teapot.ReplaceMaterial("teapot", porcelainMaterial)
@@ -105,9 +105,9 @@ func main() {
 	room.ScaleUniform(&vec3.Zero, 5.5*100)
 	room.RotateY(&vec3.Zero, util.DegToRad(-90))
 	room.Translate(&vec3.T{0, wallHeight / 2, -100})
-	room.Material = scn.NewMaterial().E(color.NewColorKelvin(2000), 0.2, true).SP(floatimage.Load("textures/equirectangular/medieval_kitchen.png"), room.Bounds.Center(), vec3.UnitX.Scaled(-1), vec3.UnitY)
+	room.Material = scene.NewMaterial().E(color.NewColorKelvin(2000), 0.2, true).SP(floatimage.Load("textures/equirectangular/medieval_kitchen.png"), room.Bounds.Center(), vec3.UnitX.Scaled(-1), vec3.UnitY)
 
-	scene := scn.NewSceneNode().
+	scn := scene.NewSceneNode().
 		S(skyDome).
 		FS(room).
 		FS(wall).
@@ -126,26 +126,26 @@ func main() {
 	viewVector := focusPoint.Subed(cameraOrigin)
 	focusDistance := viewVector.Length()
 
-	camera := scn.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).
+	camera := scene.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).
 		A(apertureSize, nil).
 		F(focusDistance).
 		D(10)
 
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, true)
-	frame := scn.NewFrame(animation.AnimationName, -1, camera, scene)
+	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, true)
+	frame := scene.NewFrame(animation.AnimationName, -1, camera, scn)
 	animation.AddFrame(frame)
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := anm.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func createWindowWall(wallWidth float64, wallHeight float64, windowXPos float64, windowYPos float64, windowWidth float64, windowHeight float64) *scn.FacetStructure {
-	wall := &scn.FacetStructure{SubstructureName: "wall"}
+func createWindowWall(wallWidth float64, wallHeight float64, windowXPos float64, windowYPos float64, windowWidth float64, windowHeight float64) *scene.FacetStructure {
+	wall := &scene.FacetStructure{SubstructureName: "wall"}
 
-	tmpFacets := &scn.FacetStructure{SubstructureName: "tmp"}
+	tmpFacets := &scene.FacetStructure{SubstructureName: "tmp"}
 	var offset = 0.0
 
 	tmpFacets.Facets = obj.GetRectangleFacets(&vec3.T{0, 1, 0}, &vec3.T{0, 0, 0}, &vec3.T{1, 0, 0}, &vec3.T{1, 1, 0})

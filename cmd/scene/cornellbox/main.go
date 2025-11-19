@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj"
-	anm "pathtracer/internal/pkg/renderfile"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/renderfile"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -26,27 +26,27 @@ func main() {
 	cornellBoxUnit := ballRadius * 3
 	cornellBox := obj.NewCornellBox(&vec3.T{2 * cornellBoxUnit, cornellBoxUnit, 3 * cornellBoxUnit}, true, 5)
 
-	rightSphereMaterial := scn.NewMaterial().N("Right sphere").C(color.NewColorGrey(0.9))
-	leftSphereMaterial := scn.NewMaterial().N("Left sphere").C(color.NewColorGrey(0.9))
+	rightSphereMaterial := scene.NewMaterial().N("Right sphere").C(color.NewColorGrey(0.9))
+	leftSphereMaterial := scene.NewMaterial().N("Left sphere").C(color.NewColorGrey(0.9))
 
 	rightSpherePosition := vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0}
 	leftSpherePosition := vec3.T{-(ballRadius + (ballRadius / 2)), ballRadius, 0}
-	sphere1 := scn.NewSphere(&rightSpherePosition, ballRadius, rightSphereMaterial).N("Right sphere")
-	sphere2 := scn.NewSphere(&leftSpherePosition, ballRadius, leftSphereMaterial).N("Left sphere")
+	sphere1 := scene.NewSphere(&rightSpherePosition, ballRadius, rightSphereMaterial).N("Right sphere")
+	sphere2 := scene.NewSphere(&leftSpherePosition, ballRadius, leftSphereMaterial).N("Left sphere")
 
-	scene := scn.NewSceneNode().S(sphere1, sphere2).FS(cornellBox)
+	scn := scene.NewSceneNode().S(sphere1, sphere2).FS(cornellBox)
 
 	cameraOrigin := cornellBox.Bounds.Center().Add(&vec3.T{0, 0, -15 * ballRadius})
 	focusPoint := cornellBox.Bounds.Center()
 
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
+	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
-	camera := scn.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).V(viewPlaneDistance)
-	frame := scn.NewFrame(animationName, -1, camera, scene)
+	camera := scene.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).V(viewPlaneDistance)
+	frame := scene.NewFrame(animationName, -1, camera, scn)
 	animation.AddFrame(frame)
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := anm.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}

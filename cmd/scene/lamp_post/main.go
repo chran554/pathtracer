@@ -6,8 +6,8 @@ import (
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
-	anm "pathtracer/internal/pkg/renderfile"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/renderfile"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -21,30 +21,30 @@ var amountFrames = 1
 
 var imageWidth = 1024  // 1280
 var imageHeight = 1280 // 1024
-var magnification = 0.5
+var magnification = 0.75
 
-var amountSamples = 512 * 2 * 8 // 16 // * 2
+var amountSamples = 512 * 2 * 16 // * 2
 var maxRecursion = 8
 
 var apertureSize = 0.5
 
 func main() {
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
+	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
 	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
 		//animationProgress := float64(frameIndex) / float64(amountFrames)
 
 		// Sky dome
 		environmentSphereOrigin := &vec3.T{0, 0, 0}
-		environmentSphereMaterial := scn.NewMaterial().
+		environmentSphereMaterial := scene.NewMaterial().
 			E(color.White, environmentEmissionFactor, true).
 			SP(floatimage.Load("textures/equirectangular/sunset horizon 2800x1400.jpg"), environmentSphereOrigin, vec3.T{-0.2, 0, -1}, vec3.T{0, 1, 0})
-		environmentSphere := scn.NewSphere(environmentSphereOrigin, environmentRadius, environmentSphereMaterial).N("Environment mapping")
+		environmentSphere := scene.NewSphere(environmentSphereOrigin, environmentRadius, environmentSphereMaterial).N("Environment mapping")
 
 		// Ground
-		groundMaterial := scn.NewMaterial().N("Ground material").
+		groundMaterial := scene.NewMaterial().N("Ground material").
 			PP(floatimage.Load("textures/ground/soil-cracked.png"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(150), vec3.UnitZ.Scaled(150))
-		ground := scn.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
+		ground := scene.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
 
 		// Gopher
 		gopher := obj.NewGopher(50)
@@ -63,22 +63,22 @@ func main() {
 		// Camera
 		cameraOrigin := gopher.Bounds.Center().Added(&vec3.T{0, 0, -50})
 		cameraFocusPoint := gopherBounds.Center().Added(&vec3.T{0, 0, -0.8 * (gopher.Bounds.SizeZ() / 2)})
-		camera := scn.NewCamera(&cameraOrigin, &cameraFocusPoint, amountSamples, magnification).
+		camera := scene.NewCamera(&cameraOrigin, &cameraFocusPoint, amountSamples, magnification).
 			A(apertureSize, nil).D(maxRecursion).
 			V(1000)
 
-		scene := scn.NewSceneNode().
+		scn := scene.NewSceneNode().
 			S(environmentSphere).
 			D(ground).
 			FS(gopher, lampPost, keroseneLamp)
 
-		frame := scn.NewFrame(animation.AnimationName, frameIndex, camera, scene)
+		frame := scene.NewFrame(animation.AnimationName, frameIndex, camera, scn)
 
 		animation.Frames = append(animation.Frames, frame)
 	}
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := anm.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}

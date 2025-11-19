@@ -2,9 +2,10 @@ package obj
 
 import (
 	"fmt"
-	"github.com/ungerik/go3d/float64/vec3"
 	"math"
 	"pathtracer/internal/pkg/scene"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 // NewTessellatedSphere creates a tessellated sphere (tessellated by triangles).

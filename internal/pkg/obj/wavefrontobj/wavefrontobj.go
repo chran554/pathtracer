@@ -735,7 +735,7 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 			// Proprietary parameter for "emission" (not present in mtl-file specification)
 			// "emission" [0.0 ..[
 			emission := color.NewColor(parseFloat64(tokens[1]), parseFloat64(tokens[2]), parseFloat64(tokens[3]))
-			currentMaterial.Emission = &emission
+			currentMaterial.Emission = emission
 		case "Ni":
 			// Ni optical_density
 			//
@@ -800,7 +800,7 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 			// "Diffuse color" [[0.0 .. 1.0] [0.0 .. 1.0] [0.0 .. 1.0]]
 
 			c := color.NewColor(parseFloat64(tokens[1]), parseFloat64(tokens[2]), parseFloat64(tokens[3]))
-			currentMaterial.Color = &c
+			currentMaterial.Color = c
 		default:
 			err = fmt.Errorf("unknown/unexpected line type: '%s'", line)
 		}

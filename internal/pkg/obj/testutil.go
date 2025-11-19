@@ -1,7 +1,7 @@
 package obj
 
 import (
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/scene"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -13,15 +13,15 @@ func setTestResourcesRoot() {
 	SetResourceRoot("../../..")
 }
 
-func assertSubstructure(t *testing.T, structure *scn.FacetStructure, objectName string, groupName string, materialName string, amountFacets int, amountSubstructures int) {
+func assertSubstructure(t *testing.T, structure *scene.FacetStructure, objectName string, groupName string, materialName string, amountFacets int, amountSubstructures int) {
 	substructure := getSubstructure(t, structure, objectName, groupName, materialName)
-	assert.NotNilf(t, substructure, "Substructure \"%s\" of structure \"%s\" could not be found.", (&scn.FacetStructure{Name: objectName, SubstructureName: groupName, Material: &scn.Material{Name: materialName}}).StructureNames(), structure.StructureNames())
+	assert.NotNilf(t, substructure, "Substructure \"%s\" of structure \"%s\" could not be found.", (&scene.FacetStructure{Name: objectName, SubstructureName: groupName, Material: &scene.Material{Name: materialName}}).StructureNames(), structure.StructureNames())
 
 	assertFacetStructure(t, substructure, objectName, groupName, materialName, amountFacets, amountSubstructures)
 
 }
 
-func assertFacetStructure(t *testing.T, f *scn.FacetStructure, name, substructureName, materialName string, amountFacets, amountSubStructures int) {
+func assertFacetStructure(t *testing.T, f *scene.FacetStructure, name, substructureName, materialName string, amountFacets, amountSubStructures int) {
 	require.NotNil(t, f)
 
 	assert.Equalf(t, name, f.Name, "Facet structure \"%s\" do not have expected name.", f.StructureNames())
@@ -57,7 +57,7 @@ func assertFacetStructure(t *testing.T, f *scn.FacetStructure, name, substructur
 
 	// Get the recursive amount of unique vertices for the facet structure f
 	vertices := make(map[*vec3.T]bool)
-	facetStructures := []*scn.FacetStructure{f}
+	facetStructures := []*scene.FacetStructure{f}
 	for len(facetStructures) > 0 {
 		facetStructure := facetStructures[0]
 		facetStructures = facetStructures[1:]
@@ -72,8 +72,8 @@ func assertFacetStructure(t *testing.T, f *scn.FacetStructure, name, substructur
 	}
 }
 
-func getSubstructure(t *testing.T, structure *scn.FacetStructure, objectName, groupName, materialName string) *scn.FacetStructure {
-	var substructure *scn.FacetStructure
+func getSubstructure(t *testing.T, structure *scene.FacetStructure, objectName, groupName, materialName string) *scene.FacetStructure {
+	var substructure *scene.FacetStructure
 
 	for _, facetSubStructure := range structure.FacetStructures {
 		if (objectName == facetSubStructure.Name) &&

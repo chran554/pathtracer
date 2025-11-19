@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -13,7 +13,7 @@ import (
 // NewCornellBox creates a new cornell box (open in the back) with the center of the floor in origin (0,0,0).
 // Left wall is blue and right wall is red.
 // The scale is the total (width, height, depth) of the cornell box.
-func NewCornellBox(scale *vec3.T, singleLight bool, lightIntensityFactor float64) *scn.FacetStructure {
+func NewCornellBox(scale *vec3.T, singleLight bool, lightIntensityFactor float64) *scene.FacetStructure {
 	blueColor := color.NewColor(0.05, 0.05, 0.95)
 	redColor := color.NewColor(0.95, 0.05, 0.05)
 
@@ -26,11 +26,11 @@ func NewCornellBox(scale *vec3.T, singleLight bool, lightIntensityFactor float64
 
 // NewWhiteCornellBox creates a new, whole white, cornell box (open in the back) with the center of the floor in origin (0,0,0).
 // The scale is the total (width, height, depth) of the cornell box.
-func NewWhiteCornellBox(scale *vec3.T, singleLight bool, lightIntensityFactor float64) *scn.FacetStructure {
+func NewWhiteCornellBox(scale *vec3.T, singleLight bool, lightIntensityFactor float64) *scene.FacetStructure {
 	return loadCornellBox(scale, singleLight, lightIntensityFactor)
 }
 
-func loadCornellBox(scale *vec3.T, singleLight bool, lightIntensityFactor float64) (cornellBox *scn.FacetStructure) {
+func loadCornellBox(scale *vec3.T, singleLight bool, lightIntensityFactor float64) (cornellBox *scene.FacetStructure) {
 	cornellBox = wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "cornellbox.obj"))
 
 	cornellBox.CenterOn(&vec3.Zero)
@@ -41,7 +41,7 @@ func loadCornellBox(scale *vec3.T, singleLight bool, lightIntensityFactor float6
 
 	fmt.Printf("Cornell box bounds: %+v\n", cornellBox.Bounds)
 
-	boxMaterial := scn.NewMaterial().N("cornellbox").C(color.NewColorGrey(1.0))
+	boxMaterial := scene.NewMaterial().N("cornellbox").C(color.NewColorGrey(1.0))
 
 	cornellBox.ReplaceMaterial("Right", boxMaterial.Copy().N("Right"))
 	cornellBox.ReplaceMaterial("Left", boxMaterial.Copy().N("Left"))
@@ -49,7 +49,7 @@ func loadCornellBox(scale *vec3.T, singleLight bool, lightIntensityFactor float6
 	cornellBox.ReplaceMaterial("Floor", boxMaterial.Copy().N("Floor"))
 	cornellBox.ReplaceMaterial("Ceiling", boxMaterial.Copy().N("Ceiling"))
 
-	lampMaterial := scn.NewMaterial().N("Lamp").E(color.White, lightIntensityFactor, true)
+	lampMaterial := scene.NewMaterial().N("Lamp").E(color.White, lightIntensityFactor, true)
 
 	if singleLight {
 		cornellBox.RemoveObjectsBySubstructureName("Lamp_1_-_left_away")
@@ -73,12 +73,12 @@ func loadCornellBox(scale *vec3.T, singleLight bool, lightIntensityFactor float6
 	return cornellBox
 }
 
-func createSingleLamp(cornellBoxScale *vec3.T, lampPercentageOfCeiling float64, lampMaterial *scn.Material) *scn.FacetStructure {
+func createSingleLamp(cornellBoxScale *vec3.T, lampPercentageOfCeiling float64, lampMaterial *scene.Material) *scene.FacetStructure {
 	lampSizeX := (cornellBoxScale[0] / 2) * lampPercentageOfCeiling
 	lampY := cornellBoxScale[1] - 0.001
 	lampSizeZ := (cornellBoxScale[2] / 2) * lampPercentageOfCeiling
 
-	lamp := &scn.FacetStructure{
+	lamp := &scene.FacetStructure{
 		Name:     "Lamp",
 		Material: lampMaterial,
 		Facets: getFlatRectangleFacets(
@@ -91,13 +91,13 @@ func createSingleLamp(cornellBoxScale *vec3.T, lampPercentageOfCeiling float64, 
 	return lamp
 }
 
-func getFlatRectangleFacets(p1, p2, p3, p4 *vec3.T) []*scn.Facet {
+func getFlatRectangleFacets(p1, p2, p3, p4 *vec3.T) []*scene.Facet {
 	v1 := p2.Subed(p1)
 	v2 := p3.Subed(p1)
 	normal := vec3.Cross(&v1, &v2)
 	normal.Normalize()
 
-	return []*scn.Facet{
+	return []*scene.Facet{
 		{Vertices: []*vec3.T{p1, p2, p4}, Normal: &normal},
 		{Vertices: []*vec3.T{p4, p2, p3}, Normal: &normal},
 	}

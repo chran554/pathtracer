@@ -4,18 +4,18 @@ import (
 	"fmt"
 	"path/filepath"
 	"pathtracer/internal/pkg/obj/ply"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-func NewSkull(scale float64) *scn.FacetStructure {
+func NewSkull(scale float64) *scene.FacetStructure {
 	skull := loadSkull(scale)
 	skull.ClearMaterials()
 	return skull
 }
 
-func loadSkull(scale float64) *scn.FacetStructure {
+func loadSkull(scale float64) *scene.FacetStructure {
 	skull := ply.ReadOrPanic(filepath.Join(PlyFileDir, "skull.ply"))
 
 	xmin := skull.Bounds.Xmin

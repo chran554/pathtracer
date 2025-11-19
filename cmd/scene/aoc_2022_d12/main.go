@@ -7,8 +7,8 @@ import (
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
-	anm "pathtracer/internal/pkg/renderfile"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/renderfile"
+	"pathtracer/internal/pkg/scene"
 	"regexp"
 	"strconv"
 
@@ -26,7 +26,7 @@ var imageWidth = 1000
 var imageHeight = 1000
 var magnification = 0.25
 
-// var renderType = scn.Raycasting
+// var renderType = scene.Raycasting
 var amountSamples = 200 // 200 * 4 * 3 // 2000 * 2 * 4
 
 var apertureSize = 2.0
@@ -34,29 +34,29 @@ var apertureSize = 2.0
 func main() {
 	environmentEnvironMap := floatimage.Load("textures/equirectangular/sunset horizon 2800x1400.jpg")
 
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
+	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
 	skyDomeOrigin := &vec3.T{0, 0, 0}
-	skyDomeMaterial := scn.NewMaterial().
+	skyDomeMaterial := scene.NewMaterial().
 		E(color.White, environmentEmissionFactor, true).
 		SP(environmentEnvironMap, skyDomeOrigin, vec3.T{-0.55, 0, -0.45}, vec3.T{0, 1, 0})
-	skyDome := scn.NewSphere(skyDomeOrigin, environmentRadius, skyDomeMaterial).N("sky dome")
+	skyDome := scene.NewSphere(skyDomeOrigin, environmentRadius, skyDomeMaterial).N("sky dome")
 
 	//moonColor := color.NewColor(0.9, 0.9, 1.0)
-	//moonMaterial := scn.NewMaterial().C(moonColor).E(moonColor, 8.0, true)
-	//moon := scn.NewSphere(&vec3.T{-400, 500, -400}, 200, moonMaterial).N("moon")
+	//moonMaterial := scene.NewMaterial().C(moonColor).E(moonColor, 8.0, true)
+	//moon := scene.NewSphere(&vec3.T{-400, 500, -400}, 200, moonMaterial).N("moon")
 
 	//sunColor := color.NewColor(1.0, 0.97, 0.8)
-	//sunMaterial := scn.NewMaterial().C(sunColor).E(sunColor, 10.0, true)
-	//sun := scn.NewSphere(&vec3.T{3000, 600, 1600}, 400, sunMaterial).N("sun")
+	//sunMaterial := scene.NewMaterial().C(sunColor).E(sunColor, 10.0, true)
+	//sun := scene.NewSphere(&vec3.T{3000, 600, 1600}, 400, sunMaterial).N("sun")
 
 	// Ground
-	groundMaterial := scn.NewMaterial().N("Ground material").PP(floatimage.Load("textures/ground/soil-cracked.png"), &vec3.Zero, vec3.UnitX.Scaled(150*3), vec3.UnitZ.Scaled(150*3))
-	ground := scn.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
+	groundMaterial := scene.NewMaterial().N("Ground material").PP(floatimage.Load("textures/ground/soil-cracked.png"), &vec3.Zero, vec3.UnitX.Scaled(150*3), vec3.UnitZ.Scaled(150*3))
+	ground := scene.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
 
 	mapTextLines, _ := readLines("cmd/scene/aoc_2022_d12/resources/map.txt")
 	karta := parseMap(mapTextLines)
-	landscape := &scn.FacetStructure{Name: "karta"}
+	landscape := &scene.FacetStructure{Name: "karta"}
 	boxUnit := 20.0
 	pathTextLines, _ := readLines("cmd/scene/aoc_2022_d12/resources/path.txt")
 	pathPositions, startPos, endPos := parsePath(pathTextLines)
@@ -68,27 +68,27 @@ func main() {
 
 	pathEmissionFactor := 0.75
 
-	boxMaterial := scn.NewMaterial().
+	boxMaterial := scene.NewMaterial().
 		C(boxColor).
 		E(color.White, 0.02, false)
 
-	lavaMaterial := scn.NewMaterial().
+	lavaMaterial := scene.NewMaterial().
 		C(color.White).
 		E(color.White, 1.5, false).
 		M(0.2, 0.3).
 		SP(floatimage.Load("textures/planets/sun.jpg"), &vec3.T{1540 / 2, -1540 / 2, 820 / 2}, vec3.UnitX.Scaled(-100), vec3.UnitZ.Scaled(100))
 
-	pathMaterial := scn.NewMaterial().
+	pathMaterial := scene.NewMaterial().
 		C(pathColor).
 		E(pathColor, 2.0*pathEmissionFactor, false).
 		M(0.3, 0.1)
 
-	startMaterial := scn.NewMaterial().
+	startMaterial := scene.NewMaterial().
 		C(startColor).
 		E(startColor, 1.5*pathEmissionFactor, false).
 		M(0.3, 0.1)
 
-	endMaterial := scn.NewMaterial().
+	endMaterial := scene.NewMaterial().
 		C(endColor).
 		E(endColor, 1.5*pathEmissionFactor, false).
 		M(0.3, 0.1)
@@ -131,7 +131,7 @@ func main() {
 
 	//fmt.Printf("%+v\n", landscape.Bounds)
 
-	scene := scn.NewSceneNode().S(skyDome /*, sun*/ /*, moon*/).D(ground).FS(landscape)
+	scn := scene.NewSceneNode().S(skyDome /*, sun*/ /*, moon*/).D(ground).FS(landscape)
 
 	var curvePoints []*vec3.T
 	for _, position := range pathPositions {
@@ -166,19 +166,19 @@ func main() {
 
 		cameraOrigin.Add(&vec3.T{0.0, 100.0, 0.0}) // Raise the camera above the focus point
 		cameraFocusPoint := focusPoint
-		camera := scn.NewCamera(&cameraOrigin, cameraFocusPoint, amountSamples, magnification).A(apertureSize, nil)
+		camera := scene.NewCamera(&cameraOrigin, cameraFocusPoint, amountSamples, magnification).A(apertureSize, nil)
 
 		// Still image camera settings
 		// cameraOrigin = vec3.T{-300, 350, 150}
 		// focusPoint = &vec3.T{850, 10, 400}
-		// camera = scn.NewCamera(&cameraOrigin, focusPoint, amountSamples, magnification).A(apertureSize, "")
+		// camera = scene.NewCamera(&cameraOrigin, focusPoint, amountSamples, magnification).A(apertureSize, "")
 
-		frame := scn.NewFrame(animationName, frameIndex, camera, scene)
+		frame := scene.NewFrame(animationName, frameIndex, camera, scn)
 		animation.AddFrame(frame)
 	}
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := anm.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}

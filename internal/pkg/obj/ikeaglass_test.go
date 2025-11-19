@@ -2,8 +2,9 @@ package obj
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func Test_IkeaGlassSkoja_glass(t *testing.T) {

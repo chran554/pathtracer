@@ -6,12 +6,12 @@ import (
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-func NewLightBox(scale *vec3.T, c color.Color, emission float64, formFilename string) *scn.FacetStructure {
+func NewLightBox(scale *vec3.T, c *color.Color, emission float64, formFilename string) *scene.FacetStructure {
 	lightBox := loadLightBox()
 
 	lightBox.CenterOn(&vec3.Zero)
@@ -27,6 +27,6 @@ func NewLightBox(scale *vec3.T, c color.Color, emission float64, formFilename st
 	return lightBox
 }
 
-func loadLightBox() *scn.FacetStructure {
+func loadLightBox() *scene.FacetStructure {
 	return wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "lightbox_freeform.obj"))
 }

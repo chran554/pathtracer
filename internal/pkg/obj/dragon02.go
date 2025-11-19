@@ -1,15 +1,16 @@
 package obj
 
 import (
-	"github.com/ungerik/go3d/float64/vec3"
 	"math"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/scene"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
-func NewDragon02(scale float64, includeDragon bool, includePillar bool) *scn.FacetStructure {
+func NewDragon02(scale float64, includeDragon bool, includePillar bool) *scene.FacetStructure {
 	dragon := loadDragon02()
 
 	if !includeDragon {
@@ -27,11 +28,11 @@ func NewDragon02(scale float64, includeDragon bool, includePillar bool) *scn.Fac
 
 	dragon.ScaleUniform(&vec3.Zero, scale/dragon.Bounds.Ymax)
 
-	skinMaterial := scn.NewMaterial().N("skin").
+	skinMaterial := scene.NewMaterial().N("skin").
 		C(color.NewColor(0.6, 0.5, 0.2)).
 		M(0.3, 0.2)
 
-	pillarMaterial := scn.NewMaterial().N("pillar").
+	pillarMaterial := scene.NewMaterial().N("pillar").
 		C(color.NewColor(0.8, 0.85, 0.7)).
 		M(0.2, 0.6)
 
@@ -41,7 +42,7 @@ func NewDragon02(scale float64, includeDragon bool, includePillar bool) *scn.Fac
 	return dragon
 }
 
-func loadDragon02() *scn.FacetStructure {
+func loadDragon02() *scene.FacetStructure {
 	dragon := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "dragon_02.obj"))
 	return dragon
 }

@@ -6,8 +6,8 @@ import (
 	"os"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/floatimage"
-	anm "pathtracer/internal/pkg/renderfile"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/renderfile"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -23,7 +23,7 @@ var imageWidth = 150
 var imageHeight = 100
 var magnification = 5.0
 
-var renderType = scn.Pathtracing
+var renderType = scene.Pathtracing
 var amountSamples = 256 * 2 * 6 * 4 // 2048 // 4000 //* 8
 var maxRecursion = 3
 
@@ -37,12 +37,12 @@ func main() {
 		object := obj.NewDragon02(100, true, true)
 		pillar := object.GetFirstObjectByName("pillar")
 		pillarCenter := *pillar.Bounds.Center()
-		object.ReplaceMaterial("pillar", scn.NewMaterial().N("pillar").SP("textures/marble/white_marble_double_width.png", pillarCenter, vec3.UnitX, vec3.UnitY).M(0.2, 0.7))
+		object.ReplaceMaterial("pillar", scene.NewMaterial().N("pillar").SP("textures/marble/white_marble_double_width.png", pillarCenter, vec3.UnitX, vec3.UnitY).M(0.2, 0.7))
 
 		object.RotateY(&vec3.Zero, -math.Pi/8)
 		object.UpdateBounds()
 		objectBounds := object.Bounds
-		//object.Material.T(0.95, true, scn.RefractionIndex_Glass)
+		//object.Material.T(0.95, true, scene.RefractionIndex_Glass)
 		//object.UpdateVertexNormals(false)
 		fmt.Printf("object bounds: %+v\n", objectBounds)
 
@@ -68,7 +68,7 @@ func main() {
 		towerLamp1 := createLamp("tower_lamp_1", 1.3, 5.0, objectBounds.Center().Add(&vec3.T{-10.3, 1, -13}), lampColor)
 		towerLamp2 := createLamp("tower_lamp_2", 1.3, 5.0, objectBounds.Center().Add(&vec3.T{10.3, 1, -13}), lampColor)
 		tinnerLamp1 := createLamp("tinner_lamp_1", 3.0, 5.0, objectBounds.Center().Add(&vec3.T{10, 25, 6}), lampColor)
-		var lamps *scn.Sphere{castleLamp, entranceLamp1, entranceLamp2, entranceLamp3, towerLamp1, towerLamp2, tinnerLamp1}
+		var lamps *scene.Sphere{castleLamp, entranceLamp1, entranceLamp2, entranceLamp3, towerLamp1, towerLamp2, tinnerLamp1}
 	*/
 
 	// Sky dome
@@ -77,11 +77,11 @@ func main() {
 	// environmentSphere := addEnvironmentMapping("textures/equirectangular/nightsky.png")
 
 	// Ground
-	groundProjection := scn.NewParallelImageProjection(floatimage.Load("textures/ground/grass_short.png"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(80/2), vec3.UnitZ.Scaled(50/2))
-	groundMaterial := scn.NewMaterial().N("Ground material").P(&groundProjection)
-	ground := scn.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
+	groundProjection := scene.NewParallelImageProjection(floatimage.Load("textures/ground/grass_short.png"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(80/2), vec3.UnitZ.Scaled(50/2))
+	groundMaterial := scene.NewMaterial().N("Ground material").P(&groundProjection)
+	ground := scene.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
 
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
+	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
 	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
@@ -104,36 +104,36 @@ func main() {
 		cameraFocusPoint[0] = math.Cos(animationProgress*2*math.Pi+cameraStartAngle) * xzRadius2
 		cameraFocusPoint[2] = math.Sin(animationProgress*2*math.Pi+cameraStartAngle) * xzRadius2
 
-		camera := scn.NewCamera(cameraOrigin, cameraFocusPoint, amountSamples, magnification).D(maxRecursion).A(apertureSize, nil)
+		camera := scene.NewCamera(cameraOrigin, cameraFocusPoint, amountSamples, magnification).D(maxRecursion).A(apertureSize, nil)
 
-		scene := scn.NewSceneNode().
+		scn := scene.NewSceneNode().
 			S(environmentSphere, lamp).
 			D(ground).
 			FS(object)
 
-		frame := scn.NewFrame(animationName, frameIndex, camera, scene)
+		frame := scene.NewFrame(animationName, frameIndex, camera, scn)
 
 		animation.AddFrame(frame)
 	}
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := anm.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func createLamp(lampName string, size float64, strength float64, lampPosition *vec3.T, lampColor color.Color) *scn.Sphere {
-	return &scn.Sphere{
+func createLamp(lampName string, size float64, strength float64, lampPosition *vec3.T, lampColor *color.Color) *scene.Sphere {
+	return &scene.Sphere{
 		Name:     lampName,
 		Origin:   lampPosition,
 		Radius:   size,
-		Material: scn.NewMaterial().N(lampName).C(color.White).E(lampColor, strength, true),
+		Material: scene.NewMaterial().N(lampName).C(color.White).E(lampColor, strength, true),
 	}
 }
 
-func NewCorner(scale float64) *scn.FacetStructure {
-	var facets []*scn.Facet
+func NewCorner(scale float64) *scene.FacetStructure {
+	var facets []*scene.Facet
 
 	p000 := &vec3.T{0, 0, 0}
 	p101 := &vec3.T{1, 0, 1}
@@ -142,13 +142,13 @@ func NewCorner(scale float64) *scn.FacetStructure {
 	p_01 := &vec3.T{-1, 0, 1}
 	p_11 := &vec3.T{-1, 1, 1}
 
-	facets = append(facets, &scn.Facet{Vertices: []*vec3.T{p000, p101, p111}})
-	facets = append(facets, &scn.Facet{Vertices: []*vec3.T{p000, p111, p010}})
-	facets = append(facets, &scn.Facet{Vertices: []*vec3.T{p000, p_11, p_01}})
-	facets = append(facets, &scn.Facet{Vertices: []*vec3.T{p000, p010, p_11}})
+	facets = append(facets, &scene.Facet{Vertices: []*vec3.T{p000, p101, p111}})
+	facets = append(facets, &scene.Facet{Vertices: []*vec3.T{p000, p111, p010}})
+	facets = append(facets, &scene.Facet{Vertices: []*vec3.T{p000, p_11, p_01}})
+	facets = append(facets, &scene.Facet{Vertices: []*vec3.T{p000, p010, p_11}})
 
-	object := &scn.FacetStructure{Name: "experiment", Facets: facets}
-	object.Material = scn.NewMaterial().N("experiment").C(color.White)
+	object := &scene.FacetStructure{Name: "experiment", Facets: facets}
+	object.Material = scene.NewMaterial().N("experiment").C(color.White)
 
 	object.ScaleUniform(&vec3.Zero, scale)
 	object.UpdateBounds()
@@ -162,12 +162,12 @@ func NewCorner(scale float64) *scn.FacetStructure {
 	return object
 }
 
-func addEnvironmentMapping(filename string) *scn.Sphere {
+func addEnvironmentMapping(filename string) *scene.Sphere {
 	origin := vec3.T{0, 0, 0}
 	u := vec3.T{-0.2, 0, -1}
 	v := vec3.T{0, 1, 0}
-	material := scn.NewMaterial().E(color.White, environmentEmissionFactor, true).SP(floatimage.Load(filename), &origin, u, v)
-	sphere := scn.NewSphere(&origin, environmentRadius, material).N("Environment mapping")
+	material := scene.NewMaterial().E(color.White, environmentEmissionFactor, true).SP(floatimage.Load(filename), &origin, u, v)
+	sphere := scene.NewSphere(&origin, environmentRadius, material).N("Environment mapping")
 
 	return sphere
 }

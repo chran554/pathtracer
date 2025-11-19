@@ -6,8 +6,8 @@ import (
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
-	anm "pathtracer/internal/pkg/renderfile"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/renderfile"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -29,21 +29,21 @@ func main() {
 	dx := 1.4
 	dy := -10.0
 
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
+	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
-	skyDome := scn.NewSphere(&vec3.T{0, 0, 0}, 4*100, scn.NewMaterial().
+	skyDome := scene.NewSphere(&vec3.T{0, 0, 0}, 4*100, scene.NewMaterial().
 		E(color.White, 1, true).
 		//C(color.NewColorGrey(0.2))).
 		SP(floatimage.Load("textures/equirectangular/las-vegas-hotell-lobby.png"), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 	skyDome.RotateY(&vec3.Zero, math.Pi+(math.Pi*6/8))
 
-	lamp1 := scn.NewSphere(&vec3.T{-50, 150 + dy, -75}, 60, scn.NewMaterial().E(color.NewColorKelvin(4000), 12, true)).N("lamp")
+	lamp1 := scene.NewSphere(&vec3.T{-50, 150 + dy, -75}, 60, scene.NewMaterial().E(color.NewColorKelvin(4000), 12, true)).N("lamp")
 
 	tableBoard := obj.NewBox(obj.BoxCentered)
 	tableBoard.Translate(&vec3.T{0, -tableBoard.Bounds.Ymax, 0})
 	tableBoard.Scale(&vec3.Zero, &vec3.T{30, 3, 20})
 	tableBoard.Translate(&vec3.T{10, dy, 0})
-	tableBoard.Material = scn.NewMaterial().
+	tableBoard.Material = scene.NewMaterial().
 		C(color.NewColorGrey(1.0)).
 		M(0.15, 0.3).
 		PP(floatimage.Load("textures/wood/darkwood.png"), &vec3.T{0, 0, 0}, vec3.T{30, 0, 0}, vec3.T{0, 0, 20})
@@ -66,7 +66,7 @@ func main() {
 	sodaCanTest.RotateY(&vec3.Zero, -math.Pi*2/3)
 	sodaCanTest.Translate(&vec3.T{6 * dx, 0 + dy, -1.5})
 
-	scene := scn.NewSceneNode().
+	scn := scene.NewSceneNode().
 		S(lamp1, skyDome).
 		FS(tableBoard, sodaCanCocaCola, sodaCanPepsi, sodaCanMtnDew, sodaCanTest)
 
@@ -80,16 +80,16 @@ func main() {
 		subed := cameraOrigin.Subed(&lidCenter)
 		focusDistance := subed.Length()
 
-		camera := scn.NewCamera(cameraOrigin, &focusPoint, amountSamples, magnification).
+		camera := scene.NewCamera(cameraOrigin, &focusPoint, amountSamples, magnification).
 			A(apertureSize, nil).
 			F(focusDistance)
 
-		frame := scn.NewFrame(animation.AnimationName, animationFrameIndex, camera, scene)
+		frame := scene.NewFrame(animation.AnimationName, animationFrameIndex, camera, scn)
 		animation.AddFrame(frame)
 	}
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := anm.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}

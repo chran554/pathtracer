@@ -2,14 +2,15 @@ package obj
 
 import (
 	"fmt"
-	"github.com/ungerik/go3d/float64/vec3"
 	"path/filepath"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/scene"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 // NewDiamond creates a new diamond with radius set to scale value.
-func NewDiamond(scale float64) *scn.FacetStructure {
+func NewDiamond(scale float64) *scene.FacetStructure {
 	diamond := loadDiamond()
 
 	xmin := diamond.Bounds.Xmin
@@ -25,7 +26,7 @@ func NewDiamond(scale float64) *scn.FacetStructure {
 	return diamond
 }
 
-func loadDiamond() *scn.FacetStructure {
+func loadDiamond() *scene.FacetStructure {
 	diamond := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "diamond.obj"))
 
 	return diamond

@@ -6,8 +6,8 @@ import (
 	dmd "pathtracer/cmd/obj/diamond/pkg/diamond"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/floatimage"
-	anm "pathtracer/internal/pkg/renderfile"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/renderfile"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -26,23 +26,23 @@ var viewPlaneDistance = 1000.0
 var cameraDistanceFactor = 1.0
 
 func main() {
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
+	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
 	roomScale := 100.0
 	// cornellBox := getCornellBox(cornellBoxFilenamePath, 100.0)
 
-	environmentSphere := scn.NewSphere(&vec3.T{0, 0, 0}, 1000*1000*1000, scn.NewMaterial().
+	environmentSphere := scene.NewSphere(&vec3.T{0, 0, 0}, 1000*1000*1000, scene.NewMaterial().
 		E(color.White, 1, true).
 		SP(floatimage.Load("textures/planets/environmentmap/Stellarium3.jpeg"), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 
-	lamp1 := scn.NewSphere(&vec3.T{roomScale * 2.0, roomScale * 0.5, -roomScale * 1.0}, roomScale*0.8, scn.NewMaterial().E(color.White, 20, true)).N("Lamp1")
+	lamp1 := scene.NewSphere(&vec3.T{roomScale * 2.0, roomScale * 0.5, -roomScale * 1.0}, roomScale*0.8, scene.NewMaterial().E(color.White, 20, true)).N("Lamp1")
 
-	lamp2 := scn.NewSphere(&vec3.T{-roomScale * 2.0, roomScale * 0.5, -roomScale * 1.0}, roomScale*0.8, scn.NewMaterial().E(color.White, 9, true)).N("Lamp2")
+	lamp2 := scene.NewSphere(&vec3.T{-roomScale * 2.0, roomScale * 0.5, -roomScale * 1.0}, roomScale*0.8, scene.NewMaterial().E(color.White, 9, true)).N("Lamp2")
 
-	diamondMaterial := scn.NewMaterial().
+	diamondMaterial := scene.NewMaterial().
 		N("diamond").
 		C(color.NewColor(1.0, 0.95, 0.8)).
-		T(1.0, true, scn.RefractionIndex_Diamond).
+		T(1.0, true, scene.RefractionIndex_Diamond).
 		M(0.3, 0.0)
 
 	d := dmd.Diamond{
@@ -59,8 +59,8 @@ func main() {
 	diamond2.UpdateBounds()
 	floorLevel := diamond2.Bounds.Ymin
 
-	floorMaterial := scn.NewMaterial().M(0.8, 0.1).PP(floatimage.Load("textures/marble/white_marble.png"), &vec3.T{0, 0, 0}, vec3.T{roomScale * 1.5 * 2, 0, 0}, vec3.T{0, 0, roomScale * 1.5 * 2})
-	floor := scn.NewDisc(&vec3.T{0, floorLevel, 0}, &vec3.T{0, 1, 0}, roomScale*1.5, floorMaterial).N("Floor")
+	floorMaterial := scene.NewMaterial().M(0.8, 0.1).PP(floatimage.Load("textures/marble/white_marble.png"), &vec3.T{0, 0, 0}, vec3.T{roomScale * 1.5 * 2, 0, 0}, vec3.T{0, 0, roomScale * 1.5 * 2})
+	floor := scene.NewDisc(&vec3.T{0, floorLevel, 0}, &vec3.T{0, 1, 0}, roomScale*1.5, floorMaterial).N("Floor")
 
 	animationStep := 1.0 / float64(amountAnimationFrames)
 	for animationFrameIndex := 0; animationFrameIndex < amountAnimationFrames; animationFrameIndex++ {
@@ -76,19 +76,19 @@ func main() {
 		cameraOrigin.Scale(cameraDistanceFactor)
 		focusPoint := vec3.T{0, 0, 0}
 
-		scene := scn.NewSceneNode().
+		scn := scene.NewSceneNode().
 			S(lamp1, lamp2, environmentSphere).
 			D(floor).
 			FS(diamond)
 
-		camera := scn.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).V(viewPlaneDistance)
+		camera := scene.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).V(viewPlaneDistance)
 
-		frame := scn.NewFrame(animation.AnimationName, animationFrameIndex, camera, scene)
+		frame := scene.NewFrame(animation.AnimationName, animationFrameIndex, camera, scn)
 		animation.AddFrame(frame)
 	}
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := anm.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}

@@ -1,19 +1,20 @@
 package obj
 
 import (
-	"github.com/ungerik/go3d/float64/vec3"
 	"math"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/scene"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
-func NewCastle(scale float64, lightColor color.Color, lightEmission float64) *scn.FacetStructure {
+func NewCastle(scale float64, lightColor *color.Color, lightEmission float64) *scene.FacetStructure {
 	object := loadCastle(scale)
 	object.PurgeEmptySubStructures()
 
-	stainedGlassMaterial := scn.NewMaterial().N("stained_glass").
+	stainedGlassMaterial := scene.NewMaterial().N("stained_glass").
 		C(color.NewColor(0.95, 0.90, 0.60)).
 		T(0.8, false, 0.0).
 		M(0.2, 0.3)
@@ -22,13 +23,13 @@ func NewCastle(scale float64, lightColor color.Color, lightEmission float64) *sc
 		stainedGlassObject.Material = stainedGlassMaterial
 	}
 
-	roofMaterial := scn.NewMaterial().N("roof").C(color.NewColor(0.30, 0.25, 0.10))
+	roofMaterial := scene.NewMaterial().N("roof").C(color.NewColor(0.30, 0.25, 0.10))
 	roofObjects := object.GetObjectsByMaterialName("erroded_cupper")
 	for _, roofObject := range roofObjects {
 		roofObject.Material = roofMaterial
 	}
 
-	glassMaterial := scn.NewMaterial().N("glass").
+	glassMaterial := scene.NewMaterial().N("glass").
 		C(color.NewColor(0.93, 0.93, 0.95)).
 		T(0.8, false, 0.0).
 		M(0.2, 0.1)
@@ -37,7 +38,7 @@ func NewCastle(scale float64, lightColor color.Color, lightEmission float64) *sc
 		glassObject.Material = glassMaterial
 	}
 
-	lightMaterial := scn.NewMaterial().N("light").E(lightColor, lightEmission, true)
+	lightMaterial := scene.NewMaterial().N("light").E(lightColor, lightEmission, true)
 	object.ReplaceMaterial("chapel_light", lightMaterial)
 	object.ReplaceMaterial("hall_light", lightMaterial)
 	object.ReplaceMaterial("hall_tower_left_light", lightMaterial)
@@ -52,7 +53,7 @@ func NewCastle(scale float64, lightColor color.Color, lightEmission float64) *sc
 	return object
 }
 
-func loadCastle(scale float64) *scn.FacetStructure {
+func loadCastle(scale float64) *scene.FacetStructure {
 	castle := wavefrontobj.ReadOrPanic(filepath.Join(ObjEvaluationFileDir, "castle_03.obj"))
 	// castle.Scale(&vec3.Zero, &vec3.T{-1, 1, 1}) // Flip along x-axis
 	castle.CenterOn(&vec3.Zero)

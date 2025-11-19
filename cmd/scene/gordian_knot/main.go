@@ -5,8 +5,8 @@ import (
 	"math"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/floatimage"
-	anm "pathtracer/internal/pkg/renderfile"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/renderfile"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -29,7 +29,7 @@ var imageWidth = 1280
 var imageHeight = 1024
 var magnification = 0.5
 
-var renderType = scn.Pathtracing
+var renderType = scene.Pathtracing
 var amountSamples = 256
 var maxRecursion = 3
 
@@ -44,7 +44,7 @@ var amountBalls = 75
 var scale = 100.0
 
 func main() {
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
+	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
 	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
@@ -54,33 +54,33 @@ func main() {
 		spheres := getKnotBalls(pipeRadius, amountBalls, scale, animationProgress, ballSpeed)
 
 		environmentOrigin := &vec3.T{0, 0, 0}
-		environmentMaterial := scn.NewMaterial().
+		environmentMaterial := scene.NewMaterial().
 			E(color.White, environmentEmissionFactor, true).
 			SP(floatimage.Load("textures/equirectangular/forest_sunny_day.jpg"), environmentOrigin, vec3.UnitZ, vec3.UnitY)
-		environmentSphere := scn.NewSphere(environmentOrigin, environmentRadius, environmentMaterial).N("Environment mapping")
+		environmentSphere := scene.NewSphere(environmentOrigin, environmentRadius, environmentMaterial).N("Environment mapping")
 
-		scene := scn.NewSceneNode().S(spheres...).S(environmentSphere)
-		scene.Bounds = nil
+		scn := scene.NewSceneNode().S(spheres...).S(environmentSphere)
+		scn.Bounds = nil
 
 		camera := getCamera(magnification, animationProgress)
 
-		frame := scn.NewFrame(animation.AnimationName, frameIndex, camera, scene)
+		frame := scene.NewFrame(animation.AnimationName, frameIndex, camera, scn)
 
 		animation.AddFrame(frame)
 	}
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := anm.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func getKnotBalls(ballRadius float64, amountBalls int, scale float64, animationProgress float64, ballSpeed float64) []*scn.Sphere {
-	spheres := make([]*scn.Sphere, 0)
+func getKnotBalls(ballRadius float64, amountBalls int, scale float64, animationProgress float64, ballSpeed float64) []*scene.Sphere {
+	spheres := make([]*scene.Sphere, 0)
 	radianDistanceBetweenBalls := (math.Pi * 2.0 * pipeLength) / float64(amountBalls)
 
-	sphereMaterial := scn.NewMaterial().C(color.NewColor(0.95, 0.95, 0.95)).M(0.9, 0.1)
+	sphereMaterial := scene.NewMaterial().C(color.NewColor(0.95, 0.95, 0.95)).M(0.9, 0.1)
 
 	for ballIndex := 0; ballIndex < amountBalls; ballIndex++ {
 		t := (radianDistanceBetweenBalls * float64(ballIndex)) + (animationProgress * ballSpeed * radianDistanceBetweenBalls)
@@ -89,7 +89,7 @@ func getKnotBalls(ballRadius float64, amountBalls int, scale float64, animationP
 		y := scale * (math.Sin(t) - 2.0*math.Sin(2.0*t))
 		z := scale * -1.0 * math.Sin(3.0*t)
 
-		sphere := scn.NewSphere(&vec3.T{x, y, z}, ballRadius, sphereMaterial).N(fmt.Sprintf("sphere #%d", ballIndex))
+		sphere := scene.NewSphere(&vec3.T{x, y, z}, ballRadius, sphereMaterial).N(fmt.Sprintf("sphere #%d", ballIndex))
 
 		spheres = append(spheres, sphere)
 	}
@@ -97,7 +97,7 @@ func getKnotBalls(ballRadius float64, amountBalls int, scale float64, animationP
 	return spheres
 }
 
-func getCamera(magnification float64, progress float64) *scn.Camera {
+func getCamera(magnification float64, progress float64) *scene.Camera {
 	degrees45 := math.Pi / 4.0
 	strideAngle := degrees45 * math.Sin(2.0*math.Pi*progress)
 	cameraDistance := 200.0 * cameraDistanceFactor
@@ -111,5 +111,5 @@ func getCamera(magnification float64, progress float64) *scn.Camera {
 
 	focusPoint := vec3.T{0, 0, 0}
 
-	return scn.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification)
+	return scene.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification)
 }

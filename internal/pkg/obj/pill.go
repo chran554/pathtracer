@@ -1,20 +1,21 @@
 package obj
 
 import (
-	"github.com/ungerik/go3d/float64/vec3"
 	"path/filepath"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/scene"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
-func NewCapsule(scale float64) *scn.FacetStructure {
+func NewCapsule(scale float64) *scene.FacetStructure {
 	pill := loadPill()
 	pill.ScaleUniform(&vec3.Zero, scale)
 
 	return pill
 }
 
-func loadPill() *scn.FacetStructure {
+func loadPill() *scene.FacetStructure {
 	//capsule := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "capsule/capsule.obj"))
 	pill := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "capsule/capsule.obj"))
 

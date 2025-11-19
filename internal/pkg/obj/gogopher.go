@@ -1,20 +1,21 @@
 package obj
 
 import (
-	"github.com/ungerik/go3d/float64/vec3"
 	"path/filepath"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/scene"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
-func NewGopher(scale float64) *scn.FacetStructure {
+func NewGopher(scale float64) *scene.FacetStructure {
 	gopher := loadGopher()
 	gopher.ScaleUniform(&vec3.Zero, scale)
 
 	return gopher
 }
 
-func loadGopher() *scn.FacetStructure {
+func loadGopher() *scene.FacetStructure {
 	gopher := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "go_gopher_color.obj"))
 
 	ymin := gopher.Bounds.Ymin

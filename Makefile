@@ -1,4 +1,4 @@
-all: test vet fmt lint
+all: test fmt vet build
 
 .PHONY: test
 test:
@@ -42,3 +42,12 @@ build_scene:
 			exit 2; \
 		fi \
 	fi
+
+.PHONY: build_scenes
+build_scenes:
+	@find ./cmd/scene -name main.go -print0 | while IFS= read -r -d '' file; do \
+		dir=$$(dirname "$$file"); \
+		scene_name=$$(basename "$$dir"); \
+		echo "Building scene $$scene_name        from $$dir"; \
+		go build -o bin/$$scene_name $$dir; \
+	done

@@ -5,8 +5,8 @@ import (
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
-	anm "pathtracer/internal/pkg/renderfile"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/renderfile"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -30,7 +30,7 @@ func main() {
 	pillarWidth := 50.0
 
 	pillar := obj.NewBox(obj.BoxPositive)
-	pillar.Material = scn.NewMaterial().
+	pillar.Material = scene.NewMaterial().
 		C(color.NewColorGrey(0.9)).
 		M(0.4, 0.1).
 		PP(floatimage.Load("textures/concrete/Polished-Concrete-Architextures.jpg"), &vec3.T{0, 0, 0}, (&vec3.UnitX).Scaled(pillarWidth), (&vec3.UnitZ).Add(&vec3.T{0, 0.5, 0}).Scaled(pillarWidth))
@@ -39,36 +39,36 @@ func main() {
 	pillar.Scale(&vec3.Zero, &vec3.T{pillarWidth, pillarHeight, pillarWidth})
 	pillar.Translate(&vec3.T{0, 0, 100})
 
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
+	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
 	minDegree := 40 // 0
 	maxDegree := 40 // 80
 	for degree := minDegree; degree <= maxDegree; degree += 5 {
 		beethoven := obj.NewBeethoven(50.0)
 		beethoven.Translate(&vec3.T{0, pillar.Bounds.Ymax, pillar.Bounds.Center()[2]})
-		// beethoven.Material = scn.NewMaterial().N("Statue").M(0.1, 0.6).PP("textures/marble/white_marble.png", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(200), vec3.UnitY.Scaled(200))
-		beethoven.Material = scn.NewMaterial().N("Statue")
+		// beethoven.Material = scene.NewMaterial().N("Statue").M(0.1, 0.6).PP("textures/marble/white_marble.png", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(200), vec3.UnitY.Scaled(200))
+		beethoven.Material = scene.NewMaterial().N("Statue")
 		beethoven.UpdateVertexNormalsWithThreshold(false, float64(degree))
 
-		scene := scn.NewSceneNode().FS(cornellBox, pillar, beethoven)
+		scn := scene.NewSceneNode().FS(cornellBox, pillar, beethoven)
 
 		cameraOrigin := beethoven.Bounds.Center().Add(&vec3.T{0, 0, -100})
 		cameraOrigin.Scale(cameraDistanceFactor)
 		focusPoint := beethoven.Bounds.Center()
-		camera := scn.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).A(lensRadius, nil)
+		camera := scene.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).A(lensRadius, nil)
 
-		frame := scn.NewFrame(animation.AnimationName, degree, camera, scene)
+		frame := scene.NewFrame(animation.AnimationName, degree, camera, scn)
 		animation.AddFrame(frame)
 	}
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := anm.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func setCornellBoxMaterial(cornellBox *scn.FacetStructure) {
+func setCornellBoxMaterial(cornellBox *scene.FacetStructure) {
 	scale := cornellBox.Bounds.SizeX() / 2
 
 	backWallMaterial := *cornellBox.Material

@@ -6,16 +6,16 @@ import (
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
 type Dice struct {
-	*scn.FacetStructure
+	*scene.FacetStructure
 }
 
-func AsDice(fs *scn.FacetStructure) *Dice {
+func AsDice(fs *scene.FacetStructure) *Dice {
 	return &(Dice{FacetStructure: fs})
 }
 
@@ -24,11 +24,11 @@ func (dice *Dice) BorderColor(c color.Color) {
 }
 
 // NewDice creates a new box object
-func NewDice(scale float64) *scn.FacetStructure {
+func NewDice(scale float64) *scene.FacetStructure {
 	return box(scale)
 }
 
-func box(scale float64) (dice *scn.FacetStructure) {
+func box(scale float64) (dice *scene.FacetStructure) {
 	dice = loadDice()
 	dice.Name = "box"
 
@@ -38,9 +38,9 @@ func box(scale float64) (dice *scn.FacetStructure) {
 
 	fmt.Printf("Dice bounds: %+v\n", dice.Bounds)
 
-	diceMaterial := scn.NewMaterial().N("box").
+	diceMaterial := scene.NewMaterial().N("box").
 		C(color.NewColorGrey(1.0)). // TODO Set to same color as texture background, should be 0.9 or something. Color should affect color diffuse textures (by operation multiplication)?
-		T(0.0, true, scn.RefractionIndex_AcrylicPlastic).
+		T(0.0, true, scene.RefractionIndex_AcrylicPlastic).
 		M(0.075, 0.2)
 
 	dice.Material = diceMaterial
@@ -73,6 +73,6 @@ func box(scale float64) (dice *scn.FacetStructure) {
 	return dice
 }
 
-func loadDice() *scn.FacetStructure {
+func loadDice() *scene.FacetStructure {
 	return wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "cube_dice.obj"))
 }

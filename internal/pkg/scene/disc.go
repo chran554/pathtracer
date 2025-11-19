@@ -2,6 +2,7 @@ package scene
 
 import (
 	"fmt"
+
 	"github.com/ungerik/go3d/float64/mat3"
 	"github.com/ungerik/go3d/float64/vec3"
 )

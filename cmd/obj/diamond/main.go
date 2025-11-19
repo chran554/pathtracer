@@ -8,7 +8,7 @@ import (
 	"pathtracer/cmd/obj/diamond/pkg/diamond"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/scene"
 	"strings"
 )
 
@@ -35,7 +35,7 @@ func createPerfectBrilliantCutDiamondObjFile(scale float64, filename string) {
 	fmt.Printf("\nCreated perfect brilliant cut diamond obj-file: %s\n", objFile.Name())
 }
 
-func writeDiamondObjFile(filename string, diamond *scn.FacetStructure, comments []string) *os.File {
+func writeDiamondObjFile(filename string, diamond *scene.FacetStructure, comments []string) *os.File {
 	objFile := createFile(filename + ".obj")
 	defer objFile.Close()
 	mtlFile := createFile(filename + ".mtl")
@@ -45,11 +45,11 @@ func writeDiamondObjFile(filename string, diamond *scn.FacetStructure, comments 
 	return objFile
 }
 
-func diamondMaterial() scn.Material {
+func diamondMaterial() scene.Material {
 	c := color.NewColor(1.00, 0.99, 0.97)
-	m := scn.Material{
+	m := scene.Material{
 		Name:            "Diamond",
-		Color:           &c, // Very slight yellowish color
+		Color:           c, // Very slight yellowish color
 		Glossiness:      0.01,
 		Roughness:       0.01,
 		RefractionIndex: 2.42, // Refraction index of diamond material
@@ -58,7 +58,7 @@ func diamondMaterial() scn.Material {
 	return m
 }
 
-func fileComments(scale float64, d diamond.Diamond, m scn.Material, b *scn.Bounds) []string {
+func fileComments(scale float64, d diamond.Diamond, m scene.Material, b *scene.Bounds) []string {
 	comments := []string{
 		"Brilliant cut diamond 3D OBJ-file was created using algorithm from https://github.com/chran554/pathtracer/",
 		"The following parameters were used creating these files:",

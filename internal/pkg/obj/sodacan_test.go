@@ -2,9 +2,10 @@ package obj
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"pathtracer/internal/pkg/color"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func Test_LoadSodaCan(t *testing.T) {
