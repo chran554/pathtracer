@@ -75,7 +75,7 @@ func loadSodaCan(textureFileName string, tabColor *color.Color, scale float64) *
 
 	sodaCan.ScaleUniform(&vec3.Zero, scale)
 
-	fmt.Printf("Sodacan %s bounds: %+v\n", textureFileName, sodaCan.Bounds)
+	fmt.Printf("Sodacan '%s' with bounds: %+v\n", textureFileName, sodaCan.Bounds)
 
 	return sodaCan
 }

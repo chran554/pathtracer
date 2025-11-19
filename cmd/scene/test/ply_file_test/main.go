@@ -71,16 +71,14 @@ func main() {
 func setCornellBoxMaterial(cornellBox *scene.FacetStructure) {
 	scale := cornellBox.Bounds.SizeX() / 2
 
-	backWallMaterial := *cornellBox.Material
+	backWallMaterial := cornellBox.GetFirstObjectByMaterialName("Back").Material
 	backWallMaterial.PP(floatimage.Load("textures/wallpaper/geometric-yellow.jpg"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale), vec3.UnitY.Scaled(scale*0.66))
-	cornellBox.GetFirstObjectByName("Back").Material = &backWallMaterial
 
-	sideWallMaterial := *cornellBox.Material
-	sideWallMaterial.PP(floatimage.Load("textures/wallpaper/geometric-yellow.jpg"), &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(scale), vec3.UnitY.Scaled(scale*0.66))
-	cornellBox.GetFirstObjectByName("Left").Material = &sideWallMaterial
-	cornellBox.GetFirstObjectByName("Right").Material = &sideWallMaterial
+	leftWallMaterial := cornellBox.GetFirstObjectByMaterialName("Left").Material
+	rightWallMaterial := cornellBox.GetFirstObjectByMaterialName("Right").Material
+	leftWallMaterial.PP(floatimage.Load("textures/wallpaper/geometric-yellow.jpg"), &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(scale), vec3.UnitY.Scaled(scale*0.66))
+	rightWallMaterial.PP(floatimage.Load("textures/wallpaper/geometric-yellow.jpg"), &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(scale), vec3.UnitY.Scaled(scale*0.66))
 
-	floorMaterial := *cornellBox.Material
+	floorMaterial := cornellBox.GetFirstObjectByMaterialName("Floor").Material
 	floorMaterial.M(0.6, 0.1).PP(floatimage.Load("textures/floor/Calacatta-Vena-French-Pattern-Architextures.jpg"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale/2), vec3.UnitZ.Scaled(scale/2))
-	cornellBox.GetFirstObjectByName("Floor").Material = &floorMaterial
 }

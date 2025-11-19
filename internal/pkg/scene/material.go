@@ -28,7 +28,7 @@ func NewMaterial() *Material {
 		Name:            "",
 		Color:           color.White,
 		Diffuse:         1.0,
-		Emission:        color.Black,
+		Emission:        nil,
 		Glossiness:      0.0,
 		Roughness:       1.0,
 		Projection:      nil,
@@ -62,7 +62,7 @@ func (m *Material) C(c *color.Color) *Material {
 // E is emission properties
 func (m *Material) E(emission *color.Color, scale float64, rayTerminator bool) *Material {
 	m.Emission = emission
-	if scale != 1.0 {
+	if scale != 1.0 && emission != nil {
 		m.Emission = emission.Copy().Multiply(float32(scale))
 	}
 	m.RayTerminator = rayTerminator
