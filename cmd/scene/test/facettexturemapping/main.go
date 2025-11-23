@@ -27,29 +27,35 @@ var maxRayDepth = 3
 
 func main() {
 	skyDome := scene.NewSphere(&vec3.T{0, 0, 0}, 200*100, scene.NewMaterial().
-		E(color.White, skyDomeEmission, true).
-		SP(floatimage.Load("textures/equirectangular/dimples.png"), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+		E(color.NewColorGrey(0.25), skyDomeEmission, true).
+		SP(floatimage.Load("textures/equirectangular/dimples.png"), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("environment dome")
 	skyDome.RotateY(&vec3.Zero, util.DegToRad(-20))
 
-	frontSideFacets := obj.NewSquare(obj.XYPlane, true)
-	backSideFacets := obj.NewSquare(obj.XYPlane, true)
+	testSquareFacets := obj.NewSquare(obj.XYPlane, true)
+	leafSquareFacets := obj.NewSquare(obj.XYPlane, true)
+	flameSquareFacets := obj.NewSquare(obj.XYPlane, true)
 
-	leafMaterial1 := scene.NewMaterial().C(color.NewColorRGBA(0.85, 0.8, 0.9, 1.0)).TP(floatimage.Load("textures/test/test_alpha_transparency.png"))
-	leafMaterial2 := scene.NewMaterial().C(color.NewColorRGBA(0.8, 0.65, 0.9, 1.0)).TP(floatimage.Load("textures/tree/Leaves0120_35_S_02.png")).T(0.05, false, 1.0)
+	testTextureMaterial := scene.NewMaterial().C(color.NewColorRGBA(0.85, 0.8, 0.9, 1.0)).TP(floatimage.Load("textures/test/test_alpha_transparency.png"))
+	leafTextureMaterial := scene.NewMaterial().C(color.NewColorRGBA(0.8, 0.65, 0.9, 1.0)).TP(floatimage.Load("textures/tree/Leaves0120_35_S_02.png")).T(0.05, false, 1.0)
+	flameTextureMaterial := scene.NewMaterial().C(color.NewColorRGBA(1.0, 1.0, 1.0, 1.0)).TP(floatimage.Load("textures/misc/kerosenelamp/kerosenelamp_flame_wave.png")).T(0.0, false, 1.0).E(color.White, 1.0, false)
 	//leafMaterial := scene.NewMaterial().TP("Leaves0120_35_S.png")
 
-	frontSide := &scene.FacetStructure{Facets: frontSideFacets, Material: leafMaterial1}
-	backSide := &scene.FacetStructure{Facets: backSideFacets, Material: leafMaterial2}
+	testSquare := &scene.FacetStructure{Facets: testSquareFacets, Material: testTextureMaterial}
+	leafSquare := &scene.FacetStructure{Facets: leafSquareFacets, Material: leafTextureMaterial}
+	flameSquare := &scene.FacetStructure{Facets: flameSquareFacets, Material: flameTextureMaterial}
 
-	frontSide.RotateY(&vec3.T{0, 0, 0}, math.Pi) // rotate test image "[F]" along y-axis so it ends up to the left showing its backside
-	backSide.ScaleUniform(&vec3.T{0, 0, 0}, 40)
-	frontSide.ScaleUniform(&vec3.T{0, 0, 0}, 40)
+	testSquare.RotateY(&vec3.T{0, 0, 0}, math.Pi)  // rotate test image "[F]" along the y-axis so it ends up to the left showing its backside
+	flameSquare.RotateX(&vec3.T{0, 0, 0}, math.Pi) // rotate test image "flame" along the x-axis so it ends up to the right bottom, showing its backside
 
-	scn := scene.NewSceneNode().S(skyDome).FS(frontSide, backSide)
+	leafSquare.ScaleUniform(&vec3.T{0, 0, 0}, 30)
+	testSquare.ScaleUniform(&vec3.T{0, 0, 0}, 30)
+	flameSquare.ScaleUniform(&vec3.T{0, 0, 0}, 30)
 
-	cameraOrigin := &vec3.T{0, 20, -50}
+	scn := scene.NewSceneNode().S(skyDome).FS(testSquare, leafSquare, flameSquare)
+
+	cameraOrigin := &vec3.T{0, 0, -50}
 	cameraOrigin.Scale(3)
-	focusPoint := &vec3.T{0, 20, 0}
+	focusPoint := &vec3.T{0, 0, 0}
 
 	viewVector := focusPoint.Subed(cameraOrigin)
 	focusDistance := viewVector.Length()

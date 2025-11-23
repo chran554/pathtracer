@@ -105,7 +105,7 @@ func (c *Color) Multiply(factor float32) *Color {
 	return c
 }
 
-func (c *Color) Fade(destColor Color, factor float32) *Color {
+func (c *Color) Fade(destColor *Color, factor float32) *Color {
 	dstContribution := destColor.Copy().Multiply(factor)
 	srcContribution := c.Copy().Multiply(1.0 - factor)
 	return srcContribution.ChannelAdd(dstContribution)
@@ -114,7 +114,7 @@ func (c *Color) Fade(destColor Color, factor float32) *Color {
 // CloseRGB checks whether a color is close to another (within a tolerance distance in RGB space).
 // No gamma is considered or expanded.
 // Alpha channel is not considered, as only the color is compared.
-func (c *Color) CloseRGB(compareColor Color, delta float64) bool {
+func (c *Color) CloseRGB(compareColor *Color, delta float64) bool {
 	rD := float64(c.R - compareColor.R)
 	gD := float64(c.G - compareColor.G)
 	bD := float64(c.B - compareColor.B)

@@ -26,7 +26,7 @@ func NewKeroseneLamp(scale float64, emission float64) *scene.FacetStructure {
 	flameMaterial := scene.NewMaterial().N("flame").
 		C(color.White).
 		E(color.White, emission, false).
-		CP(floatimage.Load("textures/misc/kerosenelamp/kerosenelamp_flame_wave.png"), &vec3.T{flameCenterBounds[0], flame.Bounds.Ymin, flameCenterBounds[2]}, vec3.UnitZ, (vec3.UnitY).Scaled(flame.Bounds.SizeY()), false)
+		CP(floatimage.Load("textures/misc/kerosenelamp/kerosenelamp_flame_wave.png"), &vec3.T{flameCenterBounds[0], flame.Bounds.Ymin, flameCenterBounds[2]}, vec3.UnitZ, (vec3.UnitY).Scaled(flame.Bounds.SizeY()*0.85), false)
 	glassMaterial := scene.NewMaterial().N("glass").
 		C(color.NewColor(0.93, 0.94, 0.95)).
 		T(0.95, false, scene.RefractionIndex_Glass).
