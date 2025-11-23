@@ -211,13 +211,13 @@ func frameInformationPreRenderText(frameInformation RenderFrameInformation) stri
 	stringBuilder.WriteString(fmt.Sprintf("Max recursion depth:   %d\n", frameInformation.maxRecursionDepth))
 	stringBuilder.WriteString("\n")
 	if frameInformation.amountFacets > 0 {
-		stringBuilder.WriteString(fmt.Sprintf("Amount facets:         %d\n", util.FormatInt(frameInformation.amountFacets)))
+		stringBuilder.WriteString(fmt.Sprintf("Amount facets:         %s\n", util.FormatInt(frameInformation.amountFacets)))
 	}
 	if frameInformation.amountSpheres > 0 {
-		stringBuilder.WriteString(fmt.Sprintf("Amount spheres:        %d\n", util.FormatInt(frameInformation.amountSpheres)))
+		stringBuilder.WriteString(fmt.Sprintf("Amount spheres:        %s\n", util.FormatInt(frameInformation.amountSpheres)))
 	}
 	if frameInformation.amountDiscs > 0 {
-		stringBuilder.WriteString(fmt.Sprintf("Amount discs:          %d\n", util.FormatInt(frameInformation.amountDiscs)))
+		stringBuilder.WriteString(fmt.Sprintf("Amount discs:          %s\n", util.FormatInt(frameInformation.amountDiscs)))
 	}
 
 	return stringBuilder.String()
@@ -746,7 +746,7 @@ func processFacetStructureIntersection(ray *scene.Ray, facetStructure *scene.Fac
 			ii.intersectedDisc = nil
 
 			if ii.material == nil {
-				ii.material = scene.NewMaterial() // If, for some erroneous reason there is an intersection without any material, use default (diffuse white).
+				ii.material = scene.NewMaterial() // If, for some erroneous reason, there is an intersection without any material, use default (diffuse white).
 				fmt.Printf("Warning: Could not find any material for intersection point on facet structure '%s' ('%s').\n", facetStructure.Name, facetStructure.SubstructureName)
 			}
 

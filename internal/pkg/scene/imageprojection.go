@@ -83,6 +83,7 @@ func (imageProjection *ImageProjection) GetColor(point *vec3.T) *color.Color {
 	if imageProjection.ProjectionType == ProjectionTypeSpherical {
 		return imageProjection.getSphericalColor(point)
 	}
+	// ProjectionTypeTextureMapping is not handled here
 
 	return color.BlackTransparent
 }
@@ -258,14 +259,6 @@ func (imageProjection *ImageProjection) getParallelColor(point *vec3.T) *color.C
 	return imageProjection.Image.GetPixel(textureX, textureY)
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	} else {
-		return b
-	}
-}
-
 func (imageProjection *ImageProjection) ClearProjection() {
 	imageProjection.Image = nil
 	imageProjection._invertedCoordinateSystemMatrix = nil
@@ -280,14 +273,21 @@ func (imageProjection *ImageProjection) Initialize() {
 		imageProjection.initializeCylindricalProjection()
 
 	case ProjectionTypeParallel:
-		imageProjection.initializeParallellProjection()
+		imageProjection.initializeParallelProjection()
+
+	case ProjectionTypeTextureMapping:
+		imageProjection.initializeTextureMapping()
 
 	default:
 		fmt.Printf("can not initialize unknown projection type \"%s\"\n", imageProjection.ProjectionType)
 	}
 }
 
-func (imageProjection *ImageProjection) initializeParallellProjection() {
+func (imageProjection *ImageProjection) initializeTextureMapping() {
+	// Nothing by intention
+}
+
+func (imageProjection *ImageProjection) initializeParallelProjection() {
 	if imageProjection._invertedCoordinateSystemMatrix == nil || *imageProjection._invertedCoordinateSystemMatrix == mat3.Zero {
 		W := vec3.Cross(imageProjection.U, imageProjection.V)
 		imageProjection._invertedCoordinateSystemMatrix = &mat3.T{*imageProjection.U, *imageProjection.V, W}

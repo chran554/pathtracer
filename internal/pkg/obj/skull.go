@@ -16,7 +16,7 @@ func NewSkull(scale float64) *scene.FacetStructure {
 }
 
 func loadSkull(scale float64) *scene.FacetStructure {
-	skull := ply.ReadFacetStructureOrPanic(filepath.Join(PlyFileDir, "skull.ply"))
+	skull := ply.ReadFacetStructureOrPanic(filepath.Join(PlyFileDir, "skull.ply"), false)
 
 	xmin := skull.Bounds.Xmin
 	xmax := skull.Bounds.Xmax

@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ungerik/go3d/float64/vec2"
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
@@ -863,7 +864,9 @@ func parseFace(pointTokens []string, vertices []*vec3.T, normals []*vec3.T, text
 		}
 
 		if textureVertexIndex > 0 {
-			face.TextureVertices = append(face.TextureVertices, textureVertices[textureVertexIndex-1])
+			objTextureVertex := textureVertices[textureVertexIndex-1]
+			textureVertex := &vec2.T{objTextureVertex[0], objTextureVertex[1]} // A potential third coordinate of the obj-file is ignored by this pathtracer
+			face.TextureCoordinates = append(face.TextureCoordinates, textureVertex)
 		}
 
 		if vertexNormalIndex > 0 {

@@ -10,7 +10,6 @@ import (
 
 type Facet struct {
 	Vertices           []*vec3.T `json:"Vertices"`
-	TextureVertices    []*vec3.T `json:"TextureVertices,omitempty"`
 	VertexNormals      []*vec3.T `json:"VertexNormals,omitempty"`
 	TextureCoordinates []*vec2.T `json:"TextureCoordinates,omitempty"`
 
@@ -29,9 +28,9 @@ func (f *Facet) SplitMultiPointFacet() []*Facet {
 		for i := 1; i < (amountVertices - 1); i++ {
 			newVertices := []*vec3.T{f.Vertices[0], f.Vertices[i], f.Vertices[i+1]}
 
-			var newTextureVertices []*vec3.T
-			if len(f.TextureVertices) > 0 {
-				newTextureVertices = []*vec3.T{f.TextureVertices[0], f.TextureVertices[i], f.TextureVertices[i+1]}
+			var newTextureCoordinates []*vec2.T
+			if len(f.TextureCoordinates) > 0 {
+				newTextureCoordinates = []*vec2.T{f.TextureCoordinates[0], f.TextureCoordinates[i]}
 			}
 
 			var newVertexNormals []*vec3.T
@@ -40,10 +39,10 @@ func (f *Facet) SplitMultiPointFacet() []*Facet {
 			}
 
 			newFace := Facet{
-				Vertices:        newVertices,
-				TextureVertices: newTextureVertices,
-				VertexNormals:   newVertexNormals,
-				Normal:          f.Normal,
+				Vertices:           newVertices,
+				TextureCoordinates: newTextureCoordinates,
+				VertexNormals:      newVertexNormals,
+				Normal:             f.Normal,
 			}
 			facets = append(facets, &newFace)
 		}

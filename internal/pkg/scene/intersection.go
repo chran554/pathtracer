@@ -204,6 +204,11 @@ func isPointWithinTriangleFacet(point *vec3.T, facet *Facet) (isWithin bool, ver
 	// http://mrl.nyu.edu/~dzorin/rendering/lectures/lecture2/lecture2-6pp.pdf (Not used here)
 	// https://gamedev.stackexchange.com/questions/23743/whats-the-most-efficient-way-to-find-barycentric-coordinates
 
+	// Degenerate triangles:
+	// If the triangle is degenerate (area ~ 0), the denominator t1*t1 - t2*t3 will be zero (or near-zero),
+	// which would cause division by zero or large numerical errors.
+	// The current code does not guard against this; upstream code should avoid degenerate facets or handle them earlier.
+
 	u := facet.Vertices[1].Subed(facet.Vertices[0])
 	v := facet.Vertices[2].Subed(facet.Vertices[0])
 	w := point.Subed(facet.Vertices[0])
