@@ -32,6 +32,7 @@ func NewBoxWithEmission(boxType BoxType, c *color.Color, scaleEmission float64, 
 }
 
 // NewBox return a box which sides all have the unit length 1.
+// Side normals point outwards from each side.
 func NewBox(boxType BoxType) *scene.FacetStructure {
 	p1 := vec3.T{1, 1, 0} // Top right close            3----------2
 	p2 := vec3.T{1, 1, 1} // Top right away            /          /|

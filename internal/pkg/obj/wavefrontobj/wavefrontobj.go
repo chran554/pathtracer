@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/scene"
 	"pathtracer/internal/pkg/util"
 	"sort"
@@ -802,6 +803,13 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 
 			c := color.NewColor(parseFloat64(tokens[1]), parseFloat64(tokens[2]), parseFloat64(tokens[3]))
 			currentMaterial.Color = c
+		case "map_Kd":
+			// To specify the diffuse reflectivity of the current material
+			// map_Kd filename
+
+			texture := floatimage.Load(tokens[1])
+			textureMappingImageProjection := scene.NewTextureMappingImageProjection(texture)
+			currentMaterial.P(&textureMappingImageProjection)
 		default:
 			err = fmt.Errorf("unknown/unexpected line type: '%s'", line)
 		}
