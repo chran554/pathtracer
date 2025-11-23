@@ -1,0 +1,91 @@
+{
+    "identifier":{
+        "identifier":"10.25039/CIE.DS.etgmuqt5",
+        "identifierType":"DOI"
+    },
+    "creators":[
+        {
+            "name":"International Commission on Illumination (CIE)",
+            "nameType":"Organizational"
+        }
+    ],
+    "titles":[
+        {
+            "title":"CIE standard illuminant D50"
+}
+    ],
+    "publisher":"International Commission on Illumination (CIE), Vienna, AT",
+    "publicationYear":"2022",
+    "subjects":[
+        {
+            "subject":"Photometry"
+},
+        {
+            "subject":"Objective photometry"
+},
+        {
+            "subject":"Units. Constants"
+}
+    ],
+    "language":"en",
+    "alternateIdentifiers":[
+        {
+            "alternateIdentifier":"CIE_std_illum_D50.csv",
+            "alternateIdentifierType":"fileName"
+        }
+    ],
+    "formats":[
+        "text/csv"
+    ],
+    "types":{
+        "resourceType":"dataTable",
+        "resourceTypeGeneral":"Dataset"
+    },
+    "descriptions":[
+        {
+            "description":"CIE standard illuminant D50, 1 nm wavelength steps, original source: ISO/CIE FDIS 11664-2:2022, Table B.1",
+            "descriptionType":"Abstract"
+        }
+    ],
+    "checksums":[
+        {
+            "hashMethod":"md5",
+            "checksum":"e72757c3078b58e78ba63051be4b27b0"
+        },
+        {
+            "hashMethod":"sha256",
+            "checksum":"b23049c6f7b266c1c1fbe147aa271e8930ca02d6e569c5ae1804c036faea4193"
+        }
+    ],
+    "datatableInfo":{
+        "validations":[
+            {
+                "validationType":"sumOfColumns",
+                "validationValue":"[300015,39484.934570]"
+            },
+            {
+                "validationType":"sampleRow",
+                "validationParameter":"120",
+                "validationValue":"[419,59.6817]"
+            }
+        ],
+        "interpolationMethod":"linear",
+        "extrapolationMethod":"zero",
+        "dataQuality":"nominal",
+        "columnHeaders":[
+            {
+                "title":"lambda",
+                "unit":"nm",
+                "quantity":"wavelength"
+},
+            {
+                "title":"S_D50(lambda)",
+                "unit":"dimensionless",
+                "quantity":"spectral distribution"
+}
+        ]
+    },
+    "schemaName":"CIEmetaDigitalProduct",
+    "schemaVersion":3,
+    "schemaURL":"https://doi.org/10.25039/CIE.SC.4taqevcd"
+}
