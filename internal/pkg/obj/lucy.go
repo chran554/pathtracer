@@ -17,7 +17,7 @@ func NewLucy(scale float64) *scene.FacetStructure {
 }
 
 func loadLucy(scale float64) *scene.FacetStructure {
-	lucy := ply.ReadFacetStructureOrPanic(filepath.Join(PlyFileDir, "lucy.ply"))
+	lucy := ply.ReadFacetStructureOrPanic(filepath.Join(PlyFileDir, "lucy.ply"), true)
 
 	xmin := lucy.Bounds.Xmin
 	xmax := lucy.Bounds.Xmax

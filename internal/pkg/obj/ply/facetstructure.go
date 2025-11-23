@@ -12,7 +12,7 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-func ReadFacetStructureOrPanic(plyFilenamePath string) *scene.FacetStructure {
+func ReadFacetStructureOrPanic(plyFilenamePath string, rightHandCoordinateSystem bool) *scene.FacetStructure {
 	objFile, err := os.Open(plyFilenamePath)
 	if err != nil {
 		message := fmt.Sprintf("Could not open ply file: '%s'\n%s\n", plyFilenamePath, err.Error())
@@ -20,7 +20,7 @@ func ReadFacetStructureOrPanic(plyFilenamePath string) *scene.FacetStructure {
 	}
 	defer objFile.Close()
 
-	ply, err := ReadFacetStructure(objFile)
+	ply, err := ReadFacetStructure(objFile, rightHandCoordinateSystem)
 	if err != nil {
 		message := fmt.Sprintf("Could not read ply file: '%s'\n%s\n", objFile.Name(), err.Error())
 		panic(message)
@@ -29,7 +29,9 @@ func ReadFacetStructureOrPanic(plyFilenamePath string) *scene.FacetStructure {
 	return ply
 }
 
-func ReadFacetStructure(file *os.File) (*scene.FacetStructure, error) {
+// ReadFacetStructure reads a ply file and returns a facet structure.
+// The rightHandCoordinateSystem parameter specifies whether the ply file assumes a right-handed or left-handed coordinate system.
+func ReadFacetStructure(file *os.File, rightHandCoordinateSystem bool) (*scene.FacetStructure, error) {
 	reader := bufio.NewReader(file)
 	fmt.Printf("Reading ply file %s\n", file.Name())
 	_, elementValues, err := Read(reader)
@@ -41,6 +43,10 @@ func ReadFacetStructure(file *os.File) (*scene.FacetStructure, error) {
 	var facetStructure *scene.FacetStructure
 	if facetStructure, err = convertToFacetStructure(elementValues); err != nil {
 		return nil, fmt.Errorf("could not convert ply file '%s' values to facet structure: %w", file.Name(), err)
+	}
+
+	if rightHandCoordinateSystem {
+		facetStructure.FlipX()
 	}
 
 	fmt.Printf("Updating structure bounds\n")

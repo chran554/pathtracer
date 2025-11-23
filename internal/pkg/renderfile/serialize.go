@@ -33,8 +33,10 @@ func WriteRenderFile(filename string, animation *scene.Animation) error {
 
 	s := newSerializer(zipWriter)
 
+	// Serialize the animation and write zip-file entries.
 	animationInformation, _ := s.serializeAnimation(animation)
 
+	// Write the animation meta-information to the zip file.
 	animationInformationData, err := json.MarshalIndent(animationInformation, "", "  ")
 	if err != nil {
 		return err

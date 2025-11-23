@@ -16,7 +16,7 @@ func Test_ReadPly(t *testing.T) {
 	}
 	defer plyFile.Close()
 
-	facetStructure, err := ReadFacetStructure(plyFile)
+	facetStructure, err := ReadFacetStructure(plyFile, false)
 	if err != nil {
 		fmt.Printf("could not test read ply file '%s': %s\n", plyFilenamePath, err.Error())
 	}

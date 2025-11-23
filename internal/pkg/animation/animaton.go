@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"pathtracer/internal/pkg/scene"
-	"strconv"
+	"pathtracer/internal/pkg/util"
 )
 
 func WriteAnimationToFile(animation *scene.Animation, indent bool) {
@@ -31,7 +31,7 @@ func WriteAnimationToFile(animation *scene.Animation, indent bool) {
 		if err != nil {
 			panic(fmt.Sprintf("Written animation file seem to be broken: %s", filename))
 		}
-		fmt.Println("Wrote animation file \"" + filename + "\" of size " + ByteCountIEC(fileSize) + " (" + strconv.FormatInt(fileSize, 10) + " bytes)")
+		fmt.Println("Wrote animation file \"" + filename + "\" of size " + util.ByteCountIEC(fileSize) + " (" + util.FormatInt(int(fileSize)) + " bytes)")
 	}
 }
 
@@ -41,17 +41,4 @@ func getFileSize(filename string) (size int64, err error) {
 		return -1, err
 	}
 	return fileInfo.Size(), nil
-}
-
-func ByteCountIEC(b int64) string {
-	const unit = 1024
-	if b < unit {
-		return fmt.Sprintf("%d B", b)
-	}
-	div, exp := int64(unit), 0
-	for n := b / unit; n >= unit; n /= unit {
-		div *= unit
-		exp++
-	}
-	return fmt.Sprintf("%.1f %ciB", float64(b)/float64(div), "KMGTPE"[exp])
 }

@@ -203,7 +203,6 @@ func frameInformationPreRenderText(frameInformation RenderFrameInformation) stri
 	stringBuilder.WriteString("-----------------------------------------------\n")
 	stringBuilder.WriteString("\n")
 	stringBuilder.WriteString(fmt.Sprintf("Frame number:          %d of %d   (animation progress %.2f%%)\n", frameInformation.frameIndex+1, frameInformation.animationFrameCount, progress*100.0))
-	// stringBuilder.WriteString(fmt.Sprintf("Frame label:           %d\n", frameInformation.frameIndex))
 	stringBuilder.WriteString(fmt.Sprintf("Frame image file:      %s\n", frameInformation.imageFilename))
 	stringBuilder.WriteString("\n")
 	stringBuilder.WriteString(fmt.Sprintf("Render algorithm:      %s\n", frameInformation.renderAlgorithm))
@@ -212,13 +211,13 @@ func frameInformationPreRenderText(frameInformation RenderFrameInformation) stri
 	stringBuilder.WriteString(fmt.Sprintf("Max recursion depth:   %d\n", frameInformation.maxRecursionDepth))
 	stringBuilder.WriteString("\n")
 	if frameInformation.amountFacets > 0 {
-		stringBuilder.WriteString(fmt.Sprintf("Amount facets:         %d\n", frameInformation.amountFacets))
+		stringBuilder.WriteString(fmt.Sprintf("Amount facets:         %d\n", util.FormatInt(frameInformation.amountFacets)))
 	}
 	if frameInformation.amountSpheres > 0 {
-		stringBuilder.WriteString(fmt.Sprintf("Amount spheres:        %d\n", frameInformation.amountSpheres))
+		stringBuilder.WriteString(fmt.Sprintf("Amount spheres:        %d\n", util.FormatInt(frameInformation.amountSpheres)))
 	}
 	if frameInformation.amountDiscs > 0 {
-		stringBuilder.WriteString(fmt.Sprintf("Amount discs:          %d\n", frameInformation.amountDiscs))
+		stringBuilder.WriteString(fmt.Sprintf("Amount discs:          %d\n", util.FormatInt(frameInformation.amountDiscs)))
 	}
 
 	return stringBuilder.String()
