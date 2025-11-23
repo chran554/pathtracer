@@ -34,8 +34,8 @@ func main() {
 	frontSideFacets := obj.NewSquare(obj.XYPlane, true)
 	backSideFacets := obj.NewSquare(obj.XYPlane, true)
 
-	leafMaterial1 := scene.NewMaterial().C(color.NewColorRGBA(0.85, 0.8, 0.9, 1.0)).TP(floatimage.Load("test_alpha_transparency.png"))
-	leafMaterial2 := scene.NewMaterial().C(color.NewColorRGBA(0.8, 0.65, 0.9, 1.0)).TP(floatimage.Load("Leaves0120_35_S_02.png")).T(0.05, false, 1.0)
+	leafMaterial1 := scene.NewMaterial().C(color.NewColorRGBA(0.85, 0.8, 0.9, 1.0)).TP(floatimage.Load("textures/test/test_alpha_transparency.png"))
+	leafMaterial2 := scene.NewMaterial().C(color.NewColorRGBA(0.8, 0.65, 0.9, 1.0)).TP(floatimage.Load("textures/tree/Leaves0120_35_S_02.png")).T(0.05, false, 1.0)
 	//leafMaterial := scene.NewMaterial().TP("Leaves0120_35_S.png")
 
 	frontSide := &scene.FacetStructure{Facets: frontSideFacets, Material: leafMaterial1}

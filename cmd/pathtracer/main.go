@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/ungerik/go3d/float64/mat3"
+	"github.com/ungerik/go3d/float64/vec2"
 
 	progressbar2 "github.com/schollz/progressbar/v3"
 	"github.com/ungerik/go3d/float64/vec3"
@@ -37,14 +38,15 @@ var (
 )
 
 type IntersectionInformation struct {
-	intersection         bool
-	intersectionPoint    *vec3.T
-	shortestDistance     float64
-	material             *scene.Material
-	normalAtIntersection *vec3.T
-	intersectedFacet     *scene.Facet
-	intersectedSphere    *scene.Sphere
-	intersectedDisc      *scene.Disc
+	intersection                  bool
+	intersectionPoint             *vec3.T
+	shortestDistance              float64
+	material                      *scene.Material
+	normalAtIntersection          *vec3.T
+	intersectedFacet              *scene.Facet
+	intersectedFacetVertexWeights *vec3.T
+	intersectedSphere             *scene.Sphere
+	intersectedDisc               *scene.Disc
 }
 
 type RenderFrameInformation struct {
@@ -87,14 +89,15 @@ func NewRenderFrameInformation(scene *scene.SceneNode, animation *scene.Animatio
 
 func NewIntersectionInformation() *IntersectionInformation {
 	return &IntersectionInformation{
-		intersection:         false,           // Intersection occurred? True/false
-		intersectionPoint:    nil,             // Point of intersection
-		shortestDistance:     math.MaxFloat64, // At what distance from start point of fired ray
-		material:             nil,             // The material of the closest object that was intersected
-		normalAtIntersection: nil,             // The normal of the object that was intersected, at intersection point
-		intersectedFacet:     nil,
-		intersectedSphere:    nil,
-		intersectedDisc:      nil,
+		intersection:                  false,           // Intersection occurred? True/false
+		intersectionPoint:             nil,             // Point of intersection
+		shortestDistance:              math.MaxFloat64, // At what distance from start point of fired ray
+		material:                      nil,             // The material of the closest object that was intersected
+		normalAtIntersection:          nil,             // The normal of the object that was intersected, at intersection point
+		intersectedFacet:              nil,
+		intersectedFacetVertexWeights: nil,
+		intersectedSphere:             nil,
+		intersectedDisc:               nil,
 	}
 }
 
@@ -568,7 +571,12 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 
 		projectionColor := color.White // Default value if no projection is applied
 		if ii.material.Projection != nil {
-			projectionColor = ii.material.Projection.GetColor(ii.intersectionPoint)
+			if (ii.intersectedFacet != nil) && (ii.intersectedFacetVertexWeights != nil) && (ii.material.Projection.ProjectionType == scene.ProjectionTypeTextureMapping) {
+				textureCoordinate := interpolateTriangleTextureCoordinate(ii.intersectedFacet, ii.intersectedFacetVertexWeights)
+				projectionColor = ii.material.Projection.GetColorAt(textureCoordinate)
+			} else {
+				projectionColor = ii.material.Projection.GetColor(ii.intersectionPoint)
+			}
 		}
 
 		if camera.RenderType == scene.Raycasting || camera.RenderType == "" {
@@ -730,18 +738,18 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 }
 
 func processFacetStructureIntersection(ray *scene.Ray, facetStructure *scene.FacetStructure, ii *IntersectionInformation) {
-	tempIntersection, tmpIntersectionFacet, tempIntersectionPoint, tempIntersectionNormal, tempMaterial := scene.FacetStructureIntersection(ray, facetStructure, nil)
+	tmpIntersection, tmpIntersectionFacet, tmpIntersectionPoint, tmpIntersectionNormal, tmpIntersectionFacetVertexWeights, tmpMaterial := scene.FacetStructureIntersection(ray, facetStructure, nil)
 
-	if tempIntersection {
-		distance := vec3.Distance(ray.Origin, tempIntersectionPoint)
+	if tmpIntersection {
+		distance := vec3.Distance(ray.Origin, tmpIntersectionPoint)
 		if distance < ii.shortestDistance && distance > epsilonDistance {
-			ii.shortestDistance = distance               // Save the shortest intersection distance
-			ii.intersection = tempIntersection           // Set to true, there has been an intersection
-			ii.intersectionPoint = tempIntersectionPoint // Save the intersection point of the closest intersection
-			ii.material = tempMaterial
-			ii.normalAtIntersection = tempIntersectionNormal // Should be normalized from initialization
-
+			ii.shortestDistance = distance              // Save the shortest intersection distance
+			ii.intersection = tmpIntersection           // Set to true, there has been an intersection
+			ii.intersectionPoint = tmpIntersectionPoint // Save the intersection point of the closest intersection
+			ii.material = tmpMaterial
+			ii.normalAtIntersection = tmpIntersectionNormal // Should be normalized from initialization
 			ii.intersectedFacet = tmpIntersectionFacet
+			ii.intersectedFacetVertexWeights = tmpIntersectionFacetVertexWeights
 			ii.intersectedSphere = nil
 			ii.intersectedDisc = nil
 
@@ -843,4 +851,18 @@ func getRefractionVector(normal *vec3.T, incomingVector *vec3.T, leavingRefracti
 	outgoingVector = &io
 
 	return outgoingVector, false
+}
+
+// interpolateTriangleTextureCoordinate interpolates intersection point texture coordinate from facet (triangle) vertex texture coordinates
+func interpolateTriangleTextureCoordinate(facet *scene.Facet, vertexWeights *vec3.T) *vec2.T {
+	textureCoordinate := vec2.T{0, 0}
+	amountVertexTextureCoordinates := len(facet.TextureCoordinates)
+	if (amountVertexTextureCoordinates > 0) && (amountVertexTextureCoordinates <= len(vertexWeights)) {
+		for i := 0; i < amountVertexTextureCoordinates; i++ {
+			weightedTextureCoordinate := facet.TextureCoordinates[i].Scaled(vertexWeights[i])
+			textureCoordinate.Add(&weightedTextureCoordinate)
+		}
+	}
+
+	return &textureCoordinate
 }
