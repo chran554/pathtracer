@@ -14,12 +14,15 @@ func NewLamppost(scale float64, emission float64) *scene.FacetStructure {
 	lamppost := loadLamppost(scale)
 	lamppost.ClearMaterials()
 
-	lamppostMaterial := scene.NewMaterial().N("lamppost").C(color.NewColor(0.20, 0.10, 0.08)).M(0.2, 0.3)
+	lamppostMaterial := scene.NewMaterial().N("lamppost").
+		C(color.NewColor(0.20, 0.10, 0.08)).
+		M(0.2, 0.3)
 
-	lampMaterial0 := scene.NewMaterial().N("lamp_0").C(color.White).E(color.White, emission, true)
-	lampMaterial1 := scene.NewMaterial().N("lamp_1").C(color.White).E(color.White, emission, true)
-	lampMaterial2 := scene.NewMaterial().N("lamp_2").C(color.White).E(color.White, emission, true)
-	lampMaterial3 := scene.NewMaterial().N("lamp_3").C(color.White).E(color.White, emission, true)
+	warmWhiteColor := color.KelvinTemperatureColor2(5000)
+	lampMaterial0 := scene.NewMaterial().N("lamp_0").C(color.White).E(warmWhiteColor, emission, true)
+	lampMaterial1 := scene.NewMaterial().N("lamp_1").C(color.White).E(warmWhiteColor, emission, true)
+	lampMaterial2 := scene.NewMaterial().N("lamp_2").C(color.White).E(warmWhiteColor, emission, true)
+	lampMaterial3 := scene.NewMaterial().N("lamp_3").C(color.White).E(warmWhiteColor, emission, true)
 
 	lamppost.Material = lamppostMaterial
 

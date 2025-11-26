@@ -23,6 +23,7 @@ var maxRayDepth = 10
 var apertureSize = 0.2
 
 var keroseneLampEmission = 15.0
+var sootness = 1.0
 var skyDomeEmission = 0.9
 
 func main() {
@@ -38,7 +39,7 @@ func main() {
 		C(color.NewColorGrey(1.0)).
 		PP(floatimage.Load("textures/wallpaper/Blossom2_Image_Tile_Item_9471w.jpg"), &vec3.T{0, 0, 0}, vec3.T{60, 0, 0}, vec3.T{0, 0, 40})
 
-	keroseneLamp := obj.NewKeroseneLamp(40, keroseneLampEmission)
+	keroseneLamp := obj.NewKeroseneLamp(40, keroseneLampEmission, sootness)
 	keroseneLamp.RotateY(&vec3.Zero, util.DegToRad(-90))
 	keroseneLamp.Translate(&vec3.T{20, tableBoard.Bounds.Ymax, -20})
 

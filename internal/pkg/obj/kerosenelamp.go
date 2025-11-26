@@ -11,7 +11,7 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-func NewKeroseneLamp(scale float64, emission float64) *scene.FacetStructure {
+func NewKeroseneLamp(scale float64, emission float64, sootness float64) *scene.FacetStructure {
 	flameTexture := floatimage.Load("textures/misc/kerosenelamp/kerosenelamp_flame_wave.png")
 	sootSmudgeTexture := floatimage.Load("textures/misc/kerosenelamp/kerosenelamp_glass_wave_mod2.png")
 
@@ -41,7 +41,7 @@ func NewKeroseneLamp(scale float64, emission float64) *scene.FacetStructure {
 
 	smudgedGlassMaterial := scene.NewMaterial().N("smudged_glass").
 		C(color.White).
-		T(0.0, false, scene.RefractionIndex_Air).
+		T(1.0-sootness, false, scene.RefractionIndex_Air).
 		M(0.0, 1.0).
 		CP(sootSmudgeTexture, &vec3.T{glassCenterBounds[0], glass.Bounds.Ymin, glassCenterBounds[2]}, vec3.UnitX, (vec3.UnitY).Scaled(glass.Bounds.SizeY()), false)
 

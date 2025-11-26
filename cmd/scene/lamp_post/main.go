@@ -17,16 +17,19 @@ var animationName = "lamp_post"
 var environmentRadius = 500.0 * 1000.0
 var environmentEmissionFactor = 1.0
 
+var lampPostLightEmission = 3.0
+var keroseneLampEmission = 20.0
+
 var amountFrames = 1
 
-var imageWidth = 1024  // 1280
-var imageHeight = 1280 // 1024
-var magnification = 0.75
+var imageWidth = 1280
+var imageHeight = 1024
+var magnification = 1.0
 
-var amountSamples = 512 * 2 * 16 // * 2
-var maxRecursion = 8
+var amountSamples = 1024 * 8 * 4
+var maxRecursion = 6
 
-var apertureSize = 0.5
+var apertureSize = 2.0
 
 func main() {
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
@@ -53,26 +56,29 @@ func main() {
 		gopherBounds := gopher.Bounds
 
 		// kerosene lamp
-		keroseneLamp := obj.NewKeroseneLamp(40, 20)
+		keroseneLamp := obj.NewKeroseneLamp(40, keroseneLampEmission, 1.0)
 		keroseneLamp.RotateY(&vec3.Zero, -math.Pi*4.0/10.0)
 		keroseneLamp.Translate(&vec3.T{gopherBounds.Center()[0] + gopherBounds.SizeX()/2, 0, gopherBounds.Center()[2] - gopherBounds.SizeY()/2})
 
 		// Lamp post
-		lampPost := obj.NewLamppost(200.0, 2.0)
+		lampPost := obj.NewLamppost(200.0, lampPostLightEmission)
 
 		// Camera
-		cameraOrigin := gopher.Bounds.Center().Added(&vec3.T{0, 0, -50})
-		cameraFocusPoint := gopherBounds.Center().Added(&vec3.T{0, 0, -0.8 * (gopher.Bounds.SizeZ() / 2)})
-		camera := scene.NewCamera(&cameraOrigin, &cameraFocusPoint, amountSamples, magnification).
-			A(apertureSize, nil).D(maxRecursion).
-			V(1000)
+		cameraOrigin := gopher.Bounds.Center().Add(&vec3.T{0, 0, -250})
+		cameraFocusPoint := gopherBounds.Center().Add(&vec3.T{0, lampPost.Bounds.SizeY() * 0.4, 0})
+		camera := scene.NewCamera(cameraOrigin, cameraFocusPoint, amountSamples, magnification).
+			A(apertureSize, nil).D(maxRecursion)
 
 		scn := scene.NewSceneNode().
 			S(environmentSphere).
 			D(ground).
 			FS(gopher, lampPost, keroseneLamp)
 
-		frame := scene.NewFrame(animation.AnimationName, frameIndex, camera, scn)
+		fi := frameIndex
+		if amountFrames == 1 {
+			fi = -1
+		}
+		frame := scene.NewFrame(animation.AnimationName, fi, camera, scn)
 
 		animation.Frames = append(animation.Frames, frame)
 	}
