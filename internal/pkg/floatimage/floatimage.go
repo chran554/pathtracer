@@ -239,8 +239,10 @@ func WriteRawImage(filename string, image *FloatImage) {
 	writeBinaryInt32(&byteBuffer, int32(width))
 	writeBinaryInt32(&byteBuffer, int32(height))
 
-	if err := binary.Write(&byteBuffer, binary.BigEndian, image.pixels); err != nil {
-		fmt.Println(err)
+	for _, pixel := range image.pixels {
+		if err := binary.Write(&byteBuffer, binary.BigEndian, pixel); err != nil {
+			fmt.Printf("could not write raw image pixel data: %v\n", err)
+		}
 	}
 
 	byteData := byteBuffer.Bytes()

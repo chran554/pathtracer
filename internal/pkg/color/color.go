@@ -106,8 +106,15 @@ func (c *Color) Multiply(factor float32) *Color {
 }
 
 func (c *Color) Fade(destColor *Color, factor float32) *Color {
+	if factor == 0.0 {
+		return c.Copy()
+	} else if factor == 1.0 {
+		return destColor.Copy()
+	}
+
 	dstContribution := destColor.Copy().Multiply(factor)
 	srcContribution := c.Copy().Multiply(1.0 - factor)
+
 	return srcContribution.ChannelAdd(dstContribution)
 }
 
