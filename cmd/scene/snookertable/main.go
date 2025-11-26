@@ -7,8 +7,8 @@ import (
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
-	anm "pathtracer/internal/pkg/renderfile"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/renderfile"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -53,9 +53,9 @@ const (
 )
 
 func main() {
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
+	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
-	environmentSphere := scn.NewSphere(&vec3.T{0, 0, 0}, 3*100, scn.NewMaterial().
+	environmentSphere := scene.NewSphere(&vec3.T{0, 0, 0}, 3*100, scene.NewMaterial().
 		E(color.White, 6, true).
 		//C(color.NewColorGrey(0.2))).
 		SP(floatimage.Load("textures/equirectangular/las-vegas-hotell-lobby.png"), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
@@ -65,8 +65,8 @@ func main() {
 	lamp2.ScaleUniform(&vec3.Zero, 0.5)
 	lamp2.Scale(&vec3.Zero, &vec3.T{100, 2, 40})
 	lamp2.Translate(&vec3.T{0, 33*2.54 + 5, 0}) // Raise lamp 33 inches above table cloth
-	lamp2.Material = scn.NewMaterial().N("lamp").E(color.KelvinTemperatureColor2(5000), 15, true)
-	// lamp1 := scn.NewSphere(&vec3.T{0, 150, -75}, 50, scn.NewMaterial().E(color.White, 18, true)).N("lamp")
+	lamp2.Material = scene.NewMaterial().N("lamp").E(color.KelvinTemperatureColor2(5000), 15, true)
+	// lamp1 := scene.NewSphere(&vec3.T{0, 150, -75}, 50, scene.NewMaterial().E(color.White, 18, true)).N("lamp")
 
 	/*
 		https://billiards.colostate.edu/faq/table/sizes/
@@ -87,14 +87,14 @@ func main() {
 	tableBoard := obj.NewBox(obj.BoxCentered)
 	tableBoard.Translate(&vec3.T{0, -tableBoard.Bounds.Ymax, 0})
 	tableBoard.Scale(&vec3.Zero, &vec3.T{356.9, 5, 177.8})
-	tableBoard.Material = scn.NewMaterial().C(color.NewColorGrey(1.0)).M(0.05, 0.8).PP(floatimage.Load("textures/snooker/cloth02.png"), &vec3.T{0, 0, 0}, vec3.T{5, 0, 0}, vec3.T{0, 0, 5})
+	tableBoard.Material = scene.NewMaterial().C(color.NewColorGrey(1.0)).M(0.05, 0.8).PP(floatimage.Load("textures/snooker/cloth02.png"), &vec3.T{0, 0, 0}, vec3.T{5, 0, 0}, vec3.T{0, 0, 5})
 
 	var balls = [][]SnookerBall{
 		{SnookerBall01, SnookerBall02, SnookerBall03, SnookerBall04, SnookerBall05, SnookerBall06, SnookerBall07, SnookerBall08},
 		{SnookerBall09, SnookerBall10, SnookerBall11, SnookerBall12, SnookerBall13, SnookerBall14, SnookerBall15, SnookerBallWhite},
 	}
 
-	var snookerballs []*scn.Sphere
+	var snookerballs []*scene.Sphere
 	for j := 0; j < len(balls); j++ {
 		for i := 0; i < len(balls[j]); i++ {
 			snookerball := NewSnookerBall(balls[j][i])
@@ -118,11 +118,11 @@ func main() {
 		}
 	}
 
-	// steelSphere := scn.NewSphere(&vec3.T{0, 5.7, -10}, 5.7, scn.NewMaterial().M(0.9, 0.15))
+	// steelSphere := scene.NewSphere(&vec3.T{0, 5.7, -10}, 5.7, scene.NewMaterial().M(0.9, 0.15))
 
-	snookerBallsNode := scn.NewSceneNode().S(snookerballs...) // .S(steelSphere)
+	snookerBallsNode := scene.NewSceneNode().S(snookerballs...) // .S(steelSphere)
 
-	scene := scn.NewSceneNode().
+	scn := scene.NewSceneNode().
 		S(environmentSphere).
 		SN(snookerBallsNode).
 		FS(tableBoard, lamp2)
@@ -133,20 +133,20 @@ func main() {
 
 		cameraOrigin := vec3.T{0, 25, -40}
 		focusPoint := vec3.T{0, 2.5, -6}
-		camera := scn.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).A(apertureSize, nil)
+		camera := scene.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).A(apertureSize, nil)
 
-		frame := scn.NewFrame(animation.AnimationName, animationFrameIndex, camera, scene)
+		frame := scene.NewFrame(animation.AnimationName, animationFrameIndex, camera, scn)
 		animation.AddFrame(frame)
 	}
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := anm.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func NewSnookerBall(ball SnookerBall) *scn.Sphere {
+func NewSnookerBall(ball SnookerBall) *scene.Sphere {
 	// diameter := 5.25 // Snooker
 	// diameter := 5.4  // Bumper Pool
 	// diameter := 5.25 // Carom (Billiard) Balls
@@ -154,13 +154,13 @@ func NewSnookerBall(ball SnookerBall) *scn.Sphere {
 
 	radius := diameter / 2
 	textureFilename := floatimage.Load(fmt.Sprintf("textures/snooker/wpi/%s_wpi.png", ball))
-	ballMaterial := scn.NewMaterial().
+	ballMaterial := scene.NewMaterial().
 		N(fmt.Sprintf("snooker ball %s", ball)).
 		M(0.05, 0.1).
-		T(0.0, true, scn.RefractionIndex_AcrylicPlastic).
+		T(0.0, true, scene.RefractionIndex_AcrylicPlastic).
 		//SP(textureFilename, &vec3.T{0, radius, 0}, vec3.T{0, 0, diameter}, vec3.T{0, radius, 0})
 		//PP(textureFilename, &vec3.T{-radius, 0, 0}, vec3.T{diameter, 0, 0}, vec3.T{0, diameter, 0})
 		CP(textureFilename, &vec3.T{0, 0, 0}, vec3.UnitZ, vec3.T{0, diameter, 0}, false)
 
-	return scn.NewSphere(&vec3.T{0, radius, 0}, radius, ballMaterial)
+	return scene.NewSphere(&vec3.T{0, radius, 0}, radius, ballMaterial)
 }

@@ -1,13 +1,14 @@
 package obj
 
 import (
-	"github.com/ungerik/go3d/float64/vec3"
 	"path/filepath"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/scene"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
-func NewSolidUtahTeapot(scale float64, includeBody bool, includeLid bool) *scn.FacetStructure {
+func NewSolidUtahTeapot(scale float64, includeBody bool, includeLid bool) *scene.FacetStructure {
 	utahTeaPot := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "utah_teapot_solid.obj"))
 
 	if !includeBody {
@@ -22,17 +23,17 @@ func NewSolidUtahTeapot(scale float64, includeBody bool, includeLid bool) *scn.F
 
 	utahTeaPot.ScaleUniform(&vec3.Zero, scale/utahTeaPot.Bounds.Ymax)
 
-	// porcelainMaterial := scn.NewMaterial().
+	// porcelainMaterial := scene.NewMaterial().
 	//	N("Porcelain material").
 	//	C(color.NewColorGrey(0.85)).
 	//	M(0.1, 0.1).
-	//	T(0.0, true, scn.RefractionIndex_Porcelain)
+	//	T(0.0, true, scene.RefractionIndex_Porcelain)
 
-	// glassMaterial := scn.NewMaterial().
+	// glassMaterial := scene.NewMaterial().
 	// 	N("Glass material").
 	// 	C(color.NewColor(0.95, 0.95, 0.97), 1.0).
 	// 	M(0.2, 0.05).
-	// 	T(1.0, true, scn.RefractionIndex_Glass)
+	// 	T(1.0, true, scene.RefractionIndex_Glass)
 
 	// utahTeaPot.ClearMaterials()
 	// utahTeaPot.Material = porcelainMaterial
@@ -40,7 +41,7 @@ func NewSolidUtahTeapot(scale float64, includeBody bool, includeLid bool) *scn.F
 	return utahTeaPot
 }
 
-func NewTeacup(scale float64, includeCup bool, includeSaucer bool, includeSpoon bool) *scn.FacetStructure {
+func NewTeacup(scale float64, includeCup bool, includeSaucer bool, includeSpoon bool) *scene.FacetStructure {
 	teacup := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "teacup.obj"))
 
 	if !includeCup {

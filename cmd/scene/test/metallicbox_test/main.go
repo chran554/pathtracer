@@ -6,8 +6,8 @@ import (
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
-	anm "pathtracer/internal/pkg/renderfile"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/renderfile"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/mat3"
 
@@ -33,27 +33,27 @@ var imageHeight = 500
 var magnification = 1.5
 
 func main() {
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
+	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
 	scale := 100.0
 	cornellBox := NewCornellBox(100.0)
 
-	footballMaterial := scn.NewMaterial().C(color.White).M(0.1, 0.6).SP(floatimage.Load("textures/equirectangular/football.png"), &vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
-	football := scn.NewSphere(&vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0}, ballRadius, footballMaterial).N("football")
+	footballMaterial := scene.NewMaterial().C(color.White).M(0.1, 0.6).SP(floatimage.Load("textures/equirectangular/football.png"), &vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+	football := scene.NewSphere(&vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0}, ballRadius, footballMaterial).N("football")
 
-	sphere2Material := scn.NewMaterial().C(color.NewColorGrey(0.9))
-	sphere2 := scn.NewSphere(&vec3.T{-(ballRadius + (ballRadius / 2)), ballRadius, 0}, ballRadius, sphere2Material).N("Left sphere")
+	sphere2Material := scene.NewMaterial().C(color.NewColorGrey(0.9))
+	sphere2 := scene.NewSphere(&vec3.T{-(ballRadius + (ballRadius / 2)), ballRadius, 0}, ballRadius, sphere2Material).N("Left sphere")
 
-	mirrorSphereMaterial := scn.NewMaterial().C(color.NewColor(0.8, 0.85, 0.9)).M(0.95, 0.4)
-	mirrorSphere1 := scn.NewSphere(&vec3.T{0, ballRadius / 1.5, ballRadius * 1.5}, ballRadius/1.5, mirrorSphereMaterial).N("Mirror sphere on floor")
+	mirrorSphereMaterial := scene.NewMaterial().C(color.NewColor(0.8, 0.85, 0.9)).M(0.95, 0.4)
+	mirrorSphere1 := scene.NewSphere(&vec3.T{0, ballRadius / 1.5, ballRadius * 1.5}, ballRadius/1.5, mirrorSphereMaterial).N("Mirror sphere on floor")
 
 	mirrorSphereRadius := scale * 0.75
 
-	wallMirrorMaterial := scn.NewMaterial().C(color.NewColor(0.85, 0.85, 0.9)).M(0.95, 0.05)
-	mirrorSphere2 := scn.NewSphere(&vec3.T{-(scale*2 + mirrorSphereRadius*0.25), scale + mirrorSphereRadius, scale*2 + mirrorSphereRadius*0.25}, mirrorSphereRadius, wallMirrorMaterial).N("Mirror sphere on wall left")
-	mirrorSphere3 := scn.NewSphere(&vec3.T{scale*2 + mirrorSphereRadius*0.25, scale + mirrorSphereRadius, scale*2 + mirrorSphereRadius*0.25}, mirrorSphereRadius, wallMirrorMaterial).N("Mirror sphere on wall right")
+	wallMirrorMaterial := scene.NewMaterial().C(color.NewColor(0.85, 0.85, 0.9)).M(0.95, 0.05)
+	mirrorSphere2 := scene.NewSphere(&vec3.T{-(scale*2 + mirrorSphereRadius*0.25), scale + mirrorSphereRadius, scale*2 + mirrorSphereRadius*0.25}, mirrorSphereRadius, wallMirrorMaterial).N("Mirror sphere on wall left")
+	mirrorSphere3 := scene.NewSphere(&vec3.T{scale*2 + mirrorSphereRadius*0.25, scale + mirrorSphereRadius, scale*2 + mirrorSphereRadius*0.25}, mirrorSphereRadius, wallMirrorMaterial).N("Mirror sphere on wall right")
 
-	scene := scn.NewSceneNode().S(football, sphere2, mirrorSphere1, mirrorSphere2, mirrorSphere3).FS(cornellBox)
+	scn := scene.NewSceneNode().S(football, sphere2, mirrorSphere1, mirrorSphere2, mirrorSphere3).FS(cornellBox)
 
 	for animationFrameIndex := 0; animationFrameIndex < amountAnimationFrames; animationFrameIndex++ {
 		animationProgress := float64(animationFrameIndex) / float64(amountAnimationFrames)
@@ -74,32 +74,32 @@ func main() {
 		rotationYMatrix.AssignYRotation(sideAngle)
 		animatedCameraOrigin = rotationYMatrix.MulVec3(&animatedCameraOrigin)
 
-		camera := scn.NewCamera(&animatedCameraOrigin, &focusPoint, amountSamples, magnification).V(viewPlaneDistance)
+		camera := scene.NewCamera(&animatedCameraOrigin, &focusPoint, amountSamples, magnification).V(viewPlaneDistance)
 
-		frame := scn.NewFrame(animation.AnimationName, animationFrameIndex, camera, scene)
+		frame := scene.NewFrame(animation.AnimationName, animationFrameIndex, camera, scn)
 		animation.AddFrame(frame)
 	}
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := anm.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func NewCornellBox(scale float64) *scn.FacetStructure {
+func NewCornellBox(scale float64) *scene.FacetStructure {
 	cornellBox := wavefrontobj.ReadOrPanic(cornellBoxFilenamePath)
 	cornellBox.ScaleUniform(&vec3.Zero, scale)
 
-	cornellBox.ReplaceMaterial("Right", scn.NewMaterial().N("Right").C(color.NewColor(0.9, 0.1, 0.1)).M(0.1, 0.2))
-	cornellBox.ReplaceMaterial("Left", scn.NewMaterial().N("Left").C(color.NewColor(0.1, 0.1, 0.9)).M(0.1, 0.2))
-	cornellBox.ReplaceMaterial("Back", scn.NewMaterial().N("Back").C(color.NewColorGrey(0.7)).M(0.1, 0.2))
-	cornellBox.ReplaceMaterial("Ceiling", scn.NewMaterial().N("Ceiling").C(color.NewColorGrey(0.9)))
-	cornellBox.ReplaceMaterial("Floor", scn.NewMaterial().N("Floor").C(color.NewColorGrey(0.8)).M(0.3, 0.05))
+	cornellBox.ReplaceMaterial("Right", scene.NewMaterial().N("Right").C(color.NewColor(0.9, 0.1, 0.1)).M(0.1, 0.2))
+	cornellBox.ReplaceMaterial("Left", scene.NewMaterial().N("Left").C(color.NewColor(0.1, 0.1, 0.9)).M(0.1, 0.2))
+	cornellBox.ReplaceMaterial("Back", scene.NewMaterial().N("Back").C(color.NewColorGrey(0.7)).M(0.1, 0.2))
+	cornellBox.ReplaceMaterial("Ceiling", scene.NewMaterial().N("Ceiling").C(color.NewColorGrey(0.9)))
+	cornellBox.ReplaceMaterial("Floor", scene.NewMaterial().N("Floor").C(color.NewColorGrey(0.8)).M(0.3, 0.05))
 
 	cornellBox.GetFirstObjectBySubstructureName("Floor").Material.PP(floatimage.Load("textures/marble/white_marble.png"), &vec3.T{0, 0, 0}, vec3.T{200 * 2, 0, 0}, vec3.T{0, 0, 200 * 2})
 
-	lampMaterial := scn.NewMaterial().N("Lamp").E(color.White, 6, true)
+	lampMaterial := scene.NewMaterial().N("Lamp").E(color.White, 6, true)
 	cornellBox.ReplaceMaterial("Lamp_1", lampMaterial)
 	cornellBox.ReplaceMaterial("Lamp_2", lampMaterial)
 	cornellBox.ReplaceMaterial("Lamp_3", lampMaterial)

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj"
-	anm "pathtracer/internal/pkg/renderfile"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/renderfile"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -28,14 +28,14 @@ var imageHeight = 1200
 var magnification = 0.75
 
 func main() {
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
+	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
 	cornellBox := obj.NewCornellBox(&vec3.T{700, 500, 700}, false, lampEmissionFactor)
-	cornellBox.ReplaceMaterial("left", scn.NewMaterial().N("left").C(color.NewColor(0.85, 0.85, 0.85)))
-	cornellBox.ReplaceMaterial("right", scn.NewMaterial().N("right").C(color.NewColor(0.85, 0.85, 0.85)))
-	cornellBox.ReplaceMaterial("back", scn.NewMaterial().N("back").C(color.NewColor(0.70, 0.70, 0.70)))
+	cornellBox.ReplaceMaterial("left", scene.NewMaterial().N("left").C(color.NewColor(0.85, 0.85, 0.85)))
+	cornellBox.ReplaceMaterial("right", scene.NewMaterial().N("right").C(color.NewColor(0.85, 0.85, 0.85)))
+	cornellBox.ReplaceMaterial("back", scene.NewMaterial().N("back").C(color.NewColor(0.70, 0.70, 0.70)))
 
-	scene := scn.NewSceneNode().FS(cornellBox)
+	scn := scene.NewSceneNode().FS(cornellBox)
 
 	amountSpheres := 6
 	sphereSpread := ballRadius * 2.0 * (float64(amountSpheres) + 1) * 1.3
@@ -46,33 +46,33 @@ func main() {
 			yProgress := float64(yIndex) / float64(amountSpheres)
 			xProgress := float64(xIndex) / float64(amountSpheres)
 
-			refractiveIndex := scn.RefractionIndex_Air
+			refractiveIndex := scene.RefractionIndex_Air
 			glossiness := xProgress
 			roughness := yProgress
 
-			sphereMaterial := scn.NewMaterial().
+			sphereMaterial := scene.NewMaterial().
 				C(color.NewColor(0.80, 0.95, 0.80)).
 				M(glossiness, roughness).
 				T(0.0, true, refractiveIndex)
 
 			sphereOrigin := vec3.T{-sphereSpread/2.0 + float64(xIndex)*sphereCC, ballRadius, -sphereSpread/2.0 + float64(yIndex)*sphereCC}
-			sphere := scn.NewSphere(&sphereOrigin, ballRadius, sphereMaterial).N(fmt.Sprintf("Sphere (glossy:%02f rough:%02f)", xProgress, yProgress))
+			sphere := scene.NewSphere(&sphereOrigin, ballRadius, sphereMaterial).N(fmt.Sprintf("Sphere (glossy:%02f rough:%02f)", xProgress, yProgress))
 
-			scene.S(sphere)
+			scn.S(sphere)
 		}
 	}
 
 	cameraOrigin := vec3.T{0, 400, -400}
 	cameraOrigin.Scale(cameraDistanceFactor)
 	focusPoint := vec3.T{0, ballRadius, -ballRadius * 2}
-	camera := scn.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).V(viewPlaneDistance).A(lensRadius, nil).D(maxRecursionDepth)
+	camera := scene.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).V(viewPlaneDistance).A(lensRadius, nil).D(maxRecursionDepth)
 
-	frame := scn.NewFrame(animation.AnimationName, -1, camera, scene)
+	frame := scene.NewFrame(animation.AnimationName, -1, camera, scn)
 
 	animation.AddFrame(frame)
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := anm.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}

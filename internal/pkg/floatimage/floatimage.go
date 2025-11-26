@@ -27,7 +27,7 @@ var (
 
 type FloatImage struct {
 	name   string
-	pixels []color.Color
+	pixels []*color.Color
 	Width  int
 	Height int
 	_hash  string
@@ -36,10 +36,15 @@ type FloatImage struct {
 func NewFloatImage(name string, width, height int) *FloatImage {
 	floatImage := FloatImage{
 		name:   name,
-		pixels: make([]color.Color, width*height),
+		pixels: make([]*color.Color, width*height),
 		Width:  width,
 		Height: height,
 	}
+
+	for i, _ := range floatImage.pixels {
+		floatImage.pixels[i] = color.Black.Copy()
+	}
+
 	return &floatImage
 }
 
@@ -50,7 +55,7 @@ func (fi *FloatImage) String() string {
 func (fi *FloatImage) Copy() *FloatImage {
 	return &FloatImage{
 		name:   fi.name,
-		pixels: append([]color.Color{}, fi.pixels...),
+		pixels: append([]*color.Color{}, fi.pixels...),
 		Width:  fi.Width,
 		Height: fi.Height,
 	}
@@ -73,15 +78,23 @@ func (fi *FloatImage) ContainImageData() bool {
 	return (fi.Width > 0) && (fi.Height > 0) && (fi.pixels != nil)
 }
 
+// GetPixel returns the pixel at the given coordinates.
+// This is a reference to the pixel value, so changing the pixel value will change the image.
 func (fi *FloatImage) GetPixel(x, y int) *color.Color {
 	if (x >= fi.Width) || (y >= fi.Height) || (x < 0) || (y < 0) {
 		fmt.Printf("Illegal pixel access in image \"%s\" of size (%d x %d). There is no pixel at (%d x %d).\n", fi.name, fi.Width, fi.Height, x, y)
 	}
-	return &fi.pixels[y*fi.Width+x]
+	return fi.pixels[y*fi.Width+x]
 }
 
 func (fi *FloatImage) SetPixel(x, y int, color *color.Color) {
-	fi.pixels[y*fi.Width+x] = *color
+	fi.pixels[y*fi.Width+x].Set(color)
+}
+
+func (fi *FloatImage) Fill(color *color.Color) {
+	for i := range fi.pixels {
+		fi.pixels[i].Set(color)
+	}
 }
 
 func Load(filename string) *FloatImage {
@@ -116,14 +129,14 @@ func ConvertImageToFloatImage(imageName string, textureImage img.Image) *FloatIm
 			c1 := textureImage.At(x, y)
 			nrgbaColor := col.NRGBAModel.Convert(c1).(col.NRGBA)
 
-			c2 := color.Color{
-				R: float32(float64(nrgbaColor.R) * colorNormalizationFactor),
-				G: float32(float64(nrgbaColor.G) * colorNormalizationFactor),
-				B: float32(float64(nrgbaColor.B) * colorNormalizationFactor),
-				A: float32(float64(nrgbaColor.A) * colorNormalizationFactor),
-			}
+			c2 := color.NewColorRGBA(
+				float64(nrgbaColor.R)*colorNormalizationFactor,
+				float64(nrgbaColor.G)*colorNormalizationFactor,
+				float64(nrgbaColor.B)*colorNormalizationFactor,
+				float64(nrgbaColor.A)*colorNormalizationFactor,
+			)
 
-			image.SetPixel(x, y, &c2)
+			image.SetPixel(x, y, c2)
 		}
 	}
 
@@ -182,7 +195,7 @@ func WriteImage(filename string, floatImage *FloatImage) {
 	}
 
 	// falpha, _ := os.Create(filename + ".alpha.png")
-	// defer falpha.CloseRGB()
+	// defer falpha.Close()
 	// encoder.Encode(falpha, imageAlpha)
 }
 
@@ -226,8 +239,10 @@ func WriteRawImage(filename string, image *FloatImage) {
 	writeBinaryInt32(&byteBuffer, int32(width))
 	writeBinaryInt32(&byteBuffer, int32(height))
 
-	if err := binary.Write(&byteBuffer, binary.BigEndian, image.pixels); err != nil {
-		fmt.Println(err)
+	for _, pixel := range image.pixels {
+		if err := binary.Write(&byteBuffer, binary.BigEndian, pixel); err != nil {
+			fmt.Printf("could not write raw image pixel data: %v\n", err)
+		}
 	}
 
 	byteData := byteBuffer.Bytes()

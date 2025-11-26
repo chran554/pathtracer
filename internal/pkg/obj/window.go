@@ -1,16 +1,17 @@
 package obj
 
 import (
-	"github.com/ungerik/go3d/float64/vec3"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/scene"
 	"pathtracer/internal/pkg/util"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 // NewWindow creates a window with proportions 2/3:1 (width:height) that is scaled with parameter.
-func NewWindow(scale float64) *scn.FacetStructure {
+func NewWindow(scale float64) *scene.FacetStructure {
 	window := loadWindow()
 
 	window.CenterOn(&vec3.Zero)
@@ -19,16 +20,16 @@ func NewWindow(scale float64) *scn.FacetStructure {
 
 	window.ScaleUniform(&vec3.Zero, scale/window.Bounds.Ymax)
 
-	glassMaterial := scn.NewMaterial().N("glass").
+	glassMaterial := scene.NewMaterial().N("glass").
 		C(color.NewColor(0.980, 0.990, 0.995)).
-		T(0.99, false, scn.RefractionIndex_Glass).
+		T(0.99, false, scene.RefractionIndex_Glass).
 		M(0.01, 0.05)
 
-	paintMaterial := scn.NewMaterial().N("paint").
+	paintMaterial := scene.NewMaterial().N("paint").
 		C(color.NewColorGrey(0.9)).
 		M(0.1, 0.6)
 
-	brassMaterial := scn.NewMaterial().N("brass").
+	brassMaterial := scene.NewMaterial().N("brass").
 		C(color.NewColor(0.8, 0.7, 0.15)).
 		M(0.8, 0.4)
 
@@ -42,6 +43,6 @@ func NewWindow(scale float64) *scn.FacetStructure {
 	return window
 }
 
-func loadWindow() *scn.FacetStructure {
+func loadWindow() *scene.FacetStructure {
 	return wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "window.obj"))
 }

@@ -282,6 +282,33 @@ func (fs *FacetStructure) Scale(scaleOrigin *vec3.T, scale *vec3.T) {
 	fs.UpdateBounds()
 }
 
+func (fs *FacetStructure) FlipX() {
+	scaledPoints := make(map[*vec3.T]bool)
+	scaledNormals := make(map[*vec3.T]bool)
+	scaledImageProjections := make(map[*ImageProjection]bool)
+	fs.scale(&vec3.Zero, &vec3.T{-1, 1, 1}, scaledPoints, scaledNormals, scaledImageProjections)
+
+	fs.UpdateBounds()
+}
+
+func (fs *FacetStructure) FlipY() {
+	scaledPoints := make(map[*vec3.T]bool)
+	scaledNormals := make(map[*vec3.T]bool)
+	scaledImageProjections := make(map[*ImageProjection]bool)
+	fs.scale(&vec3.Zero, &vec3.T{1, -1, 1}, scaledPoints, scaledNormals, scaledImageProjections)
+
+	fs.UpdateBounds()
+}
+
+func (fs *FacetStructure) FlipZ() {
+	scaledPoints := make(map[*vec3.T]bool)
+	scaledNormals := make(map[*vec3.T]bool)
+	scaledImageProjections := make(map[*ImageProjection]bool)
+	fs.scale(&vec3.Zero, &vec3.T{1, 1, -1}, scaledPoints, scaledNormals, scaledImageProjections)
+
+	fs.UpdateBounds()
+}
+
 func (fs *FacetStructure) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool, scaledNormals map[*vec3.T]bool, scaledImageProjections map[*ImageProjection]bool) {
 	if fs.Material != nil && fs.Material.Projection != nil && !scaledImageProjections[fs.Material.Projection] {
 		projection := fs.Material.Projection

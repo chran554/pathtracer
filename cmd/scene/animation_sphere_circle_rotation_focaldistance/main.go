@@ -5,8 +5,8 @@ import (
 	"math"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/floatimage"
-	anm "pathtracer/internal/pkg/renderfile"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/renderfile"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -25,13 +25,13 @@ var magnification = 1.0
 var cameraOrigin = vec3.T{0, 200, -200}
 
 func main() {
-	animation := scn.NewAnimation("sphere_circle_rotation_focaldistance_hires", 800, 600, magnification, false, false)
+	animation := scene.NewAnimation("sphere_circle_rotation_focaldistance_hires", 800, 600, magnification, false, false)
 
 	groundOrigin := &vec3.T{0, 0, 0}
-	groundMaterial := scn.NewMaterial().
+	groundMaterial := scene.NewMaterial().
 		C(color.NewColor(0.5, 0.5, 0.5)).
 		PP(floatimage.Load("textures/white_marble.png"), groundOrigin, vec3.UnitX.Scaled(50), vec3.UnitZ.Scaled(50))
-	ground := scn.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, 600, groundMaterial)
+	ground := scene.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, 600, groundMaterial)
 
 	nominalFocusDistance := cameraOrigin.Length()
 
@@ -48,7 +48,7 @@ func main() {
 		viewPlaneDistance := nominalViewPlaneDistance
 		//viewPlaneDistance := nominalViewPlaneDistance + (nominalViewPlaneDistance/2.0)*float64(math.Sin(math.Pi*2.0*animationProgress))
 
-		scene := scn.NewSceneNode().D(ground)
+		scn := scene.NewSceneNode().D(ground)
 
 		for ballIndex := 0; ballIndex < amountBalls; ballIndex++ {
 			s := 2.0 * math.Pi
@@ -57,23 +57,23 @@ func main() {
 			x := circleRadius * math.Cos(angle+deltaFrameAngle)
 			z := circleRadius * math.Sin(angle+deltaFrameAngle)
 
-			sphere := scn.NewSphere(&vec3.T{x, ballRadius, z}, ballRadius, scn.NewMaterial())
+			sphere := scene.NewSphere(&vec3.T{x, ballRadius, z}, ballRadius, scene.NewMaterial())
 
-			scene.S(sphere)
+			scn.S(sphere)
 		}
 
-		camera := scn.NewCamera(&cameraOrigin, &vec3.T{0, ballRadius, 0}, amountSamples, magnification).
+		camera := scene.NewCamera(&cameraOrigin, &vec3.T{0, ballRadius, 0}, amountSamples, magnification).
 			A(lensRadius, nil).
 			V(viewPlaneDistance).
 			F(focusDistance)
 
-		frame := scn.NewFrame(animation.AnimationName, frameIndex, camera, scene)
+		frame := scene.NewFrame(animation.AnimationName, frameIndex, camera, scn)
 
 		animation.Frames = append(animation.Frames, frame)
 	}
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := anm.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}

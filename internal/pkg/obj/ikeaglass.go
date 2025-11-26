@@ -1,14 +1,15 @@
 package obj
 
 import (
-	"github.com/ungerik/go3d/float64/vec3"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/scene"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
-func NewGlassIkeaPokal(scale float64) *scn.FacetStructure {
+func NewGlassIkeaPokal(scale float64) *scene.FacetStructure {
 	glass := loadIkeaGlassPokal()
 
 	glass.CenterOn(&vec3.Zero)
@@ -16,16 +17,16 @@ func NewGlassIkeaPokal(scale float64) *scn.FacetStructure {
 
 	glass.ScaleUniform(&vec3.Zero, scale/glass.Bounds.Ymax)
 
-	glass.Material = scn.NewMaterial().
+	glass.Material = scene.NewMaterial().
 		N("glass").
 		C(color.NewColor(0.95, 0.95, 0.97)).
 		M(0.1, 0.05).
-		T(0.98, true, scn.RefractionIndex_Glass)
+		T(0.98, true, scene.RefractionIndex_Glass)
 
 	return glass
 }
 
-func NewGlassIkeaSkoja(scale float64, includeLiquid bool) *scn.FacetStructure {
+func NewGlassIkeaSkoja(scale float64, includeLiquid bool) *scene.FacetStructure {
 	glass := loadIkeaGlassSkoja()
 
 	glass.CenterOn(&vec3.Zero)
@@ -36,17 +37,17 @@ func NewGlassIkeaSkoja(scale float64, includeLiquid bool) *scn.FacetStructure {
 	liquidObject := glass.GetFirstObjectBySubstructureName("liquid")
 	glassObject := glass.GetFirstObjectBySubstructureName("glass")
 
-	glassMaterial := scn.NewMaterial().
+	glassMaterial := scene.NewMaterial().
 		N("glass").
 		C(color.NewColor(0.95, 0.95, 0.97)).
 		M(0.1, 0.05).
-		T(0.98, true, scn.RefractionIndex_Glass)
+		T(0.98, true, scene.RefractionIndex_Glass)
 
-	liquidMaterial := scn.NewMaterial().
+	liquidMaterial := scene.NewMaterial().
 		N("red juice").
 		C(color.NewColor(0.97, 0.45, 0.47)).
 		M(0.2, 0.0).
-		T(0.98, true, scn.RefractionIndex_SugarSolution60)
+		T(0.98, true, scene.RefractionIndex_SugarSolution60)
 
 	glassObject.Material = glassMaterial
 	liquidObject.Material = liquidMaterial
@@ -58,12 +59,12 @@ func NewGlassIkeaSkoja(scale float64, includeLiquid bool) *scn.FacetStructure {
 	return glass
 }
 
-func loadIkeaGlassPokal() *scn.FacetStructure {
+func loadIkeaGlassPokal() *scene.FacetStructure {
 	glass := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "glass_ikea_pokal.obj"))
 	return glass
 }
 
-func loadIkeaGlassSkoja() *scn.FacetStructure {
+func loadIkeaGlassSkoja() *scene.FacetStructure {
 	glass := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "glass_ikea_skoja.obj"))
 	return glass
 }

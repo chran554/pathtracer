@@ -26,9 +26,9 @@ type Material struct {
 func NewMaterial() *Material {
 	return &Material{
 		Name:            "",
-		Color:           &color.White,
+		Color:           color.White,
 		Diffuse:         1.0,
-		Emission:        &color.Black,
+		Emission:        nil,
 		Glossiness:      0.0,
 		Roughness:       1.0,
 		Projection:      nil,
@@ -39,28 +39,32 @@ func NewMaterial() *Material {
 	}
 }
 
-// Copy copies the material. Any reference to other objects (color or projection)
+// Copy copies the material.
+// Any reference to other property objects (colors or projection)
 // in the old material will be the same reference in the new material.
 func (m *Material) Copy() *Material {
 	newMaterial := *m
 	return &newMaterial
 }
 
-// N is name properties
+// N sets the material name
 func (m *Material) N(name string) *Material {
 	m.Name = name
 	return m
 }
 
 // C is color properties
-func (m *Material) C(color color.Color) *Material {
-	m.Color = &color
+func (m *Material) C(c *color.Color) *Material {
+	m.Color = c
 	return m
 }
 
 // E is emission properties
-func (m *Material) E(emission color.Color, scale float64, rayTerminator bool) *Material {
-	m.Emission = (&emission).Multiply(float32(scale))
+func (m *Material) E(emission *color.Color, scale float64, rayTerminator bool) *Material {
+	m.Emission = emission
+	if scale != 1.0 && emission != nil {
+		m.Emission = emission.Copy().Multiply(float32(scale))
+	}
 	m.RayTerminator = rayTerminator
 	return m
 }
@@ -88,28 +92,28 @@ func (m *Material) P(projection *ImageProjection) *Material {
 	return m
 }
 
-// PP is parallel projection properties
+// PP is a parallel projection properties
 func (m *Material) PP(texture *floatimage.FloatImage, origin *vec3.T, u vec3.T, v vec3.T) *Material {
 	parallelImageProjection := NewParallelImageProjection(texture, origin, u, v)
 	m.Projection = &parallelImageProjection
 	return m
 }
 
-// SP is spherical projection (of equirectangular images) properties
+// SP is a spherical projection (of equirectangular images) properties
 func (m *Material) SP(texture *floatimage.FloatImage, origin *vec3.T, u vec3.T, v vec3.T) *Material {
 	sphericalImageProjection := NewSphericalImageProjection(texture, origin, u, v)
 	m.Projection = &sphericalImageProjection
 	return m
 }
 
-// TP is texture projection
+// TP is a texture projection
 func (m *Material) TP(texture *floatimage.FloatImage) *Material {
 	textureMappingImageProjection := NewTextureMappingImageProjection(texture)
 	m.Projection = &textureMappingImageProjection
 	return m
 }
 
-// CP is cylindrical projection properties
+// CP is a cylindrical projection properties
 func (m *Material) CP(texture *floatimage.FloatImage, origin *vec3.T, u vec3.T, v vec3.T, repeat bool) *Material {
 	sphericalImageProjection := NewCylindricalImageProjection(texture, origin, u, v)
 	sphericalImageProjection.RepeatV = repeat

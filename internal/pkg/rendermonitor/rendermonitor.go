@@ -83,13 +83,13 @@ func (renderMonitor *RenderMonitor) Initialize(imageGroup string, imageName stri
 	renderMonitor.width = width
 	renderMonitor.height = height
 
-	renderMonitor.SetPixel(-1, -1, -1, -1, &color.Black, -1, 0)
+	renderMonitor.SetPixel(-1, -1, -1, -1, color.Black, -1, 0)
 
 	time.Sleep(100 * time.Millisecond)
 }
 
-func getMessage(imageGroup string, imageName string, imageWidth int, imageHeight int, x int, y int, pixelWidth int, pixelHeight int, c *color.Color, amountSamples int, progress float64) []byte {
-	c = c.Copy()
+func getMessage(imageGroup string, imageName string, imageWidth int, imageHeight int, x int, y int, pixelWidth int, pixelHeight int, color *color.Color, amountSamples int, progress float64) []byte {
+	c := color.Copy()
 	c.Multiply(1.0 / float32(amountSamples))
 	c = c.GammaEncode(floatimage.GammaDefault)
 	c.Multiply(255.0)

@@ -5,13 +5,20 @@ import (
 	"math"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/floatimage"
-	anm "pathtracer/internal/pkg/renderfile"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/renderfile"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
 var animationName = "sierpinski_pyramids"
+
+// var environmentEnvironMap = "textures/equirectangular/open_grassfield_sunny_day.jpg"
+// var environmentEnvironMap = "textures/equirectangular/5792766093_8153225334_o.jpg"
+//var environmentEnvironMap = "textures/equirectangular/white room 02 612x612.jpg"
+
+// var environmentEnvironMap = "textures/equirectangular/nightsky.png"
+var environmentEnvironMap = "textures/equirectangular/sunset horizon 2800x1400.jpg"
 
 var skyDomeRadius = 200.0 * 100.0 // radius
 var skyDomeEmissionFactor = 1.0
@@ -29,7 +36,7 @@ var maxPyramidRecursionDepth = 8
 
 var apertureSize = 3.3
 
-var pyramidMaterial = scn.NewMaterial().C(color.NewColorGrey(0.75)).M(0.60, 0.08)
+var pyramidMaterial = scene.NewMaterial().C(color.NewColorGrey(0.75)).M(0.60, 0.08)
 
 // Pyramid is represented by four 3D points.
 //
@@ -82,14 +89,7 @@ func (p *Pyramid) SierpinskiSubPyramids() []*Pyramid {
 }
 
 func main() {
-	// var environmentEnvironMap = "textures/equirectangular/open_grassfield_sunny_day.jpg"
-	// var environmentEnvironMap = "textures/equirectangular/5792766093_8153225334_o.jpg"
-	//var environmentEnvironMap = "textures/equirectangular/white room 02 612x612.jpg"
-
-	// var environmentEnvironMap = "textures/equirectangular/nightsky.png"
-	environmentEnvironMap := floatimage.Load("textures/equirectangular/sunset horizon 2800x1400.jpg")
-
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
+	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
 	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
@@ -110,32 +110,32 @@ func main() {
 
 		// Sky dome
 		skyDomeOrigin := vec3.T{0, 0, 0}
-		skyDomeMaterial := scn.NewMaterial().
+		skyDomeMaterial := scene.NewMaterial().
 			E(color.White, skyDomeEmissionFactor, true).
-			SP(environmentEnvironMap, &skyDomeOrigin, vec3.T{1, 0, -1}, vec3.T{0, 1, 0})
-		skyDome := scn.NewSphere(&skyDomeOrigin, skyDomeRadius, skyDomeMaterial).N("Environment mapping")
+			SP(floatimage.Load(environmentEnvironMap), &skyDomeOrigin, vec3.T{1, 0, -1}, vec3.T{0, 1, 0})
+		skyDome := scene.NewSphere(&skyDomeOrigin, skyDomeRadius, skyDomeMaterial).N("Environment mapping")
 
 		cameraOrigin := pyramidsBounds.Center().Add(&vec3.T{0, 150, -700})
 		cameraFocusPoint := pyramidsBounds.Center().Add(&vec3.T{0, 0, -1.0 * (pyramidsBounds.SizeZ() / 2.0) * 0.8})
-		camera := scn.NewCamera(cameraOrigin, cameraFocusPoint, amountSamples, magnification).A(apertureSize, nil).V(700)
+		camera := scene.NewCamera(cameraOrigin, cameraFocusPoint, amountSamples, magnification).A(apertureSize, nil).V(700)
 
-		scene := scn.NewSceneNode().S(skyDome).SN(sierpinskiPyramid)
+		scn := scene.NewSceneNode().S(skyDome).SN(sierpinskiPyramid)
 
-		scene.RotateY(pyramidsBounds.Center(), animationAngle)
+		scn.RotateY(pyramidsBounds.Center(), animationAngle)
 
-		frame := scn.NewFrame(animationName, frameIndex, camera, scene)
+		frame := scene.NewFrame(animationName, frameIndex, camera, scn)
 
 		animation.Frames = append(animation.Frames, frame)
 	}
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := anm.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func getSierpinskiPyramid() *scn.SceneNode {
+func getSierpinskiPyramid() *scene.SceneNode {
 	a360 := 2.0 * math.Pi
 	a000 := 0.0
 	a120 := a360 * 1.0 / 3.0
@@ -160,29 +160,29 @@ func getSierpinskiPyramid() *scn.SceneNode {
 }
 
 // getRecursivePyramids gets a recursive sierpinski (3-sided) pyramid from an initial pyramid.
-func getRecursivePyramids(pyramid *Pyramid, recursionDepth int, maxRecursionDepth int) *scn.SceneNode {
-	scene := scn.SceneNode{}
+func getRecursivePyramids(pyramid *Pyramid, recursionDepth int, maxRecursionDepth int) *scene.SceneNode {
+	scn := scene.SceneNode{}
 
 	if recursionDepth == maxRecursionDepth {
-		scene.FacetStructures = append(scene.FacetStructures, getPyramidFacetStructure(pyramid))
+		scn.FacetStructures = append(scn.FacetStructures, getPyramidFacetStructure(pyramid))
 	} else {
 		sierpinskiSubPyramids := pyramid.SierpinskiSubPyramids()
 		for _, subPyramid := range sierpinskiSubPyramids {
 			subPyramidsNode := getRecursivePyramids(subPyramid, recursionDepth+1, maxRecursionDepth)
-			scene.ChildNodes = append(scene.ChildNodes, subPyramidsNode)
+			scn.ChildNodes = append(scn.ChildNodes, subPyramidsNode)
 		}
 	}
 
-	return &scene
+	return &scn
 }
 
-func getPyramidFacetStructure(pyramid *Pyramid) *scn.FacetStructure {
-	pyramidFacets := &scn.FacetStructure{Name: "pyramid", Material: pyramidMaterial}
+func getPyramidFacetStructure(pyramid *Pyramid) *scene.FacetStructure {
+	pyramidFacets := &scene.FacetStructure{Name: "pyramid", Material: pyramidMaterial}
 
-	pyramidFacets.Facets = append(pyramidFacets.Facets, &scn.Facet{Vertices: []*vec3.T{pyramid.p1, pyramid.p2, pyramid.p3}})
-	pyramidFacets.Facets = append(pyramidFacets.Facets, &scn.Facet{Vertices: []*vec3.T{pyramid.p1, pyramid.p3, pyramid.p4}})
-	pyramidFacets.Facets = append(pyramidFacets.Facets, &scn.Facet{Vertices: []*vec3.T{pyramid.p1, pyramid.p4, pyramid.p2}})
-	pyramidFacets.Facets = append(pyramidFacets.Facets, &scn.Facet{Vertices: []*vec3.T{pyramid.p2, pyramid.p3, pyramid.p4}}) // Bottom facet
+	pyramidFacets.Facets = append(pyramidFacets.Facets, &scene.Facet{Vertices: []*vec3.T{pyramid.p1, pyramid.p2, pyramid.p3}})
+	pyramidFacets.Facets = append(pyramidFacets.Facets, &scene.Facet{Vertices: []*vec3.T{pyramid.p1, pyramid.p3, pyramid.p4}})
+	pyramidFacets.Facets = append(pyramidFacets.Facets, &scene.Facet{Vertices: []*vec3.T{pyramid.p1, pyramid.p4, pyramid.p2}})
+	pyramidFacets.Facets = append(pyramidFacets.Facets, &scene.Facet{Vertices: []*vec3.T{pyramid.p2, pyramid.p3, pyramid.p4}}) // Bottom facet
 
 	pyramidFacets.UpdateNormals()
 	pyramidFacets.UpdateBounds()

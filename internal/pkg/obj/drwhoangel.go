@@ -1,15 +1,16 @@
 package obj
 
 import (
-	"github.com/ungerik/go3d/float64/vec3"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/scene"
 	"pathtracer/internal/pkg/util"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
-func NewDrWhoAngel(scale float64, includeAngel bool, includePillar bool) *scn.FacetStructure {
+func NewDrWhoAngel(scale float64, includeAngel bool, includePillar bool) *scene.FacetStructure {
 	angel := loadDrWhoAngel()
 
 	if !includeAngel {
@@ -26,11 +27,11 @@ func NewDrWhoAngel(scale float64, includeAngel bool, includePillar bool) *scn.Fa
 
 	angel.ScaleUniform(&vec3.Zero, scale/angel.Bounds.Ymax)
 
-	statueMaterial := scn.NewMaterial().N("angel").
+	statueMaterial := scene.NewMaterial().N("angel").
 		C(color.NewColor(0.9, 0.9, 0.9)).
 		M(0.3, 0.6)
 
-	pillarMaterial := scn.NewMaterial().N("pillar").
+	pillarMaterial := scene.NewMaterial().N("pillar").
 		C(color.NewColor(0.8, 0.8, 0.8)).
 		M(0.1, 0.8)
 
@@ -40,7 +41,7 @@ func NewDrWhoAngel(scale float64, includeAngel bool, includePillar bool) *scn.Fa
 	return angel
 }
 
-func loadDrWhoAngel() *scn.FacetStructure {
+func loadDrWhoAngel() *scene.FacetStructure {
 	angel := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "drwhoangel.obj"))
 	return angel
 }

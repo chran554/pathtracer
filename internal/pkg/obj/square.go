@@ -1,9 +1,10 @@
 package obj
 
 import (
+	"pathtracer/internal/pkg/scene"
+
 	"github.com/ungerik/go3d/float64/vec2"
 	"github.com/ungerik/go3d/float64/vec3"
-	scn "pathtracer/internal/pkg/scene"
 )
 
 type SquareType int
@@ -14,7 +15,7 @@ const (
 	XZPlane                   // Square lower left corner is located at (0,0,0) on axes. Each side is 1 unit in length from [0, 1]. Normal anti-parallel to y-axis (parallel to inverted direction of y-axis).
 )
 
-func NewSquare(squareType SquareType, addTextureCoordinates bool) []*scn.Facet {
+func NewSquare(squareType SquareType, addTextureCoordinates bool) []*scene.Facet {
 	p1 := vec3.T{1, 1, 0} // Top right close            3----------2
 	// p2 := vec3.T{1, 1, 1} // Top right away         /          /|         y
 	p3 := vec3.T{0, 1, 1} // Top left away            /          / |         ^
@@ -40,7 +41,7 @@ func NewSquare(squareType SquareType, addTextureCoordinates bool) []*scn.Facet {
 // The result is two triangles side by side (p1,p2,p4) and (p4,p2,p3).
 // Normal direction is calculated as pointing towards observer if the points are listed in counter-clockwise order.
 // No test nor calculation is made that the points are exactly in the same plane.
-func getSquareFacets(p1, p2, p3, p4 *vec3.T, addTextureCoordinates bool) []*scn.Facet {
+func getSquareFacets(p1, p2, p3, p4 *vec3.T, addTextureCoordinates bool) []*scene.Facet {
 	//       p1
 	//       *
 	//      / \
@@ -63,13 +64,13 @@ func getSquareFacets(p1, p2, p3, p4 *vec3.T, addTextureCoordinates bool) []*scn.
 	normal2 := vec3.Cross(&n2v1, &n2v2)
 	normal2.Normalize()
 
-	facet1 := scn.Facet{Vertices: []*vec3.T{p1, p2, p4}, Normal: &normal1}
-	facet2 := scn.Facet{Vertices: []*vec3.T{p4, p2, p3}, Normal: &normal2}
+	facet1 := scene.Facet{Vertices: []*vec3.T{p1, p2, p4}, Normal: &normal1}
+	facet2 := scene.Facet{Vertices: []*vec3.T{p4, p2, p3}, Normal: &normal2}
 
 	if addTextureCoordinates {
 		facet1.TextureCoordinates = []*vec2.T{{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}}
 		facet2.TextureCoordinates = []*vec2.T{{0.0, 1.0}, {1.0, 0.0}, {1.0, 1.0}}
 	}
 
-	return []*scn.Facet{&facet1, &facet2}
+	return []*scene.Facet{&facet1, &facet2}
 }

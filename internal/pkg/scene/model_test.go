@@ -2,10 +2,11 @@ package scene
 
 import (
 	"fmt"
-	"github.com/ungerik/go3d/float64/mat3"
-	"github.com/ungerik/go3d/float64/vec3"
 	"math"
 	"testing"
+
+	"github.com/ungerik/go3d/float64/mat3"
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 func Test_matrixRotationY(t *testing.T) {

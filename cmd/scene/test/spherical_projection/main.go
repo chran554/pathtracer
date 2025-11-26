@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"pathtracer/internal/pkg/floatimage"
-	anm "pathtracer/internal/pkg/renderfile"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/renderfile"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -21,7 +21,7 @@ var viewPlaneDistance = 1600.0
 var magnification = 1.5
 
 func main() {
-	animation := scn.NewAnimation("spherical_projection", 1200, 600, magnification, false, false)
+	animation := scene.NewAnimation("spherical_projection", 1200, 600, magnification, false, false)
 
 	sphere2Origin := vec3.T{0, 0, 0}
 	sphere1Origin := sphere2Origin.Added(&vec3.T{-ballRadius * 2.2, 0, 0})
@@ -34,22 +34,22 @@ func main() {
 	projectionU := vec3.T{0, 0, -ballRadius}
 	projectionV := vec3.T{0, ballRadius, 0}
 
-	projection1 := scn.NewSphericalImageProjection(floatimage.Load("textures/planets/earth_daymap.jpg"), &projection1Origin, projectionU.Inverted(), projectionV)
-	projection2 := scn.NewSphericalImageProjection(floatimage.Load("textures/checkered 360x180 with lines.png"), &projection2Origin, projectionU, projectionV)
-	projection3 := scn.NewSphericalImageProjection(floatimage.Load("textures/equirectangular/2560px-Plate_Carrée_with_Tissot's_Indicatrices_of_Distortion.svg.png"), &projection3Origin, projectionU.Inverted(), projectionV)
+	projection1 := scene.NewSphericalImageProjection(floatimage.Load("textures/planets/earth_daymap.jpg"), &projection1Origin, projectionU.Inverted(), projectionV)
+	projection2 := scene.NewSphericalImageProjection(floatimage.Load("textures/checkered 360x180 with lines.png"), &projection2Origin, projectionU, projectionV)
+	projection3 := scene.NewSphericalImageProjection(floatimage.Load("textures/equirectangular/2560px-Plate_Carrée_with_Tissot's_Indicatrices_of_Distortion.svg.png"), &projection3Origin, projectionU.Inverted(), projectionV)
 
-	sphere1 := scn.NewSphere(&sphere1Origin, ballRadius, scn.NewMaterial().P(&projection1)).N("Textured sphere - Earth")
-	sphere2 := scn.NewSphere(&sphere2Origin, ballRadius, scn.NewMaterial().P(&projection2)).N("Textured sphere - checkered")
-	sphere3 := scn.NewSphere(&sphere3Origin, ballRadius, scn.NewMaterial().P(&projection3)).N("Textured sphere - Tissot's_Indicatrices_of_Distortion")
+	sphere1 := scene.NewSphere(&sphere1Origin, ballRadius, scene.NewMaterial().P(&projection1)).N("Textured sphere - Earth")
+	sphere2 := scene.NewSphere(&sphere2Origin, ballRadius, scene.NewMaterial().P(&projection2)).N("Textured sphere - checkered")
+	sphere3 := scene.NewSphere(&sphere3Origin, ballRadius, scene.NewMaterial().P(&projection3)).N("Textured sphere - Tissot's_Indicatrices_of_Distortion")
 
-	scene := scn.NewSceneNode().S(sphere1, sphere2, sphere3)
+	scn := scene.NewSceneNode().S(sphere1, sphere2, sphere3)
 
-	camera := scn.NewCamera(&cameraOrigin, &vec3.T{0, 0, 0}, amountSamples, magnification).V(viewPlaneDistance).A(lensRadius, nil)
-	frame := scn.NewFrame(animation.AnimationName, -1, camera, scene)
+	camera := scene.NewCamera(&cameraOrigin, &vec3.T{0, 0, 0}, amountSamples, magnification).V(viewPlaneDistance).A(lensRadius, nil)
+	frame := scene.NewFrame(animation.AnimationName, -1, camera, scn)
 	animation.AddFrame(frame)
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := anm.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}

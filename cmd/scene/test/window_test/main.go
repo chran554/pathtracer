@@ -5,8 +5,8 @@ import (
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
-	anm "pathtracer/internal/pkg/renderfile"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/renderfile"
+	"pathtracer/internal/pkg/scene"
 	"pathtracer/internal/pkg/util"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -38,24 +38,24 @@ func main() {
 	cameraOrigin := focusObject.Bounds.Center().Add(&vec3.T{0, 45, -150})
 	cameraOrigin.Scale(cameraDistanceFactor)
 	focusPoint := focusObject.Bounds.Center().Add(&vec3.T{0, -5, 0})
-	camera := scn.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).A(apertureSize, nil)
+	camera := scene.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).A(apertureSize, nil)
 
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
-	scene := scn.NewSceneNode().
+	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
+	scn := scene.NewSceneNode().
 		FS(cornellBox).
 		FS(pillar1, window)
 
-	frame := scn.NewFrame(animation.AnimationName, -1, camera, scene)
+	frame := scene.NewFrame(animation.AnimationName, -1, camera, scn)
 	animation.AddFrame(frame)
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := anm.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func putOnPillar(object *scn.FacetStructure, rotationDegrees float64, xpos int, zpos int, pillarWidth float64, pillarHeight float64) (pillar *scn.FacetStructure) {
+func putOnPillar(object *scene.FacetStructure, rotationDegrees float64, xpos int, zpos int, pillarWidth float64, pillarHeight float64) (pillar *scene.FacetStructure) {
 	pillar = createPillar(pillarWidth, pillarHeight)
 	pillar.Translate(&vec3.T{pillarWidth * 1.3 * float64(xpos), 0, pillarWidth * 1.3 * float64(zpos)})
 
@@ -65,9 +65,9 @@ func putOnPillar(object *scn.FacetStructure, rotationDegrees float64, xpos int, 
 	return pillar
 }
 
-func createPillar(pillarWidth float64, pillarHeight float64) *scn.FacetStructure {
+func createPillar(pillarWidth float64, pillarHeight float64) *scene.FacetStructure {
 	pillar1 := obj.NewBox(obj.BoxPositive)
-	pillar1.Material = scn.NewMaterial().
+	pillar1.Material = scene.NewMaterial().
 		C(color.NewColorGrey(0.9)).
 		M(0.3, 0.2).
 		PP(floatimage.Load("textures/concrete/Polished-Concrete-Architextures.jpg"), &vec3.T{0, 0, 0}, (&vec3.UnitX).Scaled(pillarWidth), (&vec3.UnitZ).Add(&vec3.T{0, 0.5, 0}).Scaled(pillarWidth))
@@ -77,7 +77,7 @@ func createPillar(pillarWidth float64, pillarHeight float64) *scn.FacetStructure
 	return pillar1
 }
 
-func setCornellBoxMaterial(cornellBox *scn.FacetStructure) {
+func setCornellBoxMaterial(cornellBox *scene.FacetStructure) {
 	scale := cornellBox.Bounds.SizeY()
 
 	backWallMaterial := *cornellBox.Material

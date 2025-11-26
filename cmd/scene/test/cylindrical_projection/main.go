@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"pathtracer/internal/pkg/floatimage"
-	anm "pathtracer/internal/pkg/renderfile"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/renderfile"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -15,7 +15,7 @@ var amountSamples = 5
 var viewPlaneDistance = 1600.0
 
 func main() {
-	animation := scn.NewAnimation("cylindrical_projection", 800, 600, 1.0, false, false)
+	animation := scene.NewAnimation("cylindrical_projection", 800, 600, 1.0, false, false)
 
 	sphereOrigin := vec3.T{0, 0, 0}
 	projectionOrigin := sphereOrigin
@@ -24,22 +24,22 @@ func main() {
 	projectionU := vec3.T{0, 0, ballRadius}
 	projectionV := vec3.T{0, 2 * ballRadius, 0}
 
-	projection := scn.NewCylindricalImageProjection(floatimage.Load("textures/planets/earth_daymap.jpg"), &projectionOrigin, projectionU, projectionV)
+	projection := scene.NewCylindricalImageProjection(floatimage.Load("textures/planets/earth_daymap.jpg"), &projectionOrigin, projectionU, projectionV)
 
-	sphere1 := scn.NewSphere(&sphereOrigin, ballRadius, scn.NewMaterial().P(&projection)).N("Textured sphere")
+	sphere1 := scene.NewSphere(&sphereOrigin, ballRadius, scene.NewMaterial().P(&projection)).N("Textured sphere")
 
-	scene := scn.NewSceneNode().S(sphere1)
+	scn := scene.NewSceneNode().S(sphere1)
 
 	cameraOrigin := vec3.T{0, 0, -200}
 	focusPoint := vec3.T{0, 0, 0}
-	camera := scn.NewCamera(&cameraOrigin, &focusPoint, amountSamples, 1.0).V(viewPlaneDistance)
-	camera.RenderType = scn.Raycasting
+	camera := scene.NewCamera(&cameraOrigin, &focusPoint, amountSamples, 1.0).V(viewPlaneDistance)
+	camera.RenderType = scene.Raycasting
 
-	frame := scn.NewFrame(animation.AnimationName, -1, camera, scene)
+	frame := scene.NewFrame(animation.AnimationName, -1, camera, scn)
 	animation.AddFrame(frame)
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := anm.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}

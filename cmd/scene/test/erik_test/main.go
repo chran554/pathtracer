@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj"
-	anm "pathtracer/internal/pkg/renderfile"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/renderfile"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -30,10 +30,10 @@ func main() {
 	room := obj.NewBox(obj.BoxCenteredYPositive)
 	room.Scale(&vec3.Zero, &vec3.T{roomWidth * 2, roomHeight * 2, roomDepth * 2})
 	room.Translate(&vec3.T{0, 0, -roomDepth / 3})
-	room.Material = scn.NewMaterial().C(color.NewColor(0.9, 0.8, 0.7))
+	room.Material = scene.NewMaterial().C(color.NewColor(0.9, 0.8, 0.7))
 
-	room.GetObjectsBySubstructureName("xmin")[0].Material = scn.NewMaterial().C(color.NewColor(0.75, 0.25, 0.25))
-	room.GetObjectsBySubstructureName("xmax")[0].Material = scn.NewMaterial().C(color.NewColor(0.25, 0.25, 0.75))
+	room.GetObjectsBySubstructureName("xmin")[0].Material = scene.NewMaterial().C(color.NewColor(0.75, 0.25, 0.25))
+	room.GetObjectsBySubstructureName("xmax")[0].Material = scene.NewMaterial().C(color.NewColor(0.25, 0.25, 0.75))
 	room.UpdateBounds()
 	fmt.Printf("Room bounds: %+v\n", room.Bounds)
 
@@ -45,36 +45,36 @@ func main() {
 	window := createWindow(windowX, windowHeightOverFloor, windowWidth, windowHeight)
 
 	// Diffuse sphere
-	sphere1 := scn.NewSphere(&vec3.T{0, 12, -30}, 12, scn.NewMaterial().C(color.NewColor(0.9, 0.8, 0.7)).M(0.0, 1.0))
+	sphere1 := scene.NewSphere(&vec3.T{0, 12, -30}, 12, scene.NewMaterial().C(color.NewColor(0.9, 0.8, 0.7)).M(0.0, 1.0))
 
 	// Mirror sphere
-	sphere2 := scn.NewSphere(&vec3.T{28, 16, 15}, 16, scn.NewMaterial().C(color.NewColor(0.97, 0.97, 0.843)).M(0.8, 0.0))
+	sphere2 := scene.NewSphere(&vec3.T{28, 16, 15}, 16, scene.NewMaterial().C(color.NewColor(0.97, 0.97, 0.843)).M(0.8, 0.0))
 
-	scene := scn.NewSceneNode().
+	scn := scene.NewSceneNode().
 		FS(room, window).
 		S(sphere1, sphere2)
 
 	origin := vec3.T{0, 40, -160 - 56}
 	origin.Scale(cameraDistanceFactor)
 	focusPoint := vec3.T{0, 30, 0}
-	camera := scn.NewCamera(&origin, &focusPoint, amountSamples, magnification).
+	camera := scene.NewCamera(&origin, &focusPoint, amountSamples, magnification).
 		A(lensRadius, nil).
 		V(viewPlaneDistance).
 		D(maxRecursionDepth)
 
-	frame := scn.NewFrame(animationName, -1, camera, scene)
+	frame := scene.NewFrame(animationName, -1, camera, scn)
 
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
+	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 	animation.AddFrame(frame)
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := anm.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func createWindow(windowX float64, windowHeightOverFloor float64, windowWidth float64, windowHeight float64) *scn.FacetStructure {
+func createWindow(windowX float64, windowHeightOverFloor float64, windowWidth float64, windowHeight float64) *scene.FacetStructure {
 	windowBoardThickness := 1.0
 	windowBoardWidth := 2.0
 
@@ -96,17 +96,17 @@ func createWindow(windowX float64, windowHeightOverFloor float64, windowWidth fl
 	windowRightBoard.Scale(&vec3.Zero, &vec3.T{windowBoardThickness, windowHeight / 2, windowBoardWidth / 2})
 	windowRightBoard.Translate(&vec3.T{windowX, windowHeightOverFloor + windowHeight/2, -windowWidth / 2})
 
-	windowFrameMaterial := scn.NewMaterial().M(0.6, 1.0)
-	windowFrame := &scn.FacetStructure{
+	windowFrameMaterial := scene.NewMaterial().M(0.6, 1.0)
+	windowFrame := &scene.FacetStructure{
 		SubstructureName: "window frame",
 		Material:         windowFrameMaterial,
-		FacetStructures:  []*scn.FacetStructure{windowBench, windowTopBoard, windowLeftBoard, windowRightBoard},
+		FacetStructures:  []*scene.FacetStructure{windowBench, windowTopBoard, windowLeftBoard, windowRightBoard},
 	}
-	window := &scn.FacetStructure{
+	window := &scene.FacetStructure{
 		SubstructureName: "Window",
 		Facets:           windowGlass,
-		FacetStructures:  []*scn.FacetStructure{windowFrame},
-		Material:         scn.NewMaterial().C(color.NewColor(0.75, 0.75, 1.0)).E(color.White, 24, true),
+		FacetStructures:  []*scene.FacetStructure{windowFrame},
+		Material:         scene.NewMaterial().C(color.NewColor(0.75, 0.75, 1.0)).E(color.White, 24, true),
 	}
 	return window
 }

@@ -2,9 +2,10 @@ package obj
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"github.com/ungerik/go3d/float64/vec3"
-	"testing"
 )
 
 func Test_LoadCornellBox(t *testing.T) {

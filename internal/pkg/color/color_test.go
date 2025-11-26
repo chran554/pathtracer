@@ -7,7 +7,7 @@ import (
 )
 
 func Test_NewColor(t *testing.T) {
-	var c Color
+	var c *Color
 
 	c = NewColor(0.0, 0.0, 0.0)
 	assert.Equal(t, float32(0.0), c.R)
@@ -31,7 +31,7 @@ func Test_NewColor(t *testing.T) {
 }
 
 func Test_NewGreyColor(t *testing.T) {
-	var c Color
+	var c *Color
 
 	c = NewColorGrey(0.0)
 	assert.Equal(t, float32(0.0), c.R)
@@ -50,7 +50,7 @@ func Test_NewGreyColor(t *testing.T) {
 }
 
 func Test_NewHexColor(t *testing.T) {
-	var c Color
+	var c *Color
 
 	c = NewColorHex("#000000")
 	assert.Equal(t, float32(0.0), c.R)
@@ -74,8 +74,7 @@ func Test_NewHexColor(t *testing.T) {
 }
 
 func Test_Copy(t *testing.T) {
-	var c Color
-	c = NewColor(0.25, 0.50, 0.75)
+	c := NewColor(0.25, 0.50, 0.75)
 	c2 := c.Copy()
 
 	assert.Equal(t, float32(0.25), c.R)
@@ -86,6 +85,6 @@ func Test_Copy(t *testing.T) {
 	assert.Equal(t, float32(0.50), c2.G)
 	assert.Equal(t, float32(0.75), c2.B)
 
-	assert.Equal(t, c, *c2)
-	assert.True(t, &c != c2)
+	assert.Equal(t, c, c2)  // Content is equal
+	assert.True(t, c != c2) // References are not equal
 }

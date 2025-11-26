@@ -5,19 +5,19 @@ import (
 	"math"
 	"path/filepath"
 	"pathtracer/internal/pkg/obj/ply"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-func NewLucy(scale float64) *scn.FacetStructure {
+func NewLucy(scale float64) *scene.FacetStructure {
 	lucy := loadLucy(scale)
 	lucy.ClearMaterials()
 	return lucy
 }
 
-func loadLucy(scale float64) *scn.FacetStructure {
-	lucy := ply.ReadFacetStructureOrPanic(filepath.Join(PlyFileDir, "lucy.ply"))
+func loadLucy(scale float64) *scene.FacetStructure {
+	lucy := ply.ReadFacetStructureOrPanic(filepath.Join(PlyFileDir, "lucy.ply"), true)
 
 	xmin := lucy.Bounds.Xmin
 	xmax := lucy.Bounds.Xmax

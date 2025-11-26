@@ -85,7 +85,7 @@ func (imageProjection *ImageProjection) GetColor(point *vec3.T) *color.Color {
 	}
 	// ProjectionTypeTextureMapping is not handled here
 
-	return &color.BlackTransparent
+	return color.BlackTransparent
 }
 
 func (imageProjection *ImageProjection) GetColorAt(coordinate *vec2.T) *color.Color {
@@ -196,7 +196,7 @@ func (imageProjection *ImageProjection) getCylindricalColor(point *vec3.T) *colo
 	// (Amount repeats along the equator/latitude can be of use though, see "textureLatitudeRepetitions".)
 
 	if !imageProjection.RepeatV && ((v >= 1.0) || (v < 0.0)) {
-		return &color.BlackTransparent
+		return color.BlackTransparent
 	}
 
 	if fracU < 0.0 {
@@ -231,11 +231,11 @@ func (imageProjection *ImageProjection) getParallelColor(point *vec3.T) *color.C
 	_, fracV := math.Modf(v)
 
 	if !imageProjection.RepeatU && ((u >= 1.0) || (u < 0.0)) {
-		return &color.BlackTransparent
+		return color.BlackTransparent.Copy()
 	}
 
 	if !imageProjection.RepeatV && ((v >= 1.0) || (v < 0.0)) {
-		return &color.BlackTransparent
+		return color.BlackTransparent.Copy()
 	}
 
 	if fracU < 0.0 {

@@ -85,11 +85,11 @@ func Test_KelvinToRgb(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func drawLine(img *image.NRGBA, x int, y1 int, y2 int, rgb Color) {
+func drawLine(img *image.NRGBA, x int, y1 int, y2 int, rgb *Color) {
 	if x >= 0 && x < img.Bounds().Dx() {
 		for y := y1; y <= y2; y++ {
 			if y >= 0 && y < img.Bounds().Dy() {
-				img.Set(x, y, &rgb)
+				img.Set(x, y, rgb)
 			}
 		}
 	}

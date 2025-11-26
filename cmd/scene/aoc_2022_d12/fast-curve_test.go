@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/ungerik/go3d/float64/vec3"
 	"testing"
+
+	"github.com/ungerik/go3d/float64/vec3"
 )
 
 func Test_3D(t *testing.T) {

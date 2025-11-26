@@ -5,7 +5,7 @@ import (
 	"pathtracer/internal/pkg/util"
 )
 
-func NewColorKelvin(colorTemperature float64) Color {
+func NewColorKelvin(colorTemperature float64) *Color {
 	return KelvinTemperatureColor2(colorTemperature)
 }
 
@@ -13,7 +13,7 @@ func NewColorKelvin(colorTemperature float64) Color {
 // This function is valid for Kelvin temperatures in the range [1000,40000]. Other values are clamped to the valid range.
 //
 // https://tannerhelland.com/2012/09/18/convert-temperature-rgb-algorithm-code.html
-func KelvinTemperatureColor(kelvinTemperature float64) Color {
+func KelvinTemperatureColor(kelvinTemperature float64) *Color {
 	var r, g, b float64
 
 	// The temperature must fall between 1000 and 40000 degrees
@@ -61,7 +61,7 @@ func KelvinTemperatureColor(kelvinTemperature float64) Color {
 // using a more accurate version algorithm based on a different curve fit to the original RGB to Kelvin data.
 //
 // https://github.com/neilbartlett/color-temperature/blob/master/index.js
-func KelvinTemperatureColor2(kelvinTemperature float64) Color {
+func KelvinTemperatureColor2(kelvinTemperature float64) *Color {
 	// The temperature must fall between 1000 and 40000 degrees
 	kelvinTemperature = util.ClampFloat64(1000, 40000, kelvinTemperature)
 
@@ -114,7 +114,7 @@ func KelvinTemperatureColor2(kelvinTemperature float64) Color {
 	return NewColor(red, green, blue)
 }
 
-func KelvinTemperatureCCT(c Color) float64 {
+func KelvinTemperatureCCT(c *Color) float64 {
 	var temperature float64
 
 	epsilon := 0.4

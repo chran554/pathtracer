@@ -6,8 +6,8 @@ import (
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
-	anm "pathtracer/internal/pkg/renderfile"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/renderfile"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -30,11 +30,11 @@ var maxRecursion = 5
 var apertureSize = 1.5
 
 func main() {
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
+	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
 	// Sphere
 	tessellatedSphere := obj.NewTessellatedSphere(5, false)
-	tessellatedSphere.Material = scn.NewMaterial().N("tessellated sphere").M(0.1, 0.1)
+	tessellatedSphere.Material = scene.NewMaterial().N("tessellated sphere").M(0.1, 0.1)
 
 	objectHeight := 60.0
 	objectWidth := 30.0
@@ -49,36 +49,36 @@ func main() {
 
 	// Sky dome
 	skyDomeOrigin := vec3.T{0, 0, 0}
-	skyDomeMaterial := scn.NewMaterial().
+	skyDomeMaterial := scene.NewMaterial().
 		E(color.White, environmentEmissionFactor, true).
 		SP(floatimage.Load(environmentEnvironMap), &skyDomeOrigin, vec3.T{-0.2, 0, -1}, vec3.T{0, 1, 0})
-	skyDome := scn.NewSphere(&skyDomeOrigin, environmentRadius, skyDomeMaterial).N("sky dome")
+	skyDome := scene.NewSphere(&skyDomeOrigin, environmentRadius, skyDomeMaterial).N("sky dome")
 
 	// Ground
-	groundMaterial := scn.NewMaterial().N("Ground material").PP(floatimage.Load("textures/ground/soil-cracked.png"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(150), vec3.UnitZ.Scaled(150))
-	ground := scn.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
+	groundMaterial := scene.NewMaterial().N("Ground material").PP(floatimage.Load("textures/ground/soil-cracked.png"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(150), vec3.UnitZ.Scaled(150))
+	ground := scene.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
 
 	// Camera
 	cameraOrigin := tessellatedSphereBounds.Center().Add(&vec3.T{25, 10, -250})
 	cameraFocusPoint := tessellatedSphereBounds.Center().Add(&vec3.T{0, 0, -(tessellatedSphereBounds.SizeZ() / 2) * 0.8})
-	camera := scn.NewCamera(cameraOrigin, cameraFocusPoint, amountSamples, magnification).D(maxRecursion).A(apertureSize, nil)
+	camera := scene.NewCamera(cameraOrigin, cameraFocusPoint, amountSamples, magnification).D(maxRecursion).A(apertureSize, nil)
 
 	//for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
 	for frameIndex := 88; frameIndex < 89; frameIndex++ {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
 
 		// Lamp
-		lampMaterial := scn.NewMaterial().N("lamp").E(color.White, 50.0, true)
-		lamp := scn.NewSphere(&vec3.T{300, 150, -150}, 50, lampMaterial).N("lamp")
+		lampMaterial := scene.NewMaterial().N("lamp").E(color.White, 50.0, true)
+		lamp := scene.NewSphere(&vec3.T{300, 150, -150}, 50, lampMaterial).N("lamp")
 		lamp.RotateY(tessellatedSphere.Bounds.Center(), -math.Pi/4+animationProgress*math.Pi/2)
 
-		scene := scn.NewSceneNode().S(skyDome, lamp).D(ground).FS(tessellatedSphere)
-		frame := scn.NewFrame(animation.AnimationName, frameIndex, camera, scene)
+		scn := scene.NewSceneNode().S(skyDome, lamp).D(ground).FS(tessellatedSphere)
+		frame := scene.NewFrame(animation.AnimationName, frameIndex, camera, scn)
 		animation.AddFrame(frame)
 	}
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := anm.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}

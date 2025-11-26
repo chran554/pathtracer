@@ -7,8 +7,8 @@ import (
 	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
-	anm "pathtracer/internal/pkg/renderfile"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/renderfile"
+	"pathtracer/internal/pkg/scene"
 	"strconv"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -41,7 +41,7 @@ func main() {
 	spheres3[0].Radius = spheres3[0].Radius * 0.5
 	spheres3[0].Translate(&vec3.T{0, -spheres3[0].Radius, 0})
 
-	var spheres []*scn.Sphere
+	var spheres []*scene.Sphere
 	spheres = append(spheres, spheres1...)
 	spheres = append(spheres, spheres2...)
 	spheres = append(spheres, spheres3...)
@@ -52,11 +52,11 @@ func main() {
 	glassSkoja := obj.NewGlassIkeaSkoja(40.0, true)
 	glassSkoja.Translate(&vec3.T{35, 0, 0})
 
-	// glassMaterial := scn.NewMaterial().
+	// glassMaterial := scene.NewMaterial().
 	// 	N("glass material").
 	// 	C(color.NewColor(0.98, 0.80, 0.75)).
 	// 	M(0.2, 0.05).
-	// 	T(0.95, true, scn.RefractionIndex_Glass)
+	// 	T(0.95, true, scene.RefractionIndex_Glass)
 	utahTeapot := obj.NewSolidUtahTeapot(50.0, true, true)
 	utahTeapot.RotateY(&vec3.T{0, 0, 0}, -math.Pi/3.5-math.Pi/2.0)
 	utahTeapot.Translate(&vec3.T{25 + 5, 0, 150})
@@ -68,7 +68,7 @@ func main() {
 	//pixarBall.RotateY(pixarBallOrigin, 0.0)
 	pixarBall.RotateY(pixarBallOrigin, math.Pi/4.0)
 
-	scene := scn.NewSceneNode().
+	scn := scene.NewSceneNode().
 		S(spheres...).
 		//S(pixarBall).
 		FS(cornellBox /*glassPokal, glassSkoja, utahTeapot*/)
@@ -76,28 +76,28 @@ func main() {
 	sphereBounds := spheres[0].Bounds()
 	cameraOrigin := &vec3.T{sphereBounds.Center()[1], sphereBounds.Center()[1], -200}
 	cameraFocusPoint := sphereBounds.Center().Added(&vec3.T{0, -ballRadius / 2, -ballRadius})
-	camera := scn.NewCamera(cameraOrigin, &cameraFocusPoint, amountSamples, magnification).D(maxRecursionDepth).A(lensRadius, nil)
+	camera := scene.NewCamera(cameraOrigin, &cameraFocusPoint, amountSamples, magnification).D(maxRecursionDepth).A(lensRadius, nil)
 
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
+	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
-	frame := scn.NewFrame(animation.AnimationName, -1, camera, scene)
+	frame := scene.NewFrame(animation.AnimationName, -1, camera, scn)
 
 	animation.AddFrame(frame)
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := anm.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func GetSpheres(amountSpheres int, translation *vec3.T) []*scn.Sphere {
-	var spheres []*scn.Sphere
-	sphereMaterial := scn.NewMaterial().
+func GetSpheres(amountSpheres int, translation *vec3.T) []*scene.Sphere {
+	var spheres []*scene.Sphere
+	sphereMaterial := scene.NewMaterial().
 		N("glass sphere").
 		C(color.NewColor(0.95, 0.95, 0.99)).
 		M(0.01, 0.05).
-		T(0.98, true, scn.RefractionIndex_Glass)
+		T(0.98, true, scene.RefractionIndex_Glass)
 
 	for i := 0; i < amountSpheres; i++ {
 		positionOffsetX := 0.0 // (-sphereSpread/2.0 + float64(i)*sphereCC) * 0.5
@@ -105,7 +105,7 @@ func GetSpheres(amountSpheres int, translation *vec3.T) []*scn.Sphere {
 
 		groundOffset := 0.02 // ballRadius / 2.0 // Raise the sphere above the ground
 		sphereOrigin := vec3.T{positionOffsetX, ballRadius + groundOffset, positionOffsetZ}
-		sphere := scn.NewSphere(&sphereOrigin, ballRadius, sphereMaterial).N("Glass sphere #" + strconv.Itoa(i))
+		sphere := scene.NewSphere(&sphereOrigin, ballRadius, sphereMaterial).N("Glass sphere #" + strconv.Itoa(i))
 
 		sphere.Translate(translation)
 
@@ -115,7 +115,7 @@ func GetSpheres(amountSpheres int, translation *vec3.T) []*scn.Sphere {
 	return spheres
 }
 
-func GetCornellBox(scale *vec3.T, lightIntensityFactor float64) *scn.FacetStructure {
+func GetCornellBox(scale *vec3.T, lightIntensityFactor float64) *scene.FacetStructure {
 	var cornellBoxFilename = "cornellbox.obj"
 	var cornellBoxFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + cornellBoxFilename
 
@@ -124,7 +124,7 @@ func GetCornellBox(scale *vec3.T, lightIntensityFactor float64) *scn.FacetStruct
 	cornellBox.Scale(&vec3.Zero, scale)
 	cornellBox.ClearMaterials()
 
-	cornellBox.Material = scn.NewMaterial().
+	cornellBox.Material = scene.NewMaterial().
 		N("Cornell box material").
 		C(color.NewColor(0.95, 0.95, 0.95))
 
@@ -135,7 +135,7 @@ func GetCornellBox(scale *vec3.T, lightIntensityFactor float64) *scn.FacetStruct
 	floorMaterial := cornellBox.Material.Copy().
 		PP(floatimage.Load("textures/floor/7451-diffuse 02 low contrast.png"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale[0]*0.25), vec3.UnitZ.Scaled(scale[0]*0.25))
 
-	lampMaterial := scn.NewMaterial().N("Lamp").
+	lampMaterial := scene.NewMaterial().N("Lamp").
 		C(color.White).
 		E(color.White, lightIntensityFactor, true)
 

@@ -176,7 +176,7 @@ func shapedApertureOffset(image *img.FloatImage) (float64, float64) {
 	offsetX := 0.0
 	offsetY := 0.0
 
-	for c := color.Black; c != color.White; { // TODO be smarter than re-iterating until we randomly hit a white pixel...
+	for c := *color.Black; c != *color.White; { // TODO be smarter than re-iterating until we randomly hit a white pixel...
 		x := rand.Intn(image.Width)
 		y := rand.Intn(image.Height)
 

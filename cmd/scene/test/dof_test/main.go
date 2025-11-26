@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj"
-	anm "pathtracer/internal/pkg/renderfile"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/renderfile"
+	"pathtracer/internal/pkg/scene"
 	"strconv"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -32,33 +32,33 @@ func main() {
 	sphereSpread := ballRadius * 2.0 * (float64(amountSpheres) + 1)
 	sphereCC := sphereSpread / float64(amountSpheres)
 
-	sphereMaterial := scn.NewMaterial().C(color.NewColor(0.85, 0.95, 0.80)).M(0.4, 0.05)
+	sphereMaterial := scene.NewMaterial().C(color.NewColor(0.85, 0.95, 0.80)).M(0.4, 0.05)
 
-	var spheres []*scn.Sphere
+	var spheres []*scene.Sphere
 	for i := 0; i <= amountSpheres; i++ {
 		positionOffsetX := (-sphereSpread/2.0 + float64(i)*sphereCC) * 0.5
 		positionOffsetZ := (-sphereSpread/2.0 + float64(i)*sphereCC) * 1.0
 
-		sphere := scn.NewSphere(&vec3.T{positionOffsetX, ballRadius, positionOffsetZ}, ballRadius, sphereMaterial).
+		sphere := scene.NewSphere(&vec3.T{positionOffsetX, ballRadius, positionOffsetZ}, ballRadius, sphereMaterial).
 			N("Glass sphere with transparency " + strconv.Itoa(i))
 
 		spheres = append(spheres, sphere)
 	}
 
-	scene := scn.NewSceneNode().S(spheres...).FS(cornellBox)
+	scn := scene.NewSceneNode().S(spheres...).FS(cornellBox)
 
 	cameraOrigin := vec3.T{0, ballRadius * 3, -800}
 	cameraOrigin.Scale(cameraDistanceFactor)
 	focusPoint := vec3.T{0, ballRadius, 0}
-	camera := scn.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).V(viewPlaneDistance).A(lensRadius, nil)
+	camera := scene.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).V(viewPlaneDistance).A(lensRadius, nil)
 
-	frame := scn.NewFrame(animationName, -1, camera, scene)
+	frame := scene.NewFrame(animationName, -1, camera, scn)
 
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
+	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 	animation.AddFrame(frame)
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := anm.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}

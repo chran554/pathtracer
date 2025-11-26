@@ -6,8 +6,8 @@ import (
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
-	anm "pathtracer/internal/pkg/renderfile"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/renderfile"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/mat3"
 
@@ -66,7 +66,7 @@ func main() {
 	// objectFilename = objectPath + "triangle.obj"
 	// objectFilename = "objects/go_gopher_high.obj"
 
-	animation := scn.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
+	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
 	for imageIndex := 0; imageIndex < amountImages; imageIndex++ {
 		fmt.Printf("\n\nCostructing frame %d\n", imageIndex)
@@ -80,45 +80,45 @@ func main() {
 		facetStructure.ScaleUniform(&vec3.Zero, objectScale)
 		facetStructure.RotateY(&vec3.Zero, objectStartAngle)
 
-		scene := scn.NewSceneNode().FS(facetStructure)
-		scene.UpdateBounds()
-		scene.Bounds = nil
+		scn := scene.NewSceneNode().FS(facetStructure)
+		scn.UpdateBounds()
+		scn.Bounds = nil
 
 		if useLights {
-			lampMaterial := scn.NewMaterial().C(lightColor).E(lightColor, lightEmissionFactor, true)
-			lamp := scn.NewSphere(&lightOrigin, lightRadius, lampMaterial).N("Light")
-			scene.S(lamp)
+			lampMaterial := scene.NewMaterial().C(lightColor).E(lightColor, lightEmissionFactor, true)
+			lamp := scene.NewSphere(&lightOrigin, lightRadius, lampMaterial).N("Light")
+			scn.S(lamp)
 		}
 
 		skyDomeOrigin := vec3.T{0, 0, 0}
-		skyDomeMaterial := scn.NewMaterial().
+		skyDomeMaterial := scene.NewMaterial().
 			E(color.White, environmentEmissionFactor, true).
 			SP(floatimage.Load("textures/equirectangular/white room 01 1836x918.png"), &skyDomeOrigin, vec3.UnitZ, vec3.UnitY)
-		skyDome := scn.NewSphere(&skyDomeOrigin, environmentRadius, skyDomeMaterial).N("sky dome")
-		scene.S(skyDome)
+		skyDome := scene.NewSphere(&skyDomeOrigin, environmentRadius, skyDomeMaterial).N("sky dome")
+		scn.S(skyDome)
 
 		animationProgress := float64(imageIndex) / float64(amountImages)
 		heightFactor := math.Sin(2.0 * 2.0 * math.Pi * animationProgress)
 		camera := getCamera(&cameraOrigin, facetStructure.Bounds.Center(), 2.0*math.Pi*animationProgress, heightFactor)
 
-		frame := scn.NewFrame(animationName, imageIndex, camera, scene)
+		frame := scene.NewFrame(animationName, imageIndex, camera, scn)
 
 		animation.AddFrame(frame)
 	}
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := anm.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func getCamera(cameraOrigin *vec3.T, focusPoint *vec3.T, yRotationAngle float64, heightFactor float64) *scn.Camera {
+func getCamera(cameraOrigin *vec3.T, focusPoint *vec3.T, yRotationAngle float64, heightFactor float64) *scene.Camera {
 	rotationMatrix := mat3.T{}
 	rotationMatrix.AssignYRotation(yRotationAngle)
 
 	newCameraOrigin := vec3.T{cameraOrigin[0], cameraOrigin[1] * heightFactor, cameraOrigin[2]}
 	newCameraOrigin = rotationMatrix.MulVec3(&newCameraOrigin)
 
-	return scn.NewCamera(&newCameraOrigin, focusPoint, amountSamples, magnification).V(viewPlaneDistance)
+	return scene.NewCamera(&newCameraOrigin, focusPoint, amountSamples, magnification).V(viewPlaneDistance)
 }

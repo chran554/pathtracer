@@ -3,7 +3,7 @@ package obj
 import (
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/floatimage"
-	scn "pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec2"
 	"github.com/ungerik/go3d/float64/vec3"
@@ -20,10 +20,10 @@ const (
 // NewBoxWithEmission return a box which sides all have unit length 1.
 // The box has a material called "light" on each side and a color emission.
 // The sides of the box have prepared texture coordinates at each vertex: [0,0], [1,0], [1,1], [0,1].
-func NewBoxWithEmission(boxType BoxType, c color.Color, scaleEmission float64, texture *floatimage.FloatImage) (*scn.FacetStructure, *scn.Material) {
+func NewBoxWithEmission(boxType BoxType, c *color.Color, scaleEmission float64, texture *floatimage.FloatImage) (*scene.FacetStructure, *scene.Material) {
 	box := NewBox(boxType)
 
-	box.Material = scn.NewMaterial().E(c, scaleEmission, true)
+	box.Material = scene.NewMaterial().E(c, scaleEmission, true)
 	if texture != nil {
 		box.Material.TP(texture)
 	}
@@ -32,7 +32,8 @@ func NewBoxWithEmission(boxType BoxType, c color.Color, scaleEmission float64, t
 }
 
 // NewBox return a box which sides all have the unit length 1.
-func NewBox(boxType BoxType) *scn.FacetStructure {
+// Side normals point outwards from each side.
+func NewBox(boxType BoxType) *scene.FacetStructure {
 	p1 := vec3.T{1, 1, 0} // Top right close            3----------2
 	p2 := vec3.T{1, 1, 1} // Top right away            /          /|
 	p3 := vec3.T{0, 1, 1} // Top left away            /          / |
@@ -42,8 +43,8 @@ func NewBox(boxType BoxType) *scn.FacetStructure {
 	p7 := vec3.T{0, 0, 1} // Bottom left away        |          |/
 	p8 := vec3.T{0, 0, 0} // Bottom left close       8----------5
 
-	box := scn.FacetStructure{
-		FacetStructures: []*scn.FacetStructure{
+	box := scene.FacetStructure{
+		FacetStructures: []*scene.FacetStructure{
 			{Facets: GetRectangleFacets(&p1, &p2, &p3, &p4), SubstructureName: "ymax"},
 			{Facets: GetRectangleFacets(&p8, &p7, &p6, &p5), SubstructureName: "ymin"},
 			{Facets: GetRectangleFacets(&p4, &p8, &p5, &p1), SubstructureName: "zmin"},
@@ -70,7 +71,7 @@ func NewBox(boxType BoxType) *scn.FacetStructure {
 // The result is two triangles side by side (p1,p2,p4) and (p4,p2,p3).
 // Normal direction is calculated as pointing towards observer if the points are listed in counter-clockwise order.
 // No test nor calculation is made that the points are exactly in the same plane.
-func GetRectangleFacets(p1, p2, p3, p4 *vec3.T) []*scn.Facet {
+func GetRectangleFacets(p1, p2, p3, p4 *vec3.T) []*scene.Facet {
 	//       p1
 	//       *
 	//      / \
@@ -93,7 +94,7 @@ func GetRectangleFacets(p1, p2, p3, p4 *vec3.T) []*scn.Facet {
 	normal2 := vec3.Cross(&n2v1, &n2v2)
 	normal2.Normalize()
 
-	return []*scn.Facet{
+	return []*scene.Facet{
 		{Vertices: []*vec3.T{p1, p2, p4}, Normal: &normal1, TextureCoordinates: []*vec2.T{{1, 0}, {1, 1}, {0, 0}}},
 		{Vertices: []*vec3.T{p4, p2, p3}, Normal: &normal2, TextureCoordinates: []*vec2.T{{0, 0}, {1, 1}, {0, 1}}},
 	}
