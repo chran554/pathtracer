@@ -12,6 +12,9 @@ import (
 )
 
 func NewKeroseneLamp(scale float64, emission float64) *scene.FacetStructure {
+	flameTexture := floatimage.Load("textures/misc/kerosenelamp/kerosenelamp_flame_wave.png")
+	sootSmudgeTexture := floatimage.Load("textures/misc/kerosenelamp/kerosenelamp_glass_wave_mod2.png")
+
 	keroseneLamp := loadKeroseneLamp(scale)
 
 	flame := keroseneLamp.GetFirstObjectByMaterialName("flame")
@@ -23,20 +26,24 @@ func NewKeroseneLamp(scale float64, emission float64) *scene.FacetStructure {
 	brassMaterial := scene.NewMaterial().N("brass").
 		C(color.NewColor(0.8/2, 0.60/2, 0.25/2)).
 		M(0.8, 0.3)
+
 	flameMaterial := scene.NewMaterial().N("flame").
 		C(color.White).
+		T(1.0, false, scene.RefractionIndex_Air).
 		E(color.White, emission, false).
-		CP(floatimage.Load("textures/misc/kerosenelamp/kerosenelamp_flame_wave.png"), &vec3.T{flameCenterBounds[0], flame.Bounds.Ymin, flameCenterBounds[2]}, vec3.UnitZ, (vec3.UnitY).Scaled(flame.Bounds.SizeY()*0.85), false)
+		CP(flameTexture, &vec3.T{flameCenterBounds[0], flame.Bounds.Ymin, flameCenterBounds[2]}, vec3.UnitZ, (vec3.UnitY).Scaled(flame.Bounds.SizeY()*0.95), false)
+
 	glassMaterial := scene.NewMaterial().N("glass").
-		C(color.NewColor(0.93, 0.94, 0.95)).
-		T(0.95, false, scene.RefractionIndex_Glass).
-		M(0.05, 0.05)
-	glassMaterial.Diffuse = 0.0
+		//C(color.NewColor(0.93, 0.94, 0.95)).
+		C(color.NewColor(0.85, 0.87, 0.90)).
+		T(0.90, false, scene.RefractionIndex_Glass).
+		M(0.085, 0.015)
 
 	smudgedGlassMaterial := scene.NewMaterial().N("smudged_glass").
 		C(color.White).
-		T(1.0, false, scene.RefractionIndex_Air).
-		CP(floatimage.Load("textures/misc/kerosenelamp/kerosenelamp_glass_wave_mod2.png"), &vec3.T{glassCenterBounds[0], glass.Bounds.Ymin, glassCenterBounds[2]}, vec3.UnitX, (vec3.UnitY).Scaled(glass.Bounds.SizeY()), false)
+		T(0.0, false, scene.RefractionIndex_Air).
+		M(0.0, 1.0).
+		CP(sootSmudgeTexture, &vec3.T{glassCenterBounds[0], glass.Bounds.Ymin, glassCenterBounds[2]}, vec3.UnitX, (vec3.UnitY).Scaled(glass.Bounds.SizeY()), false)
 
 	keroseneLamp.GetFirstObjectByMaterialName("base").Material = brassMaterial
 	keroseneLamp.GetFirstObjectByMaterialName("handle").Material = brassMaterial

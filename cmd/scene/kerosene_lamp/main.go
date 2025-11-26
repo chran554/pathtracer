@@ -19,11 +19,11 @@ var imageHeight = 800
 var magnification = 1.0
 
 var amountSamples = 1024 * 32
-
+var maxRayDepth = 10
 var apertureSize = 0.2
 
-var keroseneLampEmission = 75.0
-var skyDomeEmission = 1.5
+var keroseneLampEmission = 15.0
+var skyDomeEmission = 0.9
 
 func main() {
 	skyDome := scene.NewSphere(&vec3.T{0, 0, 0}, 200*100, scene.NewMaterial().
@@ -53,7 +53,7 @@ func main() {
 	camera := scene.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).
 		A(apertureSize, nil).
 		F(focusDistance).
-		D(10)
+		D(maxRayDepth)
 
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, true)
 	frame := scene.NewFrame(animation.AnimationName, -1, camera, scn)

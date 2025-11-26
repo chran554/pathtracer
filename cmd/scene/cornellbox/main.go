@@ -14,7 +14,10 @@ var animationName = "cornellbox"
 
 var ballRadius float64 = 20
 
+var lightIntensityFactor = 1.5
+
 var amountSamples = 1024 * 32
+var maxRayDepth = 6
 
 var imageWidth = 800
 var imageHeight = 400
@@ -24,7 +27,7 @@ var viewPlaneDistance = 1500.0
 
 func main() {
 	cornellBoxUnit := ballRadius * 3
-	cornellBox := obj.NewCornellBox(&vec3.T{2 * cornellBoxUnit, cornellBoxUnit, 3 * cornellBoxUnit}, true, 5)
+	cornellBox := obj.NewCornellBox(&vec3.T{2 * cornellBoxUnit, cornellBoxUnit, 3 * cornellBoxUnit}, true, lightIntensityFactor)
 
 	rightSphereMaterial := scene.NewMaterial().N("Right sphere").C(color.NewColorGrey(0.9))
 	leftSphereMaterial := scene.NewMaterial().N("Left sphere").C(color.NewColorGrey(0.9))
@@ -41,7 +44,7 @@ func main() {
 
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
-	camera := scene.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).V(viewPlaneDistance)
+	camera := scene.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).V(viewPlaneDistance).D(maxRayDepth)
 	frame := scene.NewFrame(animationName, -1, camera, scn)
 	animation.AddFrame(frame)
 
