@@ -210,7 +210,7 @@ func frameInformationPreRenderText(frameInformation RenderFrameInformation) stri
 	stringBuilder.WriteString("\n")
 	stringBuilder.WriteString(fmt.Sprintf("Render algorithm:      %s\n", frameInformation.renderAlgorithm))
 	stringBuilder.WriteString(fmt.Sprintf("Image size:            %dx%d %s\n", frameInformation.imageWidth, frameInformation.imageHeight, mp4CreationWarning))
-	stringBuilder.WriteString(fmt.Sprintf("Amount samples/pixel:  %d\n", frameInformation.samplesPerPixel))
+	stringBuilder.WriteString(fmt.Sprintf("Amount samples/pixel:  %s\n", util.FormatInt(frameInformation.samplesPerPixel)))
 	stringBuilder.WriteString(fmt.Sprintf("Max recursion depth:   %d\n", frameInformation.maxRecursionDepth))
 	stringBuilder.WriteString("\n")
 	if frameInformation.amountFacets > 0 {
@@ -587,7 +587,7 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 				R: ii.material.Color.R * float32(cosineIncomingRayAndNormal) * projectionColor.R,
 				G: ii.material.Color.G * float32(cosineIncomingRayAndNormal) * projectionColor.G,
 				B: ii.material.Color.B * float32(cosineIncomingRayAndNormal) * projectionColor.B,
-				A: ii.material.Color.A * projectionColor.A,
+				A: 1.0,
 			}
 
 		} else if camera.RenderType == scene.Pathtracing {
@@ -615,15 +615,21 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 					reflectionProbability = ii.material.Glossiness
 				}
 
-				transparencyProbability := 1.0 - ((1.0 - ii.material.Transparency) * float64(ii.material.Color.A) * float64(projectionColor.A))
-				diffuseProbability := ii.material.Diffuse * float64(ii.material.Color.A) * float64(projectionColor.A)
+				alpha := (1.0 - ii.material.Transparency) * float64(ii.material.Color.A) * float64(projectionColor.A)
+				transparencyProbability := 1.0 - alpha
+				diffuseProbability := max(0, ii.material.Diffuse-reflectionProbability) * alpha
+				reflectionProbability = reflectionProbability * alpha
 
 				probabilitySum := reflectionProbability + transparencyProbability + diffuseProbability
 				probabilityValue := rand.Float64() * probabilitySum
 
-				useReflectionRay := probabilityValue < reflectionProbability
-				useTransparencyRay := !useReflectionRay && (probabilityValue < (reflectionProbability + transparencyProbability))
-				useDiffuseRay := !useReflectionRay && !useTransparencyRay
+				useDiffuseRay := (diffuseProbability > 0) && (probabilityValue < diffuseProbability)
+				useReflectionRay := (reflectionProbability > 0) && (probabilityValue < (diffuseProbability + reflectionProbability)) && !useDiffuseRay
+				useTransparencyRay := (transparencyProbability > 0) && (probabilityValue < (diffuseProbability + reflectionProbability + transparencyProbability)) && !useReflectionRay && !useDiffuseRay
+
+				if !useDiffuseRay && !useReflectionRay && !useTransparencyRay {
+					panic("No ray type selected!")
+				}
 
 				diffuseHeading := getRandomCosineWeightedHemisphereVector(ii.normalAtIntersection)
 				cosineNewRayAndNormal := 1.0
@@ -634,7 +640,8 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 
 				if useDiffuseRay {
 					// Weight for cosine weighted hemisphere sampling
-					cosineNewRayAndNormal = 0.5 // remove the cosine factor as it is already included in hemisphere sampling
+					//cosineNewRayAndNormal = 0.5 // remove the cosine factor as it is already included in hemisphere sampling
+					cosineNewRayAndNormal = 1.0 // remove the cosine factor as it is already included in hemisphere sampling
 					newRayHeading = diffuseHeading
 
 					// Uniform random hemisphere sampling
@@ -715,26 +722,82 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 				incomingEmissionOnSurface := incomingEmission
 				incomingEmissionOnSurface.Multiply(float32(cosineNewRayAndNormal))
 
-				alpha := ii.material.Color.A * projectionColor.A
-				outgoingEmission = &color.Color{
-					R: incomingEmissionOnSurface.R * (alpha*ii.material.Color.R*projectionColor.R + (1.0 - alpha)),
-					G: incomingEmissionOnSurface.G * (alpha*ii.material.Color.G*projectionColor.G + (1.0 - alpha)),
-					B: incomingEmissionOnSurface.B * (alpha*ii.material.Color.B*projectionColor.B + (1.0 - alpha)),
-					A: util.Max32(alpha, incomingEmissionOnSurface.A),
+				if useDiffuseRay || useReflectionRay {
+					//projectionCol := fixTransparentColor(projectionColor)
+					//materialCol := fixTransparentColor(ii.material.Color)
+					projectionCol := projectionColor
+					materialCol := ii.material.Color
+
+					//projectionCol = projectionCol.Fade(color.White, 1-projectionCol.A)
+					//materialCol = materialCol.Fade(color.White, 1-materialCol.A)
+
+					outgoingEmission = &color.Color{
+						R: incomingEmissionOnSurface.R * materialCol.R * projectionCol.R,
+						G: incomingEmissionOnSurface.G * materialCol.G * projectionCol.G,
+						B: incomingEmissionOnSurface.B * materialCol.B * projectionCol.B,
+						A: 1.0,
+					}
+				} else if useTransparencyRay {
+					// TODO is the following correct?
+					// Is the color calculation correct for a ray going through a transparent object?
+					// Should it be coloured as if the color is on the surface of the object or from travelling through the object?
+					// If it is colored from the surface of the object, the color will be the same as the color of the object?
+					// Or should it be colored twice, first when entering the object and then once more when leaving the object?
+					// If it is going through a single layer of transparent material,
+					// the color should be the same as the color of the object?
+
+					//projectionCol := fixTransparentColor(projectionColor)
+					//materialCol := fixTransparentColor(ii.material.Color)
+
+					//projectionCol = projectionCol.Fade(color.White, 1-projectionCol.A)
+					//materialCol = materialCol.Fade(color.White, 1-materialCol.A)
+
+					outgoingEmission = &color.Color{
+						// Non colorizing transparency "like light going through plain glass"
+						R: incomingEmissionOnSurface.R, // * materialCol.R * projectionCol.R,
+						G: incomingEmissionOnSurface.G, // * materialCol.G * projectionCol.G,
+						B: incomingEmissionOnSurface.B, // * materialCol.B * projectionCol.B,
+						A: 1.0,
+
+						// Colorizing transparency "like light going through colored/painted glass"
+						// R: incomingEmissionOnSurface.R * materialCol.R * projectionCol.R,
+						// G: incomingEmissionOnSurface.G * materialCol.G * projectionCol.G,
+						// B: incomingEmissionOnSurface.B * materialCol.B * projectionCol.B,
+						// A: 1.0,
+					}
 				}
 			}
 
 			if ii.material.Emission != nil {
-				alpha := float32(1.0-ii.material.Transparency) * ii.material.Color.A * projectionColor.A
-				outgoingEmission.R += ii.material.Emission.R * projectionColor.R * alpha
-				outgoingEmission.G += ii.material.Emission.G * projectionColor.G * alpha
-				outgoingEmission.B += ii.material.Emission.B * projectionColor.B * alpha
-				outgoingEmission.A = util.Max32(outgoingEmission.A, alpha)
+				//projectionCol := fixTransparentColor(projectionColor)
+				//materialCol := fixTransparentColor(ii.material.Color)
+				projectionCol := projectionColor
+				materialCol := ii.material.Color
+
+				//projectionCol = projectionCol.Fade(color.White, 1-projectionCol.A)
+				//materialCol = materialCol.Fade(color.White, 1-materialCol.A)
+
+				outgoingEmission.R += (ii.material.Emission.R * ii.material.Emission.A) * (materialCol.R * materialCol.A) * (projectionCol.R * projectionCol.A) // * (1.0 - float32(ii.material.Transparency))
+				outgoingEmission.G += (ii.material.Emission.G * ii.material.Emission.A) * (materialCol.G * materialCol.A) * (projectionCol.G * projectionCol.A) // * (1.0 - float32(ii.material.Transparency))
+				outgoingEmission.B += (ii.material.Emission.B * ii.material.Emission.A) * (materialCol.B * materialCol.A) * (projectionCol.B * projectionCol.A) // * (1.0 - float32(ii.material.Transparency))
+				outgoingEmission.A = 1.0
 			}
 		}
 	}
 
 	return outgoingEmission
+}
+
+// fixTransparentColor fixes colors where an alpha channel is 0. The color information (RGB) values
+// cannot be used in calculations as they can have any value.
+// This normalizes "black transparency" often used in pixel-based images into "white transparency" which
+//
+//	keeps light calculations when using multiplication.
+func fixTransparentColor(c *color.Color) *color.Color {
+	if *c == *color.BlackTransparent {
+		return color.WhiteTransparent
+	}
+	return c
 }
 
 func processFacetStructureIntersection(ray *scene.Ray, facetStructure *scene.FacetStructure, ii *IntersectionInformation) {
@@ -759,7 +822,8 @@ func processFacetStructureIntersection(ray *scene.Ray, facetStructure *scene.Fac
 			}
 
 			if vec3.Dot(ii.normalAtIntersection, tmpIntersectionFacet.Normal) < 0 {
-				// fmt.Println("rotten normals")
+				//normalAngle := vec3.Angle(ii.normalAtIntersection, tmpIntersectionFacet.Normal)
+				//fmt.Println("Illegal facet inter normal angle (interpolated normal and normal) (in degrees): ", util.RadToDeg(normalAngle))
 			}
 		}
 	}
