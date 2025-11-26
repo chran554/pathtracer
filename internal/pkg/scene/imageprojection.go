@@ -94,12 +94,6 @@ func (imageProjection *ImageProjection) GetColorAt(coordinate *vec2.T) *color.Co
 	return imageProjection.Image.GetPixel(textureX, textureY)
 }
 
-func (imageProjection *ImageProjection) GetColorAt(coordinate *vec2.T) *color.Color {
-	textureX := util.ClampInt(0, imageProjection.Image.Width-1, int(coordinate[0]*float64(imageProjection.Image.Width)))
-	textureY := util.ClampInt(0, imageProjection.Image.Height-1, int((1.0-coordinate[1])*float64(imageProjection.Image.Height)))
-	return imageProjection.Image.GetPixel(textureX, textureY)
-}
-
 func (imageProjection *ImageProjection) getSphericalColor2(point *vec3.T) *color.Color {
 	translatedPoint := *point
 	translatedPoint.Sub(imageProjection.Origin)
