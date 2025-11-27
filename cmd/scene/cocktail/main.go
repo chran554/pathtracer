@@ -21,7 +21,7 @@ var amountSamples = 1024 * 12 * 4
 
 var imageWidth = 800
 var imageHeight = 600
-var magnification = 1.0
+var magnification = 2.0
 
 func main() {
 	ceilingLight := createCeilingLight(16)
