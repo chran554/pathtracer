@@ -112,7 +112,7 @@ func main() {
 		skyDomeOrigin := vec3.T{0, 0, 0}
 		skyDomeMaterial := scene.NewMaterial().
 			E(color.White, skyDomeEmissionFactor, true).
-			SP(floatimage.Load(environmentEnvironMap), &skyDomeOrigin, vec3.T{1, 0, -1}, vec3.T{0, 1, 0})
+			SP(floatimage.LoadOrPanic(environmentEnvironMap), &skyDomeOrigin, vec3.T{1, 0, -1}, vec3.T{0, 1, 0})
 		skyDome := scene.NewSphere(&skyDomeOrigin, skyDomeRadius, skyDomeMaterial).N("Environment mapping")
 
 		cameraOrigin := pyramidsBounds.Center().Add(&vec3.T{0, 150, -700})

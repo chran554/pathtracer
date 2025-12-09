@@ -14,7 +14,7 @@ import (
 
 var animationName = "diamondsR4ever"
 
-var amountAnimationFrames = 60
+var amountAnimationFrames = 1
 
 var imageWidth = 800
 var imageHeight = 800
@@ -33,7 +33,7 @@ func main() {
 
 	environmentSphere := scene.NewSphere(&vec3.T{0, 0, 0}, 1000*1000*1000, scene.NewMaterial().
 		E(color.White, 1, true).
-		SP(floatimage.Load("textures/planets/environmentmap/Stellarium3.jpeg"), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+		SP(floatimage.LoadOrPanic("textures/planets/environmentmap/Stellarium3.jpeg"), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 
 	lamp1 := scene.NewSphere(&vec3.T{roomScale * 2.0, roomScale * 0.5, -roomScale * 1.0}, roomScale*0.8, scene.NewMaterial().E(color.White, 20, true)).N("Lamp1")
 
@@ -41,9 +41,9 @@ func main() {
 
 	diamondMaterial := scene.NewMaterial().
 		N("diamond").
-		C(color.NewColor(1.0, 0.95, 0.8)).
-		T(1.0, true, scene.RefractionIndex_Diamond).
-		M(0.3, 0.0)
+		C(color.NewColor(0.95, 0.90, 0.9)).
+		T(0.98, true, scene.RefractionIndex_Diamond).
+		M(0.02, 0.0)
 
 	d := dmd.Diamond{
 		GirdleDiameter:                         1.00, // 100.0%
@@ -59,7 +59,7 @@ func main() {
 	diamond2.UpdateBounds()
 	floorLevel := diamond2.Bounds.Ymin
 
-	floorMaterial := scene.NewMaterial().M(0.8, 0.1).PP(floatimage.Load("textures/marble/white_marble.png"), &vec3.T{0, 0, 0}, vec3.T{roomScale * 1.5 * 2, 0, 0}, vec3.T{0, 0, roomScale * 1.5 * 2})
+	floorMaterial := scene.NewMaterial().M(0.8, 0.1).PP(floatimage.LoadOrPanic("textures/marble/white_marble.png"), &vec3.T{0, 0, 0}, vec3.T{roomScale * 1.5 * 2, 0, 0}, vec3.T{0, 0, roomScale * 1.5 * 2})
 	floor := scene.NewDisc(&vec3.T{0, floorLevel, 0}, &vec3.T{0, 1, 0}, roomScale*1.5, floorMaterial).N("Floor")
 
 	animationStep := 1.0 / float64(amountAnimationFrames)
@@ -83,7 +83,12 @@ func main() {
 
 		camera := scene.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).V(viewPlaneDistance)
 
-		frame := scene.NewFrame(animation.AnimationName, animationFrameIndex, camera, scn)
+		fi := -1
+		if animationFrameIndex > 1 {
+			fi = animationFrameIndex
+		}
+
+		frame := scene.NewFrame(animation.AnimationName, fi, camera, scn)
 		animation.AddFrame(frame)
 	}
 

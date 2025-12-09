@@ -24,7 +24,7 @@ func main() {
 	projectionU := vec3.T{0, 0, ballRadius}
 	projectionV := vec3.T{0, 2 * ballRadius, 0}
 
-	projection := scene.NewCylindricalImageProjection(floatimage.Load("textures/planets/earth_daymap.jpg"), &projectionOrigin, projectionU, projectionV)
+	projection := scene.NewCylindricalImageProjection(floatimage.LoadOrPanic("textures/planets/earth_daymap.jpg"), &projectionOrigin, projectionU, projectionV)
 
 	sphere1 := scene.NewSphere(&sphereOrigin, ballRadius, scene.NewMaterial().P(&projection)).N("Textured sphere")
 

@@ -20,10 +20,8 @@ func NewWindow(scale float64) *scene.FacetStructure {
 
 	window.ScaleUniform(&vec3.Zero, scale/window.Bounds.Ymax)
 
-	glassMaterial := scene.NewMaterial().N("glass").
-		C(color.NewColor(0.980, 0.990, 0.995)).
-		T(0.99, false, scene.RefractionIndex_Glass).
-		M(0.01, 0.05)
+	glassMaterial := scene.NewMaterialGlass("glass")
+	glassMaterial.SolidObject = false
 
 	paintMaterial := scene.NewMaterial().N("paint").
 		C(color.NewColorGrey(0.9)).

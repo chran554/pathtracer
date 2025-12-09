@@ -34,9 +34,9 @@ func main() {
 	projectionU := vec3.T{0, 0, -ballRadius}
 	projectionV := vec3.T{0, ballRadius, 0}
 
-	projection1 := scene.NewSphericalImageProjection(floatimage.Load("textures/planets/earth_daymap.jpg"), &projection1Origin, projectionU.Inverted(), projectionV)
-	projection2 := scene.NewSphericalImageProjection(floatimage.Load("textures/checkered 360x180 with lines.png"), &projection2Origin, projectionU, projectionV)
-	projection3 := scene.NewSphericalImageProjection(floatimage.Load("textures/equirectangular/2560px-Plate_Carrée_with_Tissot's_Indicatrices_of_Distortion.svg.png"), &projection3Origin, projectionU.Inverted(), projectionV)
+	projection1 := scene.NewSphericalImageProjection(floatimage.LoadOrPanic("textures/planets/earth_daymap.jpg"), &projection1Origin, projectionU.Inverted(), projectionV)
+	projection2 := scene.NewSphericalImageProjection(floatimage.LoadOrPanic("textures/checkered 360x180 with lines.png"), &projection2Origin, projectionU, projectionV)
+	projection3 := scene.NewSphericalImageProjection(floatimage.LoadOrPanic("textures/equirectangular/2560px-Plate_Carrée_with_Tissot's_Indicatrices_of_Distortion.svg.png"), &projection3Origin, projectionU.Inverted(), projectionV)
 
 	sphere1 := scene.NewSphere(&sphere1Origin, ballRadius, scene.NewMaterial().P(&projection1)).N("Textured sphere - Earth")
 	sphere2 := scene.NewSphere(&sphere2Origin, ballRadius, scene.NewMaterial().P(&projection2)).N("Textured sphere - checkered")

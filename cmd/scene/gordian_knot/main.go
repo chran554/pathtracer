@@ -56,7 +56,7 @@ func main() {
 		environmentOrigin := &vec3.T{0, 0, 0}
 		environmentMaterial := scene.NewMaterial().
 			E(color.White, environmentEmissionFactor, true).
-			SP(floatimage.Load("textures/equirectangular/forest_sunny_day.jpg"), environmentOrigin, vec3.UnitZ, vec3.UnitY)
+			SP(floatimage.LoadOrPanic("textures/equirectangular/forest_sunny_day.jpg"), environmentOrigin, vec3.UnitZ, vec3.UnitY)
 		environmentSphere := scene.NewSphere(environmentOrigin, environmentRadius, environmentMaterial).N("Environment mapping")
 
 		scn := scene.NewSceneNode().S(spheres...).S(environmentSphere)

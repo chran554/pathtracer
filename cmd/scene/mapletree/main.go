@@ -31,17 +31,17 @@ func main() {
 
 	skydomeMaterial := scene.NewMaterial().
 		E(color.White, skyDomeEmission, true).
-		SP(floatimage.Load("textures/equirectangular/336_PDM_BG7.jpg"), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+		SP(floatimage.LoadOrPanic("textures/equirectangular/336_PDM_BG7.jpg"), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
 
 	skyDome := scene.NewSphere(&vec3.T{0, 0, 0}, skyDomeRadius, skydomeMaterial).N("sky dome")
 	skyDome.RotateY(&vec3.Zero, util.DegToRad(-20))
 	//skyDome.Translate(&vec3.T{0, 2, 0})
 
-	ground := &scene.FacetStructure{Facets: obj.NewSquare(obj.XZPlane, false)}
+	ground := &scene.FacetStructure{Facets: obj.NewSquare(obj.SquareTypeXZPlane, false)}
 	ground.Translate(&vec3.T{-0.5, 0, -0.5})
 	ground.ScaleUniform(&vec3.T{0, 0, 0}, skyDomeRadius*2)
 	ground.Translate(&vec3.T{0, -2, 0})
-	groundMaterial := scene.NewMaterial().E(color.White, skyDomeEmission, true).SP(floatimage.Load("textures/equirectangular/336_PDM_BG7.jpg"), &vec3.T{0, skyDomeRadius, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+	groundMaterial := scene.NewMaterial().E(color.White, skyDomeEmission, true).SP(floatimage.LoadOrPanic("textures/equirectangular/336_PDM_BG7.jpg"), &vec3.T{0, skyDomeRadius, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
 
 	ground.Material = groundMaterial
 
@@ -49,13 +49,13 @@ func main() {
 	var leaves []*scene.FacetStructure
 
 	leafCount := 100
-	leafMaterial := scene.NewMaterial().TP(floatimage.Load("Leaves0120_35_S_02.png")).
+	leafMaterial := scene.NewMaterial().TP(floatimage.LoadOrPanic("Leaves0120_35_S_02.png")).
 		C(color.NewColorRGBA(1.0, 1.0, 1.0, 1.0)).
 		T(0.05, false, 1.0).
 		M(0.15, 0.85)
 
 	for leafIndex := 0; leafIndex < leafCount; leafIndex++ {
-		leafFacets := obj.NewSquare(obj.XYPlane, true)
+		leafFacets := obj.NewSquare(obj.SquareTypeXYPlane, true)
 		leaf := &scene.FacetStructure{Facets: leafFacets, Material: leafMaterial}
 
 		// Move leaf to be centered on origin

@@ -38,7 +38,7 @@ func main() {
 	scale := 100.0
 	cornellBox := NewCornellBox(100.0)
 
-	footballMaterial := scene.NewMaterial().C(color.White).M(0.1, 0.6).SP(floatimage.Load("textures/equirectangular/football.png"), &vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+	footballMaterial := scene.NewMaterial().C(color.White).M(0.1, 0.6).SP(floatimage.LoadOrPanic("textures/equirectangular/football.png"), &vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
 	football := scene.NewSphere(&vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0}, ballRadius, footballMaterial).N("football")
 
 	sphere2Material := scene.NewMaterial().C(color.NewColorGrey(0.9))
@@ -97,7 +97,7 @@ func NewCornellBox(scale float64) *scene.FacetStructure {
 	cornellBox.ReplaceMaterial("Ceiling", scene.NewMaterial().N("Ceiling").C(color.NewColorGrey(0.9)))
 	cornellBox.ReplaceMaterial("Floor", scene.NewMaterial().N("Floor").C(color.NewColorGrey(0.8)).M(0.3, 0.05))
 
-	cornellBox.GetFirstObjectBySubstructureName("Floor").Material.PP(floatimage.Load("textures/marble/white_marble.png"), &vec3.T{0, 0, 0}, vec3.T{200 * 2, 0, 0}, vec3.T{0, 0, 200 * 2})
+	cornellBox.GetFirstObjectBySubstructureName("Floor").Material.PP(floatimage.LoadOrPanic("textures/marble/white_marble.png"), &vec3.T{0, 0, 0}, vec3.T{200 * 2, 0, 0}, vec3.T{0, 0, 200 * 2})
 
 	lampMaterial := scene.NewMaterial().N("Lamp").E(color.White, 6, true)
 	cornellBox.ReplaceMaterial("Lamp_1", lampMaterial)

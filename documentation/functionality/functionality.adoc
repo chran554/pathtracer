@@ -153,10 +153,10 @@ _Glossiness_ is the parameter that is the common "mirror" parameter that most tr
 _Roughness_ is how rough the mirror surface is, much like the real world material "brushed aluminum". It gives a non-sharp reflection. Roughness 0.0 is perfect clear mirror reflection and for roughness 1.0 it is the same as diffuse reflection.
 A material with roughness 1.0 do not differ from a perfectly diffuse material, although it has full (1.0) glossiness.
 
-.Light green sphere with reflective parameters glossiness and roughness. Glossiness increasing from left 0.0 to right 1.0 and roughness increasing from bottom 0.0 to top 1.0.
+.Light green spheres with reflective parameters glossiness and roughness. Glossiness increasing from left 0.0 to right 1.0 and roughness increasing from bottom 0.0 to top 1.0.
 image::reflective_test_glossy_roughness.png[Reflective parameters glossiness and roughness]
 
-.Reflection image details
+.Reflection image details.
 ----
 Image size:             1350x900
 Amount samples/pixel:   12288
@@ -164,6 +164,28 @@ Max recursion depth:    6
 Amount facets:          18
 Amount spheres:         49
 ----
+
+== Material - Reflection (glossy and colorized reflection)
+
+A conductive material (non dielectric) such as metals does colorize their reflection. A simple approximation to the colorized reflection is to use the color of the object.
+A more correct approach would be to use the Fresnel for metal objects. That function is somewhat more complex and unintuitive to configure for simple scenes to render.
+
+.The two lower rows are light-goldish-colored spheres with the changing reflective parameter glossiness. Glossiness increasing from left 0.0 to right 1.0 (fixed roughness of 0.0, perfect clear mirror). The upper of the two goldish rows colorizes reflections like the metal gold, and the lower row reflects like dielectric objects like billiard balls. The four white specular squares on the high-gloss golden balls are colorized as well, but the color and high brightness in the reflection of the four lamps are clamped (to RGB max) and thus rendered as white.
+image::reflective_test_glossy_reflective_color.png[Reflective parameters glossiness and if reflection should be colorized by object color]
+
+.Reflections of dielectric and conductive materials image details.
+----
+Image size:            1800x900
+Amount samples/pixel:  24 576
+Max recursion depth:   6
+Amount facets:         10
+Amount spheres:        29
+Render date:           2025-12-07
+Render duration:       6h17m16.183009375s
+----
+
+
+== Metallic test scene
 
 .A Cornell box with "metallic like" settings.
 image::reflection_metallic_cornellbox.png[Cornell box with metallic settings]
@@ -200,7 +222,7 @@ Image size:             800x400
 Amount samples/pixel:   2048
 Max recursion:          4
 Amount spheres:         6
-Frame render time: 3h46m48.561010458s
+Frame render time:      3h46m48.561010458s
 ----
 
 == Aperture shape

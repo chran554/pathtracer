@@ -9,6 +9,7 @@ import (
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/util"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -19,9 +20,9 @@ var amountAnimationFrames = 1
 
 var imageWidth = 400
 var imageHeight = 300
-var magnification = 0.5
+var magnification = 4.0
 
-var amountSamples = 128 // 1024 * 16
+var amountSamples = 1024 * 24 // 1024 * 16
 
 var apertureSize = 0.4
 
@@ -55,17 +56,22 @@ const (
 func main() {
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, true)
 
+	textureEnvironment := floatimage.LoadOrPanic("textures/equirectangular/las-vegas-hotell-lobby.png")
 	environmentSphere := scene.NewSphere(&vec3.T{0, 0, 0}, 3*100, scene.NewMaterial().
-		E(color.White, 6, true).
+		E(color.White, 2, true).
 		//C(color.NewColorGrey(0.2))).
-		SP(floatimage.Load("textures/equirectangular/las-vegas-hotell-lobby.png"), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+		SP(textureEnvironment, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 
 	// Generally speaking, hanging billiard lights about 32"-36" above the bed of the table is about right.
-	lamp2 := obj.NewBox(obj.BoxCentered)
-	lamp2.ScaleUniform(&vec3.Zero, 0.5)
-	lamp2.Scale(&vec3.Zero, &vec3.T{100, 2, 40})
-	lamp2.Translate(&vec3.T{0, 33*2.54 + 5, 0}) // Raise lamp 33 inches above table cloth
-	lamp2.Material = scene.NewMaterial().N("lamp").E(color.KelvinTemperatureColor2(5000), 15, true)
+	//
+	// The lights over a pool, snooker or billiard table must be at least 520 lux,
+	// and the minimum height of the fixture is no lower than 1.016m above the bed of the table.
+	// https://www.cits.wa.gov.au/sport-and-recreation/sports-dimensions-guide/billiards-pool-and-snooker
+	lamp2 := obj.NewSquareFacetStructure(obj.SquareTypeXZPlane, false)
+	lamp2.CenterOn(&vec3.Zero)
+	lamp2.Scale(&vec3.Zero, &vec3.T{100, 1, 40})
+	lamp2.Translate(&vec3.T{0, 33 * 2.54, -10}) // Raise the lamp 33 inches above the table cloth (and a little bit in front of the balls)
+	lamp2.Material = scene.NewMaterial().N("lamp").E(color.KelvinTemperatureColor2(4500), 8, true)
 	// lamp1 := scene.NewSphere(&vec3.T{0, 150, -75}, 50, scene.NewMaterial().E(color.White, 18, true)).N("lamp")
 
 	/*
@@ -84,24 +90,30 @@ func main() {
 
 		The distance between the diamonds can be found by dividing the playing surface length by 8 or the width by 4.
 	*/
-	tableBoard := obj.NewBox(obj.BoxCentered)
-	tableBoard.Translate(&vec3.T{0, -tableBoard.Bounds.Ymax, 0})
-	tableBoard.Scale(&vec3.Zero, &vec3.T{356.9, 5, 177.8})
-	tableBoard.Material = scene.NewMaterial().C(color.NewColorGrey(1.0)).M(0.05, 0.8).PP(floatimage.Load("textures/snooker/cloth02.png"), &vec3.T{0, 0, 0}, vec3.T{5, 0, 0}, vec3.T{0, 0, 5})
+	poolTable := obj.NewSquareFacetStructure(obj.SquareTypeXZPlane, false)
+	poolTable.CenterOn(&vec3.Zero)
+	poolTable.Scale(&vec3.Zero, &vec3.T{356.9, 1, 177.8})
+	textureTableCloth := floatimage.LoadOrPanic("textures/snooker/cloth02.png")
+	poolTable.Material = scene.NewMaterial().
+		C(color.White).
+		M(0.015, 0.9).
+		PP(textureTableCloth, &vec3.T{2.5, 0, 2.5}, vec3.T{5, 0, 0}, vec3.T{0, 0, 5})
 
 	var balls = [][]SnookerBall{
 		{SnookerBall01, SnookerBall02, SnookerBall03, SnookerBall04, SnookerBall05, SnookerBall06, SnookerBall07, SnookerBall08},
 		{SnookerBall09, SnookerBall10, SnookerBall11, SnookerBall12, SnookerBall13, SnookerBall14, SnookerBall15, SnookerBallWhite},
 	}
 
+	r := rand.New(rand.NewSource(99))
 	var snookerballs []*scene.Sphere
 	for j := 0; j < len(balls); j++ {
 		for i := 0; i < len(balls[j]); i++ {
 			snookerball := NewSnookerBall(balls[j][i])
+			snookerball.RotateX(snookerball.Bounds().Center(), util.DegToRad(-10)) // Tilt the ball number slightly upwards
 
-			xRotAngle := maxRotation * (rand.Float64()*2 - 1)
-			yRotAngle := maxRotation * (rand.Float64()*2 - 1)
-			zRotAngle := maxRotation * (rand.Float64()*2 - 1)
+			xRotAngle := maxRotation * (r.Float64()*2 - 1)
+			yRotAngle := maxRotation * (r.Float64()*2 - 1)
+			zRotAngle := maxRotation * (r.Float64()*2 - 1)
 			snookerball.RotateZ(snookerball.Bounds().Center(), zRotAngle)
 			snookerball.RotateX(snookerball.Bounds().Center(), xRotAngle)
 			snookerball.RotateY(snookerball.Bounds().Center(), yRotAngle)
@@ -110,7 +122,7 @@ func main() {
 			z := ((float64(j) - 0.5) / 0.5) * snookerball.Radius * 2.5
 
 			ballPerfectPosition := vec3.T{x, 0, z}
-			displacementAngle := math.Pi * 2 * rand.Float64()
+			displacementAngle := math.Pi * 2 * r.Float64()
 			ballPosition := ballPerfectPosition.Added(&vec3.T{ballDisplacementRadius * math.Cos(displacementAngle), 0, ballDisplacementRadius * math.Sin(displacementAngle)})
 
 			snookerball.Translate(&ballPosition)
@@ -132,18 +144,25 @@ func main() {
 	scn := scene.NewSceneNode().
 		S(environmentSphere).
 		SN(snookerBallsNode).
-		FS(tableBoard, lamp2)
+		FS(poolTable, lamp2)
 
 	//animationStep := 1.0 / float64(amountAnimationFrames)
 	for animationFrameIndex := 0; animationFrameIndex < amountAnimationFrames; animationFrameIndex++ {
 		// animationProgress := float64(animationFrameIndex) * animationStep
 
-		cameraOrigin := vec3.T{0, 9, -40}
+		cameraOrigin := &vec3.T{0, 9, -40}
 		focusPoint := dice.Bounds.Center() // vec3.T{0, 2.5, -6}
 		focusPoint[1] = dice.Bounds.Ymax * 0.75
-		camera := scene.NewCamera(&cameraOrigin, focusPoint, amountSamples, magnification).A(apertureSize, nil)
+		camera := scene.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).
+			A(apertureSize, nil).
+			D(6)
 
-		frame := scene.NewFrame(animation.AnimationName, animationFrameIndex, camera, scn)
+		fi := -1
+		if fi > 1 {
+			fi = animationFrameIndex
+		}
+
+		frame := scene.NewFrame(animation.AnimationName, fi, camera, scn)
 		animation.AddFrame(frame)
 	}
 
@@ -155,16 +174,20 @@ func main() {
 }
 
 func NewSnookerBall(ball SnookerBall) *scene.Sphere {
-	// diameter := 5.25 // Snooker
-	// diameter := 5.4  // Bumper Pool
-	// diameter := 5.25 // Carom (Billiard) Balls
-	diameter := 5.7 // Pool (Pocket Billiard] Balls
+	// diameter := 5.25 // Snooker (cm)
+	// diameter := 5.4  // Bumper Pool (cm)
+	// diameter := 5.25 // Carom (Billiard) Balls (cm)
+	diameter := 5.7 // Pool (Pocket Billiard) Balls (cm)
 
 	radius := diameter / 2
-	textureFilename := floatimage.Load(fmt.Sprintf("textures/snooker/wpi/%s_wpi.png", ball))
+	textureFilename, err := floatimage.EmptyPlaceholderImage(fmt.Sprintf("textures/snooker/wpi/%s_wpi.png", ball))
+	if err != nil {
+		panic(err)
+	}
+
 	ballMaterial := scene.NewMaterial().
 		N(fmt.Sprintf("snooker ball %s", ball)).
-		M(0.05, 0.1).
+		M(0.015, 0.1).
 		T(0.0, true, scene.RefractionIndex_AcrylicPlastic).
 		//SP(textureFilename, &vec3.T{0, radius, 0}, vec3.T{0, 0, diameter}, vec3.T{0, radius, 0})
 		//PP(textureFilename, &vec3.T{-radius, 0, 0}, vec3.T{diameter, 0, 0}, vec3.T{0, diameter, 0})

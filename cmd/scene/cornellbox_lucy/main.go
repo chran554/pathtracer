@@ -34,7 +34,7 @@ func main() {
 	lamp.Scale(&vec3.Zero, &vec3.T{0.35, 1.0, 1.0})
 	lamp.Material.E(color.NewColor(1.0, 0.95, 0.9), lampIntensity, true)
 
-	skyTexture := floatimage.Load("textures/sky/pink clouds.jpg")
+	skyTexture := floatimage.LoadOrPanic("textures/sky/pink clouds.jpg")
 
 	floor := cornellBox.GetFirstObjectByMaterialName("Floor")
 	floor.Material = scene.NewMaterial().N("Floor").E(color.White, 1.0, true)
@@ -67,7 +67,7 @@ func main() {
 	u := vec3.T{1, 0, 0}
 	lucy.Material = scene.NewMaterial().N("lucy").
 		C(color.NewColorGrey(0.90)).
-		CP(floatimage.Load("textures/marble/white_marble_double_width.png"), &vec3.Zero, u, v, true)
+		CP(floatimage.LoadOrPanic("textures/marble/white_marble_double_width.png"), &vec3.Zero, u, v, true)
 
 	scn := scene.NewSceneNode().FS(lucy).FS(cornellBox)
 

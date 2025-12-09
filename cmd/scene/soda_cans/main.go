@@ -34,7 +34,7 @@ func main() {
 	skyDome := scene.NewSphere(&vec3.T{0, 0, 0}, 4*100, scene.NewMaterial().
 		E(color.White, 1, true).
 		//C(color.NewColorGrey(0.2))).
-		SP(floatimage.Load("textures/equirectangular/las-vegas-hotell-lobby.png"), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+		SP(floatimage.LoadOrPanic("textures/equirectangular/las-vegas-hotell-lobby.png"), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 	skyDome.RotateY(&vec3.Zero, math.Pi+(math.Pi*6/8))
 
 	lamp1 := scene.NewSphere(&vec3.T{-50, 150 + dy, -75}, 60, scene.NewMaterial().E(color.NewColorKelvin(4000), 12, true)).N("lamp")
@@ -46,7 +46,7 @@ func main() {
 	tableBoard.Material = scene.NewMaterial().
 		C(color.NewColorGrey(1.0)).
 		M(0.15, 0.3).
-		PP(floatimage.Load("textures/wood/darkwood.png"), &vec3.T{0, 0, 0}, vec3.T{30, 0, 0}, vec3.T{0, 0, 20})
+		PP(floatimage.LoadOrPanic("textures/wood/darkwood.png"), &vec3.T{0, 0, 0}, vec3.T{30, 0, 0}, vec3.T{0, 0, 20})
 
 	sodaCanHeight := 11.6
 

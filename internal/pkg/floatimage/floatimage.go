@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	img "image"
 	col "image/color"
@@ -41,7 +42,7 @@ func NewFloatImage(name string, width, height int) *FloatImage {
 		Height: height,
 	}
 
-	for i, _ := range floatImage.pixels {
+	for i := range floatImage.pixels {
 		floatImage.pixels[i] = color.Black.Copy()
 	}
 
@@ -63,7 +64,10 @@ func (fi *FloatImage) Copy() *FloatImage {
 
 func (fi *FloatImage) Hash() string {
 	if fi._hash == "" {
-		data, _ := msgpack.Marshal(fi.pixels)
+		data := []byte(fi.name)
+		if len(fi.pixels) > 0 {
+			data, _ = msgpack.Marshal(fi.pixels)
+		}
 		sum256 := sha256.Sum256(data)
 		fi._hash = base64.URLEncoding.EncodeToString(sum256[:])
 	}
@@ -97,14 +101,48 @@ func (fi *FloatImage) Fill(color *color.Color) {
 	}
 }
 
-func Load(filename string) *FloatImage {
-	textureImage, err := getImageFromFilePath(filename)
+// EmptyPlaceholderImage returns a new FloatImage with the given filename as the name.
+// The image is empty and of no size (w=0, h=0).
+// This is useful for images that are referenced during scene creation where the image is not but rather the filename.
+func EmptyPlaceholderImage(filename string) (*FloatImage, error) {
+	info, err := os.Stat(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := os.Stat(filename); errors.Is(err, os.ErrNotExist) {
+		return nil, fmt.Errorf("file \"%s\" does not exist", filename)
+	} else if err != nil {
+		return nil, err
+	} else if info.IsDir() {
+		return nil, fmt.Errorf("file \"%s\" is a directory", filename)
+	} else if info.Size() == 0 {
+		return nil, fmt.Errorf("file \"%s\" is empty", filename)
+	}
+
+	return NewFloatImage(filename, 0, 0), nil
+}
+
+func Load(filename string) (*FloatImage, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	image, err := Read(filename, f)
+	if err != nil {
+		return nil, err
+	}
+	return image, nil
+}
+
+func LoadOrPanic(filename string) *FloatImage {
+	image, err := Load(filename)
 	if err != nil {
 		message := fmt.Sprintf("image file \"%s\" could not be loaded: %s", filename, err.Error())
 		panic(message)
 	}
-
-	image := ConvertImageToFloatImage(filename, textureImage)
 	return image
 }
 
@@ -142,16 +180,6 @@ func ConvertImageToFloatImage(imageName string, textureImage img.Image) *FloatIm
 
 	image.GammaDecode(GammaDefault)
 	return image
-}
-
-func getImageFromFilePath(filePath string) (img.Image, error) {
-	f, err := os.Open(filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	image, _, err := img.Decode(f)
-	return image, err
 }
 
 func WriteImage(filename string, floatImage *FloatImage) {

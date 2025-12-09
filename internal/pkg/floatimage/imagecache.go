@@ -24,7 +24,7 @@ func GetCachedImage(filename string) *FloatImage {
 
 	if strings.TrimSpace(filename) != "" {
 		fmt.Println("Image cache loading file:", filename)
-		floatImage = Load(filename)
+		floatImage = LoadOrPanic(filename)
 		fmt.Println("Image cache loading file:", filename, "... done", floatImage.String())
 		globalImageCache[filename] = floatImage
 	}

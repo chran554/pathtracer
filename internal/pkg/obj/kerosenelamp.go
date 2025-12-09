@@ -12,8 +12,8 @@ import (
 )
 
 func NewKeroseneLamp(scale float64, emission float64, sootness float64) *scene.FacetStructure {
-	flameTexture := floatimage.Load("textures/misc/kerosenelamp/kerosenelamp_flame_wave.png")
-	sootSmudgeTexture := floatimage.Load("textures/misc/kerosenelamp/kerosenelamp_glass_wave_mod2.png")
+	flameTexture := floatimage.LoadOrPanic("textures/misc/kerosenelamp/kerosenelamp_flame_wave.png")
+	sootSmudgeTexture := floatimage.LoadOrPanic("textures/misc/kerosenelamp/kerosenelamp_glass_wave_mod2.png")
 
 	keroseneLamp := loadKeroseneLamp(scale)
 
@@ -24,8 +24,9 @@ func NewKeroseneLamp(scale float64, emission float64, sootness float64) *scene.F
 	glassCenterBounds := glass.Bounds.Center()
 
 	brassMaterial := scene.NewMaterial().N("brass").
-		C(color.NewColor(0.8/2, 0.60/2, 0.25/2)).
+		C(color.NewColor(0.8, 0.60, 0.25).Multiply(0.3)).
 		M(0.8, 0.3)
+	brassMaterial.ColorizeReflection = true
 
 	flameMaterial := scene.NewMaterial().N("flame").
 		C(color.White).

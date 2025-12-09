@@ -10,10 +10,16 @@ import (
 type SquareType int
 
 const (
-	XYPlane SquareType = iota // Square lower left corner is located at (0,0,0) on axes. Each side is 1 unit in length from [0, 1]. Normal parallel to z-axis.
-	YZPlane                   // Square lower left corner is located at (0,0,0) on axes. Each side is 1 unit in length from [0, 1]. Normal parallel to x-axis.
-	XZPlane                   // Square lower left corner is located at (0,0,0) on axes. Each side is 1 unit in length from [0, 1]. Normal anti-parallel to y-axis (parallel to inverted direction of y-axis).
+	SquareTypeXYPlane SquareType = iota // Square lower left corner is located at (0,0,0) on axes. Each side is 1 unit in length from [0, 1]. Normal parallel to z-axis.
+	SquareTypeYZPlane                   // Square lower left corner is located at (0,0,0) on axes. Each side is 1 unit in length from [0, 1]. Normal parallel to x-axis.
+	SquareTypeXZPlane                   // Square lower left corner is located at (0,0,0) on axes. Each side is 1 unit in length from [0, 1]. Normal anti-parallel to y-axis (parallel to inverted direction of y-axis).
 )
+
+func NewSquareFacetStructure(squareType SquareType, addTextureCoordinates bool) *scene.FacetStructure {
+	fs := &scene.FacetStructure{Facets: NewSquare(squareType, addTextureCoordinates)}
+	fs.UpdateBounds()
+	return fs
+}
 
 func NewSquare(squareType SquareType, addTextureCoordinates bool) []*scene.Facet {
 	p1 := vec3.T{1, 1, 0} // Top right close            3----------2
@@ -26,11 +32,11 @@ func NewSquare(squareType SquareType, addTextureCoordinates bool) []*scene.Facet
 	p8 := vec3.T{0, 0, 0} // Bottom left close       8----------5            *----> x
 
 	switch squareType {
-	case XYPlane:
+	case SquareTypeXYPlane:
 		return getSquareFacets(&p8, &p5, &p1, &p4, addTextureCoordinates)
-	case YZPlane:
+	case SquareTypeYZPlane:
 		return getSquareFacets(&p8, &p4, &p3, &p7, addTextureCoordinates)
-	case XZPlane:
+	case SquareTypeXZPlane:
 		fallthrough
 	default:
 		return getSquareFacets(&p8, &p5, &p6, &p7, addTextureCoordinates)

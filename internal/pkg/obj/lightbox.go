@@ -20,7 +20,7 @@ func NewLightBox(scale *vec3.T, c *color.Color, emission float64, formFilename s
 
 	lightBox.GetFirstMaterialByName("cube").C(color.Black).E(color.Black, 0.0, true)
 	lightBox.GetFirstMaterialByName("lightpanel").E(c, emission, true)
-	lightBox.GetFirstMaterialByName("front").PP(floatimage.Load(formFilename), &vec3.T{0.5, -0.5, 0}, vec3.UnitX.Scaled(-1), vec3.UnitY)
+	lightBox.GetFirstMaterialByName("front").PP(floatimage.LoadOrPanic(formFilename), &vec3.T{0.5, -0.5, 0}, vec3.UnitX.Scaled(-1), vec3.UnitY)
 
 	lightBox.Scale(&vec3.Zero, scale)
 

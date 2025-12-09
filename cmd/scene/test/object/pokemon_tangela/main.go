@@ -24,13 +24,13 @@ var magnification = 1.0
 
 func main() {
 	// Ground
-	groundMaterial := scene.NewMaterial().PP(floatimage.Load("textures/floor/Calacatta-Vena-French-Pattern-Architextures.jpg"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(150), vec3.UnitZ.Scaled(150))
+	groundMaterial := scene.NewMaterial().PP(floatimage.LoadOrPanic("textures/floor/Calacatta-Vena-French-Pattern-Architextures.jpg"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(150), vec3.UnitZ.Scaled(150))
 	ground := &scene.Disc{Name: "ground", Origin: &vec3.T{0, 0, 0}, Normal: &vec3.UnitY, Radius: 5000.0, Material: groundMaterial}
 
 	// Sky
 	skyMaterial := scene.NewMaterial().
 		E(color.White, 0.5, true).
-		SP(floatimage.Load("textures/equirectangular/wirebox 6192x3098.png"), &vec3.T{0, 0, 0}, vec3.UnitX, vec3.UnitY)
+		SP(floatimage.LoadOrPanic("textures/equirectangular/wirebox 6192x3098.png"), &vec3.T{0, 0, 0}, vec3.UnitX, vec3.UnitY)
 	skyDome := scene.NewSphere(&vec3.T{0, 0, 0}, 5000, skyMaterial).N("sky dome")
 
 	// Object

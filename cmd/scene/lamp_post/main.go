@@ -41,12 +41,12 @@ func main() {
 		environmentSphereOrigin := &vec3.T{0, 0, 0}
 		environmentSphereMaterial := scene.NewMaterial().
 			E(color.White, environmentEmissionFactor, true).
-			SP(floatimage.Load("textures/equirectangular/sunset horizon 2800x1400.jpg"), environmentSphereOrigin, vec3.T{-0.2, 0, -1}, vec3.T{0, 1, 0})
+			SP(floatimage.LoadOrPanic("textures/equirectangular/sunset horizon 2800x1400.jpg"), environmentSphereOrigin, vec3.T{-0.2, 0, -1}, vec3.T{0, 1, 0})
 		environmentSphere := scene.NewSphere(environmentSphereOrigin, environmentRadius, environmentSphereMaterial).N("Environment mapping")
 
 		// Ground
 		groundMaterial := scene.NewMaterial().N("Ground material").
-			PP(floatimage.Load("textures/ground/soil-cracked.png"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(150), vec3.UnitZ.Scaled(150))
+			PP(floatimage.LoadOrPanic("textures/ground/soil-cracked.png"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(150), vec3.UnitZ.Scaled(150))
 		ground := scene.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
 
 		// Gopher

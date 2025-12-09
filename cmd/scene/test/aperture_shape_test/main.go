@@ -46,7 +46,7 @@ func main() {
 	skyDomeOrigin := vec3.T{0, 0, 0}
 	skyDomeMaterial := scene.NewMaterial().
 		E(color.White, environmentEmissionFactor, true).
-		SP(floatimage.Load(environmentEnvironMap), &skyDomeOrigin, vec3.T{0, 0, 1}, vec3.T{0, 1, 0})
+		SP(floatimage.LoadOrPanic(environmentEnvironMap), &skyDomeOrigin, vec3.T{0, 0, 1}, vec3.T{0, 1, 0})
 	skyDome := scene.NewSphere(&skyDomeOrigin, environmentRadius, skyDomeMaterial).N("sky dome")
 
 	// Gopher
@@ -63,7 +63,7 @@ func main() {
 
 	// Ground
 
-	groundProjection := scene.NewParallelImageProjection(floatimage.Load("textures/ground/soil-cracked.png"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(gopher.Bounds.SizeY()*2), vec3.UnitZ.Scaled(gopher.Bounds.SizeY()*2))
+	groundProjection := scene.NewParallelImageProjection(floatimage.LoadOrPanic("textures/ground/soil-cracked.png"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(gopher.Bounds.SizeY()*2), vec3.UnitZ.Scaled(gopher.Bounds.SizeY()*2))
 	groundMaterial := scene.NewMaterial().N("Ground material").P(&groundProjection)
 	ground := scene.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
 
@@ -99,7 +99,7 @@ func main() {
 		cameraOrigin := vec3.T{xPos, yPos, -600}
 
 		camera := scene.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).
-			A(apertureSize, floatimage.Load("textures/aperture/heart.png")).
+			A(apertureSize, floatimage.LoadOrPanic("textures/aperture/heart.png")).
 			V(600)
 
 		frame := scene.NewFrame(animationName, frameIndex, camera, scn)

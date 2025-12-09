@@ -26,21 +26,21 @@ var skyDomeEmission = 1.0
 var maxRayDepth = 3
 
 func main() {
-	//environmentTexture := floatimage.Load("textures/equirectangular/dimples.png")
-	environmentTexture := floatimage.Load("textures/equirectangular/wirebox 6192x3098.png")
+	//environmentTexture := floatimage.LoadOrPanic("textures/equirectangular/dimples.png")
+	environmentTexture := floatimage.LoadOrPanic("textures/equirectangular/wirebox 6192x3098.png")
 
 	environmentDome := scene.NewSphere(&vec3.T{0, 0, 0}, 200*100, scene.NewMaterial().N("environment dome").
 		E(color.NewColorGrey(1.0), skyDomeEmission, true).
 		SP(environmentTexture, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("environment dome")
 	environmentDome.RotateY(&vec3.Zero, util.DegToRad(-20))
 
-	testSquareFacets := obj.NewSquare(obj.XYPlane, true)
-	leafSquareFacets := obj.NewSquare(obj.XYPlane, true)
-	flameSquareFacets := obj.NewSquare(obj.XYPlane, true)
+	testSquareFacets := obj.NewSquare(obj.SquareTypeXYPlane, true)
+	leafSquareFacets := obj.NewSquare(obj.SquareTypeXYPlane, true)
+	flameSquareFacets := obj.NewSquare(obj.SquareTypeXYPlane, true)
 
-	transparencyTestImage := floatimage.Load("textures/test/test_alpha_transparency.png")
-	leafImage := floatimage.Load("textures/tree/Leaves0120_35_S_02.png")
-	keroseneFlameTextureImage := floatimage.Load("textures/misc/kerosenelamp/kerosenelamp_flame_wave.png")
+	transparencyTestImage := floatimage.LoadOrPanic("textures/test/test_alpha_transparency.png")
+	leafImage := floatimage.LoadOrPanic("textures/tree/Leaves0120_35_S_02.png")
+	keroseneFlameTextureImage := floatimage.LoadOrPanic("textures/misc/kerosenelamp/kerosenelamp_flame_wave.png")
 
 	testTextureMaterial := scene.NewMaterial().N("test material").C(color.NewColorRGBA(1.0, 1.0, 1.0, 1.0)).TP(transparencyTestImage)
 

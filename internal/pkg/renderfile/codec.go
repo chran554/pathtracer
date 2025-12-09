@@ -129,14 +129,16 @@ func (s *serializer) fileResourceIndex(floatImage *floatimage.FloatImage) (Resou
 		return index, nil // Reuse the existing index
 	}
 
-	// Load the binary data from the file
+	// Calculate the new resource index based on the size of the map
+	newIndex := ResourceIndex(len(s.resourceFileMap) + 1)
+
+	//fmt.Printf("Reading resource file %s as resource #%d\n", floatImage.Name(), newIndex)
+
+	// Read the binary data from the file
 	fileData, err := os.ReadFile(floatImage.Name())
 	if err != nil {
 		return 0, fmt.Errorf("could not read resource file %s: %w", floatImage.Name(), err)
 	}
-
-	// Calculate the new resource index based on the size of the map
-	newIndex := ResourceIndex(len(s.resourceFileMap) + 1)
 
 	// Create the zip entry filename
 	resourceZipFilename := fmt.Sprintf("resources/%03d_%s", newIndex, filepath.Base(floatImage.Name()))
@@ -190,17 +192,18 @@ func (s *serializer) materialIndex(material *scene.Material) (MaterialIndex, err
 
 	// Map the *scene.Material to a local Material struct
 	mappedMaterial := &Material{
-		Name:            material.Name,
-		Color:           s.colorIndex(material.Color),
-		Diffuse:         material.Diffuse,
-		Emission:        s.colorIndex(material.Emission),
-		Glossiness:      material.Glossiness,
-		Roughness:       material.Roughness,
-		RefractionIndex: material.RefractionIndex,
-		SolidObject:     material.SolidObject,
-		Transparency:    material.Transparency,
-		RayTerminator:   material.RayTerminator,
-		Projection:      projection,
+		Name:               material.Name,
+		Color:              s.colorIndex(material.Color),
+		Diffuse:            material.Diffuse,
+		Emission:           s.colorIndex(material.Emission),
+		Glossiness:         material.Glossiness,
+		Roughness:          material.Roughness,
+		RefractionIndex:    material.RefractionIndex,
+		SolidObject:        material.SolidObject,
+		Transparency:       material.Transparency,
+		RayTerminator:      material.RayTerminator,
+		Projection:         projection,
+		ColorizeReflection: material.ColorizeReflection,
 	}
 
 	// Assign a new index for the material

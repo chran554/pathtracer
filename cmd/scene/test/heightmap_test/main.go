@@ -29,7 +29,7 @@ func main() {
 
 	landscapeMaterial := scene.NewMaterial().N("Ground material").
 		T(0.0, false, scene.RefractionIndex_Quartz).
-		PP(floatimage.Load("textures/ground/soil-cracked-bright.png"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(75), vec3.UnitZ.Scaled(75))
+		PP(floatimage.LoadOrPanic("textures/ground/soil-cracked-bright.png"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(75), vec3.UnitZ.Scaled(75))
 	landscape := obj.NewHeightMap("textures/height maps/test_heightmap.png", vec3.T{size, size / 7, size})
 	landscape.UpdateVertexNormalsWithThreshold(false, 0)
 	//landscape.UpdateVertexNormalsWithThreshold(false, 75)
@@ -40,7 +40,7 @@ func main() {
 	skyDomeOrigin := &vec3.T{0, 0, 0}
 	skyDomeMaterial := scene.NewMaterial().
 		E(color.White, 3, true).
-		SP(floatimage.Load("textures/equirectangular/sunset horizon 2800x1400.jpg"), skyDomeOrigin, vec3.T{-0.2, 0, -1}, vec3.T{0, 1, 0})
+		SP(floatimage.LoadOrPanic("textures/equirectangular/sunset horizon 2800x1400.jpg"), skyDomeOrigin, vec3.T{-0.2, 0, -1}, vec3.T{0, 1, 0})
 	skyDome := scene.NewSphere(skyDomeOrigin, 10*1000, skyDomeMaterial).N("Sky dome")
 
 	animationStartIndex := 0

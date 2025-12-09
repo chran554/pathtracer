@@ -19,9 +19,9 @@ func NewGlassIkeaPokal(scale float64) *scene.FacetStructure {
 
 	glass.Material = scene.NewMaterial().
 		N("glass").
-		C(color.NewColor(0.95, 0.95, 0.97)).
-		M(0.1, 0.05).
-		T(0.98, true, scene.RefractionIndex_Glass)
+		C(color.NewColor(0.90, 0.92, 0.95)).
+		M(0.270, 0.030).
+		T(0.700, true, scene.RefractionIndex_Glass)
 
 	return glass
 }

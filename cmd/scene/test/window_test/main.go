@@ -70,7 +70,7 @@ func createPillar(pillarWidth float64, pillarHeight float64) *scene.FacetStructu
 	pillar1.Material = scene.NewMaterial().
 		C(color.NewColorGrey(0.9)).
 		M(0.3, 0.2).
-		PP(floatimage.Load("textures/concrete/Polished-Concrete-Architextures.jpg"), &vec3.T{0, 0, 0}, (&vec3.UnitX).Scaled(pillarWidth), (&vec3.UnitZ).Add(&vec3.T{0, 0.5, 0}).Scaled(pillarWidth))
+		PP(floatimage.LoadOrPanic("textures/concrete/Polished-Concrete-Architextures.jpg"), &vec3.T{0, 0, 0}, (&vec3.UnitX).Scaled(pillarWidth), (&vec3.UnitZ).Add(&vec3.T{0, 0.5, 0}).Scaled(pillarWidth))
 	pillar1.Translate(&vec3.T{-0.5, 0, -0.5})
 
 	pillar1.Scale(&vec3.Zero, &vec3.T{pillarWidth, pillarHeight, pillarWidth})
@@ -81,17 +81,17 @@ func setCornellBoxMaterial(cornellBox *scene.FacetStructure) {
 	scale := cornellBox.Bounds.SizeY()
 
 	backWallMaterial := *cornellBox.Material
-	backWallMaterial.PP(floatimage.Load("textures/wallpaper/VintagePalms_Image_Tile_Item_9454w.jpg"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(1.66*scale), vec3.UnitY.Scaled(scale))
+	backWallMaterial.PP(floatimage.LoadOrPanic("textures/wallpaper/VintagePalms_Image_Tile_Item_9454w.jpg"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(1.66*scale), vec3.UnitY.Scaled(scale))
 	//backWallMaterial.PP("textures/wallpaper/DarkFloral_Image_Tile_Item_9419w.jpg", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(2*scale), vec3.UnitY.Scaled(2*scale*0.66))
 	cornellBox.GetFirstObjectBySubstructureName("Back::Back").Material = &backWallMaterial
 
 	sideWallMaterial := *cornellBox.Material
-	sideWallMaterial.PP(floatimage.Load("textures/wallpaper/VintagePalms_Image_Tile_Item_9454w.jpg"), &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(1.66*scale), vec3.UnitY.Scaled(scale))
+	sideWallMaterial.PP(floatimage.LoadOrPanic("textures/wallpaper/VintagePalms_Image_Tile_Item_9454w.jpg"), &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(1.66*scale), vec3.UnitY.Scaled(scale))
 	//sideWallMaterial.PP("textures/wallpaper/DarkFloral_Image_Tile_Item_9419w.jpg", &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(2*scale), vec3.UnitY.Scaled(2*scale*0.66))
 	cornellBox.GetFirstObjectBySubstructureName("Left::Left").Material = &sideWallMaterial
 	cornellBox.GetFirstObjectBySubstructureName("Right::Right").Material = &sideWallMaterial
 
 	floorMaterial := *cornellBox.Material
-	floorMaterial.M(0.3, 0.1).PP(floatimage.Load("textures/marble/marble white tiles 1000x1000.jpg"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale/4), vec3.UnitZ.Scaled(scale/4))
+	floorMaterial.M(0.3, 0.1).PP(floatimage.LoadOrPanic("textures/marble/marble white tiles 1000x1000.jpg"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale/4), vec3.UnitZ.Scaled(scale/4))
 	cornellBox.GetFirstObjectBySubstructureName("Floor::Floor").Material = &floorMaterial
 }

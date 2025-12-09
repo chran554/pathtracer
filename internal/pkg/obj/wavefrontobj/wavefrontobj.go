@@ -807,7 +807,7 @@ func readMaterials(materialFilename string, objectFile *os.File) (map[string]*sc
 			// To specify the diffuse reflectivity of the current material
 			// map_Kd filename
 
-			texture := floatimage.Load(tokens[1])
+			texture := floatimage.LoadOrPanic(tokens[1])
 			textureMappingImageProjection := scene.NewTextureMappingImageProjection(texture)
 			currentMaterial.P(&textureMappingImageProjection)
 		default:

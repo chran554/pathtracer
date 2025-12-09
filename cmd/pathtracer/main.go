@@ -34,7 +34,7 @@ const (
 
 var (
 	debugPixel = struct{ x, y int }{x: -1, y: -1} // No debug
-	//debugPixel = struct{ x, y int }{x: 450, y: 300}
+	// debugPixel = struct{ x, y int }{x: 200, y: 200}
 )
 
 type IntersectionInformation struct {
@@ -409,7 +409,7 @@ func parallelPixelRendering(renderedPixelData *floatimage.FloatImage, camera *sc
 	defaultRenderContext := scene.NewMaterial().N("default render context").C(color.White).T(1.0, true, scene.RefractionIndex_Air)
 	rayContexts := []*scene.Material{defaultRenderContext}
 
-	// Debug ray at specified pixel
+	// Debug ray at a specific pixel
 	if debugPixel.y == y && debugPixel.x >= 0 && debugPixel.y >= 0 {
 		fmt.Printf("debugging at pixel (%d, %d)...\n", debugPixel.x, debugPixel.y)
 
@@ -439,8 +439,8 @@ func parallelPixelRendering(renderedPixelData *floatimage.FloatImage, camera *sc
 //
 // refractionIndex1 is the index of the medium that we come from.
 // refractionIndex1 is the index of the medium that we hit.
-// incident is the direction vector of the ray, the direction in which we travelled.
-// normal is the normal of the surface we hit (pointing more or less towards our incident vector.
+// incident is the direction vector of the ray.
+// normal is the normal of the surface we hit (pointing more or less towards our incident vector).
 //
 // https://blog.demofox.org/2020/06/14/casual-shadertoy-path-tracing-3-fresnel-rough-refraction-absorption-orbit-camera/
 func FresnelReflectAmount(refractionIndex1 float64, refractionIndex2 float64, normal *vec3.T, incident *vec3.T, minReflection float64, maxReflection float64) float64 {
@@ -465,6 +465,71 @@ func FresnelReflectAmount(refractionIndex1 float64, refractionIndex2 float64, no
 
 	// adjust reflect multiplier for object reflectivity
 	return minReflection*(1.0-ret) + (maxReflection * ret)
+}
+
+// FresnelDielectric computes the Fresnel reflectance for a dielectric interface.
+// cosI: cosine of the incident angle (should be positive).
+// nI:   refractive index of incident medium.
+// nT:   refractive index of transmitted medium.
+// Returns reflectance F in [0,1].
+func FresnelDielectric(cosI, nI, nT float64) float64 {
+	// Clamp cosI to [-1, 1]
+	if cosI < -1 {
+		cosI = -1
+	} else if cosI > 1 {
+		cosI = 1
+	}
+
+	// Determine if the ray is entering or exiting
+	entering := cosI > 0
+	if !entering {
+		// swap indices
+		nI, nT = nT, nI
+		cosI = math.Abs(cosI)
+	}
+
+	// Compute sin^2(theta_t) using Snell's law
+	eta := nI / nT
+	sinT2 := eta * eta * (1.0 - cosI*cosI)
+
+	// Handle total internal reflection
+	if sinT2 > 1.0 {
+		return 1.0
+	}
+
+	cosT := math.Sqrt(1.0 - sinT2)
+
+	rsNum := nI*cosI - nT*cosT
+	rsDen := nI*cosI + nT*cosT
+	rs := rsNum / rsDen
+
+	rpNum := nT*cosI - nI*cosT
+	rpDen := nT*cosI + nI*cosT
+	rp := rpNum / rpDen
+
+	F := 0.5 * (rs*rs + rp*rp)
+	return F
+}
+
+// FresnelSchlick computes an approximation of the Fresnel reflectance for a dielectric interface.
+// cosI: cosine of the incident angle (should be positive).
+// nI:   refractive index of incident medium.
+// nT:   refractive index of transmitted medium.
+// Returns reflectance F in [0,1].
+func FresnelSchlick(cosI, nI, nT float64) float64 {
+	r0 := (nI - nT) / (nI + nT)
+	r0 *= r0
+	return r0 + (1-r0)*math.Pow(1-cosI, 5)
+}
+
+func Beer(c *color.Color, distance float64) *color.Color {
+	const a = 0.15
+	k := a * (-distance)
+	return color.NewColor(
+		math.Exp((1-float64(c.R))*k),
+		math.Exp((1-float64(c.G))*k),
+		math.Exp((1-float64(c.B))*k),
+	)
 }
 
 func getRandomHemisphereVector(hemisphereHeading *vec3.T) *vec3.T {
@@ -675,12 +740,18 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 							// Outgoing ray from a solid object with refraction index
 							//fmt.Printf("Outgoing... %s\n", ii.material.Name)
 
+							// This is a fallback for error state when we otherwise are about to pop an empty ray context.
+							previousRayContext := rayContexts[len(rayContexts)-1] // Get previous ray context
+
 							// Outgoing ray from a solid object with refraction index
 							rayContexts = rayContexts[:len(rayContexts)-1] // Pop off current ray context
 							if len(rayContexts) == 0 {
-								panic("About to access empty ray context (after popping last context)...")
+								// Fallback re-use the saved current ray context, as fallback
+								//panic("About to access empty ray context (after popping last context)...")
+								fmt.Println("About to access empty ray context (after popping last context)...")
+							} else {
+								previousRayContext = rayContexts[len(rayContexts)-1] // Get actual previous ray context
 							}
-							previousRayContext := rayContexts[len(rayContexts)-1] // Get previous ray context
 
 							// Flip normal if needed, to face ray
 							if util.CosinePositive(ii.normalAtIntersection, ray.Heading) {
@@ -722,7 +793,7 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 				incomingEmissionOnSurface := incomingEmission
 				incomingEmissionOnSurface.Multiply(float32(cosineNewRayAndNormal))
 
-				if useDiffuseRay || useReflectionRay {
+				if useDiffuseRay {
 					//projectionCol := fixTransparentColor(projectionColor)
 					//materialCol := fixTransparentColor(ii.material.Color)
 					projectionCol := projectionColor
@@ -736,6 +807,31 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 						G: incomingEmissionOnSurface.G * materialCol.G * projectionCol.G,
 						B: incomingEmissionOnSurface.B * materialCol.B * projectionCol.B,
 						A: 1.0,
+					}
+				} else if useReflectionRay {
+					//projectionCol := fixTransparentColor(projectionColor)
+					//materialCol := fixTransparentColor(ii.material.Color)
+					projectionCol := projectionColor
+					materialCol := ii.material.Color
+
+					//projectionCol = projectionCol.Fade(color.White, 1-projectionCol.A)
+					//materialCol = materialCol.Fade(color.White, 1-materialCol.A)
+
+					if ii.material.ColorizeReflection {
+						// fmt.Println("colorizing reflection for ", ii.material.Name)
+						outgoingEmission = &color.Color{
+							R: incomingEmissionOnSurface.R * materialCol.R * projectionCol.R,
+							G: incomingEmissionOnSurface.G * materialCol.G * projectionCol.G,
+							B: incomingEmissionOnSurface.B * materialCol.B * projectionCol.B,
+							A: 1.0,
+						}
+					} else {
+						outgoingEmission = &color.Color{
+							R: incomingEmissionOnSurface.R,
+							G: incomingEmissionOnSurface.G,
+							B: incomingEmissionOnSurface.B,
+							A: 1.0,
+						}
 					}
 				} else if useTransparencyRay {
 					// TODO is the following correct?
@@ -896,20 +992,20 @@ func getRefractionVector(normal *vec3.T, incomingVector *vec3.T, leavingRefracti
 	outgoingVector = incomingVector // No refraction
 
 	refractionRatio := leavingRefractionIndex / enteringRefractionIndex
-	cosi := -vec3.Dot(incomingVector, normal)                        // Cosine for angle of incoming vector and surface normal
-	sinlsqr := refractionRatio * refractionRatio * (1.0 - cosi*cosi) // Squared sinus for angle between refraction (leaving) vector and inverted normal
+	cosi := -vec3.Dot(incomingVector, normal)                        // Cosine for an angle of incoming vector and surface normal
+	sinlsqr := refractionRatio * refractionRatio * (1.0 - cosi*cosi) // Squared sinus for an angle between refraction (leaving) vector and inverted normal
 
-	// If the incoming vector angle is to flat to the surface of an optically lighter material then
-	// total reflection occur. (Like the mirror effect on the water surface when you are diving and looking up.)
+	// If the incoming vector angle is too flat to the surface of an optically lighter material, then
+	// total reflection occurs. (Like the mirror effect on the water surface when you are diving and looking up.)
 	// Calculate the reflection vector instead.
 	if sinlsqr > 1.0 {
 		return getReflectionVector(normal, incomingVector), true
 	}
 
-	cosl := math.Sqrt(1.0 - sinlsqr) // Need to verify that this part actually is "cosine" of angle
+	cosl := math.Sqrt(1.0 - sinlsqr) // Need to verify that this part actually is "cosine" of an angle
 
 	io := incomingVector.Scaled(refractionRatio)     // Incoming vector part of outgoing (refraction) vector
-	no := normal.Scaled(refractionRatio*cosi - cosl) // Normal vector part of outgoing (refraction) vector
+	no := normal.Scaled(refractionRatio*cosi - cosl) // Normal vector part of the outgoing (refraction) vector
 
 	io.Add(&no)
 	outgoingVector = &io

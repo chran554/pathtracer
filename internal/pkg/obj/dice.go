@@ -40,8 +40,8 @@ func box(scale float64) (dice *scene.FacetStructure) {
 
 	diceMaterial := scene.NewMaterial().N("box").
 		C(color.NewColorGrey(1.0)). // TODO Set to same color as texture background, should be 0.9 or something. Color should affect color diffuse textures (by operation multiplication)?
-		T(0.0, true, scene.RefractionIndex_AcrylicPlastic).
-		M(0.075, 0.2)
+		M(0.045, 0.1).
+		T(0.0, true, scene.RefractionIndex_AcrylicPlastic)
 
 	dice.Material = diceMaterial
 
@@ -54,12 +54,12 @@ func box(scale float64) (dice *scene.FacetStructure) {
 	}
 
 	b := dice.Bounds
-	diceMaterial1 := diceMaterial.Copy().N("1"). /*.C(color.NewColor(1, 0, 0))*/ PP(floatimage.Load("textures/box/dice_1.png"), &vec3.T{b.Xmax, b.Ymin, 0}, vec3.T{-scale, 0, 0}, vec3.T{0, scale, 0})
-	diceMaterial2 := diceMaterial.Copy().N("2"). /*.C(color.NewColor(0, 1, 0))*/ PP(floatimage.Load("textures/box/dice_2.png"), &vec3.T{0, b.Ymin, b.Zmin}, vec3.T{0, 0, scale}, vec3.T{0, scale, 0})
-	diceMaterial3 := diceMaterial.Copy().N("3"). /*.C(color.NewColor(0, 0, 1))*/ PP(floatimage.Load("textures/box/dice_3.png"), &vec3.T{b.Xmin, 0, b.Zmin}, vec3.T{scale, 0, 0}, vec3.T{0, 0, scale})
-	diceMaterial4 := diceMaterial.Copy().N("4"). /*.C(color.NewColor(1, 0, 1))*/ PP(floatimage.Load("textures/box/dice_4.png"), &vec3.T{b.Xmin, 0, b.Zmax}, vec3.T{scale, 0, 0}, vec3.T{0, 0, -scale})
-	diceMaterial5 := diceMaterial.Copy().N("5"). /*.C(color.NewColor(1, 1, 0))*/ PP(floatimage.Load("textures/box/dice_5.png"), &vec3.T{0, b.Ymin, b.Zmax}, vec3.T{0, 0, -scale}, vec3.T{0, scale, 0})
-	diceMaterial6 := diceMaterial.Copy().N("6"). /*.C(color.NewColor(0, 1, 1))*/ PP(floatimage.Load("textures/box/dice_6.png"), &vec3.T{b.Xmin, b.Ymin, 0}, vec3.T{scale, 0, 0}, vec3.T{0, scale, 0})
+	diceMaterial1 := diceMaterial.Copy().N("1"). /*.C(color.NewColor(1, 0, 0))*/ PP(floatimage.LoadOrPanic("textures/dice/dice_1.png"), &vec3.T{b.Xmax, b.Ymin, 0}, vec3.T{-scale, 0, 0}, vec3.T{0, scale, 0})
+	diceMaterial2 := diceMaterial.Copy().N("2"). /*.C(color.NewColor(0, 1, 0))*/ PP(floatimage.LoadOrPanic("textures/dice/dice_2.png"), &vec3.T{0, b.Ymin, b.Zmin}, vec3.T{0, 0, scale}, vec3.T{0, scale, 0})
+	diceMaterial3 := diceMaterial.Copy().N("3"). /*.C(color.NewColor(0, 0, 1))*/ PP(floatimage.LoadOrPanic("textures/dice/dice_3.png"), &vec3.T{b.Xmin, 0, b.Zmin}, vec3.T{scale, 0, 0}, vec3.T{0, 0, scale})
+	diceMaterial4 := diceMaterial.Copy().N("4"). /*.C(color.NewColor(1, 0, 1))*/ PP(floatimage.LoadOrPanic("textures/dice/dice_4.png"), &vec3.T{b.Xmin, 0, b.Zmax}, vec3.T{scale, 0, 0}, vec3.T{0, 0, -scale})
+	diceMaterial5 := diceMaterial.Copy().N("5"). /*.C(color.NewColor(1, 1, 0))*/ PP(floatimage.LoadOrPanic("textures/dice/dice_5.png"), &vec3.T{0, b.Ymin, b.Zmax}, vec3.T{0, 0, -scale}, vec3.T{0, scale, 0})
+	diceMaterial6 := diceMaterial.Copy().N("6"). /*.C(color.NewColor(0, 1, 1))*/ PP(floatimage.LoadOrPanic("textures/dice/dice_6.png"), &vec3.T{b.Xmin, b.Ymin, 0}, vec3.T{scale, 0, 0}, vec3.T{0, scale, 0})
 
 	dice.ReplaceMaterial("1", diceMaterial1)
 	dice.ReplaceMaterial("2", diceMaterial2)

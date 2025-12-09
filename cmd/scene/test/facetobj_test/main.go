@@ -93,7 +93,7 @@ func main() {
 		skyDomeOrigin := vec3.T{0, 0, 0}
 		skyDomeMaterial := scene.NewMaterial().
 			E(color.White, environmentEmissionFactor, true).
-			SP(floatimage.Load("textures/equirectangular/white room 01 1836x918.png"), &skyDomeOrigin, vec3.UnitZ, vec3.UnitY)
+			SP(floatimage.LoadOrPanic("textures/equirectangular/white room 01 1836x918.png"), &skyDomeOrigin, vec3.UnitZ, vec3.UnitY)
 		skyDome := scene.NewSphere(&skyDomeOrigin, environmentRadius, skyDomeMaterial).N("sky dome")
 		scn.S(skyDome)
 

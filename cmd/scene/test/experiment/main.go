@@ -77,7 +77,7 @@ func main() {
 	// environmentSphere := addEnvironmentMapping("textures/equirectangular/nightsky.png")
 
 	// Ground
-	groundProjection := scene.NewParallelImageProjection(floatimage.Load("textures/ground/grass_short.png"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(80/2), vec3.UnitZ.Scaled(50/2))
+	groundProjection := scene.NewParallelImageProjection(floatimage.LoadOrPanic("textures/ground/grass_short.png"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(80/2), vec3.UnitZ.Scaled(50/2))
 	groundMaterial := scene.NewMaterial().N("Ground material").P(&groundProjection)
 	ground := scene.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
 
@@ -166,7 +166,7 @@ func addEnvironmentMapping(filename string) *scene.Sphere {
 	origin := vec3.T{0, 0, 0}
 	u := vec3.T{-0.2, 0, -1}
 	v := vec3.T{0, 1, 0}
-	material := scene.NewMaterial().E(color.White, environmentEmissionFactor, true).SP(floatimage.Load(filename), &origin, u, v)
+	material := scene.NewMaterial().E(color.White, environmentEmissionFactor, true).SP(floatimage.LoadOrPanic(filename), &origin, u, v)
 	sphere := scene.NewSphere(&origin, environmentRadius, material).N("Environment mapping")
 
 	return sphere

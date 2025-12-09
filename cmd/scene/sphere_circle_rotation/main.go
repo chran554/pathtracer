@@ -76,7 +76,7 @@ func main() {
 		// Sky Dome
 		skyDomeRadius := 100.0 * 1000.0
 		skyDomeOrigin := &vec3.T{0, 0, 0}
-		skyDomeMaterial := scene.NewMaterial().E(color.White, 1.0, true).SP(floatimage.Load(environmentEnvironMap), skyDomeOrigin, vec3.UnitX, vec3.UnitY)
+		skyDomeMaterial := scene.NewMaterial().E(color.White, 1.0, true).SP(floatimage.LoadOrPanic(environmentEnvironMap), skyDomeOrigin, vec3.UnitX, vec3.UnitY)
 		skyDome := scene.NewSphere(skyDomeOrigin, skyDomeRadius, skyDomeMaterial)
 
 		camera := getCamera(magnification, animationProgress)
@@ -122,7 +122,7 @@ func addBallsToScene(deltaBallAngle float64, projectionAngle float64, projection
 
 		material := scene.NewMaterial().
 			E(projectionData[projectionTextureIndex].emission, 1.0, projectionData[projectionTextureIndex].rayTerminator).
-			SP(floatimage.Load(projectionData[projectionTextureIndex].filename), &ballOrigin, vec3.T{projectionU, 0, projectionV}, vec3.T{0, 1, 0})
+			SP(floatimage.LoadOrPanic(projectionData[projectionTextureIndex].filename), &ballOrigin, vec3.T{projectionU, 0, projectionV}, vec3.T{0, 1, 0})
 
 		sphere := scene.NewSphere(&ballOrigin, ballRadius, material)
 

@@ -30,7 +30,7 @@ func main() {
 	groundOrigin := &vec3.T{0, 0, 0}
 	groundMaterial := scene.NewMaterial().
 		C(color.NewColor(0.5, 0.5, 0.5)).
-		PP(floatimage.Load("textures/white_marble.png"), groundOrigin, vec3.UnitX.Scaled(50), vec3.UnitZ.Scaled(50))
+		PP(floatimage.LoadOrPanic("textures/white_marble.png"), groundOrigin, vec3.UnitX.Scaled(50), vec3.UnitZ.Scaled(50))
 	ground := scene.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, 600, groundMaterial)
 
 	nominalFocusDistance := cameraOrigin.Length()

@@ -25,11 +25,11 @@ func main() {
 	cylinder := obj.NewCylinder(obj.CylinderYPositive, cylinderRadius, cylinderRadius*1.5)
 	cylinder.Material = scene.NewMaterial().
 		E(color.White, 1.0, true).
-		CP(floatimage.Load("textures/tapeter 2/CaptainsCabin_Image_Flatshot_Item_8887_360.jpg"), projectionOrigin, projectionU, projectionV, false)
+		CP(floatimage.LoadOrPanic("textures/tapeter 2/CaptainsCabin_Image_Flatshot_Item_8887_360.jpg"), projectionOrigin, projectionU, projectionV, false)
 
 	// Ground
 	groundMaterial := scene.NewMaterial().N("Ground material").
-		PP(floatimage.Load("textures/ground/soil-cracked.png"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(200), vec3.UnitZ.Scaled(200))
+		PP(floatimage.LoadOrPanic("textures/ground/soil-cracked.png"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(200), vec3.UnitZ.Scaled(200))
 	ground := scene.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, cylinderRadius*3, groundMaterial).N("Ground")
 
 	scn := scene.NewSceneNode().D(ground).FS(cylinder)

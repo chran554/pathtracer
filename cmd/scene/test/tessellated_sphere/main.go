@@ -32,10 +32,10 @@ var maxRecursion = 3
 var apertureSize = 1.5
 
 func main() {
-	var imageEnvironment = floatimage.Load("textures/equirectangular/sunset horizon 2800x1400.jpg")
-	var imageSphere = floatimage.Load("textures/equirectangular/world_map_latlonlines_equirectangular.jpeg")
-	var imageSoilCracked = floatimage.Load("textures/ground/soil-cracked.png")
-	var imageLightBox = floatimage.Load("textures/lights/lightboxtexture_2.0.png")
+	var imageEnvironment = floatimage.LoadOrPanic("textures/equirectangular/sunset horizon 2800x1400.jpg")
+	var imageSphere = floatimage.LoadOrPanic("textures/equirectangular/world_map_latlonlines_equirectangular.jpeg")
+	var imageSoilCracked = floatimage.LoadOrPanic("textures/ground/soil-cracked.png")
+	var imageLightBox = floatimage.LoadOrPanic("textures/lights/lightboxtexture_2.0.png")
 
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 

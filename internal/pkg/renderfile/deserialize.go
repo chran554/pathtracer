@@ -83,6 +83,8 @@ func (s *serializer) deserializeAnimation(animationInformation *AnimationInforma
 }
 
 func (s *serializer) deserializeFrame(frameInformation *FrameInformation) (*scene.Frame, error) {
+	fmt.Printf("Deserializing frame '%s': %d\n", frameInformation.Filename, frameInformation.Index)
+
 	err := s.initFrameCache(frameInformation)
 	if err != nil {
 		return nil, err
@@ -90,7 +92,8 @@ func (s *serializer) deserializeFrame(frameInformation *FrameInformation) (*scen
 
 	for _, file := range s.zipReader.File {
 		if file.Name == frameInformation.FrameFile {
-			fmt.Println("Initializing: Reading ", file.Name)
+			// fmt.Println("Initializing: Reading ", file.Name)
+
 			fileData, err := readZipFileEntry(file)
 			if err != nil {
 				return nil, err
@@ -126,7 +129,8 @@ func (s *serializer) initFrameCache(frameInformation *FrameInformation) error {
 
 	for _, file := range s.zipReader.File {
 		if file.Name == frameInformation.VectorFile {
-			fmt.Println("Initializing: Reading ", file.Name)
+			// fmt.Println("Initializing: Reading ", file.Name)
+
 			fileData, err := readZipFileEntry(file)
 			if err != nil {
 				return err
@@ -143,7 +147,8 @@ func (s *serializer) initFrameCache(frameInformation *FrameInformation) error {
 			}
 		}
 		if file.Name == frameInformation.Vector2DFile {
-			fmt.Println("Initializing: Reading ", file.Name)
+			// fmt.Println("Initializing: Reading ", file.Name)
+
 			fileData, err := readZipFileEntry(file)
 			if err != nil {
 				return err
@@ -160,7 +165,8 @@ func (s *serializer) initFrameCache(frameInformation *FrameInformation) error {
 			}
 		}
 		if file.Name == frameInformation.ColorFile {
-			fmt.Println("Initializing: Reading ", file.Name)
+			// fmt.Println("Initializing: Reading ", file.Name)
+
 			fileData, err := readZipFileEntry(file)
 			if err != nil {
 				return err
@@ -179,7 +185,8 @@ func (s *serializer) initFrameCache(frameInformation *FrameInformation) error {
 	}
 	for _, file := range s.zipReader.File {
 		if file.Name == frameInformation.MaterialFile {
-			fmt.Println("Initializing: Reading ", file.Name)
+			// fmt.Println("Initializing: Reading ", file.Name)
+
 			fileData, err := readZipFileEntry(file)
 			if err != nil {
 				return err
@@ -198,17 +205,18 @@ func (s *serializer) initFrameCache(frameInformation *FrameInformation) error {
 				}
 
 				s.sm = append(s.sm, &scene.Material{
-					Name:            m.Name,
-					Color:           s.sceneColor(m.Color),
-					Diffuse:         m.Diffuse,
-					Emission:        s.sceneColor(m.Emission),
-					Glossiness:      m.Glossiness,
-					Roughness:       m.Roughness,
-					Projection:      projection,
-					RefractionIndex: m.RefractionIndex,
-					SolidObject:     m.SolidObject,
-					Transparency:    m.Transparency,
-					RayTerminator:   m.RayTerminator,
+					Name:               m.Name,
+					Color:              s.sceneColor(m.Color),
+					Diffuse:            m.Diffuse,
+					Emission:           s.sceneColor(m.Emission),
+					Glossiness:         m.Glossiness,
+					Roughness:          m.Roughness,
+					Projection:         projection,
+					RefractionIndex:    m.RefractionIndex,
+					SolidObject:        m.SolidObject,
+					Transparency:       m.Transparency,
+					RayTerminator:      m.RayTerminator,
+					ColorizeReflection: m.ColorizeReflection,
 				})
 			}
 		}

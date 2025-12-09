@@ -24,12 +24,12 @@ var imageWidth = 800
 var imageHeight = 600
 var magnification = 1.5
 
-var amountSamples = 1024 * 42
+var amountSamples = 1024 * 24
 
 var apertureSize = 0.2
 
-var keroseneLampEmission = 450.0
-var skyDomeEmission = 1.5
+var keroseneLampEmission = 80.0
+var skyDomeEmission = 1.1
 
 func main() {
 	//lamp := scene.NewSphere(&vec3.T{0, 300, -300}, 100, scene.NewMaterial().N("lamp").E(color.White, 10*0, true))
@@ -37,7 +37,7 @@ func main() {
 	skyDome := scene.NewSphere(&vec3.T{0, 0, 0}, 200*100, scene.NewMaterial().
 		E(color.White, skyDomeEmission, true).
 		//C(color.NewColorGrey(0.2))).
-		SP(floatimage.Load("textures/equirectangular/331_PDM_BG1.jpg"), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+		SP(floatimage.LoadOrPanic("textures/equirectangular/331_PDM_BG1.jpg"), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 	// SP("textures/equirectangular/white room 02 612x612.jpg", &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 	skyDome.RotateY(&vec3.Zero, util.DegToRad(-20))
 
@@ -46,7 +46,7 @@ func main() {
 	tableBoard.Translate(&vec3.T{0, -tableBoard.Bounds.Ymax + 80, 0})
 	tableBoard.Material = scene.NewMaterial().
 		C(color.NewColorGrey(1.0)).
-		PP(floatimage.Load("textures/wallpaper/Blossom2_Image_Tile_Item_9471w.jpg"), &vec3.T{0, 0, 0}, vec3.T{60, 0, 0}, vec3.T{0, 0, 40})
+		PP(floatimage.LoadOrPanic("textures/wallpaper/Blossom2_Image_Tile_Item_9471w.jpg"), &vec3.T{0, 0, 0}, vec3.T{60, 0, 0}, vec3.T{0, 0, 40})
 
 	wallZ := tableBoard.Bounds.Zmax + 2.0
 
@@ -64,29 +64,29 @@ func main() {
 
 	wall := createWindowWall(wallWidth, wallHeight, windowXPos, windowYPos, windowWidth, windowHeight)
 	wall.Translate(&vec3.T{-wallWidth / 2, 0, wallZ})
-	wall.Material = scene.NewMaterial().PP(floatimage.Load("textures/wallpaper/Slottsteatern_Image_Flatshot_Item_4507.jpg"), &vec3.T{0, 0, 0}, vec3.T{52, 0, 0}, vec3.T{0, 52, 0})
+	wall.Material = scene.NewMaterial().PP(floatimage.LoadOrPanic("textures/wallpaper/Slottsteatern_Image_Flatshot_Item_4507.jpg"), &vec3.T{0, 0, 0}, vec3.T{52, 0, 0}, vec3.T{0, 52, 0})
 	//wall.Material = scene.NewMaterial().PP("textures/wallpaper/Ester_Image_Flatshot_Item_7659.jpg", &vec3.T{0, 0, 0}, vec3.T{100, 0, 0}, vec3.T{0, 100, 0})
 	//wall.Material = scene.NewMaterial().PP("textures/wallpaper/RoseGarden_Image_Tile_Item_7464.jpg", &vec3.T{0, 0, 0}, vec3.T{100, 0, 0}, vec3.T{0, 50, 0})
 
-	keroseneLamp := obj.NewKeroseneLamp(40, keroseneLampEmission)
+	keroseneLamp := obj.NewKeroseneLamp(40, keroseneLampEmission, 1.0)
 	keroseneLamp.RotateY(&vec3.Zero, util.DegToRad(-90))
 	keroseneLamp.Translate(&vec3.T{20, tableBoard.Bounds.Ymax, -20})
 
 	porcelainMaterial := scene.NewMaterial().
 		N("Porcelain").
-		C(color.NewColorGrey(0.85)).
+		C(color.NewColorGrey(0.80)).
 		M(0.1, 0.1).
 		T(0.0, true, scene.RefractionIndex_Porcelain)
-	var steelColorFactor = 0.8
+
 	steelCutleryMaterial := scene.NewMaterial().N("steel").
-		C(color.NewColor(0.93*steelColorFactor, 0.93*steelColorFactor, 0.95*steelColorFactor)).
-		M(0.9, 0.2).
-		T(0.0, true, scene.RefractionIndex_Glass)
+		C(color.NewColor(0.85, 0.85, 0.85).Multiply(0.8)).
+		M(0.9, 0.3).
+		T(0.0, true, scene.RefractionIndex_Silver)
 
 	teapot := obj.NewSolidUtahTeapot(21, true, true)
 	teapot.ReplaceMaterial("teapot", porcelainMaterial)
 	teapot.ReplaceMaterial("lid", porcelainMaterial)
-	teapot.RotateY(&vec3.Zero, util.DegToRad(-65))
+	teapot.RotateY(&vec3.Zero, util.DegToRad(-60))
 	teapot.Translate(&vec3.T{0, tableBoard.Bounds.Ymax, 20})
 
 	teacup := obj.NewTeacup(12, true, true, false)
@@ -100,16 +100,19 @@ func main() {
 	spoon.RotateY(&vec3.Zero, util.DegToRad(-80))
 	spoon.Translate(&vec3.T{-25 - 5, tableBoard.Bounds.Ymax, -12})
 
-	room := wavefrontobj.ReadOrPanic(filepath.Join(obj.ObjEvaluationFileDir, "skydome_open.obj"))
-	room.ScaleUniform(&vec3.Zero, 1/room.Bounds.SizeY())
-	room.ScaleUniform(&vec3.Zero, 5.5*100)
-	room.RotateY(&vec3.Zero, util.DegToRad(-90))
-	room.Translate(&vec3.T{0, wallHeight / 2, -100})
-	room.Material = scene.NewMaterial().E(color.NewColorKelvin(2000), 0.2, true).SP(floatimage.Load("textures/equirectangular/medieval_kitchen.png"), room.Bounds.Center(), vec3.UnitX.Scaled(-1), vec3.UnitY)
+	textureKitchen := floatimage.LoadOrPanic("textures/equirectangular/medieval_kitchen.png")
+	kitchenDome := wavefrontobj.ReadOrPanic(filepath.Join(obj.ObjEvaluationFileDir, "skydome_open.obj"))
+	kitchenDome.ScaleUniform(&vec3.Zero, 1/kitchenDome.Bounds.SizeY())
+	kitchenDome.ScaleUniform(&vec3.Zero, 5.5*100)
+	kitchenDome.RotateY(&vec3.Zero, util.DegToRad(-90))
+	kitchenDome.Translate(&vec3.T{0, wallHeight / 2, -100})
+	kitchenDome.Material = scene.NewMaterial().
+		E(color.NewColorKelvin(2000), 0.125, true).
+		SP(textureKitchen, kitchenDome.Bounds.Center(), vec3.UnitX.Scaled(-1), vec3.UnitY)
 
 	scn := scene.NewSceneNode().
 		S(skyDome).
-		FS(room).
+		FS(kitchenDome).
 		FS(wall).
 		FS(window).
 		FS(teapot).

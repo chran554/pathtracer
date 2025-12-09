@@ -25,7 +25,7 @@ func main() {
 	cylinder := obj.NewCylinder(obj.CylinderYPositive, cylinderRadius, cylinderRadius/2.2)
 	cylinder.Material = scene.NewMaterial().
 		E(color.White, 4.0, true).
-		CP(floatimage.Load("textures/floor/checkered.jpg"), projectionOrigin, projectionU, projectionV, false)
+		CP(floatimage.LoadOrPanic("textures/floor/checkered.jpg"), projectionOrigin, projectionU, projectionV, false)
 
 	// Ground
 	// groundMaterial := scene.NewMaterial().N("Ground material").
@@ -40,7 +40,7 @@ func main() {
 	skyDome := scene.NewSphere(&vec3.T{0, 0, 0}, 10*100, scene.NewMaterial().
 		E(color.White, 1, true).
 		//C(color.NewColorGrey(0.2))).
-		SP(floatimage.Load("textures/equirectangular/leaf_trees_by_lake.jpg"), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+		SP(floatimage.LoadOrPanic("textures/equirectangular/leaf_trees_by_lake.jpg"), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 
 	scn := scene.NewSceneNode().
 		// D(ground).
