@@ -67,7 +67,7 @@ func main() {
 	// The lights over a pool, snooker or billiard table must be at least 520 lux,
 	// and the minimum height of the fixture is no lower than 1.016m above the bed of the table.
 	// https://www.cits.wa.gov.au/sport-and-recreation/sports-dimensions-guide/billiards-pool-and-snooker
-	lamp2 := obj.NewSquareFacetStructure(obj.SquareTypeXZPlane, false)
+	lamp2 := obj.NewSquareFacetStructure(obj.SquareTypeXZPlane, false, false)
 	lamp2.CenterOn(&vec3.Zero)
 	lamp2.Scale(&vec3.Zero, &vec3.T{100, 1, 40})
 	lamp2.Translate(&vec3.T{0, 33 * 2.54, -10}) // Raise the lamp 33 inches above the table cloth (and a little bit in front of the balls)
@@ -90,7 +90,7 @@ func main() {
 
 		The distance between the diamonds can be found by dividing the playing surface length by 8 or the width by 4.
 	*/
-	poolTable := obj.NewSquareFacetStructure(obj.SquareTypeXZPlane, false)
+	poolTable := obj.NewSquareFacetStructure(obj.SquareTypeXZPlane, false, false)
 	poolTable.CenterOn(&vec3.Zero)
 	poolTable.Scale(&vec3.Zero, &vec3.T{356.9, 1, 177.8})
 	textureTableCloth := floatimage.LoadOrPanic("textures/snooker/cloth02.png")

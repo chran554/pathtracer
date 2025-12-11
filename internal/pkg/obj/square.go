@@ -15,9 +15,12 @@ const (
 	SquareTypeXZPlane                   // Square lower left corner is located at (0,0,0) on axes. Each side is 1 unit in length from [0, 1]. Normal anti-parallel to y-axis (parallel to inverted direction of y-axis).
 )
 
-func NewSquareFacetStructure(squareType SquareType, addTextureCoordinates bool) *scene.FacetStructure {
+func NewSquareFacetStructure(squareType SquareType, addTextureCoordinates bool, centerOnOrigin bool) *scene.FacetStructure {
 	fs := &scene.FacetStructure{Facets: NewSquare(squareType, addTextureCoordinates)}
 	fs.UpdateBounds()
+	if centerOnOrigin {
+		fs.Translate(fs.Bounds.Center().Scale(-1.0))
+	}
 	return fs
 }
 

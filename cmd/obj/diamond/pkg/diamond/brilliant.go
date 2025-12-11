@@ -10,23 +10,23 @@ import (
 )
 
 type Diamond struct {
-	GirdleDiameter                     float64 // GirdleDiameter is the diameter of the round diamond as seen from above. All facet sizes of a diamond are given in percentage of the girdle (diamond) width. Thus, we set girdle size as 100%.
-	GirdleHeightRelativeGirdleDiameter float64 // GirdleHeightRelativeGirdleDiameter is girdle height in percent of girdle radius. The height is measured at the girdle highest point (i.e. at the point where bezel facets and pavilion main facets point to each other). At least nn percent for "razor sharp" edges. nn% = "THIN", nn% = "MEDUIM" ..
+	GirdleDiameter                     float64 // GirdleDiameter is the diameter of the round diamond as seen from above. All facet sizes of a diamond are given in percentage of the girdle (diamond) width. Thus, we set the girdle size as 100%.
+	GirdleHeightRelativeGirdleDiameter float64 // GirdleHeightRelativeGirdleDiameter is girdle height in percentage of girdle radius. The height is measured at the girdle highest point (i.e. at the point where bezel facets and pavilion main facets point to each other). At least nn percent for "razor sharp" edges. nn% = "THIN", nn% = "MEDUIM" ..
 
 	CrownAngleDegrees              float64 // CrownAngleDegrees is the angle of the crown side, from the girdle to the table, as when you see the diamond from the side. (value is typically 33 degrees - 35 degrees). According to Marcel Tolkowsky, a 40.75-degree pavilion angle gets perfectly paired with a 34.5-degree crown angle. The recommended crown angle ranges from 34 to 35 degrees.
 	TableFacetSizeRelativeGirdle   float64 // TableFacetSizeRelativeGirdle is the size of the tablet. It is expressed as a percentage of the Girdle diameter (value is typically 53%-58%, 56% might be a good start)
-	StarFacetSizeRelativeCrownSide float64 // StarFacetSizeRelativeCrownSide is the size of the star facets. It is expressed as percentage of the length of the side of the crown. <crown side width> = (<girdle width> - <table width>)/2.0 (value is typically 50%-60%)
+	StarFacetSizeRelativeCrownSide float64 // StarFacetSizeRelativeCrownSide is the size of the star facets. It is expressed as a percentage of the length of the side of the crown. <crown side width> = (<girdle width> - <table width>)/2.0 (value is typically 50%-60%)
 
 	PavilionAngleDegrees                   float64 // PavilionAngleDegrees According to Marcel Tolkowsky, the optimal pavilion angle degree is 40.75. However, unless you are looking for a super-ideal diamond cut with a pavilion angle of 40.9 degrees, opting for stone within a range of 40.6 – 41 degrees is safe, providing other parameters meet their recommended ranges.
-	LowerHalfFacetSizeRelativeGirdleRadius float64 // // LowerHalfFacetSizeRelativeGirdleRadius is the size of the lower half facets. It is expressed as percentage of the length of the side of the pavilion.
+	LowerHalfFacetSizeRelativeGirdleRadius float64 // // LowerHalfFacetSizeRelativeGirdleRadius is the size of the lower half-facets. It is expressed as a percentage of the length of the side of the pavilion.
 }
 
 // NewDiamondRoundBrilliantCut will return a facet structure of a round, brilliant cut, diamond.
-// The diamond is a 57 facet, brilliant cut, diamond.
+// The diamond is a 57-facet, brilliant cut, diamond.
 //
-// It has a faceted girdle. The facets of the girdle is not included in the 57 facet count.
+// It has a faceted girdle. The facets of the girdle are not included in the 57-facet count.
 // The girdle is neither "dug out" nor "painted" but "normal".
-// (The girdle itself consist of 32 facets. Two girdle facets per each "upper"/"lower" half pair facet.)
+// (The girdle itself consists of 32 facets. Two girdle facets per each "upper"/"lower" half-pair facet.)
 //
 // It has no culet (no 58:th facet), at the bottom of the diamond, but is a "pointed" or "None" culet cut.
 func NewDiamondRoundBrilliantCut(d Diamond, scale float64, material scene.Material) *scene.FacetStructure {
@@ -37,11 +37,11 @@ func NewDiamondRoundBrilliantCut(d Diamond, scale float64, material scene.Materi
 	// girdleDiameter := 1.0                          // girdleDiameter is the diameter of the round diamond as seen from above. All facet sizes of a diamond are given in percentage of the girdle (diamond) width. Thus, we set girdle size as 100%.
 	// crownAngleDegrees := 34.0                      // crownAngleDegrees is the angle of the crown side, from the girdle to the table, as when you see the diamond from the side. (value is typically 33 degrees - 35 degrees). According to Marcel Tolkowsky, a 40.75-degree pavilion angle gets perfectly paired with a 34.5-degree crown angle. The recommended crown angle ranges from 34 to 35 degrees.
 	// tableFacetSizeRelativeGirdle := 0.56           // tableFacetSizeRelativeGirdle is the size of the tablet. It is expressed as a percentage of the Girdle diameter (value is typically 53%-58%, 56% might be a good start)
-	// starFacetSizeRelativeCrownSide := 0.55         // starFacetSizeRelativeCrownSide is the size of the star facets. It is expressed as percentage of the length of the side of the crown. <crown side width> = (<girdle width> - <table width>)/2.0 (value is typically 50%-60%)
+	// starFacetSizeRelativeCrownSide := 0.55         // starFacetSizeRelativeCrownSide is the size of the star facets. It is expressed as a percentage of the length of the side of the crown. <crown side width> = (<girdle width> - <table width>)/2.0 (value is typically 50%-60%)
 	// pavilionAngleDegrees := 40.9                   // According to Marcel Tolkowsky, the optimal pavilion angle degree is 40.75. However, unless you are looking for a super-ideal diamond cut with a pavilion angle of 40.9 degrees, opting for stone within a range of 40.6 – 41 degrees is safe, providing other parameters meet their recommended ranges.
 	// lowerHalfFacetSizeRelativeGirdleRadius := 0.77 //
-	// girdleHeightRelativeGirdleRadius := 0.03       // Girdle height in percent of girdle radius. At least nn percent for "razor sharp" edges. Thin is less than 1%=0.01, Medium is between 1%-3% and Thick is more 4%<
-	culetDiameter := 0.0 // Do not change this from value 0.0. Culet facet is not included in 3D model. Only diamonds with "pointed" or "None" culet are created.
+	// girdleHeightRelativeGirdleRadius := 0.03       // Girdle height in percentage of girdle radius. At least nn percent for "razor sharp" edges. Thin is less than 1%=0.01, Medium is between 1%-3% and Thick is more 4%<
+	culetDiameter := 0.0 // Do not change this from value 0.0. Culet facet is not included in the 3D model. Only diamonds with "pointed" or "None" culet are created.
 
 	// Create crown
 
@@ -89,13 +89,13 @@ func NewDiamondRoundBrilliantCut(d Diamond, scale float64, material scene.Materi
 		girdleLowerPoints[i*4+2] = point
 	}
 
-	// Crown "table"-facet (i.e. top flat facet, 8 equally sided facet)
+	// Crown "table"-facet (i.e., top flat facet, 8 equally sided facet)
 
 	// The table of the diamond is the largest facet, the flat part on top of the diamond.
-	// Having an advantageous proportion of table to girdle diameter creates the greatest aperture of sight
+	// Having an advantageous proportion of table-to-girdle diameter creates the greatest aperture of sight
 	// into the stone and the greatest diamond brilliance.
 	// A good-sized table, measured as an average of the four widest points of the table,
-	// allows us to see into the diamond, but having too large a table percentage can create a flat effect,
+	// allows us to see into the diamond. However, having too large a table percentage can create a flat effect,
 	// with little radiance and fire, known as the “fish eye” effect.
 	// The table size, calculated as a percentage of the girdle diameter, will be indicated on the diamond’s GIA certificate.
 	table := scene.Facet{Vertices: tableFacetPoints}
@@ -114,7 +114,7 @@ func NewDiamondRoundBrilliantCut(d Diamond, scale float64, material scene.Materi
 		starFacets = append(starFacets, &starFacet)
 	}
 
-	// Crown Bezel-facets (the kite like, 4 sided, facet of the crown)
+	// Crown Bezel-facets (the kite like, 4-sided, facet of the crown)
 	var bezelFacets []*scene.Facet
 	amountBezelFacets := amountTableCorners
 	for bezelFacetIndex := 0; bezelFacetIndex < amountBezelFacets; bezelFacetIndex++ {
@@ -129,7 +129,7 @@ func NewDiamondRoundBrilliantCut(d Diamond, scale float64, material scene.Materi
 		bezelFacets = append(bezelFacets, &bezelFacet)
 	}
 
-	// Upper half facet (the triangle facets on the crown closest to the girdle)
+	// Upper half-facet (the triangle facets on the crown closest to the girdle)
 	var upperHalfFacets []*scene.Facet
 	amountUpperHalfFacetPairs := amountTableCorners
 	for upperHalfFacetPairIndex := 0; upperHalfFacetPairIndex < amountUpperHalfFacetPairs; upperHalfFacetPairIndex++ {

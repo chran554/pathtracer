@@ -105,22 +105,15 @@ func NewFrame(fileName string, frameIndex int, camera *Camera, scene *SceneNode)
 	}
 }
 
-type Plane struct {
-	Name     string
-	Origin   *vec3.T
-	Normal   *vec3.T
-	Material *Material `json:"Material,omitempty"`
-}
-
 func RotateY(point *vec3.T, rotationOrigin *vec3.T, angle float64) {
 	rotationMatrix := mat3.T{}
 	rotationMatrix.AssignYRotation(angle)
 
 	origin := *point
 	origin.Sub(rotationOrigin)
-	origin[2] *= -1 // Change to right hand coordinate system from left hand coordinate system
+	origin[2] *= -1 // Change to right-hand coordinate system from left-hand coordinate system
 	rotatedOrigin := rotationMatrix.MulVec3(&origin)
-	rotatedOrigin[2] *= -1 // Change back from right hand coordinate system to left hand coordinate system
+	rotatedOrigin[2] *= -1 // Change back from right-hand coordinate system to left-hand coordinate system
 	rotatedOrigin.Add(rotationOrigin)
 
 	point[0] = rotatedOrigin[0]
@@ -133,19 +126,5 @@ func (r Ray) point(t float64) *vec3.T {
 		r.Origin[0] + r.Heading[0]*t,
 		r.Origin[1] + r.Heading[1]*t,
 		r.Origin[2] + r.Heading[2]*t,
-	}
-}
-
-func NewPlane(v1, v2, v3 *vec3.T, name string, material *Material) *Plane {
-	a := v2.Subed(v1)
-	b := v3.Subed(v1)
-	n := vec3.Cross(&a, &b)
-	n.Normalize()
-
-	return &Plane{
-		Name:     name,
-		Origin:   v1,
-		Normal:   &n,
-		Material: material,
 	}
 }

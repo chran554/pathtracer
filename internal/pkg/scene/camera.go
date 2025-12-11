@@ -38,8 +38,8 @@ func NewCamera(origin *vec3.T, viewPoint *vec3.T, amountSamples int, magnificati
 		Heading:           &heading,
 		ViewUp:            &vec3.UnitY,
 		ViewPlaneDistance: 800,
-		ApertureSize:      0.0, // Use default aperture, with no "Depth of Field" (DOF).
-		ApertureShape:     nil, // Use default, round aperture.
+		ApertureSize:      0.0, // Use the default aperture, with no "Depth of Field" (DOF).
+		ApertureShape:     nil, // Use the default, round aperture.
 		FocusDistance:     focusDistance,
 		Samples:           amountSamples,
 		AntiAlias:         true,
