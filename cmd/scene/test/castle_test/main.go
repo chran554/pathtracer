@@ -16,16 +16,17 @@ import (
 var animationName = "castle_test"
 
 var amountAnimationFrames = 180
+var animationStartIndex = 0
 
 var environmentRadius = 500.0 * 1000.0
 var environmentEmissionFactor = 1.0
 
 var imageWidth = 1024
 var imageHeight = 768
-var magnification = 0.4
+var magnification = 0.5 // 0.4
 
-var amountSamples = 128 // * 6
-var maxRecursion = 4
+var amountSamples = 1400 // 1024 * 6
+var maxRecursion = 5
 
 var apertureSize = 0.25
 
@@ -54,10 +55,10 @@ func main() {
 		D(ground).
 		FS(castle)
 
-	animationStartIndex := 0
-	animationEndIndex := amountAnimationFrames
-	for frameIndex := animationStartIndex; frameIndex <= animationEndIndex; frameIndex++ {
+	for frameIndex := animationStartIndex; frameIndex < amountAnimationFrames; frameIndex++ {
 		animationProgress := float64(frameIndex) / float64(amountAnimationFrames)
+		animationProgress = 0.5 + math.Sin(-math.Pi/2+math.Pi*animationProgress)*0.5 // Ease in, and ease out
+
 		angle := util.DegToRad(animationProgress*180) + util.DegToRad(-90)
 
 		cameraOffsetFromCastleCenter := &vec3.T{}
@@ -74,7 +75,12 @@ func main() {
 
 		camera := scene.NewCamera(cameraOrigin, cameraFocusPoint, amountSamples, magnification).D(maxRecursion).A(apertureSize, nil)
 
-		frame := scene.NewFrame(animationName, frameIndex, camera, scn)
+		fi := -1
+		if amountAnimationFrames > 1 {
+			fi = frameIndex
+		}
+
+		frame := scene.NewFrame(animationName, fi, camera, scn)
 		animation.AddFrame(frame)
 	}
 

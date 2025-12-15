@@ -40,6 +40,7 @@ func NewCastle(scale float64, lightColor *color.Color, lightEmission float64) *s
 
 	lightMaterial := scene.NewMaterial().N("light").E(lightColor, lightEmission, true)
 	object.ReplaceMaterial("chapel_light", lightMaterial)
+	object.ReplaceMaterial("chapel_tower_light", lightMaterial)
 	object.ReplaceMaterial("hall_light", lightMaterial)
 	object.ReplaceMaterial("hall_tower_left_light", lightMaterial)
 	object.ReplaceMaterial("hall_tower_right_light", lightMaterial)
