@@ -40,7 +40,7 @@ func main() {
 		object.ReplaceMaterial("pillar", scene.NewMaterial().N("pillar").SP("textures/marble/white_marble_double_width.png", pillarCenter, vec3.UnitX, vec3.UnitY).M(0.2, 0.7))
 
 		object.RotateY(&vec3.Zero, -math.Pi/8)
-		object.UpdateBounds()
+		object.GetBounds()
 		objectBounds := object.Bounds
 		//object.Material.T(0.95, true, scene.RefractionIndex_Glass)
 		//object.UpdateVertexNormals(false)
