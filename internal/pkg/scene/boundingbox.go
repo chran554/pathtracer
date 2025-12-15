@@ -12,8 +12,8 @@ type Bounds struct {
 	Zmin, Zmax float64
 }
 
-func NewBounds() Bounds {
-	return Bounds{
+func NewBounds() *Bounds {
+	return &Bounds{
 		Xmin: math.MaxFloat64,
 		Xmax: -math.MaxFloat64,
 		Ymin: math.MaxFloat64,
@@ -154,8 +154,8 @@ func BoundingBoxIntersection1(line *Ray, bounds *Bounds) bool {
 }
 
 func BoundingBoxIntersection2(line *Ray, bounds *Bounds) bool {
-	hit := true
-	noHit := false
+	const hit = true
+	const noHit = false
 
 	invHeadingX := 1.0 / line.Heading[0]
 	txmin := (bounds.Xmin - line.Origin[0]) * invHeadingX // Intersection with bounding box yz-plane at min x
@@ -197,8 +197,8 @@ func BoundingBoxIntersection2(line *Ray, bounds *Bounds) bool {
 		return noHit
 	}
 
-	tmin = max(tmin, tzmin)
-	tmax = min(tmax, tzmax)
+	tmin = math.Max(tmin, tzmin)
+	tmax = math.Min(tmax, tzmax)
 
 	return hit
 }

@@ -249,8 +249,8 @@ func writeRenderedImage(animation *scene.Animation, frame *scene.Frame, rendered
 }
 
 func initializeScene(scn *scene.SceneNode) {
-	_initializeScene(scn)
 	scn.UpdateBounds()
+	_initializeScene(scn)
 }
 
 func _initializeScene(scene *scene.SceneNode) {

@@ -66,7 +66,8 @@ func (fs *FacetStructure) UpdateBounds() *Bounds {
 	bounds := NewBounds()
 
 	for _, facet := range fs.Facets {
-		facetBounds := facet.UpdateBounds()
+		facet.ResetBounds()
+		facetBounds := facet.GetBounds()
 		if !facetBounds.IsZeroBounds() {
 			bounds.AddBounds(facetBounds)
 		}
@@ -79,7 +80,7 @@ func (fs *FacetStructure) UpdateBounds() *Bounds {
 		}
 	}
 
-	fs.Bounds = &bounds
+	fs.Bounds = bounds
 	return fs.Bounds
 }
 
@@ -537,76 +538,128 @@ func (fs *FacetStructure) ClearMaterials() {
 }
 
 func (fs *FacetStructure) SubdivideFacetStructure(maxFacets int, level int) {
-	if (fs.GetAmountFacets() > maxFacets) && (maxFacets > 2) {
-		// fmt.Printf("Subdividing %s with %d facets.\n", facetStructure.Name, facetStructure.GetAmountFacets())
+	// Recursively subdivide the facets of this facet structure into 8 sub facet structures, one for each octant,
+	// until a facet structure contains exactly or fewer facets than the maximum count of facets for a facet structure.
+	if len(fs.Facets) > maxFacets {
 
-		if len(fs.Facets) > maxFacets {
+		// Calculate dividing center of facets
+		facetStructureCenter := &vec3.T{}
+		for _, facet := range fs.Facets {
+			facetStructureCenter.Add(facet.Center())
+		}
+		facetStructureCenter.Scale(1.0 / float64(len(fs.Facets)))
 
-			// Calculate dividing center of facets
-			var facetStructureCenter *vec3.T
-			if len(fs.Facets) > 0 {
-				center := &vec3.T{}
-				for _, facet := range fs.Facets {
-					center.Add(facet.Center())
-				}
-				center.Scale(1.0 / float64(len(fs.Facets)))
-				facetStructureCenter = center
-			} else {
-				fs.UpdateBounds()
-				bounds := fs.Bounds
-				facetStructureCenter = bounds.Center()
+		subFacetStructures := make([]*FacetStructure, 8)
+
+		for _, facet := range fs.Facets {
+			facetSubstructureIndex := 0
+
+			facetCenter := facet.Center()
+			facetRelativeStructurePosition := vec3.Sub(facetCenter, facetStructureCenter)
+
+			if facetRelativeStructurePosition[0] >= 0 {
+				facetSubstructureIndex = facetSubstructureIndex | 0b001
+			}
+			if facetRelativeStructurePosition[1] >= 0 {
+				facetSubstructureIndex = facetSubstructureIndex | 0b010
+			}
+			if facetRelativeStructurePosition[2] >= 0 {
+				facetSubstructureIndex = facetSubstructureIndex | 0b100
 			}
 
-			subFacetStructures := make([]*FacetStructure, 8)
-
-			for _, facet := range fs.Facets {
-				facetSubstructureIndex := 0
-
-				facetCenter := facet.Center()
-				facetRelativeStructurePosition := vec3.Sub(facetCenter, facetStructureCenter)
-
-				if facetRelativeStructurePosition[0] >= 0 {
-					facetSubstructureIndex = facetSubstructureIndex | 0b001
-				}
-				if facetRelativeStructurePosition[1] >= 0 {
-					facetSubstructureIndex = facetSubstructureIndex | 0b010
-				}
-				if facetRelativeStructurePosition[2] >= 0 {
-					facetSubstructureIndex = facetSubstructureIndex | 0b100
-				}
-
-				if subFacetStructures[facetSubstructureIndex] == nil {
-					subFacetStructures[facetSubstructureIndex] = &FacetStructure{
-						Name:     fmt.Sprintf("%s-%03b", fs.Name, facetSubstructureIndex),
-						Material: fs.Material,
-					}
-				}
-
-				subFacetStructures[facetSubstructureIndex].Facets = append(subFacetStructures[facetSubstructureIndex].Facets, facet)
-			}
-
-			// logSubdivision(subFacetStructures, level, fs)
-
-			amountSubstructures := 0
-			for _, subFacetStructure := range subFacetStructures {
-				if subFacetStructure != nil {
-					amountSubstructures++
+			if subFacetStructures[facetSubstructureIndex] == nil {
+				subFacetStructures[facetSubstructureIndex] = &FacetStructure{
+					Name:     fmt.Sprintf("%s-%03b", fs.Name, facetSubstructureIndex),
+					Material: fs.Material,
 				}
 			}
-			if amountSubstructures > 1 {
-				// Update the content of the current facet structure
-				fs.Facets = nil
-				for _, subFacetStructure := range subFacetStructures {
-					if subFacetStructure != nil {
-						fs.FacetStructures = append(fs.FacetStructures, subFacetStructure)
-					}
+
+			subFacetStructures[facetSubstructureIndex].Facets = append(subFacetStructures[facetSubstructureIndex].Facets, facet)
+		}
+
+		// logSubdivision(subFacetStructures, level, fs)
+
+		// Update the content of the current facet structure
+		fs.Facets = nil
+		for _, subFacetStructure := range subFacetStructures {
+			if subFacetStructure != nil {
+				if len(subFacetStructure.Facets) > 0 {
+					// Create a new facet substructure if the face count is high enough
+					subFacetStructure.UpdateBounds()
+					fs.FacetStructures = append(fs.FacetStructures, subFacetStructure)
+					// fmt.Printf("Subdivided %d facets of facet structure %s into octant facet structure %s\n", len(subFacetStructure.Facets), fs.Name, subFacetStructure.Name)
+				} else {
+					// Keep the face on this facet structure if the face count is few, instead of adding them in a new level of facet substructure
+					fs.Facets = append(fs.Facets, subFacetStructure.Facets...)
 				}
 			}
 		}
+	}
+
+	// If this facet structure contains more sub facet structures than max facet count,
+	// then subdivide this facet structure into new sub facet structures, one for each octant.
+	//
+	// This is done to prevent having a list of too many facet structures,
+	// which is inefficient to iterate over when performing intersection test.
+	if (len(fs.FacetStructures) > maxFacets) && (len(fs.FacetStructures) > 8) {
+
+		// Calculate dividing center of facet structure
+		facetStructureCenter := &vec3.T{}
+		for _, facetStructure := range fs.FacetStructures {
+			facetStructureCenter.Add(facetStructure.Bounds.Center())
+		}
+		facetStructureCenter.Scale(1.0 / float64(len(fs.FacetStructures)))
+
+		subFacetStructures := make([]*FacetStructure, 8)
 
 		for _, facetStructure := range fs.FacetStructures {
-			facetStructure.SubdivideFacetStructure(maxFacets, level+1)
+			facetSubstructureIndex := 0
+
+			center := facetStructure.Bounds.Center()
+			facetRelativeStructurePosition := vec3.Sub(center, facetStructureCenter)
+
+			if facetRelativeStructurePosition[0] >= 0 {
+				facetSubstructureIndex = facetSubstructureIndex | 0b001
+			}
+			if facetRelativeStructurePosition[1] >= 0 {
+				facetSubstructureIndex = facetSubstructureIndex | 0b010
+			}
+			if facetRelativeStructurePosition[2] >= 0 {
+				facetSubstructureIndex = facetSubstructureIndex | 0b100
+			}
+
+			if subFacetStructures[facetSubstructureIndex] == nil {
+				subFacetStructures[facetSubstructureIndex] = &FacetStructure{Name: fmt.Sprintf("%s-%03b", fs.Name, facetSubstructureIndex)}
+			}
+
+			subFacetStructures[facetSubstructureIndex].FacetStructures = append(subFacetStructures[facetSubstructureIndex].FacetStructures, facetStructure)
 		}
+
+		var nonEmptySubFacetStructures []*FacetStructure
+		for _, subFacetStructure := range subFacetStructures {
+			if len(subFacetStructures) > 0 {
+				nonEmptySubFacetStructures = append(nonEmptySubFacetStructures, subFacetStructure)
+			}
+		}
+
+		// Replace the old facet substructure only if the octant division resulted in more than one non-empty octant facet substructures
+		if len(nonEmptySubFacetStructures) > 1 {
+			// Replace old facet structures with new (non-empty) octant facet structures (which contain the old facet structures)
+			fs.FacetStructures = nil
+
+			for _, subFacetStructure := range subFacetStructures {
+				if subFacetStructure != nil {
+					subFacetStructure.UpdateBounds()
+					fs.FacetStructures = append(fs.FacetStructures, subFacetStructure)
+					// fmt.Printf("Subdivided facet structure %s into octant facet structure %s\n", fs.Name, subFacetStructure.Name)
+				}
+			}
+		}
+	}
+
+	// Recursively subdivide the sub facet structures of this facet structure.
+	for _, facetStructure := range fs.FacetStructures {
+		facetStructure.SubdivideFacetStructure(maxFacets, level+1)
 	}
 }
 

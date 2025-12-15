@@ -100,7 +100,6 @@ func (sn *SceneNode) GetBounds() *Bounds {
 
 func (sn *SceneNode) UpdateBounds() *Bounds {
 	bounds := NewBounds()
-	sn.Bounds = &bounds
 
 	for _, sphere := range sn.GetSpheres() {
 		bounds.AddBounds(sphere.Bounds())
@@ -118,6 +117,7 @@ func (sn *SceneNode) UpdateBounds() *Bounds {
 		bounds.AddBounds(childNode.UpdateBounds())
 	}
 
+	sn.Bounds = bounds
 	return sn.Bounds
 }
 
