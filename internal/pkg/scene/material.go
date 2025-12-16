@@ -9,35 +9,37 @@ import (
 )
 
 type Material struct {
-	Name               string           `json:"Name,omitempty"`
-	Color              *color.Color     `json:"Color,omitempty"`
-	Diffuse            float64          `json:"Diffuse,omitempty"`
-	Emission           *color.Color     `json:"Emission,omitempty"`
-	Glossiness         float64          `json:"Glossiness,omitempty"` // Glossiness is the percent amount that will make out specular reflection. Values [0.0, 1.0] with default 0.0. The lower value, the more diffuse color will appear, and the higher value, the more mirror reflection will appear.
-	Roughness          float64          `json:"Roughness,omitempty"`  // Roughness is the diffuse spread of the specular reflection. Values [0.0, 1.0] with default 0.0. Lower is like "brushed metal" or "foggy/hazy reflection" and higher value gives a more mirror like reflection. A value of 1.0 is perfect mirror reflection and a value of 0.0 is a perfect diffuse material (no mirror at all).
-	Projection         *ImageProjection `json:"Projection,omitempty"`
-	RefractionIndex    float64          `json:"RefractionIndex,omitempty"`
-	SolidObject        bool             `json:"SolidObject,omitempty"`        // SolidObject is if the material denotes a solid object with volume, not a hollow or open object or object nor an object with plane-thin walls. Solid transparent objects can refract light, hollow objects don't.
-	Transparency       float64          `json:"Transparency,omitempty"`       // Transparency is the amount [0,1.0) of transparency vs diffuse contribution.
-	RayTerminator      bool             `json:"RayTerminator,omitempty"`      // RayTerminator decide if the ray should terminate after hit with the object. Example can be an environment sphere or environment cube where a hit to the wall is the same as "no hit, continue in infinity". Extremely bright lights can also be ray terminators, their appearance will not notably be affected by further tracing.
-	ColorizeReflection bool             `json:"ColorizeReflection,omitempty"` // ColorizeReflection is if the reflection color should be colorized based on the material color. Shiny metal materials will colorize reflection. Dielectric materials will not colorize reflection.
+	Name                 string           `json:"Name,omitempty"`
+	Color                *color.Color     `json:"Color,omitempty"`
+	Diffuse              float64          `json:"Diffuse,omitempty"`
+	Emission             *color.Color     `json:"Emission,omitempty"`
+	Glossiness           float64          `json:"Glossiness,omitempty"` // Glossiness is the percent amount that will make out specular reflection. Values [0.0, 1.0] with default 0.0. The lower value, the more diffuse color will appear, and the higher value, the more mirror reflection will appear.
+	Roughness            float64          `json:"Roughness,omitempty"`  // Roughness is the diffuse spread of the specular reflection. Values [0.0, 1.0] with default 0.0. Lower is like "brushed metal" or "foggy/hazy reflection" and higher value gives a more mirror like reflection. A value of 1.0 is perfect mirror reflection and a value of 0.0 is a perfect diffuse material (no mirror at all).
+	Projection           *ImageProjection `json:"Projection,omitempty"`
+	RefractionIndex      float64          `json:"RefractionIndex,omitempty"`
+	SolidObject          bool             `json:"SolidObject,omitempty"`        // SolidObject is if the material denotes a solid object with volume, not a hollow or open object or object nor an object with plane-thin walls. Solid transparent objects can refract light, hollow objects don't.
+	Transparency         float64          `json:"Transparency,omitempty"`       // Transparency is the amount [0,1.0) of transparency vs diffuse contribution.
+	RayTerminator        bool             `json:"RayTerminator,omitempty"`      // RayTerminator decide if the ray should terminate after hit with the object. Example can be an environment sphere or environment cube where a hit to the wall is the same as "no hit, continue in infinity". Extremely bright lights can also be ray terminators, their appearance will not notably be affected by further tracing.
+	ColorizeReflection   bool             `json:"ColorizeReflection,omitempty"` // ColorizeReflection is if the reflection color should be colorized based on the material color. Shiny metal materials will colorize reflection. Dielectric materials will not colorize reflection.
+	FresnelMaxGlossiness float64          `json:"FresnelMaxGlossiness,omitempty"`
 }
 
 // NewMaterial creates a new material with sensible defaults.
 func NewMaterial() *Material {
 	return &Material{
-		Name:               "",
-		Color:              color.White,
-		Diffuse:            1.0,
-		Emission:           nil,
-		Glossiness:         0.0,
-		Roughness:          1.0,
-		Projection:         nil,
-		RefractionIndex:    RefractionIndex_Air,
-		SolidObject:        false,
-		Transparency:       0.0,
-		RayTerminator:      false,
-		ColorizeReflection: false,
+		Name:                 "",
+		Color:                color.White,
+		Diffuse:              1.0,
+		Emission:             nil,
+		Glossiness:           0.0,
+		Roughness:            1.0,
+		Projection:           nil,
+		RefractionIndex:      RefractionIndex_Air,
+		SolidObject:          false,
+		Transparency:         0.0,
+		RayTerminator:        false,
+		ColorizeReflection:   false,
+		FresnelMaxGlossiness: 1.0,
 	}
 }
 

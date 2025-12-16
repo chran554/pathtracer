@@ -123,18 +123,19 @@ type Projection struct {
 }
 
 type Material struct {
-	Name               string      `msgpack:"name,omitempty"`
-	Color              ColorIndex  `msgpack:"color,omitempty"`
-	Diffuse            float64     `msgpack:"diffuse,omitempty"`
-	Emission           ColorIndex  `msgpack:"emission,omitempty"`
-	Glossiness         float64     `msgpack:"glossiness,omitempty"` // Glossiness is the percent amount that will make out specular reflection. Values [0.0 .. 1.0] with default 0.0. Lower value the more diffuse color will appear and higher value the more mirror reflection will appear.
-	Roughness          float64     `msgpack:"roughness,omitempty"`  // Roughness is the diffuse spread of the specular reflection. Values [0.0 .. 1.0] with default 0.0. Lower is like "brushed metal" or "foggy/hazy reflection" and higher value give a more mirror like reflection. A value of 1.0 is perfect mirror reflection and a value of 0.0 is a perfect diffuse material (no mirror at al).
-	RefractionIndex    float64     `msgpack:"refraction-index,omitempty"`
-	SolidObject        bool        `msgpack:"solid-object,omitempty"`   // SolidObject is if the material denotes a solid object with volume, not a hollow or open object or object nor an object with plane-thin walls. Solid transparent objects can refract light, hollow objects don't.
-	Transparency       float64     `msgpack:"transparency,omitempty"`   // Transparency is the amount [0,1.0) of transparency vs diffuse contribution.
-	RayTerminator      bool        `msgpack:"ray-terminator,omitempty"` // RayTerminator decide if the ray should terminate after hit with object. Example can be an environment sphere or environment cube where a hit to the wall is the same as "no hit, continue in infinity". Extremely bright lights can also be ray terminators, their appearance will not notably be affected by further tracing.
-	Projection         *Projection `msgpack:"projection,omitempty"`
-	ColorizeReflection bool        `msgpack:"colorize-reflection,omitempty"` // ColorizingReflection is if the reflection color should be colorized based on the material color. Shiny metal materials will colorize reflection. Dielectric materials will not colorize reflection.
+	Name                 string      `msgpack:"name,omitempty"`
+	Color                ColorIndex  `msgpack:"color,omitempty"`
+	Diffuse              float64     `msgpack:"diffuse,omitempty"`
+	Emission             ColorIndex  `msgpack:"emission,omitempty"`
+	Glossiness           float64     `msgpack:"glossiness,omitempty"` // Glossiness is the percent amount that will make out specular reflection. Values [0.0 .. 1.0] with default 0.0. Lower value the more diffuse color will appear and higher value the more mirror reflection will appear.
+	Roughness            float64     `msgpack:"roughness,omitempty"`  // Roughness is the diffuse spread of the specular reflection. Values [0.0 .. 1.0] with default 0.0. Lower is like "brushed metal" or "foggy/hazy reflection" and higher value give a more mirror like reflection. A value of 1.0 is perfect mirror reflection and a value of 0.0 is a perfect diffuse material (no mirror at al).
+	RefractionIndex      float64     `msgpack:"refraction-index,omitempty"`
+	SolidObject          bool        `msgpack:"solid-object,omitempty"`   // SolidObject is if the material denotes a solid object with volume, not a hollow or open object or object nor an object with plane-thin walls. Solid transparent objects can refract light, hollow objects don't.
+	Transparency         float64     `msgpack:"transparency,omitempty"`   // Transparency is the amount [0,1.0) of transparency vs diffuse contribution.
+	RayTerminator        bool        `msgpack:"ray-terminator,omitempty"` // RayTerminator decide if the ray should terminate after hit with object. Example can be an environment sphere or environment cube where a hit to the wall is the same as "no hit, continue in infinity". Extremely bright lights can also be ray terminators, their appearance will not notably be affected by further tracing.
+	Projection           *Projection `msgpack:"projection,omitempty"`
+	ColorizeReflection   bool        `msgpack:"colorize-reflection,omitempty"` // ColorizingReflection is if the reflection color should be colorized based on the material color. Shiny metal materials will colorize reflection. Dielectric materials will not colorize reflection.
+	FresnelMaxGlossiness float64     `msgpack:"fresnel-max-reflection,omitempty"`
 }
 
 func (v *Vector) MarshalMsgpack() ([]byte, error) {

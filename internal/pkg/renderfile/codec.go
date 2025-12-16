@@ -192,18 +192,19 @@ func (s *serializer) materialIndex(material *scene.Material) (MaterialIndex, err
 
 	// Map the *scene.Material to a local Material struct
 	mappedMaterial := &Material{
-		Name:               material.Name,
-		Color:              s.colorIndex(material.Color),
-		Diffuse:            material.Diffuse,
-		Emission:           s.colorIndex(material.Emission),
-		Glossiness:         material.Glossiness,
-		Roughness:          material.Roughness,
-		RefractionIndex:    material.RefractionIndex,
-		SolidObject:        material.SolidObject,
-		Transparency:       material.Transparency,
-		RayTerminator:      material.RayTerminator,
-		Projection:         projection,
-		ColorizeReflection: material.ColorizeReflection,
+		Name:                 material.Name,
+		Color:                s.colorIndex(material.Color),
+		Diffuse:              material.Diffuse,
+		Emission:             s.colorIndex(material.Emission),
+		Glossiness:           material.Glossiness,
+		Roughness:            material.Roughness,
+		RefractionIndex:      material.RefractionIndex,
+		SolidObject:          material.SolidObject,
+		Transparency:         material.Transparency,
+		RayTerminator:        material.RayTerminator,
+		Projection:           projection,
+		ColorizeReflection:   material.ColorizeReflection,
+		FresnelMaxGlossiness: material.FresnelMaxGlossiness,
 	}
 
 	// Assign a new index for the material

@@ -671,7 +671,7 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 				var reflectionProbability float64
 				if isIngoingRay {
 					// Add Fresnel reflection if it is an ingoing array (for now)
-					reflectionProbability = FresnelReflectAmount(currentRayContext.RefractionIndex, ii.material.RefractionIndex, ii.normalAtIntersection, ray.Heading, ii.material.Glossiness, 1.0)
+					reflectionProbability = FresnelReflectAmount(currentRayContext.RefractionIndex, ii.material.RefractionIndex, ii.normalAtIntersection, ray.Heading, ii.material.Glossiness, ii.material.FresnelMaxGlossiness)
 				} else {
 					// previousRayContext := rayContexts[len(rayContexts)-2]
 					// normal := ii.normalAtIntersection.Inverted()
