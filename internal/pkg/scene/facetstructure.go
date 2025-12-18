@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/ungerik/go3d/float64/mat3"
+	"github.com/ungerik/go3d/float64/quaternion"
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
@@ -187,6 +188,55 @@ func (fs *FacetStructure) RotateZ(rotationOrigin *vec3.T, angle float64) {
 	fs.UpdateBounds()
 }
 
+func (fs *FacetStructure) RotateAxis(rotationOrigin *vec3.T, axis *vec3.T, angle float64) {
+	rotatedPoints := make(map[*vec3.T]bool)
+	rotatedNormals := make(map[*vec3.T]bool)
+	rotatedVertexNormals := make(map[*vec3.T]bool)
+
+	rotatedImageProjections := make(map[*ImageProjection]bool)
+
+	q := quaternion.FromAxisAngle(axis, angle)
+
+	fs.rotateByQuaternion(rotationOrigin, q, rotatedPoints, rotatedNormals, rotatedVertexNormals, rotatedImageProjections)
+	fs.UpdateBounds()
+}
+
+func (fs *FacetStructure) rotateByQuaternion(rotationOrigin *vec3.T, q quaternion.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool, rotatedImageProjections map[*ImageProjection]bool) {
+	if fs.Material != nil && fs.Material.Projection != nil && !rotatedImageProjections[fs.Material.Projection] {
+		projection := fs.Material.Projection
+
+		if !rotatedPoints[projection.Origin] {
+			projection.Origin.Sub(rotationOrigin)
+			q.RotateVec3(projection.Origin)
+			projection.Origin.Add(rotationOrigin)
+
+			rotatedPoints[projection.Origin] = true
+		}
+
+		if !rotatedPoints[projection.U] {
+			q.RotateVec3(projection.U)
+			rotatedPoints[projection.U] = true
+		}
+
+		if !rotatedPoints[projection.V] {
+			q.RotateVec3(projection.V)
+			rotatedPoints[projection.V] = true
+		}
+
+		rotatedImageProjections[fs.Material.Projection] = true
+	}
+
+	for _, facet := range fs.Facets {
+		facet.rotateByQuaternion(rotationOrigin, q, rotatedPoints, rotatedNormals, rotatedVertexNormals)
+	}
+
+	if len(fs.FacetStructures) > 0 {
+		for _, facetStructure := range fs.FacetStructures {
+			facetStructure.rotateByQuaternion(rotationOrigin, q, rotatedPoints, rotatedNormals, rotatedVertexNormals, rotatedImageProjections)
+		}
+	}
+}
+
 func (fs *FacetStructure) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool, rotatedImageProjections map[*ImageProjection]bool) {
 	if fs.Material != nil && fs.Material.Projection != nil && !rotatedImageProjections[fs.Material.Projection] {
 		projection := fs.Material.Projection
@@ -283,29 +333,29 @@ func (fs *FacetStructure) Scale(scaleOrigin *vec3.T, scale *vec3.T) {
 	fs.UpdateBounds()
 }
 
-func (fs *FacetStructure) FlipX() {
+func (fs *FacetStructure) FlipX(flipOrigin *vec3.T) {
 	scaledPoints := make(map[*vec3.T]bool)
 	scaledNormals := make(map[*vec3.T]bool)
 	scaledImageProjections := make(map[*ImageProjection]bool)
-	fs.scale(&vec3.Zero, &vec3.T{-1, 1, 1}, scaledPoints, scaledNormals, scaledImageProjections)
+	fs.scale(flipOrigin, &vec3.T{-1, 1, 1}, scaledPoints, scaledNormals, scaledImageProjections)
 
 	fs.UpdateBounds()
 }
 
-func (fs *FacetStructure) FlipY() {
+func (fs *FacetStructure) FlipY(flipOrigin *vec3.T) {
 	scaledPoints := make(map[*vec3.T]bool)
 	scaledNormals := make(map[*vec3.T]bool)
 	scaledImageProjections := make(map[*ImageProjection]bool)
-	fs.scale(&vec3.Zero, &vec3.T{1, -1, 1}, scaledPoints, scaledNormals, scaledImageProjections)
+	fs.scale(flipOrigin, &vec3.T{1, -1, 1}, scaledPoints, scaledNormals, scaledImageProjections)
 
 	fs.UpdateBounds()
 }
 
-func (fs *FacetStructure) FlipZ() {
+func (fs *FacetStructure) FlipZ(flipOrigin *vec3.T) {
 	scaledPoints := make(map[*vec3.T]bool)
 	scaledNormals := make(map[*vec3.T]bool)
 	scaledImageProjections := make(map[*ImageProjection]bool)
-	fs.scale(&vec3.Zero, &vec3.T{1, 1, -1}, scaledPoints, scaledNormals, scaledImageProjections)
+	fs.scale(flipOrigin, &vec3.T{1, 1, -1}, scaledPoints, scaledNormals, scaledImageProjections)
 
 	fs.UpdateBounds()
 }

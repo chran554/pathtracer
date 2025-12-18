@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/ungerik/go3d/float64/mat3"
+	"github.com/ungerik/go3d/float64/quaternion"
 	"github.com/ungerik/go3d/float64/vec2"
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -136,6 +137,32 @@ func (f *Facet) RotateZ(rotationOrigin *vec3.T, angle float64) {
 	f.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
 }
 
+func (f *Facet) rotateByQuaternion(rotationOrigin *vec3.T, q quaternion.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool) {
+	for _, vertex := range f.Vertices {
+		if !rotatedPoints[vertex] {
+			vertex.Sub(rotationOrigin)
+			q.RotateVec3(vertex)
+			vertex.Add(rotationOrigin)
+
+			rotatedPoints[vertex] = true
+		}
+	}
+
+	if !rotatedNormals[f.Normal] {
+		q.RotatedVec3(f.Normal)
+		rotatedNormals[f.Normal] = true
+	}
+
+	for _, vertexNormal := range f.VertexNormals {
+		if !rotatedVertexNormals[vertexNormal] {
+			q.RotatedVec3(vertexNormal)
+			rotatedVertexNormals[vertexNormal] = true
+		}
+	}
+
+	f.Bounds = nil
+}
+
 func (f *Facet) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool) {
 	for _, vertex := range f.Vertices {
 		if rotatedPoints[vertex] {
@@ -207,27 +234,27 @@ func (f *Facet) translate(translation *vec3.T, translatedPoints map[*vec3.T]bool
 }
 
 func (f *Facet) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool, scaledNormals map[*vec3.T]bool) {
-
 	for _, vertex := range f.Vertices {
 		if !scaledPoints[vertex] {
-			newVertex := vertex.Subed(scaleOrigin)
-			newVertex.Mul(scale)
-			newVertex.Add(scaleOrigin)
-
-			vertex[0] = newVertex[0]
-			vertex[1] = newVertex[1]
-			vertex[2] = newVertex[2]
-
+			vertex.Sub(scaleOrigin).Mul(scale).Add(scaleOrigin)
 			scaledPoints[vertex] = true
 		}
 	}
 
 	if f.Normal != nil {
-		f.UpdateNormal()
+		// f.UpdateNormal()
+		f.Normal.Mul(scale).Normalize()
 		scaledNormals[f.Normal] = true
 	}
 
-	// TODO Update vertex normals?! How?
+	if f.VertexNormals != nil {
+		for _, vertexNormal := range f.VertexNormals {
+			if !scaledNormals[vertexNormal] {
+				vertexNormal.Mul(scale).Normalize() // keep normals normalized (in unit length)
+				scaledNormals[vertexNormal] = true
+			}
+		}
+	}
 
 	f.Bounds = nil
 }

@@ -46,7 +46,7 @@ func ReadFacetStructure(file *os.File, rightHandCoordinateSystem bool) (*scene.F
 	}
 
 	if rightHandCoordinateSystem {
-		facetStructure.FlipX()
+		facetStructure.FlipX(&vec3.Zero)
 	}
 
 	fmt.Printf("Updating structure bounds\n")
