@@ -165,9 +165,7 @@ func (f *Facet) rotateByQuaternion(rotationOrigin *vec3.T, q quaternion.T, rotat
 
 func (f *Facet) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool) {
 	for _, vertex := range f.Vertices {
-		if rotatedPoints[vertex] {
-			// fmt.Printf("Point already rotated: %+v\n", vertex)
-		} else {
+		if !rotatedPoints[vertex] {
 			newVertex := vertex.Subed(rotationOrigin)
 			newVertex[2] *= -1 // Convert to right hand coordinate system before rotation matrix
 			rotatedVertex := rotationMatrix.MulVec3(&newVertex)
@@ -182,9 +180,7 @@ func (f *Facet) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoi
 		}
 	}
 
-	if rotatedNormals[f.Normal] {
-		// fmt.Printf("Normal already rotated: %+v\n", f.Normal)
-	} else {
+	if !rotatedNormals[f.Normal] {
 		normal := *f.Normal
 		normal[2] *= -1 // Convert to right hand coordinate system before rotation matrix
 		rotatedNormal := rotationMatrix.MulVec3(&normal)
@@ -197,9 +193,7 @@ func (f *Facet) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoi
 	}
 
 	for _, vertexNormal := range f.VertexNormals {
-		if rotatedVertexNormals[vertexNormal] {
-			// fmt.Printf("Vertex normal already rotated: %+v\n", vertexNormal)
-		} else {
+		if !rotatedVertexNormals[vertexNormal] {
 			normal := *vertexNormal
 			normal[2] *= -1 // Convert to right hand coordinate system before rotation matrix
 			rotatedNormal := rotationMatrix.MulVec3(&normal)
@@ -267,6 +261,16 @@ func (f *Facet) ChangeWindingOrder() {
 	} else if amountVertices > 3 {
 		for i := 0; i < amountVertices/2; i++ {
 			f.Vertices[i], f.Vertices[amountVertices-i-1] = f.Vertices[amountVertices-i-1], f.Vertices[i]
+		}
+	}
+
+	amountVertexNormals := len(f.VertexNormals)
+	if amountVertexNormals == 3 {
+		// Flip the second and third vertex in triangle (facet) to change the winding order of facet vertices
+		f.VertexNormals[0], f.VertexNormals[2] = f.VertexNormals[2], f.VertexNormals[0]
+	} else if amountVertexNormals > 3 {
+		for i := 0; i < amountVertexNormals/2; i++ {
+			f.VertexNormals[i], f.VertexNormals[amountVertexNormals-i-1] = f.VertexNormals[amountVertexNormals-i-1], f.Vertices[i]
 		}
 	}
 }
