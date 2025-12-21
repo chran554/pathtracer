@@ -53,23 +53,6 @@ func (b *Bounds) SizeZ() float64 {
 	return b.Zmax - b.Zmin
 }
 
-func (b *Bounds) Max() float64 {
-	return max(b.Xmax, max(b.Ymax, b.Zmax))
-}
-
-func (b *Bounds) Min() float64 {
-	return min(b.Xmax, min(b.Ymax, b.Zmax))
-}
-
-func (b *Bounds) AddDiscBounds(d *Disc) {
-	b.Xmin = min(b.Xmin, d.Origin[0]-d.Radius)
-	b.Xmax = max(b.Xmax, d.Origin[0]+d.Radius)
-	b.Ymin = min(b.Ymin, d.Origin[1]-d.Radius)
-	b.Ymax = max(b.Ymax, d.Origin[1]+d.Radius)
-	b.Zmin = min(b.Zmin, d.Origin[2]-d.Radius)
-	b.Zmax = max(b.Zmax, d.Origin[2]+d.Radius)
-}
-
 func (b *Bounds) AddBounds(bounds *Bounds) {
 	b.Xmin = min(b.Xmin, bounds.Xmin)
 	b.Xmax = max(b.Xmax, bounds.Xmax)

@@ -27,6 +27,8 @@ func NewTessellatedSphere(level int, useVertexNormals bool) *scene.FacetStructur
 	}
 
 	tessellatedSphere.UpdateBounds()
+	tessellatedSphere.UpdateNormals()
+
 	if useVertexNormals {
 		tessellatedSphere.UpdateVertexNormals(false)
 	}
@@ -49,6 +51,7 @@ func NewOctahedron() *scene.FacetStructure {
 	}
 
 	octahedron := &scene.FacetStructure{SubstructureName: "octahedron", Facets: facets}
+	octahedron.UpdateNormals()
 
 	return octahedron
 }
@@ -88,6 +91,7 @@ func NewIcosahedron() *scene.FacetStructure {
 	}
 
 	icosahedron := &scene.FacetStructure{SubstructureName: "icosahedron", Facets: facets}
+	icosahedron.UpdateNormals()
 
 	return icosahedron
 }

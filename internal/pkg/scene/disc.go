@@ -12,16 +12,21 @@ type Disc struct {
 	Origin   *vec3.T
 	Normal   *vec3.T
 	Radius   float64
+	Bounds   *Bounds
 	Material *Material `json:"Material,omitempty"`
 }
 
 func NewDisc(origin *vec3.T, normal *vec3.T, radius float64, material *Material) *Disc {
-	return &Disc{
+	d := &Disc{
 		Origin:   origin,
-		Normal:   normal,
+		Normal:   &(*normal),
 		Radius:   radius,
 		Material: material,
 	}
+	d.Normal.Normalize()
+	d.UpdateBounds()
+
+	return d
 }
 
 func (d *Disc) Initialize() {
@@ -31,6 +36,18 @@ func (d *Disc) Initialize() {
 	if projection != nil {
 		projection.Initialize()
 	}
+}
+
+func (d *Disc) UpdateBounds() {
+	b := &Bounds{}
+	b.Xmin = min(b.Xmin, d.Origin[0]-d.Radius)
+	b.Xmax = max(b.Xmax, d.Origin[0]+d.Radius)
+	b.Ymin = min(b.Ymin, d.Origin[1]-d.Radius)
+	b.Ymax = max(b.Ymax, d.Origin[1]+d.Radius)
+	b.Zmin = min(b.Zmin, d.Origin[2]-d.Radius)
+	b.Zmax = max(b.Zmax, d.Origin[2]+d.Radius)
+
+	d.Bounds = b
 }
 
 func (d *Disc) Translate(translation *vec3.T) {
@@ -60,6 +77,8 @@ func (d *Disc) translate(translation *vec3.T, translatedPoints map[*vec3.T]bool,
 		d.Origin.Add(translation)
 		translatedPoints[d.Origin] = true
 	}
+
+	d.UpdateBounds()
 }
 
 func (d *Disc) Scale(scaleOrigin *vec3.T, scale *vec3.T) {
@@ -75,6 +94,8 @@ func (d *Disc) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.
 	}
 
 	panic("Scale of disc is not yet implemented")
+
+	d.UpdateBounds()
 }
 
 func (d *Disc) RotateX(rotationOrigin *vec3.T, angle float64) {
@@ -124,17 +145,8 @@ func (d *Disc) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T) {
 	if d.Material != nil && d.Material.Projection != nil {
 		panic(fmt.Sprintf("No disc rotation implementation for projection type %s", d.Material.Projection.ProjectionType))
 	}
-}
 
-func (d *Disc) Bounds() *Bounds {
-	return &Bounds{
-		Xmin: d.Origin[0] - d.Radius,
-		Xmax: d.Origin[0] + d.Radius,
-		Ymin: d.Origin[1] - d.Radius,
-		Ymax: d.Origin[1] + d.Radius,
-		Zmin: d.Origin[2] - d.Radius,
-		Zmax: d.Origin[2] + d.Radius,
-	}
+	d.UpdateBounds()
 }
 
 func (d *Disc) N(name string) *Disc {

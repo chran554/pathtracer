@@ -188,6 +188,9 @@ func (fs *FacetStructure) RotateZ(rotationOrigin *vec3.T, angle float64) {
 	fs.UpdateBounds()
 }
 
+// RotateAxis rotates the facet structure around any axis.
+// The parameter axis needs to be normalized, and the rotation angle needs to be in radians.
+// The rotation is counter-clockwise when viewed in the axis direction.
 func (fs *FacetStructure) RotateAxis(rotationOrigin *vec3.T, axis *vec3.T, angle float64) {
 	rotatedPoints := make(map[*vec3.T]bool)
 	rotatedNormals := make(map[*vec3.T]bool)
