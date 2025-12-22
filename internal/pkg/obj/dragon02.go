@@ -29,8 +29,10 @@ func NewDragon02(scale float64, includeDragon bool, includePillar bool) *scene.F
 	dragon.ScaleUniform(&vec3.Zero, scale/dragon.Bounds.Ymax)
 
 	skinMaterial := scene.NewMaterial().N("skin").
-		C(color.NewColor(0.6, 0.5, 0.2)).
-		M(0.3, 0.2)
+		C(color.NewColor(1.0, 0.85, 0.58).Multiply(0.9)).
+		M(0.30, 0.15).
+		T(0.0, true, scene.RefractionIndex_Gold)
+	skinMaterial.ColorizeReflection = true
 
 	pillarMaterial := scene.NewMaterial().N("pillar").
 		C(color.NewColor(0.8, 0.85, 0.7)).

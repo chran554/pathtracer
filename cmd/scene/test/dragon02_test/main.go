@@ -14,17 +14,19 @@ import (
 
 var animationName = "dragon02_test"
 
-var amountSamples = 1024 * 3 // * 5
-var apertureSize = 0.0
+var amountSamples = 1024 * 3 * 8 // * 5
+var apertureSize = 0.1
 
 var cameraDistanceFactor = 1.0
 
-var imageWidth = 350
-var imageHeight = 350
+var imageWidth = 600
+var imageHeight = 400
 var magnification = 2.0
 
+var lightIntensityFactor = 12.0
+
 func main() {
-	cornellBox := obj.NewWhiteCornellBox(&vec3.T{300, 300, 300}, true, 20) // cm, as units. I.e. a 5x3x5m room
+	cornellBox := obj.NewWhiteCornellBox(&vec3.T{300, 300, 300}, true, lightIntensityFactor) // cm, as units. I.e. a 5x3x5m room
 	setCornellBoxMaterial(cornellBox)
 
 	pillarHeight := 5.0
@@ -70,11 +72,11 @@ func createPillar(pillarWidth float64, pillarHeight float64) *scene.FacetStructu
 	pillar1 := obj.NewBox(obj.BoxPositive)
 	pillar1.Material = scene.NewMaterial().
 		C(color.NewColorGrey(0.9)).
-		M(0.3, 0.2).
+		M(0.2, 0.15).
 		PP(floatimage.LoadOrPanic("textures/concrete/Polished-Concrete-Architextures.jpg"), &vec3.T{0, 0, 0}, (&vec3.UnitX).Scaled(pillarWidth), (&vec3.UnitZ).Add(&vec3.T{0, 0.5, 0}).Scaled(pillarWidth))
 	pillar1.Translate(&vec3.T{-0.5, 0, -0.5})
 
-	pillar1.Scale(&vec3.Zero, &vec3.T{pillarWidth, pillarHeight, pillarWidth})
+	pillar1.Scale(&vec3.Zero, &vec3.T{pillarWidth * 1.5, pillarHeight, pillarWidth})
 	return pillar1
 }
 
@@ -94,7 +96,7 @@ func setCornellBoxMaterial(cornellBox *scene.FacetStructure) {
 
 	//floorMaterial := scene.NewMaterial().N("floor").M(0.3, 0.1).PP("textures/marble/marble white tiles 1000x1000.jpg", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale/4), vec3.UnitZ.Scaled(scale/4))
 	floorMaterial := scene.NewMaterial().N("floor").
-		C(color.NewColorGrey(0.5)).M(0.3, 0.1).
+		C(color.NewColorGrey(0.4)).M(0.15, 0.2).
 		PP(floatimage.LoadOrPanic("textures/floor/floor_boards.png"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale), vec3.UnitZ.Scaled(scale))
 	cornellBox.GetFirstObjectBySubstructureName("Floor").Material = floorMaterial
 
