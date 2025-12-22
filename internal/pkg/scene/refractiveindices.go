@@ -1,6 +1,7 @@
 package scene
 
 // https://www.robinwood.com/Catalog/Technical/Gen3DTuts/Gen3DPages/RefractionIndexList.html
+// https://pixelandpoly.com/ior.html // TODO incorporate values(?)
 const (
 	RefractionIndex_Vacuum = 1.0
 	RefractionIndex_Air    = 1.000273
