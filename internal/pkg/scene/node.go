@@ -106,7 +106,7 @@ func (sn *SceneNode) UpdateBounds() *Bounds {
 	}
 
 	for _, disc := range sn.GetDiscs() {
-		bounds.AddBounds(disc.Bounds())
+		bounds.AddBounds(disc.Bounds)
 	}
 
 	for _, facetStructure := range sn.GetFacetStructures() {
