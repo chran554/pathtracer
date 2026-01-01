@@ -355,9 +355,15 @@ func (s *serializer) deserializeProjection(projection *Projection) (*scene.Image
 		return nil, err
 	}
 
+	normalMap, err := s.resourceNormalMap(projection.NormalMap)
+	if err != nil {
+		return nil, err
+	}
+
 	return &scene.ImageProjection{
 		ProjectionType: scene.ProjectionType(projection.ProjectionType),
 		Image:          img,
+		NormalMap:      normalMap,
 		Origin:         s.sceneVector(projection.Origin),
 		U:              s.sceneVector(projection.U),
 		V:              s.sceneVector(projection.V),

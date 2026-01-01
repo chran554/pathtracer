@@ -1,5 +1,6 @@
 package main
 
+import "C"
 import (
 	"errors"
 	"fmt"
@@ -43,6 +44,8 @@ type IntersectionInformation struct {
 	shortestDistance              float64
 	material                      *scene.Material
 	normalAtIntersection          *vec3.T
+	tangentAtIntersection         *vec3.T
+	perturbedNormalAtIntersection *vec3.T
 	intersectedFacet              *scene.Facet
 	intersectedFacetVertexWeights *vec3.T
 	intersectedSphere             *scene.Sphere
@@ -562,7 +565,7 @@ func getRandomHemisphereVector(hemisphereHeading *vec3.T) *vec3.T {
 //
 // https://www.csie.ntu.edu.tw/~cyy/courses/rendering/05fall/lectures/handouts/lec10_mc_4up.pdf (page 12)
 func getRandomCosineWeightedHemisphereVector(n *vec3.T) *vec3.T {
-	amountPoints := 10000
+	amountPoints := 100_000
 	x, y := sunflower.Sunflower(amountPoints, 0.0, rand.Intn(amountPoints), true)
 	// ret.z = sqrtf(max(0.f,1.f - ret.x*ret.x - ret.y*ret.y));
 	z := math.Sqrt(math.Max(0.0, 1.0-x*x-y*y))
@@ -696,8 +699,7 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 					panic("No ray type selected!")
 				}
 
-				diffuseHeading := getRandomCosineWeightedHemisphereVector(ii.normalAtIntersection)
-				cosineNewRayAndNormal := 1.0
+				//cosineNewRayAndNormal := 1.0
 
 				// Uniform random hemisphere sampling
 				//diffuseHeading := getRandomHemisphereVector(ii.normalAtIntersection)
@@ -706,22 +708,46 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 				if useDiffuseRay {
 					// Weight for cosine weighted hemisphere sampling
 					//cosineNewRayAndNormal = 0.5 // remove the cosine factor as it is already included in hemisphere sampling
-					cosineNewRayAndNormal = 1.0 // remove the cosine factor as it is already included in hemisphere sampling
-					newRayHeading = diffuseHeading
+					//cosineNewRayAndNormal = 1.0 // remove the cosine factor as it is already included in hemisphere sampling
+
+					surfaceNormal := ii.normalAtIntersection
+					if ii.perturbedNormalAtIntersection != nil {
+						surfaceNormal = ii.perturbedNormalAtIntersection
+					}
+
+					// Iterate new creating a new heading ray until it is facing in the valid hemisphere direction
+					validNewRay := false
+					maxIter := 100
+					for iter := 0; validNewRay == false && iter < maxIter; iter++ {
+						newRayHeading = getRandomCosineWeightedHemisphereVector(surfaceNormal)
+						validNewRay = vec3.Dot(ii.normalAtIntersection, newRayHeading) > 0.0
+					}
 
 					// Uniform random hemisphere sampling
 					// cosineNewRayAndNormal = vec3.Dot(ii.normalAtIntersection, newRayHeading) / (ii.normalAtIntersection.Length() * newRayHeading.Length())
 
 				} else if useReflectionRay {
-					reflectionHeading := getReflectionVector(ii.normalAtIntersection, ray.Heading)
+					// Iterate new creating a new heading ray until it is facing in the valid hemisphere direction
+					validNewRay := false
+					maxIter := 100
+					for iter := 0; validNewRay == false && iter < maxIter; iter++ {
+						surfaceNormal := ii.normalAtIntersection
+						if ii.perturbedNormalAtIntersection != nil {
+							surfaceNormal = ii.perturbedNormalAtIntersection
+						}
 
-					interpolationWeight := ii.material.Roughness * ii.material.Roughness
-					interpolatedHeading := vec3.Interpolate(reflectionHeading, diffuseHeading, interpolationWeight)
-					interpolatedHeading.Normalize()
+						diffuseHeading := getRandomCosineWeightedHemisphereVector(surfaceNormal)
+						perfectReflectionHeading := getReflectionVector(surfaceNormal, ray.Heading)
 
-					// Weight for cosine weighted hemisphere sampling
-					cosineNewRayAndNormal = 0.5*interpolationWeight + (1.0 - interpolationWeight) // Interpolated weight diffuse --> specular
-					newRayHeading = &interpolatedHeading
+						interpolationWeight := ii.material.Roughness * ii.material.Roughness
+						interpolatedHeading := vec3.Interpolate(perfectReflectionHeading, diffuseHeading, interpolationWeight)
+						interpolatedHeading.Normalize()
+
+						// Weight for cosine weighted hemisphere sampling
+						//cosineNewRayAndNormal = 0.5*interpolationWeight + (1.0 - interpolationWeight) // Interpolated weight diffuse --> specular
+						newRayHeading = &interpolatedHeading
+						validNewRay = vec3.Dot(ii.normalAtIntersection, newRayHeading) > 0.0
+					}
 
 				} else if useTransparencyRay {
 					if ii.material.SolidObject && (ii.material.RefractionIndex > 0.0) {
@@ -768,13 +794,13 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 							}
 						}
 
-						cosineNewRayAndNormal = 1.0
+						//cosineNewRayAndNormal = 1.0
 
 					} else if !ii.material.SolidObject {
 						// Just pass through the object in the same direction as before.
 						// The walls of the object are super thin and do not refract the ray.
 						newRayHeading = ray.Heading
-						cosineNewRayAndNormal = 1.0
+						//cosineNewRayAndNormal = 1.0
 					}
 				}
 
@@ -791,7 +817,7 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 
 				incomingEmission := tracePath(&newRay, camera, scn, currentDepth+1, rayContexts)
 				incomingEmissionOnSurface := incomingEmission
-				incomingEmissionOnSurface.Multiply(float32(cosineNewRayAndNormal))
+				// incomingEmissionOnSurface.Multiply(float32(cosineNewRayAndNormal))
 
 				if useDiffuseRay {
 					//projectionCol := fixTransparentColor(projectionColor)
@@ -967,6 +993,44 @@ func processSphereIntersection(ray *scene.Ray, sphere *scene.Sphere, ii *Interse
 			ii.material = sphere.Material
 
 			ii.normalAtIntersection = sphere.Normal(ii.intersectionPoint)
+
+			if ii.material != nil {
+				projection := ii.material.Projection
+
+				// If a normal map exists, apply normal perturbation
+				if projection != nil && projection.NormalMap != nil {
+					// Find the tangent of an intersection point on a sphere
+					// https://computergraphics.stackexchange.com/questions/5498/compute-sphere-tangent-for-normal-mapping
+
+					// Construct TBN base vectors (tangent, bitangent, normal)
+					N := *ii.normalAtIntersection
+					N.Normalize()           // Needed?
+					N[1], N[2] = N[2], N[1] // Convert to a right-handed coordinate system
+
+					T := *projection.V      // Convert to a right-handed coordinate system. Should really be a setting of a temporary V rather than T, but T is set immediately for efficiency as it should have V as the default value.
+					T[1], T[2] = T[2], T[1] // Convert to a right-handed coordinate system
+					if vec3.Dot(&T, &N) != 0 {
+						T = vec3.Cross(&T, &N)
+					}
+					T.Normalize()
+
+					B := vec3.Cross(&N, &T)
+					B.Normalize()
+
+					mapNormal := projection.GetNormal(ii.intersectionPoint)
+
+					baseTBN := mat3.T{T, B, N}
+					perturbedNormal := baseTBN.MulVec3(mapNormal)
+					perturbedNormal.Normalize()
+					perturbedNormal[1], perturbedNormal[2] = perturbedNormal[2], perturbedNormal[1] // Convert to a left-handed coordinate system
+
+					//if vec3.Dot(ii.normalAtIntersection, &perturbedNormal) < 0 {
+					//	perturbedNormal = *ii.normalAtIntersection
+					//}
+
+					ii.perturbedNormalAtIntersection = &perturbedNormal
+				}
+			}
 
 			ii.intersectedFacet = nil
 			ii.intersectedSphere = sphere

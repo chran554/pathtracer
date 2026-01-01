@@ -9,7 +9,7 @@ type Sphere struct {
 	Name     string
 	Origin   *vec3.T
 	Radius   float64
-	Material *Material `json:"material,omitempty"`
+	Material *Material
 }
 
 func NewSphere(origin *vec3.T, radius float64, material *Material) *Sphere {

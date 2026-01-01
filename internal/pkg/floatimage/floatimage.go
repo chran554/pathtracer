@@ -49,6 +49,20 @@ func NewFloatImage(name string, width, height int) *FloatImage {
 	return &floatImage
 }
 
+func (fi *FloatImage) Bounds() img.Rectangle {
+	return img.Rect(0, 0, fi.Width, fi.Height)
+}
+
+func (fi *FloatImage) At(x, y int) col.Color {
+	return fi.GetPixel(x, y)
+}
+
+func (fi *FloatImage) Set(x, y int, c col.Color) {
+	fi.SetPixel(x, y, c.(*color.Color))
+}
+
+func (fi *FloatImage) ColorModel() col.Model { return color.FloatNRGBAModel }
+
 func (fi *FloatImage) String() string {
 	return fmt.Sprintf("%s (%dx%d)", fi.name, fi.Width, fi.Height)
 }
@@ -146,6 +160,8 @@ func LoadOrPanic(filename string) *FloatImage {
 	return image
 }
 
+// Read reads an image from the given reader.
+// No gama correction is applied.
 func Read(imageName string, r io.Reader) (*FloatImage, error) {
 	image, _, err := img.Decode(r)
 	if err != nil {
@@ -156,6 +172,8 @@ func Read(imageName string, r io.Reader) (*FloatImage, error) {
 	return floatImage, nil
 }
 
+// ConvertImageToFloatImage converts an image.Image to a FloatImage.
+// No gama correction is applied.
 func ConvertImageToFloatImage(imageName string, textureImage img.Image) *FloatImage {
 	width := textureImage.Bounds().Max.X
 	height := textureImage.Bounds().Max.Y
@@ -177,8 +195,6 @@ func ConvertImageToFloatImage(imageName string, textureImage img.Image) *FloatIm
 			image.SetPixel(x, y, c2)
 		}
 	}
-
-	image.GammaDecode(GammaDefault)
 	return image
 }
 

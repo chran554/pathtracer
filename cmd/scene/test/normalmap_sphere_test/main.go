@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"math"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
@@ -13,7 +12,7 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "normalmap"
+var animationName = "normal_map_sphere_test"
 
 var amountAnimationFrames = 1 // 72 * 2 // TODO set to 1
 
@@ -150,39 +149,4 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-}
-
-func RotationFromTo(v1, v2 *vec3.T) (axis *vec3.T, angle float64, ok bool) {
-	if v1.Length() == 0 || v2.Length() == 0 {
-		return &vec3.Zero, 0, false
-	}
-
-	u := v1.Normalized()
-	v := v2.Normalized()
-
-	axis_ := vec3.Cross(&u, &v)
-	axis = &axis_
-	s := axis.Length()
-	c := vec3.Dot(&u, &v)
-
-	const eps = 1e-12
-	if s < eps {
-		if c > 0 {
-			// already parallel
-			return &vec3.T{0, 1, 0}, 0, true
-		}
-		// opposite: pick any perpendicular axis
-		tmp := &vec3.T{1, 0, 0}
-		if math.Abs(u[0]) > 0.9 {
-			tmp = &vec3.T{0, 1, 0}
-		}
-		axis_ = vec3.Cross(&u, tmp)
-		axis = &axis_
-		axis.Normalize()
-		return axis, math.Pi, true
-	}
-
-	axis.Normalize()         // normalize axis
-	angle = math.Atan2(s, c) // stable angle
-	return axis, angle, true
 }

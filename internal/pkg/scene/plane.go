@@ -6,7 +6,7 @@ type Plane struct {
 	Name     string
 	Origin   *vec3.T
 	Normal   *vec3.T
-	Material *Material `json:"Material,omitempty"`
+	Material *Material
 }
 
 // NewPlane creates a plane from three vertices.

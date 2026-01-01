@@ -24,9 +24,19 @@ func ClampFloat64(min float64, max float64, value float64) float64 {
 		return min
 	} else if value > max {
 		return max
-	} else {
-		return value
 	}
+
+	return value
+}
+
+func ClampFloat32(min float32, max float32, value float32) float32 {
+	if value < min {
+		return min
+	} else if value > max {
+		return max
+	}
+
+	return value
 }
 
 func ClampInt(min int, max int, value int) int {
@@ -34,9 +44,9 @@ func ClampInt(min int, max int, value int) int {
 		return min
 	} else if value > max {
 		return max
-	} else {
-		return value
 	}
+
+	return value
 }
 
 func Cosine(a *vec3.T, b *vec3.T) float64 {

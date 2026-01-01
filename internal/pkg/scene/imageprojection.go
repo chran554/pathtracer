@@ -31,15 +31,16 @@ const (
 )
 
 type ImageProjection struct {
-	ProjectionType                  ProjectionType         `json:"ProjectionType"`
-	Image                           *floatimage.FloatImage `json:"Image"`
-	Origin                          *vec3.T                `json:"Origin"`
-	U                               *vec3.T                `json:"U"`
-	V                               *vec3.T                `json:"V"`
-	RepeatU                         bool                   `json:"RepeatU,omitempty"`
-	RepeatV                         bool                   `json:"RepeatV,omitempty"`
-	FlipU                           bool                   `json:"FlipU,omitempty"`
-	FlipV                           bool                   `json:"FlipV,omitempty"`
+	ProjectionType                  ProjectionType
+	Image                           *floatimage.FloatImage
+	NormalMap                       *floatimage.FloatImage
+	Origin                          *vec3.T
+	U                               *vec3.T
+	V                               *vec3.T
+	RepeatU                         bool
+	RepeatV                         bool
+	FlipU                           bool
+	FlipV                           bool
 	_invertedCoordinateSystemMatrix *mat3.T
 }
 
@@ -74,6 +75,10 @@ func NewImageProjection(projectionType ProjectionType, texture *floatimage.Float
 }
 
 func (imageProjection *ImageProjection) GetColor(point *vec3.T) *color.Color {
+	if imageProjection.Image == nil {
+		return color.BlackTransparent
+	}
+
 	if imageProjection.ProjectionType == ProjectionTypeParallel {
 		return imageProjection.getParallelColor(point)
 	}
@@ -86,6 +91,27 @@ func (imageProjection *ImageProjection) GetColor(point *vec3.T) *color.Color {
 	// ProjectionTypeTextureMapping is not handled here
 
 	return color.BlackTransparent
+}
+
+func (imageProjection *ImageProjection) GetNormal(point *vec3.T) *vec3.T {
+	var normal *vec3.T
+	if imageProjection.NormalMap == nil {
+		return normal
+	}
+
+	switch imageProjection.ProjectionType {
+	case ProjectionTypeParallel:
+		normal = nil // TODO implement
+	case ProjectionTypeCylindrical:
+		normal = nil // TODO implement
+	case ProjectionTypeSpherical:
+		normal = imageProjection.getSphericalNormal(point)
+	}
+	// ProjectionTypeTextureMapping is not handled here
+
+	normal.Normalize()
+
+	return normal
 }
 
 func (imageProjection *ImageProjection) GetColorAt(coordinate *vec2.T) *color.Color {
@@ -126,12 +152,31 @@ func (imageProjection *ImageProjection) getSphericalColor2(point *vec3.T) *color
 }
 
 func (imageProjection *ImageProjection) getSphericalColor(point *vec3.T) *color.Color {
+	if imageProjection.Image == nil {
+		return nil
+	}
+
 	normalizedTextureCoordinate := imageProjection.getSphericalXY(point)
 
 	textureX := int(normalizedTextureCoordinate[0] * float64(imageProjection.Image.Width))
 	textureY := int(normalizedTextureCoordinate[1] * float64(imageProjection.Image.Height))
 
 	return imageProjection.Image.GetPixel(textureX, textureY)
+}
+
+func (imageProjection *ImageProjection) getSphericalNormal(point *vec3.T) *vec3.T {
+	if imageProjection.NormalMap == nil {
+		return nil
+	}
+
+	normalizedTextureCoordinate := imageProjection.getSphericalXY(point)
+
+	textureX := normalizedTextureCoordinate[0] * float64(imageProjection.NormalMap.Width)
+	textureY := normalizedTextureCoordinate[1] * float64(imageProjection.NormalMap.Height)
+
+	c := imageProjection.NormalMap.GetInterpolatedPixel(textureX, textureY, floatimage.InterpolationBilinear)
+
+	return &vec3.T{float64(c.R), float64(c.G), float64(c.B)}
 }
 
 func (imageProjection *ImageProjection) getSphericalXY(point *vec3.T) vec2.T {

@@ -13,7 +13,7 @@ type Disc struct {
 	Normal   *vec3.T
 	Radius   float64
 	Bounds   *Bounds
-	Material *Material `json:"Material,omitempty"`
+	Material *Material
 }
 
 func NewDisc(origin *vec3.T, normal *vec3.T, radius float64, material *Material) *Disc {

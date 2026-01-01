@@ -6,11 +6,11 @@ import (
 )
 
 type SceneNode struct {
-	Spheres         []*Sphere         `json:"Spheres,omitempty"`
-	Discs           []*Disc           `json:"Discs,omitempty"`
-	ChildNodes      []*SceneNode      `json:"ChildNodes,omitempty"`
-	FacetStructures []*FacetStructure `json:"FacetStructures,omitempty"`
-	Bounds          *Bounds           `json:"-"`
+	Spheres         []*Sphere
+	Discs           []*Disc
+	ChildNodes      []*SceneNode
+	FacetStructures []*FacetStructure
+	Bounds          *Bounds
 }
 
 func NewSceneNode() *SceneNode {

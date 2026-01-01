@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/floatimage"
+	"pathtracer/internal/pkg/imagecache"
 	"pathtracer/internal/pkg/scene"
 	"regexp"
 	"time"
@@ -29,7 +30,7 @@ type serializer struct {
 	colors          []*Color
 	colorToIndexMap map[*color.Color]ColorIndex
 
-	resourceFileMap map[string]ResourceIndex
+	resourceHashToIndex map[string]ResourceIndex
 
 	sv   []*vec3.T         // sv is scene vectors
 	sv2d []*vec2.T         // sv2d is scene 2D vectors
@@ -62,23 +63,23 @@ func (s *serializer) clearFrameCache() {
 
 func newSerializer(zipWriter *zip.Writer) *serializer {
 	return &serializer{
-		zipWriter:          zipWriter,
-		vectorToIndexMap:   make(map[*vec3.T]VectorIndex),
-		vector2DToIndexMap: make(map[*vec2.T]Vector2DIndex),
-		resourceFileMap:    make(map[string]ResourceIndex),
-		materialToIndexMap: make(map[*scene.Material]MaterialIndex),
-		colorToIndexMap:    make(map[*color.Color]ColorIndex),
+		zipWriter:           zipWriter,
+		vectorToIndexMap:    make(map[*vec3.T]VectorIndex),
+		vector2DToIndexMap:  make(map[*vec2.T]Vector2DIndex),
+		resourceHashToIndex: make(map[string]ResourceIndex),
+		materialToIndexMap:  make(map[*scene.Material]MaterialIndex),
+		colorToIndexMap:     make(map[*color.Color]ColorIndex),
 	}
 }
 
 func newDeserializer(reader *zip.Reader) (*serializer, error) {
 	s := &serializer{
-		zipReader:          reader,
-		vectorToIndexMap:   make(map[*vec3.T]VectorIndex),
-		vector2DToIndexMap: make(map[*vec2.T]Vector2DIndex),
-		resourceFileMap:    make(map[string]ResourceIndex),
-		materialToIndexMap: make(map[*scene.Material]MaterialIndex),
-		colorToIndexMap:    make(map[*color.Color]ColorIndex),
+		zipReader:           reader,
+		vectorToIndexMap:    make(map[*vec3.T]VectorIndex),
+		vector2DToIndexMap:  make(map[*vec2.T]Vector2DIndex),
+		resourceHashToIndex: make(map[string]ResourceIndex),
+		materialToIndexMap:  make(map[*scene.Material]MaterialIndex),
+		colorToIndexMap:     make(map[*color.Color]ColorIndex),
 	}
 
 	return s, nil
@@ -125,12 +126,12 @@ func (s *serializer) fileResourceIndex(floatImage *floatimage.FloatImage) (Resou
 	imageHash := floatImage.Hash()
 
 	// Check if the resource has already been added
-	if index, exists := s.resourceFileMap[imageHash]; exists {
+	if index, exists := s.resourceHashToIndex[imageHash]; exists {
 		return index, nil // Reuse the existing index
 	}
 
 	// Calculate the new resource index based on the size of the map
-	newIndex := ResourceIndex(len(s.resourceFileMap) + 1)
+	newIndex := ResourceIndex(len(s.resourceHashToIndex) + 1)
 
 	//fmt.Printf("Reading resource file %s as resource #%d\n", floatImage.Name(), newIndex)
 
@@ -150,7 +151,7 @@ func (s *serializer) fileResourceIndex(floatImage *floatimage.FloatImage) (Resou
 	}
 
 	// Add the filename and its index to the map
-	s.resourceFileMap[imageHash] = newIndex
+	s.resourceHashToIndex[imageHash] = newIndex
 
 	// Return the new index
 	return newIndex, nil
@@ -313,7 +314,34 @@ func (s *serializer) resourceImage(resourceIndex ResourceIndex) (*floatimage.Flo
 			}
 			defer fileReader.Close()
 
-			floatImage, err := floatimage.GetOrReadCachedImage(filename, fileReader)
+			floatImage, err := imagecache.GetOrReadCachedImage(filename, fileReader, true, false)
+			if err != nil {
+				return nil, fmt.Errorf("could not decode resource image file %s: %w", filename, err)
+			}
+
+			return floatImage, nil
+		}
+	}
+
+	return nil, fmt.Errorf("could not find resource file for resource index %d", resourceIndex)
+}
+
+func (s *serializer) resourceNormalMap(resourceIndex ResourceIndex) (*floatimage.FloatImage, error) {
+	if resourceIndex == 0 {
+		return nil, nil
+	}
+
+	for _, file := range s.zipReader.File {
+		filename := file.Name
+
+		if match, _ := regexp.Match(fmt.Sprintf("resources/%03d_.*", resourceIndex), []byte(filename)); match {
+			fileReader, err := file.Open()
+			if err != nil {
+				return nil, fmt.Errorf("could not open resource image file %s: %w", filename, err)
+			}
+			defer fileReader.Close()
+
+			floatImage, err := imagecache.GetOrReadCachedImage(filename, fileReader, false, true)
 			if err != nil {
 				return nil, fmt.Errorf("could not decode resource image file %s: %w", filename, err)
 			}

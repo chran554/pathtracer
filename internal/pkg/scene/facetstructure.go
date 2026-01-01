@@ -12,14 +12,14 @@ import (
 )
 
 type FacetStructure struct {
-	Name             string            `json:"Name,omitempty"`
-	SubstructureName string            `json:"SubstructureName,omitempty"`
-	Material         *Material         `json:"Material,omitempty"`
-	Facets           []*Facet          `json:"Facets,omitempty"`
-	FacetStructures  []*FacetStructure `json:"FacetStructures,omitempty"`
+	Name             string
+	SubstructureName string
+	Material         *Material
+	Facets           []*Facet
+	FacetStructures  []*FacetStructure
 
-	IgnoreBounds bool    `json:"IgnoreBounds,omitempty"`
-	Bounds       *Bounds `json:"-"` // Calculated attribute. See UpdateBounds(). Derived from all vertices in all sub facets recursively.
+	IgnoreBounds bool
+	Bounds       *Bounds // Calculated attribute. See UpdateBounds(). Derived from all vertices in all sub facets recursively.
 }
 
 func (fs *FacetStructure) Initialize() {

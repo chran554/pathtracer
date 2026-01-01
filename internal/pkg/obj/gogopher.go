@@ -1,6 +1,7 @@
 package obj
 
 import (
+	"fmt"
 	"path/filepath"
 	"pathtracer/internal/pkg/obj/wavefrontobj"
 	"pathtracer/internal/pkg/scene"
@@ -17,6 +18,7 @@ func NewGopher(scale float64) *scene.FacetStructure {
 
 func loadGopher() *scene.FacetStructure {
 	gopher := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "go_gopher_color.obj"))
+	gopher.FlipX(&vec3.Zero)
 
 	ymin := gopher.Bounds.Ymin
 	ymax := gopher.Bounds.Ymax
@@ -24,4 +26,12 @@ func loadGopher() *scene.FacetStructure {
 	gopher.ScaleUniform(&vec3.Zero, 1.0/(ymax-ymin)) // resize to height == 1.0
 
 	return gopher
+}
+
+func GopherFacing(gopher *scene.FacetStructure, facingPoint *vec3.T) {
+	fmt.Print(gopher)
+}
+
+func GopherFocusEye(gopher *scene.FacetStructure, eyeFocusPoint *vec3.T) {
+	fmt.Print(gopher)
 }

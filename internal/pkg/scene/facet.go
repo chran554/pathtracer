@@ -10,12 +10,12 @@ import (
 )
 
 type Facet struct {
-	Vertices           []*vec3.T `json:"Vertices"`
-	VertexNormals      []*vec3.T `json:"VertexNormals,omitempty"`
-	TextureCoordinates []*vec2.T `json:"TextureCoordinates,omitempty"`
+	Vertices           []*vec3.T
+	VertexNormals      []*vec3.T
+	TextureCoordinates []*vec2.T
 
-	Normal *vec3.T `json:"-"` // Calculated attribute. See UpdateNormal(). Derived from the first three vertices of the triangle.
-	Bounds *Bounds `json:"-"` // Calculated attribute. See GetBounds(). Derived from all vertices in the facet.
+	Normal *vec3.T // Calculated attribute. See UpdateNormal(). Derived from the first three vertices of the triangle.
+	Bounds *Bounds // Calculated attribute. See GetBounds(). Derived from all vertices in the facet.
 }
 
 // SplitMultiPointFacet maps a multipoint (> 3 points) facet into a list of triangles.

@@ -9,19 +9,19 @@ import (
 )
 
 type Material struct {
-	Name                 string           `json:"Name,omitempty"`
-	Color                *color.Color     `json:"Color,omitempty"`
-	Diffuse              float64          `json:"Diffuse,omitempty"`
-	Emission             *color.Color     `json:"Emission,omitempty"`
-	Glossiness           float64          `json:"Glossiness,omitempty"` // Glossiness is the percent amount that will make out specular reflection. Values [0.0, 1.0] with default 0.0. The lower value, the more diffuse color will appear, and the higher value, the more mirror reflection will appear.
-	Roughness            float64          `json:"Roughness,omitempty"`  // Roughness is the diffuse spread of the specular reflection. Values [0.0, 1.0] with default 0.0. Lower is like "brushed metal" or "foggy/hazy reflection" and higher value gives a more mirror like reflection. A value of 1.0 is perfect mirror reflection and a value of 0.0 is a perfect diffuse material (no mirror at all).
-	Projection           *ImageProjection `json:"Projection,omitempty"`
-	RefractionIndex      float64          `json:"RefractionIndex,omitempty"`
-	SolidObject          bool             `json:"SolidObject,omitempty"`        // SolidObject is if the material denotes a solid object with volume, not a hollow or open object or object nor an object with plane-thin walls. Solid transparent objects can refract light, hollow objects don't.
-	Transparency         float64          `json:"Transparency,omitempty"`       // Transparency is the amount [0,1.0) of transparency vs diffuse contribution.
-	RayTerminator        bool             `json:"RayTerminator,omitempty"`      // RayTerminator decide if the ray should terminate after hit with the object. Example can be an environment sphere or environment cube where a hit to the wall is the same as "no hit, continue in infinity". Extremely bright lights can also be ray terminators, their appearance will not notably be affected by further tracing.
-	ColorizeReflection   bool             `json:"ColorizeReflection,omitempty"` // ColorizeReflection is if the reflection color should be colorized based on the material color. Shiny metal materials will colorize reflection. Dielectric materials will not colorize reflection.
-	FresnelMaxGlossiness float64          `json:"FresnelMaxGlossiness,omitempty"`
+	Name                 string
+	Color                *color.Color
+	Diffuse              float64
+	Emission             *color.Color
+	Glossiness           float64 // Glossiness is the percent amount that will make out specular reflection. Values [0.0, 1.0] with default 0.0. The lower value, the more diffuse color will appear, and the higher value, the more mirror reflection will appear.
+	Roughness            float64 // Roughness is the diffuse spread of the specular reflection. Values [0.0, 1.0] with default 0.0. Lower is like "brushed metal" or "foggy/hazy reflection" and higher value gives a more mirror like reflection. A value of 1.0 is perfect mirror reflection and a value of 0.0 is a perfect diffuse material (no mirror at all).
+	Projection           *ImageProjection
+	RefractionIndex      float64
+	SolidObject          bool    // SolidObject is if the material denotes a solid object with volume, not a hollow or open object or object nor an object with plane-thin walls. Solid transparent objects can refract light, hollow objects don't.
+	Transparency         float64 // Transparency is the amount [0,1.0) of transparency vs diffuse contribution.
+	RayTerminator        bool    // RayTerminator decide if the ray should terminate after hit with the object. Example can be an environment sphere or environment cube where a hit to the wall is the same as "no hit, continue in infinity". Extremely bright lights can also be ray terminators, their appearance will not notably be affected by further tracing.
+	ColorizeReflection   bool    // ColorizeReflection is if the reflection color should be colorized based on the material color. Shiny metal materials will colorize reflection. Dielectric materials will not colorize reflection.
+	FresnelMaxGlossiness float64
 }
 
 // NewMaterial creates a new material with sensible defaults.
@@ -96,14 +96,23 @@ func (m *Material) P(projection *ImageProjection) *Material {
 	return m
 }
 
-// PP is a parallel projection properties
+// PP is a parallel projection property
 func (m *Material) PP(texture *floatimage.FloatImage, origin *vec3.T, u vec3.T, v vec3.T) *Material {
 	parallelImageProjection := NewParallelImageProjection(texture, origin, u, v)
 	m.Projection = &parallelImageProjection
 	return m
 }
 
-// SP is a spherical projection (of equirectangular images) properties
+// SP is a spherical projection (of equirectangular images) property
+//
+// u and v vectors should be orthogonal to one another.
+//
+// u vector points to the middle of the sphere where the texture left edge starts.
+// The intersection point on the sphere (of the u vector) corresponds to the pixel
+// in the middle of the left most pixel column in the texture.
+//
+// v vector is the "up" vector of the projection.
+// The intersection point on the sphere (of the v vector) corresponds to the pixel row at the top of the texture.
 func (m *Material) SP(texture *floatimage.FloatImage, origin *vec3.T, u vec3.T, v vec3.T) *Material {
 	sphericalImageProjection := NewSphericalImageProjection(texture, origin, u, v)
 	m.Projection = &sphericalImageProjection

@@ -3,7 +3,7 @@ package obj
 import (
 	"math"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
+	"pathtracer/internal/pkg/imagecache"
 	"pathtracer/internal/pkg/scene"
 	"strconv"
 
@@ -26,7 +26,7 @@ func loadHeightMap(filename string) *scene.FacetStructure {
 	landscape := &scene.FacetStructure{}
 	landscape.Material = scene.NewMaterial()
 
-	img := floatimage.GetCachedImage(filename)
+	img := imagecache.GetCachedImage(filename)
 
 	pointMap := map[string]*vec3.T{}
 

@@ -14,12 +14,14 @@ var (
 	WhiteTransparent = NewColorRGBA(1, 1, 1, 0)
 )
 
+// Color is an RGBA color with an alpha channel.
+// The RGB values are not premultiplied with the alpha value (i.e., this color is a float32 NRGBA implementation).
+// All channels are of type float32 and have a value in the range [0, 1].
+//
+// Although the channel values can be set to values outside the specified range,
+// any calculation or color model conversion may clamp a channel value outside the range to the nearest boundary for
+// data type precision or calculation robustness.
 type Color struct{ R, G, B, A float32 }
-
-// RGBA creates a new color
-func (c *Color) RGBA() (r, g, b, a uint32) {
-	return uint32(c.R * 0xffff), uint32(c.G * 0xffff), uint32(c.B * 0xffff), uint32(c.A * 0xffff)
-}
 
 func NewColor(r, g, b float64) *Color {
 	return NewColorRGBA(r, g, b, 1.0)
