@@ -16,14 +16,11 @@ import (
 	"os"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/util"
+	"runtime"
 	"strconv"
+	"sync"
 
 	"github.com/vmihailenco/msgpack/v5"
-)
-
-var (
-	GammaSRGB    = 2.2
-	GammaDefault = GammaSRGB
 )
 
 type FloatImage struct {
@@ -179,22 +176,41 @@ func ConvertImageToFloatImage(imageName string, textureImage img.Image) *FloatIm
 	height := textureImage.Bounds().Max.Y
 
 	image := NewFloatImage(imageName, width, height)
-	colorNormalizationFactor := 1.0 / 0xff
-	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
-			c1 := textureImage.At(x, y)
-			nrgbaColor := col.NRGBAModel.Convert(c1).(col.NRGBA)
+	const colorNormalizationFactor = 1.0 / 0xff
 
-			c2 := color.NewColorRGBA(
-				float64(nrgbaColor.R)*colorNormalizationFactor,
-				float64(nrgbaColor.G)*colorNormalizationFactor,
-				float64(nrgbaColor.B)*colorNormalizationFactor,
-				float64(nrgbaColor.A)*colorNormalizationFactor,
-			)
-
-			image.SetPixel(x, y, c2)
-		}
+	numCPU := runtime.NumCPU()
+	if numCPU > 1 {
+		numCPU--
 	}
+
+	var wg sync.WaitGroup
+	wg.Add(numCPU)
+
+	for i := 0; i < numCPU; i++ {
+		go func(i int) {
+			defer wg.Done()
+			startY := (height * i) / numCPU
+			endY := (height * (i + 1)) / numCPU
+
+			for y := startY; y < endY; y++ {
+				for x := 0; x < width; x++ {
+					c1 := textureImage.At(x, y)
+					nrgbaColor := col.NRGBAModel.Convert(c1).(col.NRGBA)
+
+					c2 := color.NewColorRGBA(
+						float64(nrgbaColor.R)*colorNormalizationFactor,
+						float64(nrgbaColor.G)*colorNormalizationFactor,
+						float64(nrgbaColor.B)*colorNormalizationFactor,
+						float64(nrgbaColor.A)*colorNormalizationFactor,
+					)
+
+					image.SetPixel(x, y, c2)
+				}
+			}
+		}(i)
+	}
+	wg.Wait()
+
 	return image
 }
 
@@ -203,7 +219,7 @@ func WriteImage(filename string, floatImage *FloatImage) {
 	height := floatImage.Height
 
 	tmp := floatImage.Copy()
-	tmp.GammaEncode(GammaDefault)
+	tmp.GammaEncode()
 
 	image := img.NewNRGBA(img.Rect(0, 0, width, height))
 	// imageAlpha := img.NewRGBA(img.Rect(0, 0, width, height))
@@ -248,7 +264,7 @@ func (fi *FloatImage) Image() *img.NRGBA {
 	height := fi.Height
 
 	tmp := fi.Copy()
-	tmp.GammaEncode(GammaDefault)
+	tmp.GammaEncode()
 
 	newImage := img.NewNRGBA(img.Rect(0, 0, width, height))
 	// imageAlpha := img.NewRGBA(img.Rect(0, 0, width, height))
@@ -320,26 +336,22 @@ func writeBinaryInt32(buffer *bytes.Buffer, value int32) {
 }
 
 // GammaEncode (or gamma compression) converts this image with values in linear space to have values in gamma space.
-//
-// https://blog.johnnovak.net/2016/09/21/what-every-coder-should-know-about-gamma/
-func (fi *FloatImage) GammaEncode(gamma float64) {
+func (fi *FloatImage) GammaEncode() {
 	for y := 0; y < fi.Height; y++ {
 		for x := 0; x < fi.Width; x++ {
 			linearPixelValue := fi.GetPixel(x, y)
-			gammaPixelValue := linearPixelValue.GammaEncode(gamma)
+			gammaPixelValue := linearPixelValue.GammaEncodeSRGB()
 			fi.SetPixel(x, y, gammaPixelValue)
 		}
 	}
 }
 
 // GammaDecode (or gamma expansion) converts this image with values in gamma space to have values in linear space.
-//
-// https://blog.johnnovak.net/2016/09/21/what-every-coder-should-know-about-gamma/
-func (fi *FloatImage) GammaDecode(gamma float64) {
+func (fi *FloatImage) GammaDecode() {
 	for y := 0; y < fi.Height; y++ {
 		for x := 0; x < fi.Width; x++ {
 			gammaPixelValue := fi.GetPixel(x, y)
-			linearPixelValue := gammaPixelValue.GammaDecode(gamma)
+			linearPixelValue := gammaPixelValue.GammaDecodeSRGB()
 			fi.SetPixel(x, y, linearPixelValue)
 		}
 	}

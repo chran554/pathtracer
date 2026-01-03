@@ -53,7 +53,7 @@ func GetOrReadCachedImage(imageName string, r io.Reader, gammaDecode bool, norma
 		}
 
 		if gammaDecode {
-			fimg.GammaDecode(floatimage.GammaDefault)
+			fimg.GammaDecode()
 		}
 
 		// Convert normal map r,g,b to vector x,y,z values

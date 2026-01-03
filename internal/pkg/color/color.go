@@ -144,6 +144,20 @@ func (c *Color) GammaDecode(gamma float64) *Color {
 	return GammaDecodeColor(c, gamma)
 }
 
+// GammaEncodeSRGB (or gamma compression) converts this color with values in linear space to a new color with values in sRGB gamma space.
+//
+// https://blog.johnnovak.net/2016/09/21/what-every-coder-should-know-about-gamma/
+func (c *Color) GammaEncodeSRGB() *Color {
+	return GammaEncodeSRGBColor(c)
+}
+
+// GammaDecodeSRGB (or gamma expansion) converts this color with values in sRGB gamma space to a new color with values in linear space.
+//
+// https://blog.johnnovak.net/2016/09/21/what-every-coder-should-know-about-gamma/
+func (c *Color) GammaDecodeSRGB() *Color {
+	return GammaDecodeSRGBColor(c)
+}
+
 // GammaEncodeColor (or gamma compression) converts a color with values in linear space to a new color with values in gamma space.
 //
 // https://blog.johnnovak.net/2016/09/21/what-every-coder-should-know-about-gamma/
@@ -172,6 +186,43 @@ func GammaDecodeColor(gammaColor *Color, gamma float64) *Color {
 	return linearColor
 }
 
+// GammaEncodeSRGBColor (or gamma compression) converts a color with values in linear space to a new color with values in sRGB gamma space.
+func GammaEncodeSRGBColor(linearColor *Color) *Color {
+	gammaColor := &Color{
+		R: sRGBGammaEncodeCalculation(linearColor.R),
+		G: sRGBGammaEncodeCalculation(linearColor.G),
+		B: sRGBGammaEncodeCalculation(linearColor.B),
+		A: linearColor.A,
+	}
+
+	return gammaColor
+}
+
+// GammaDecodeSRGBColor (or gamma expansion) converts a color with values in sRGB gamma space to a new color with values in linear space.
+func GammaDecodeSRGBColor(gammaColor *Color) *Color {
+	linearColor := &Color{
+		R: sRGBGammaDecodeCalculation(gammaColor.R),
+		G: sRGBGammaDecodeCalculation(gammaColor.G),
+		B: sRGBGammaDecodeCalculation(gammaColor.B),
+		A: gammaColor.A,
+	}
+	return linearColor
+}
+
 func gammaCalculation(value float32, gamma float64) float32 {
 	return float32(math.Pow(float64(value), gamma))
+}
+
+func sRGBGammaEncodeCalculation(value float32) float32 {
+	if value <= 0.0031308 {
+		return 12.92 * value
+	}
+	return float32(1.055*math.Pow(float64(value), 1.0/2.4) - 0.055)
+}
+
+func sRGBGammaDecodeCalculation(value float32) float32 {
+	if value <= 0.04045 {
+		return value / 12.92
+	}
+	return float32(math.Pow((float64(value)+0.055)/1.055, 2.4))
 }
