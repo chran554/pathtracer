@@ -343,6 +343,7 @@ func (s *serializer) serializeProjection(projection *scene.ImageProjection) (*Pr
 	return &Projection{
 		ProjectionType: string(projection.ProjectionType),
 		Image:          imageResourceIndex,
+		Interpolation:  int(projection.Interpolation),
 		NormalMap:      normalMapResourceIndex,
 		Origin:         s.vectorIndex(projection.Origin),
 		U:              s.vectorIndex(projection.U),

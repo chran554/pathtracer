@@ -113,6 +113,7 @@ type Color struct {
 type Projection struct {
 	ProjectionType string        `msgpack:"projection-type"`
 	Image          ResourceIndex `msgpack:"image-resource-index"`
+	Interpolation  int           `msgpack:"interpolation,omitempty"`
 	NormalMap      ResourceIndex `msgpack:"normal-map-resource-index"`
 	Origin         VectorIndex   `msgpack:"origin"`
 	U              VectorIndex   `msgpack:"u"`

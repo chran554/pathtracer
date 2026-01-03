@@ -33,6 +33,7 @@ const (
 type ImageProjection struct {
 	ProjectionType                  ProjectionType
 	Image                           *floatimage.FloatImage
+	Interpolation                   floatimage.Interpolation
 	NormalMap                       *floatimage.FloatImage
 	Origin                          *vec3.T
 	U                               *vec3.T
@@ -64,6 +65,7 @@ func NewImageProjection(projectionType ProjectionType, texture *floatimage.Float
 	return ImageProjection{
 		ProjectionType: projectionType,
 		Image:          texture,
+		Interpolation:  floatimage.InterpolationNearestNeighbor,
 		Origin:         origin,
 		U:              &u,
 		V:              &v,
@@ -158,10 +160,10 @@ func (imageProjection *ImageProjection) getSphericalColor(point *vec3.T) *color.
 
 	normalizedTextureCoordinate := imageProjection.getSphericalXY(point)
 
-	textureX := int(normalizedTextureCoordinate[0] * float64(imageProjection.Image.Width))
-	textureY := int(normalizedTextureCoordinate[1] * float64(imageProjection.Image.Height))
+	textureX := normalizedTextureCoordinate[0] * float64(imageProjection.Image.Width)
+	textureY := normalizedTextureCoordinate[1] * float64(imageProjection.Image.Height)
 
-	return imageProjection.Image.GetPixel(textureX, textureY)
+	return imageProjection.Image.GetInterpolatedPixel(textureX, textureY, imageProjection.Interpolation)
 }
 
 func (imageProjection *ImageProjection) getSphericalNormal(point *vec3.T) *vec3.T {
@@ -174,7 +176,7 @@ func (imageProjection *ImageProjection) getSphericalNormal(point *vec3.T) *vec3.
 	textureX := normalizedTextureCoordinate[0] * float64(imageProjection.NormalMap.Width)
 	textureY := normalizedTextureCoordinate[1] * float64(imageProjection.NormalMap.Height)
 
-	c := imageProjection.NormalMap.GetInterpolatedPixel(textureX, textureY, floatimage.InterpolationBilinear)
+	c := imageProjection.NormalMap.GetInterpolatedPixel(textureX, textureY, imageProjection.Interpolation)
 
 	return &vec3.T{float64(c.R), float64(c.G), float64(c.B)}
 }

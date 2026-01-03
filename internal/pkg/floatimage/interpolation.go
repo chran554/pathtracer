@@ -10,16 +10,21 @@ type Interpolation int
 const (
 	InterpolationNearestNeighbor = iota
 	InterpolationBilinear
+	InterpolationBicubic
 )
 
 func (fi *FloatImage) GetInterpolatedPixel(srcX, srcY float64, interpolation Interpolation) *color.Color {
 	switch interpolation {
 	case InterpolationBilinear:
 		return fi.GetBilinearInterpolatedPixel(srcX, srcY)
+	case InterpolationBicubic:
+		return fi.GetBicubicInterpolatedPixel(srcX, srcY)
 	case InterpolationNearestNeighbor:
 		fallthrough
 	default:
-		return fi.GetPixel(int(srcX), int(srcY))
+		x := clampInt(int(srcX), fi.Bounds().Min.X, fi.Bounds().Max.X-1)
+		y := clampInt(int(srcY), fi.Bounds().Min.Y, fi.Bounds().Max.Y-1)
+		return fi.GetPixel(x, y)
 	}
 }
 
@@ -68,6 +73,52 @@ func (fi *FloatImage) GetBilinearInterpolatedPixel(srcX, srcY float64) *color.Co
 
 	// Return the interpolated color
 	return &color.Color{R: r, G: g, B: b, A: a}
+}
+
+func (fi *FloatImage) GetBicubicInterpolatedPixel(srcX, srcY float64) *color.Color {
+	x0 := int(math.Floor(srcX))
+	y0 := int(math.Floor(srcY))
+
+	// Fractional part
+	tx := srcX - float64(x0)
+	ty := srcY - float64(y0)
+
+	// Cubic weights
+	wx := cubicWeights(tx)
+	wy := cubicWeights(ty)
+
+	var interpolatedR, interpolatedG, interpolatedB, interpolatedA float32
+
+	bounds := fi.Bounds()
+
+	for offsetY := -1; offsetY <= 2; offsetY++ {
+		y := clampInt(y0+offsetY, bounds.Min.Y, bounds.Max.Y-1)
+		rowWeight := float32(wy[offsetY+1])
+
+		for offsetX := -1; offsetX <= 2; offsetX++ {
+			x := clampInt(x0+offsetX, bounds.Min.X, bounds.Max.X-1)
+			pixelWeight := rowWeight * float32(wx[offsetX+1])
+
+			c := fi.GetPixel(x, y)
+			interpolatedR += c.R * pixelWeight
+			interpolatedG += c.G * pixelWeight
+			interpolatedB += c.B * pixelWeight
+			interpolatedA += c.A * pixelWeight
+		}
+	}
+
+	return &color.Color{R: interpolatedR, G: interpolatedG, B: interpolatedB, A: interpolatedA}
+}
+
+func cubicWeights(t float64) [4]float64 {
+	t2 := t * t
+	t3 := t2 * t
+	return [4]float64{
+		0.5 * (-t3 + 2*t2 - t),
+		0.5 * (3*t3 - 5*t2 + 2),
+		0.5 * (-3*t3 + 4*t2 + t),
+		0.5 * (t3 - t2),
+	}
 }
 
 func clampInt(value, min, max int) int {

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/scene"
 	"regexp"
 
@@ -363,6 +364,7 @@ func (s *serializer) deserializeProjection(projection *Projection) (*scene.Image
 	return &scene.ImageProjection{
 		ProjectionType: scene.ProjectionType(projection.ProjectionType),
 		Image:          img,
+		Interpolation:  floatimage.Interpolation(projection.Interpolation),
 		NormalMap:      normalMap,
 		Origin:         s.sceneVector(projection.Origin),
 		U:              s.sceneVector(projection.U),
