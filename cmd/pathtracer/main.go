@@ -417,7 +417,8 @@ func parallelPixelRendering(renderedPixelData *floatimage.FloatImage, camera *sc
 		fmt.Printf("debugging at pixel (%d, %d)...\n", debugPixel.x, debugPixel.y)
 
 		cameraRay := scene.CreateCameraRay(debugPixel.x, debugPixel.y, width, height, camera, 1)
-		tracePath(cameraRay, camera, scn, 0, rayContexts)
+		col := tracePath(cameraRay, camera, scn, 0, rayContexts)
+		fmt.Printf("Debug pixel %+v has color: %+v\n", debugPixel, col)
 	}
 
 	for x := 0; (x + renderPass.Dx) < width; x += maxPixelWidth {

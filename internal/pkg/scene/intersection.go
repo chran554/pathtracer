@@ -396,13 +396,13 @@ func SphereIntersection(line *Ray, sphere *Sphere) (intersectionPoint *vec3.T, i
 
 	if (warning == WarningNone) || (warning == WarningOn) || (warning == WarningInside) {
 		// Put in t3 into formula of line to get intersection point
-		intersectionPoint := vec3.T{
+		intersectionPoint = &vec3.T{
 			line.Origin[0] + t3*line.Heading[0],
 			line.Origin[1] + t3*line.Heading[1],
 			line.Origin[2] + t3*line.Heading[2],
 		}
 
-		return &intersectionPoint, true
+		return intersectionPoint, true
 	}
 
 	return nil, false
