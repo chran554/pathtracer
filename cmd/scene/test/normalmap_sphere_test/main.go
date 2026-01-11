@@ -12,7 +12,7 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "normal_map_sphere_test"
+var animationName = "normalmap_sphere_test"
 
 var amountAnimationFrames = 1 // 72 * 2 // TODO set to 1
 
@@ -20,7 +20,7 @@ var imageWidth = 640
 var imageHeight = 480
 var magnification = 2.0
 
-var amountSamples = 512 * 8 * 2 // * 2 * 15 // * 8 // * 15
+var amountSamples = 512 * 2 * 8 //  8 * 12 // * 2 * 15 // * 8 // * 15
 var maxRecursionDepth = 6
 
 var cameraAperture = 0.0
@@ -28,7 +28,7 @@ var cameraZoom = 1.0
 
 var lampIntensity = 8.0
 var lightIntensityFactor = 0.15
-var sphereRadius = 1.0
+var sphereRadius = 1.5
 
 func main() {
 	//textureGround, err := floatimage.EmptyPlaceholderImage("textures/floor/7451-diffuse 02 low contrast.png")
@@ -37,7 +37,9 @@ func main() {
 		panic(err)
 	}
 
-	textureWall, err := floatimage.EmptyPlaceholderImage("textures/tapeter/Camille_Image_Flatshot_Item_7209.jpg")
+	//textureWall, err := floatimage.EmptyPlaceholderImage("textures/tapeter/Camille_Image_Flatshot_Item_7209.jpg")
+	//textureWall, err := floatimage.EmptyPlaceholderImage("textures/wallpaper/Borosanpapper2021_Image_Flatshot_Item_8620.jpg")
+	textureWall, err := floatimage.EmptyPlaceholderImage("textures/wallpaper/sapphirebirds_image_tile_item_2279.jpg")
 	if err != nil {
 		panic(err)
 	}
@@ -54,51 +56,48 @@ func main() {
 	wallpaperSize := cornellBox.Bounds.SizeY() / wallpaperZoomFactor
 
 	leftWallMaterial := cornellBox.GetFirstMaterialByName("Left")
-	leftWallMaterial.PP(textureWall, &vec3.T{0, cornellBox.Bounds.Ymin, cornellBox.Bounds.Zmin}, vec3.T{0, wallpaperSize, 0}, vec3.T{0, 0, wallpaperSize})
+	leftWallMaterial.PP(textureWall, &vec3.T{0, cornellBox.Bounds.Ymin, cornellBox.Bounds.Zmin}, vec3.T{0, 0, wallpaperSize}, vec3.T{0, wallpaperSize, 0})
 	leftWallMaterial.FresnelMaxGlossiness = 0.15
 
 	rightWallMaterial := cornellBox.GetFirstMaterialByName("Right")
-	rightWallMaterial.PP(textureWall, &vec3.T{0, cornellBox.Bounds.Ymin, cornellBox.Bounds.Zmin}, vec3.T{0, wallpaperSize, 0}, vec3.T{0, 0, wallpaperSize})
+	rightWallMaterial.PP(textureWall, &vec3.T{0, cornellBox.Bounds.Ymin, cornellBox.Bounds.Zmin}, vec3.T{0, 0, wallpaperSize}, vec3.T{0, wallpaperSize, 0})
 	rightWallMaterial.FresnelMaxGlossiness = 0.15
 
 	backWallMaterial := cornellBox.GetFirstMaterialByName("Back")
-	backWallMaterial.PP(textureWall, &vec3.T{cornellBox.Bounds.Xmin, cornellBox.Bounds.Ymin, 0}, vec3.T{0, wallpaperSize, 0}, vec3.T{wallpaperSize, 0, 0})
+	backWallMaterial.PP(textureWall, &vec3.T{cornellBox.Bounds.Xmin, cornellBox.Bounds.Ymin, 0}, vec3.T{wallpaperSize, 0, 0}, vec3.T{0, wallpaperSize, 0})
 	backWallMaterial.FresnelMaxGlossiness = 0.15
 
-	ceilingMaterial := cornellBox.GetFirstMaterialByName("Ceiling").C(color.NewColor(1.0, 1.0, 1.0).Multiply(0.90))
+	ceilingMaterial := cornellBox.GetFirstMaterialByName("Ceiling").C(color.NewColor(1.0, 1.0, 1.0).Multiply(0.30))
 	ceilingMaterial.FresnelMaxGlossiness = 0.15
 
+	behindWall := obj.NewSquareFacetStructure(obj.SquareTypeXYPlane, false, true)
+	behindWall.Name = "Behind"
+	behindWall.Scale(&vec3.Zero, &vec3.T{cornellBox.Bounds.SizeX(), cornellBox.Bounds.SizeY(), 1})
+	behindWall.Translate(&vec3.T{0, -behindWall.Bounds.Ymin, cornellBox.Bounds.Zmin})
+	behindWall.Material = backWallMaterial
+
+	cornellBox.FacetStructures = append(cornellBox.FacetStructures, behindWall)
+
 	//textureSphere, err := floatimage.EmptyPlaceholderImage("textures/equirectangular/earth/light.jpg")
-	textureSphere, err := floatimage.EmptyPlaceholderImage("textures/equirectangular/earth/blank 75.png")
+	//textureSphere, err := floatimage.EmptyPlaceholderImage("textures/planets/earth/earth_grey_50.png")
+	//textureSphere, err := floatimage.EmptyPlaceholderImage("textures/planets/earth/earth_daymap_dark.jpg")
+	textureSphere, err := floatimage.EmptyPlaceholderImage("textures/dirtyoldbrickwall/Brick wall 4_baseColor 2xWidth AO flipped.png")
 	if err != nil {
 		panic(err)
 	}
 
-	textureNormals, err := floatimage.EmptyPlaceholderImage("textures/normal maps/golfball.jpg")
+	textureNormals, err := floatimage.EmptyPlaceholderImage("textures/dirtyoldbrickwall/Brick wall 4_normal 2xWidth smooth flipped.png")
 	if err != nil {
 		panic(err)
 	}
 
 	//goldColor := color.NewColor(1.00, 0.85, 0.58).Multiply(0.9)
-	silverColor := color.NewColor(0.85, 0.85, 0.9).Multiply(1.0)
-	sphereMaterial := scene.NewMaterial().
-		N("sphere").
-		C(silverColor).
-		M(0.30, 0.05)
-	sphereMaterial.FresnelMaxGlossiness = 0.20
-	sphereMaterial.ColorizeReflection = true
-
-	// TODO set s1 here
-
-	greenSphereMaterial := scene.NewMaterial().C(color.NewColor(0.1, 0.75, 0.15))
-	greenSphereMaterial.FresnelMaxGlossiness = 0.30
-	sg := scene.NewSphere(&vec3.T{0, 0, 0}, sphereRadius*0.5, greenSphereMaterial)
-	sg.Translate(&vec3.T{-sphereRadius * 1.2, sphereRadius * 0.5, -sphereRadius * 1.2})
-
-	redSphereMaterial := scene.NewMaterial().C(color.NewColor(0.75, 0.1, 0.15))
-	redSphereMaterial.FresnelMaxGlossiness = 0.30
-	sr := scene.NewSphere(&vec3.T{0, 0, 0}, sphereRadius*0.5, redSphereMaterial)
-	sr.Translate(&vec3.T{sphereRadius * 1.2, sphereRadius * 0.5, -sphereRadius * 1.2})
+	//silverColor := color.NewColor(0.85, 0.85, 0.9).Multiply(1.0)
+	sphereMaterial := scene.NewMaterial().N("sphere").
+		//C(silverColor).
+		M(0.01, 0.6)
+	sphereMaterial.FresnelMaxGlossiness = 0.10
+	//sphereMaterial.ColorizeReflection = true
 
 	lampPosition := vec3.Zero.Added(&vec3.T{-4, 3, -4})
 	lamp := scene.NewSphere(&lampPosition, 1.5, scene.NewMaterial().
@@ -115,7 +114,8 @@ func main() {
 		s1Material.Projection.NormalMap = textureNormals
 
 		s1 := scene.NewSphere(&vec3.T{0, 0, 0}, sphereRadius, s1Material)
-		s1.RotateY(s1.Bounds().Center(), util.DegToRad(animationProgress*360)) // TODO remove
+		s1.RotateY(s1.Bounds().Center(), util.DegToRad(animationProgress*360+45)) // TODO remove
+		s1.RotateX(s1.Bounds().Center(), util.DegToRad(23.4))                     // axial tilt                         // TODO remove
 		s1.Translate(&vec3.T{0, sphereRadius, 0})
 		//s1.Translate(&vec3.T{-sphereRadius * 1.25, sphereRadius, 0})
 
@@ -133,7 +133,7 @@ func main() {
 			F(cameraFocusVector.Length()).
 			V(800 * cameraZoom)
 
-		scn := scene.NewSceneNode().FS(cornellBox).S(lamp).S(s1).S(sr, sg) //.S(s2) // TODO restore
+		scn := scene.NewSceneNode().FS(cornellBox).S(lamp).S(s1)
 
 		fi := -1
 		if amountAnimationFrames > 1 {
