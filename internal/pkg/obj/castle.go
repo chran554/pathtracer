@@ -4,7 +4,7 @@ import (
 	"math"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
+	"pathtracer/internal/pkg/fileformat/wavefront"
 	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -55,7 +55,7 @@ func NewCastle(scale float64, lightColor *color.Color, lightEmission float64) *s
 }
 
 func loadCastle(scale float64) *scene.FacetStructure {
-	castle := wavefrontobj.ReadOrPanic(filepath.Join(ObjEvaluationFileDir, "castle_03.obj"))
+	castle := wavefront.ReadFacetStructureOrPanic(filepath.Join(ObjEvaluationFileDir, "castle_03.obj"))
 	// castle.Scale(&vec3.Zero, &vec3.T{-1, 1, 1}) // Flip along x-axis
 	castle.CenterOn(&vec3.Zero)
 

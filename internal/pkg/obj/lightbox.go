@@ -4,8 +4,8 @@ import (
 	"math"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/fileformat/wavefront"
 	"pathtracer/internal/pkg/floatimage"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
 	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -28,5 +28,5 @@ func NewLightBox(scale *vec3.T, c *color.Color, emission float64, formFilename s
 }
 
 func loadLightBox() *scene.FacetStructure {
-	return wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "lightbox_freeform.obj"))
+	return wavefront.ReadFacetStructureOrPanic(filepath.Join(ObjFileDir, "lightbox_freeform.obj"))
 }

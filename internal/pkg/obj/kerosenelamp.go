@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/fileformat/wavefront"
 	"pathtracer/internal/pkg/floatimage"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
 	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -66,7 +66,7 @@ func NewKeroseneLamp(scale float64, emission float64, sootness float64) *scene.F
 }
 
 func loadKeroseneLamp(scale float64) *scene.FacetStructure {
-	keroseneLamp := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "kerosene_lamp.obj"))
+	keroseneLamp := wavefront.ReadFacetStructureOrPanic(filepath.Join(ObjFileDir, "kerosene_lamp.obj"))
 
 	ymin := keroseneLamp.Bounds.Ymin
 	ymax := keroseneLamp.Bounds.Ymax

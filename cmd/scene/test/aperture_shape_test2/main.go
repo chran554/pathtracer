@@ -5,8 +5,8 @@ import (
 	"math"
 	"math/rand"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/fileformat/wavefront"
 	"pathtracer/internal/pkg/floatimage"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
 
@@ -91,7 +91,7 @@ func GetCornellBox(scale *vec3.T, lightIntensityFactor float64) *scene.FacetStru
 	var cornellBoxFilename = "cornellbox.obj"
 	var cornellBoxFilenamePath = "/Users/christian/projects/code/go/pathtracer/objects/obj/" + cornellBoxFilename
 
-	cornellBox := wavefrontobj.ReadOrPanic(cornellBoxFilenamePath)
+	cornellBox := wavefront.ReadFacetStructureOrPanic(cornellBoxFilenamePath)
 
 	cornellBox.Scale(&vec3.Zero, scale)
 	cornellBox.ClearMaterials()

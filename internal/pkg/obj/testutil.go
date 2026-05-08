@@ -18,7 +18,6 @@ func assertSubstructure(t *testing.T, structure *scene.FacetStructure, objectNam
 	assert.NotNilf(t, substructure, "Substructure \"%s\" of structure \"%s\" could not be found.", (&scene.FacetStructure{Name: objectName, SubstructureName: groupName, Material: &scene.Material{Name: materialName}}).StructureNames(), structure.StructureNames())
 
 	assertFacetStructure(t, substructure, objectName, groupName, materialName, amountFacets, amountSubstructures)
-
 }
 
 func assertFacetStructure(t *testing.T, f *scene.FacetStructure, name, substructureName, materialName string, amountFacets, amountSubStructures int) {

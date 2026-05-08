@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/fileformat/wavefront"
 	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
 	"pathtracer/internal/pkg/util"
@@ -101,7 +101,7 @@ func main() {
 	spoon.Translate(&vec3.T{-25 - 5, tableBoard.Bounds.Ymax, -12})
 
 	textureKitchen := floatimage.LoadOrPanic("textures/equirectangular/medieval_kitchen.png")
-	kitchenDome := wavefrontobj.ReadOrPanic(filepath.Join(obj.ObjEvaluationFileDir, "skydome_open.obj"))
+	kitchenDome := wavefront.ReadFacetStructureOrPanic(filepath.Join(obj.ObjEvaluationFileDir, "skydome_open.obj"))
 	kitchenDome.ScaleUniform(&vec3.Zero, 1/kitchenDome.Bounds.SizeY())
 	kitchenDome.ScaleUniform(&vec3.Zero, 5.5*100)
 	kitchenDome.RotateY(&vec3.Zero, util.DegToRad(-90))

@@ -13,6 +13,7 @@ import (
 var animationName = "reflective_test_glossy_roughness"
 
 var ballRadius float64 = 20
+var colorizeReflection = true
 
 var maxRecursionDepth = 6
 var amountSamples = 1024 * 12
@@ -21,7 +22,7 @@ var lensRadius float64 = 2
 var viewPlaneDistance = 4000.0
 var cameraDistanceFactor = 2.0
 
-var lampEmissionFactor = 12.0
+var lampEmissionFactor = 3.0
 
 var imageWidth = 1800
 var imageHeight = 1200
@@ -31,9 +32,10 @@ func main() {
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
 	cornellBox := obj.NewCornellBox(&vec3.T{700, 500, 700}, false, lampEmissionFactor)
-	cornellBox.ReplaceMaterial("left", scene.NewMaterial().N("left").C(color.NewColor(0.85, 0.85, 0.85)))
-	cornellBox.ReplaceMaterial("right", scene.NewMaterial().N("right").C(color.NewColor(0.85, 0.85, 0.85)))
-	cornellBox.ReplaceMaterial("back", scene.NewMaterial().N("back").C(color.NewColor(0.70, 0.70, 0.70)))
+	wallColor := color.NewColorGrey(0.8)
+	cornellBox.ReplaceMaterial("Left", scene.NewMaterial().N("Left").C(wallColor))
+	cornellBox.ReplaceMaterial("Right", scene.NewMaterial().N("Right").C(wallColor))
+	cornellBox.ReplaceMaterial("Back", scene.NewMaterial().N("Back").C(wallColor))
 
 	scn := scene.NewSceneNode().FS(cornellBox)
 
@@ -54,6 +56,7 @@ func main() {
 				C(color.NewColor(0.80, 0.95, 0.80)).
 				M(glossiness, roughness).
 				T(0.0, true, refractiveIndex)
+			sphereMaterial.ColorizeReflection = colorizeReflection
 
 			sphereOrigin := vec3.T{-sphereSpread/2.0 + float64(xIndex)*sphereCC, ballRadius, -sphereSpread/2.0 + float64(yIndex)*sphereCC}
 			sphere := scene.NewSphere(&sphereOrigin, ballRadius, sphereMaterial).N(fmt.Sprintf("Sphere (glossy:%02f rough:%02f)", xProgress, yProgress))

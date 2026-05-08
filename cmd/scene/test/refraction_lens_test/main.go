@@ -44,7 +44,7 @@ func main() {
 	backplane := &scene.FacetStructure{
 		Name:     "backplane",
 		Material: scene.NewMaterial().N("backplane").C(color.NewColor(0.95, 0.95, 0.95)),
-		Facets:   obj.NewSquare(obj.SquareTypeXYPlane, false),
+		Facets:   obj.NewSquare(obj.SquareTypeXYPlane, nil),
 	}
 	backplane.Scale(&vec3.Zero, &vec3.T{125, 125, 1})
 	backplane.Translate(&vec3.T{-backplane.Bounds.SizeX() / 2, -backplane.Bounds.SizeY() / 2, 0})
@@ -56,9 +56,8 @@ func main() {
 	lightPlane := &scene.FacetStructure{
 		Name: "light plane",
 		Material: scene.NewMaterial().N("light plane").C(color.NewColor(0.95, 0.95, 0.95)).
-			E(color.White, textureEmisssion, true).
-			TP(texture),
-		Facets: obj.NewSquare(obj.SquareTypeXYPlane, true),
+			E(color.White, textureEmisssion, true),
+		Facets: obj.NewSquare(obj.SquareTypeXYPlane, texture),
 	}
 	lightPlane.Scale(&vec3.Zero, &vec3.T{textureBaseSize, textureBaseSize * 1.5, 1})
 	lightPlane.Translate(&vec3.T{-lightPlane.Bounds.SizeX() / 2, -lightPlane.Bounds.SizeY() / 2, -textureDistance})

@@ -3,7 +3,7 @@ package obj
 import (
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
+	"pathtracer/internal/pkg/fileformat/wavefront"
 	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -60,11 +60,11 @@ func NewGlassIkeaSkoja(scale float64, includeLiquid bool) *scene.FacetStructure 
 }
 
 func loadIkeaGlassPokal() *scene.FacetStructure {
-	glass := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "glass_ikea_pokal.obj"))
+	glass := wavefront.ReadFacetStructureOrPanic(filepath.Join(ObjFileDir, "glass_ikea_pokal.obj"))
 	return glass
 }
 
 func loadIkeaGlassSkoja() *scene.FacetStructure {
-	glass := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "glass_ikea_skoja.obj"))
+	glass := wavefront.ReadFacetStructureOrPanic(filepath.Join(ObjFileDir, "glass_ikea_skoja.obj"))
 	return glass
 }

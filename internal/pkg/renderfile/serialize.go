@@ -91,6 +91,7 @@ func (s *serializer) serializeFrameFile(frame *scene.Frame) (*FrameInformation, 
 	vectors2DFilename := fmt.Sprintf("frames/v%s.vector2d.msgpack", filePrefix)
 	materialsFilename := fmt.Sprintf("frames/%s.material.msgpack", filePrefix)
 	colorsFilename := fmt.Sprintf("frames/%s.color.msgpack", filePrefix)
+	texturesFilename := fmt.Sprintf("frames/%s.texture.msgpack", filePrefix)
 	frameFilename := fmt.Sprintf("frames/%s.frame.msgpack", filePrefix)
 
 	camera, err := s.serializeCamera(frame.Camera)
@@ -132,6 +133,11 @@ func (s *serializer) serializeFrameFile(frame *scene.Frame) (*FrameInformation, 
 		return nil, err
 	}
 
+	err = s.writeMarshalledDataToZipEntry(s.textures, texturesFilename)
+	if err != nil {
+		return nil, err
+	}
+
 	frameInformation := &FrameInformation{
 		Index:        frame.Index,
 		Filename:     frame.Filename,
@@ -140,6 +146,7 @@ func (s *serializer) serializeFrameFile(frame *scene.Frame) (*FrameInformation, 
 		Vector2DFile: vectors2DFilename,
 		MaterialFile: materialsFilename,
 		ColorFile:    colorsFilename,
+		TextureFile:  texturesFilename,
 	}
 
 	return frameInformation, nil
@@ -245,32 +252,103 @@ func (s *serializer) serializeFacetStructure(facetStructure *scene.FacetStructur
 		return nil, err
 	}
 
+	serializedFacets, err := s.serializeFacets(facetStructure.Facets)
+	if err != nil {
+		return nil, err
+	}
+
 	return &FacetStructure{
 		Name:             facetStructure.Name,
 		SubstructureName: facetStructure.SubstructureName,
 		Material:         materialIndex,
-		Facets:           s.serializeFacets(facetStructure.Facets),
+		Facets:           serializedFacets,
 		FacetStructures:  serializedFacetStructures,
 		IgnoreBounds:     facetStructure.IgnoreBounds,
 	}, nil
 }
 
-func (s *serializer) serializeFacets(facets []*scene.Facet) []*Facet {
+func (s *serializer) serializeFacets(facets []*scene.Facet) ([]*Facet, error) {
 	var serializedFacets []*Facet
 	for _, facet := range facets {
-		serializedFacets = append(serializedFacets, s.serializeFacet(facet))
+		serializedFacet, err := s.serializeFacet(facet)
+		if err != nil {
+			return nil, err
+		}
+		serializedFacets = append(serializedFacets, serializedFacet)
 	}
-	return serializedFacets
+	return serializedFacets, nil
 }
 
-func (s *serializer) serializeFacet(facet *scene.Facet) *Facet {
+func (s *serializer) serializeFacet(facet *scene.Facet) (*Facet, error) {
+	serializedTextures, err := s.serializeFacetTextures(facet.Textures)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Facet{
-		Vertices:           s.vectorIndices(facet.Vertices),
-		VertexNormals:      s.vectorIndices(facet.VertexNormals),
-		TextureCoordinates: s.vector2DIndices(facet.TextureCoordinates),
-	}
+		Vertices:       s.vectorIndices(facet.Vertices),
+		VertexNormals:  s.vectorIndices(facet.VertexNormals),
+		VertexTangents: s.vectorIndices(facet.VertexTangents),
+		Textures:       serializedTextures,
+	}, nil
 }
 
+func (s *serializer) serializeFacetTextures(facetTextures []*scene.FacetTexture) ([]*FacetTexture, error) {
+	var serializedFacetTextures []*FacetTexture
+	for _, facetTexture := range facetTextures {
+		serializedFacetTexture, err := s.serializeFacetTexture(facetTexture)
+		if err != nil {
+			return nil, err
+		}
+		serializedFacetTextures = append(serializedFacetTextures, serializedFacetTexture)
+	}
+
+	return serializedFacetTextures, nil
+}
+
+func (s *serializer) serializeFacetTexture(facetTexture *scene.FacetTexture) (*FacetTexture, error) {
+	if facetTexture == nil {
+		return nil, nil
+	}
+
+	textureIndex, err := s.textureIndex(facetTexture.Texture)
+	if err != nil {
+		return nil, err
+	}
+
+	return &FacetTexture{
+		Texture:            textureIndex,
+		TextureCoordinates: s.vector2DIndices(facetTexture.Coordinates),
+	}, nil
+}
+
+/*
+	func (s *serializer) serializeTexture(texture *scene.Texture) (*Texture, error) {
+		if texture == nil {
+			return nil, nil
+		}
+
+		imageResourceIndex := ResourceIndex(0)
+		textureStrength := 0.0
+		textureType := scene.TextureType("")
+
+		var err error
+		if texture.Image != nil {
+			imageResourceIndex, err = s.fileResourceIndex(texture.Image)
+			if err != nil {
+				return nil, err
+			}
+		}
+		textureStrength = texture.Strength
+		textureType = texture.Type
+
+		return &Texture{
+			ImageResourceIndex: imageResourceIndex,
+			Type:               textureType.String(),
+			Strength:           textureStrength,
+		}, nil
+	}
+*/
 func (s *serializer) serializeSpheres(spheres []*scene.Sphere) ([]*Sphere, error) {
 	var serializedSpheres []*Sphere
 	for _, sphere := range spheres {
@@ -343,7 +421,7 @@ func (s *serializer) serializeProjection(projection *scene.ImageProjection) (*Pr
 	return &Projection{
 		ProjectionType: string(projection.ProjectionType),
 		Image:          imageResourceIndex,
-		Interpolation:  int(projection.Interpolation),
+		Interpolation:  string(projection.Interpolation),
 		NormalMap:      normalMapResourceIndex,
 		Origin:         s.vectorIndex(projection.Origin),
 		U:              s.vectorIndex(projection.U),

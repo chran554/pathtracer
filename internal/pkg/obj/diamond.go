@@ -3,7 +3,7 @@ package obj
 import (
 	"fmt"
 	"path/filepath"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
+	"pathtracer/internal/pkg/fileformat/wavefront"
 	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -27,7 +27,7 @@ func NewDiamond(scale float64) *scene.FacetStructure {
 }
 
 func loadDiamond() *scene.FacetStructure {
-	diamond := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "diamond.obj"))
+	diamond := wavefront.ReadFacetStructureOrPanic(filepath.Join(ObjFileDir, "diamond.obj"))
 
 	return diamond
 }

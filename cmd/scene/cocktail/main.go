@@ -29,7 +29,7 @@ func main() {
 	ceilingLight.Translate(&vec3.T{-150, 70, -10})
 
 	textureDarkWood := floatimage.LoadOrPanic("textures/wood/darkwood.png")
-	ceilingLightShade := &scene.FacetStructure{Facets: obj.NewSquare(obj.SquareTypeXYPlane, false)}
+	ceilingLightShade := &scene.FacetStructure{Facets: obj.NewSquare(obj.SquareTypeXYPlane, nil)}
 	ceilingLightShade.Scale(&vec3.Zero, &vec3.T{300, 20, 1})
 	ceilingLightShade.Material = scene.NewMaterial().N("ceiling light shade").
 		C(color.White).
@@ -48,7 +48,7 @@ func main() {
 	poster1.RotateZ(poster1.Bounds.Center(), math.Pi/12)
 	poster2.RotateZ(poster2.Bounds.Center(), -math.Pi/16)
 
-	bench := &scene.FacetStructure{Facets: obj.NewSquare(obj.SquareTypeXZPlane, false)}
+	bench := &scene.FacetStructure{Facets: obj.NewSquare(obj.SquareTypeXZPlane, nil)}
 	bench.Scale(&vec3.Zero, &vec3.T{300, 1, 60})
 	bench.Material = scene.NewMaterial().N("ceiling light shade").
 		C(color.White).
@@ -99,12 +99,12 @@ func createCeilingLight(emission float64) *scene.FacetStructure {
 	textureLightStrip := floatimage.LoadOrPanic("textures/misc/cocktail/lightstrip_1_2.png")
 	textureLightStripShade := floatimage.LoadOrPanic("textures/misc/cocktail/lightstrip_1_2_shade.png")
 
-	lightPanel := &scene.FacetStructure{Facets: obj.NewSquare(obj.SquareTypeXZPlane, false)}
+	lightPanel := &scene.FacetStructure{Facets: obj.NewSquare(obj.SquareTypeXZPlane, nil)}
 	lightPanel.Material = scene.NewMaterial().N("light strip").
 		E(color.KelvinTemperatureColor2(3000), emission, true).
 		PP(textureLightStrip, &vec3.T{0, 0, 0}, vec3.UnitX, vec3.UnitZ)
 
-	shadePanel := &scene.FacetStructure{Facets: obj.NewSquare(obj.SquareTypeXZPlane, false)}
+	shadePanel := &scene.FacetStructure{Facets: obj.NewSquare(obj.SquareTypeXZPlane, nil)}
 	shadePanel.Material = scene.NewMaterial().N("shade strip").
 		PP(textureLightStripShade, &vec3.T{0, 0, 0}, vec3.UnitX, vec3.UnitZ)
 
@@ -119,9 +119,9 @@ func createNeonSign(neonSignWidth float64, coreEmission, haloEmission float64, l
 	textureCocktailsNeonSignCore := floatimage.LoadOrPanic("textures/misc/cocktail/cocktails_mod03_core.png")
 	textureCocktailsNeonSignHalo := floatimage.LoadOrPanic("textures/misc/cocktail/cocktails_mod03_halo.png")
 
-	core1 := &scene.FacetStructure{SubstructureName: "core1", Facets: obj.NewSquare(obj.SquareTypeXYPlane, false)}
-	core2 := &scene.FacetStructure{SubstructureName: "core2", Facets: obj.NewSquare(obj.SquareTypeXYPlane, false)}
-	halo := &scene.FacetStructure{SubstructureName: "halo", Facets: obj.NewSquare(obj.SquareTypeXYPlane, false)}
+	core1 := &scene.FacetStructure{SubstructureName: "core1", Facets: obj.NewSquare(obj.SquareTypeXYPlane, nil)}
+	core2 := &scene.FacetStructure{SubstructureName: "core2", Facets: obj.NewSquare(obj.SquareTypeXYPlane, nil)}
+	halo := &scene.FacetStructure{SubstructureName: "halo", Facets: obj.NewSquare(obj.SquareTypeXYPlane, nil)}
 
 	core1.UpdateBounds()
 	core1.UpdateNormals()
@@ -169,7 +169,7 @@ func createNeonSign(neonSignWidth float64, coreEmission, haloEmission float64, l
 func createWall(wallScale float64) *scene.FacetStructure {
 	textureWallBricks := floatimage.LoadOrPanic("textures/misc/cocktail/bricks.png")
 
-	wall := &scene.FacetStructure{Name: "wall", Facets: obj.NewSquare(obj.SquareTypeXYPlane, false)}
+	wall := &scene.FacetStructure{Name: "wall", Facets: obj.NewSquare(obj.SquareTypeXYPlane, nil)}
 	wall.UpdateBounds()
 	wall.UpdateNormals()
 	wall.CenterOn(&vec3.Zero)
@@ -183,7 +183,7 @@ func createWall(wallScale float64) *scene.FacetStructure {
 func createPoster(posterLocation vec3.T) *scene.FacetStructure {
 	textureCocktailPoster := floatimage.LoadOrPanic("textures/misc/cocktail/cocktailposter_worn.png")
 
-	poster := &scene.FacetStructure{Name: "poster", Facets: obj.NewSquare(obj.SquareTypeXYPlane, false)}
+	poster := &scene.FacetStructure{Name: "poster", Facets: obj.NewSquare(obj.SquareTypeXYPlane, nil)}
 	poster.UpdateBounds()
 	poster.UpdateNormals()
 	poster.Material = scene.NewMaterial().N("poster").

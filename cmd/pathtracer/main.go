@@ -638,14 +638,24 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 			ii.material = scene.NewMaterial() // Default material, if not specified, is matte diffuse white
 		}
 
-		projectionColor := color.White // Default value if no projection is applied
-		if ii.material.Projection != nil {
-			if (ii.intersectedFacet != nil) && (ii.intersectedFacetVertexWeights != nil) && (ii.material.Projection.ProjectionType == scene.ProjectionTypeTextureMapping) {
-				textureCoordinate := interpolateTriangleTextureCoordinate(ii.intersectedFacet, ii.intersectedFacetVertexWeights)
-				projectionColor = ii.material.Projection.GetColorAt(textureCoordinate)
-			} else {
-				projectionColor = ii.material.Projection.GetColor(ii.intersectionPoint)
+		var textureAlbedoColor *color.Color // Default value if no projection is applied
+
+		if (ii.intersectedFacet != nil) && (ii.intersectedFacetVertexWeights != nil) {
+			albedoTexture := ii.intersectedFacet.GetTextureByType(scene.TextureTypeAlbedo)
+			if albedoTexture != nil {
+				textureCoordinate := interpolateTriangleTextureCoordinate(albedoTexture, ii.intersectedFacetVertexWeights)
+				if textureCoordinate != nil {
+					textureAlbedoColor = albedoTexture.Texture.GetColorAt(textureCoordinate)
+				}
 			}
+		}
+
+		if (textureAlbedoColor == nil) && (ii.material.Projection != nil) {
+			textureAlbedoColor = ii.material.Projection.GetColor(ii.intersectionPoint)
+		}
+
+		if textureAlbedoColor == nil {
+			textureAlbedoColor = color.White
 		}
 
 		if camera.RenderType == scene.Raycasting || camera.RenderType == "" {
@@ -653,9 +663,9 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 			cosineIncomingRayAndNormal := util.Cosine(ii.normalAtIntersection, &incomingRayInverted)
 
 			outgoingEmission = &color.Color{
-				R: ii.material.Color.R * float32(cosineIncomingRayAndNormal) * projectionColor.R,
-				G: ii.material.Color.G * float32(cosineIncomingRayAndNormal) * projectionColor.G,
-				B: ii.material.Color.B * float32(cosineIncomingRayAndNormal) * projectionColor.B,
+				R: ii.material.Color.R * float32(cosineIncomingRayAndNormal) * textureAlbedoColor.R,
+				G: ii.material.Color.G * float32(cosineIncomingRayAndNormal) * textureAlbedoColor.G,
+				B: ii.material.Color.B * float32(cosineIncomingRayAndNormal) * textureAlbedoColor.B,
 				A: 1.0,
 			}
 
@@ -675,16 +685,18 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 				var reflectionProbability float64
 				if isIngoingRay {
 					// Add Fresnel reflection if it is an ingoing array (for now)
-					reflectionProbability = FresnelReflectAmount(currentRayContext.RefractionIndex, ii.material.RefractionIndex, ii.normalAtIntersection, ray.Heading, ii.material.Glossiness, ii.material.FresnelMaxGlossiness)
+					perceptualGlossiness := ii.material.Glossiness * ii.material.Glossiness * ii.material.Glossiness * ii.material.Glossiness // Nothing scientific, just a fix for a more (perceptual) linear scale for glossiness
+					reflectionProbability = FresnelReflectAmount(currentRayContext.RefractionIndex, ii.material.RefractionIndex, ii.normalAtIntersection, ray.Heading, perceptualGlossiness, ii.material.FresnelMaxGlossiness)
 				} else {
 					// previousRayContext := rayContexts[len(rayContexts)-2]
 					// normal := ii.normalAtIntersection.Inverted()
 					// reflectionProbability = FresnelReflectAmount(currentRayContext.RefractionIndex, previousRayContext.RefractionIndex, &normal, ray.Heading, ii.material.Glossiness, 1.0)
 
-					reflectionProbability = ii.material.Glossiness
+					perceptualGlossiness := ii.material.Glossiness * ii.material.Glossiness * ii.material.Glossiness * ii.material.Glossiness // Nothing scientific, just a fix for a more (perceptual) linear scale for glossiness
+					reflectionProbability = perceptualGlossiness
 				}
 
-				alpha := (1.0 - ii.material.Transparency) * float64(ii.material.Color.A) * float64(projectionColor.A)
+				alpha := (1.0 - ii.material.Transparency) * float64(ii.material.Color.A) * float64(textureAlbedoColor.A)
 				transparencyProbability := 1.0 - alpha
 				diffuseProbability := max(0, ii.material.Diffuse-reflectionProbability) * alpha
 				reflectionProbability = reflectionProbability * alpha
@@ -744,7 +756,7 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 						interpolatedHeading := vec3.Interpolate(perfectReflectionHeading, diffuseHeading, interpolationWeight)
 						interpolatedHeading.Normalize()
 
-						// Weight for cosine weighted hemisphere sampling
+						// Weight for cosine-weighted hemisphere sampling
 						//cosineNewRayAndNormal = 0.5*interpolationWeight + (1.0 - interpolationWeight) // Interpolated weight diffuse --> specular
 						newRayHeading = &interpolatedHeading
 						validNewRay = vec3.Dot(ii.normalAtIntersection, newRayHeading) > 0.0
@@ -823,7 +835,7 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 				if useDiffuseRay {
 					//projectionCol := fixTransparentColor(projectionColor)
 					//materialCol := fixTransparentColor(ii.material.Color)
-					projectionCol := projectionColor
+					projectionCol := textureAlbedoColor
 					materialCol := ii.material.Color
 
 					//projectionCol = projectionCol.Fade(color.White, 1-projectionCol.A)
@@ -838,7 +850,7 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 				} else if useReflectionRay {
 					//projectionCol := fixTransparentColor(projectionColor)
 					//materialCol := fixTransparentColor(ii.material.Color)
-					projectionCol := projectionColor
+					projectionCol := textureAlbedoColor
 					materialCol := ii.material.Color
 
 					//projectionCol = projectionCol.Fade(color.White, 1-projectionCol.A)
@@ -894,7 +906,7 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 			if ii.material.Emission != nil {
 				//projectionCol := fixTransparentColor(projectionColor)
 				//materialCol := fixTransparentColor(ii.material.Color)
-				projectionCol := projectionColor
+				projectionCol := textureAlbedoColor
 				materialCol := ii.material.Color
 
 				//projectionCol = projectionCol.Fade(color.White, 1-projectionCol.A)
@@ -1079,15 +1091,21 @@ func getRefractionVector(normal *vec3.T, incomingVector *vec3.T, leavingRefracti
 }
 
 // interpolateTriangleTextureCoordinate interpolates intersection point texture coordinate from facet (triangle) vertex texture coordinates
-func interpolateTriangleTextureCoordinate(facet *scene.Facet, vertexWeights *vec3.T) *vec2.T {
-	textureCoordinate := vec2.T{0, 0}
-	amountVertexTextureCoordinates := len(facet.TextureCoordinates)
-	if (amountVertexTextureCoordinates > 0) && (amountVertexTextureCoordinates <= len(vertexWeights)) {
-		for i := 0; i < amountVertexTextureCoordinates; i++ {
-			weightedTextureCoordinate := facet.TextureCoordinates[i].Scaled(vertexWeights[i])
-			textureCoordinate.Add(&weightedTextureCoordinate)
-		}
+func interpolateTriangleTextureCoordinate(texture *scene.FacetTexture, vertexWeights *vec3.T) *vec2.T {
+	if texture == nil {
+		return nil
 	}
 
-	return &textureCoordinate
+	amountVertexTextureCoordinates := len(texture.Coordinates)
+	if (amountVertexTextureCoordinates > 0) && (amountVertexTextureCoordinates <= len(vertexWeights)) {
+		textureCoordinate := vec2.T{0, 0}
+
+		for i := 0; i < amountVertexTextureCoordinates; i++ {
+			weightedTextureCoordinate := texture.Coordinates[i].Scaled(vertexWeights[i])
+			textureCoordinate.Add(&weightedTextureCoordinate)
+		}
+		return &textureCoordinate
+	}
+
+	return nil
 }

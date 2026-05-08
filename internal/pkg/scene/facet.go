@@ -2,6 +2,8 @@ package scene
 
 import (
 	"fmt"
+	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 
 	"github.com/ungerik/go3d/float64/mat3"
 	"github.com/ungerik/go3d/float64/quaternion"
@@ -9,13 +11,44 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
+type TextureType string
+
+const (
+	TextureTypeAlbedo       TextureType = "albedo"
+	TextureTypeNormalMap    TextureType = "normalmap"
+	TextureTypeTransparency TextureType = "transparency"
+	TextureTypeGlossy       TextureType = "glossy" // Reflection
+)
+
+func (t TextureType) String() string { return string(t) }
+
+type Texture struct {
+	Type          TextureType
+	Strength      float64
+	Interpolation floatimage.Interpolation
+	Image         *floatimage.FloatImage
+}
+
+type FacetTexture struct {
+	Texture     *Texture
+	Coordinates []*vec2.T
+}
+
 type Facet struct {
-	Vertices           []*vec3.T
-	VertexNormals      []*vec3.T
-	TextureCoordinates []*vec2.T
+	Vertices       []*vec3.T
+	VertexNormals  []*vec3.T
+	VertexTangents []*vec3.T
+	Textures       []*FacetTexture
 
 	Normal *vec3.T // Calculated attribute. See UpdateNormal(). Derived from the first three vertices of the triangle.
 	Bounds *Bounds // Calculated attribute. See GetBounds(). Derived from all vertices in the facet.
+}
+
+func (t *Texture) GetColorAt(coordinate *vec2.T) *color.Color {
+	return t.Image.GetInterpolatedPixelByNormalizedCoordinates(coordinate[0], coordinate[1], t.Interpolation)
+	//textureX := util.ClampInt(0, t.Image.Width-1, int(coordinate[0]*float64(t.Image.Width)))
+	//textureY := util.ClampInt(0, t.Image.Height-1, int((1.0-coordinate[1])*float64(t.Image.Height)))
+	//return t.Image.GetPixel(textureX, textureY)
 }
 
 // SplitMultiPointFacet maps a multipoint (> 3 points) facet into a list of triangles.
@@ -29,23 +62,33 @@ func (f *Facet) SplitMultiPointFacet() []*Facet {
 		for i := 1; i < (amountVertices - 1); i++ {
 			newVertices := []*vec3.T{f.Vertices[0], f.Vertices[i], f.Vertices[i+1]}
 
-			var newTextureCoordinates []*vec2.T
-			if len(f.TextureCoordinates) > 0 {
-				newTextureCoordinates = []*vec2.T{f.TextureCoordinates[0], f.TextureCoordinates[i]}
-			}
-
 			var newVertexNormals []*vec3.T
 			if len(f.VertexNormals) > 0 {
 				newVertexNormals = []*vec3.T{f.VertexNormals[0], f.VertexNormals[i], f.VertexNormals[i+1]}
 			}
 
-			newFace := Facet{
-				Vertices:           newVertices,
-				TextureCoordinates: newTextureCoordinates,
-				VertexNormals:      newVertexNormals,
-				Normal:             f.Normal,
+			var newVertexTangents []*vec3.T
+			if len(f.VertexTangents) > 0 {
+				newVertexTangents = []*vec3.T{f.VertexTangents[0], f.VertexTangents[i], f.VertexTangents[i+1]}
 			}
-			facets = append(facets, &newFace)
+
+			var newTextures []*FacetTexture
+			for _, texture := range f.Textures {
+				newTexture := &FacetTexture{Texture: texture.Texture}
+				if len(texture.Coordinates) > 0 {
+					newTexture.Coordinates = append(newTexture.Coordinates, texture.Coordinates[0], texture.Coordinates[i], texture.Coordinates[i+1])
+				}
+				newTextures = append(newTextures, newTexture)
+			}
+
+			newFacet := Facet{
+				Normal:         f.Normal,
+				Vertices:       newVertices,
+				VertexNormals:  newVertexNormals,
+				VertexTangents: newVertexTangents,
+				Textures:       newTextures,
+			}
+			facets = append(facets, &newFacet)
 		}
 	} else {
 		facets = append(facets, f)
@@ -108,36 +151,39 @@ func (f *Facet) RotateX(rotationOrigin *vec3.T, angle float64) {
 	rotatedPoints := make(map[*vec3.T]bool)
 	rotatedNormals := make(map[*vec3.T]bool)
 	rotatedVertexNormals := make(map[*vec3.T]bool)
+	rotatedVertexTangents := make(map[*vec3.T]bool)
 
 	rotationMatrix := mat3.T{}
 	rotationMatrix.AssignXRotation(angle)
 
-	f.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
+	f.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals, rotatedVertexTangents)
 }
 
 func (f *Facet) RotateY(rotationOrigin *vec3.T, angle float64) {
 	rotatedPoints := make(map[*vec3.T]bool)
 	rotatedNormals := make(map[*vec3.T]bool)
 	rotatedVertexNormals := make(map[*vec3.T]bool)
+	rotatedVertexTangents := make(map[*vec3.T]bool)
 
 	rotationMatrix := mat3.T{}
 	rotationMatrix.AssignYRotation(angle)
 
-	f.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
+	f.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals, rotatedVertexTangents)
 }
 
 func (f *Facet) RotateZ(rotationOrigin *vec3.T, angle float64) {
 	rotatedPoints := make(map[*vec3.T]bool)
 	rotatedNormals := make(map[*vec3.T]bool)
 	rotatedVertexNormals := make(map[*vec3.T]bool)
+	rotatedVertexTangents := make(map[*vec3.T]bool)
 
 	rotationMatrix := mat3.T{}
 	rotationMatrix.AssignZRotation(angle)
 
-	f.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals)
+	f.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals, rotatedVertexTangents)
 }
 
-func (f *Facet) rotateByQuaternion(rotationOrigin *vec3.T, q quaternion.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool) {
+func (f *Facet) rotateByQuaternion(rotationOrigin *vec3.T, q quaternion.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool, rotatedVertexTangents map[*vec3.T]bool) {
 	for _, vertex := range f.Vertices {
 		if !rotatedPoints[vertex] {
 			vertex.Sub(rotationOrigin)
@@ -160,10 +206,17 @@ func (f *Facet) rotateByQuaternion(rotationOrigin *vec3.T, q quaternion.T, rotat
 		}
 	}
 
+	for _, vertexTangent := range f.VertexTangents {
+		if !rotatedVertexTangents[vertexTangent] {
+			q.RotatedVec3(vertexTangent)
+			rotatedVertexTangents[vertexTangent] = true
+		}
+	}
+
 	f.Bounds = nil
 }
 
-func (f *Facet) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool) {
+func (f *Facet) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool, rotatedVertexTangents map[*vec3.T]bool) {
 	for _, vertex := range f.Vertices {
 		if !rotatedPoints[vertex] {
 			newVertex := vertex.Subed(rotationOrigin)
@@ -206,6 +259,20 @@ func (f *Facet) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoi
 		}
 	}
 
+	for _, vertexTangent := range f.VertexTangents {
+		if !rotatedVertexNormals[vertexTangent] {
+			tangent := *vertexTangent
+			tangent[2] *= -1 // Convert to right hand coordinate system before rotation matrix
+			rotatedTangent := rotationMatrix.MulVec3(&tangent)
+			rotatedTangent[2] *= -1 // Convert back to left hand coordinate system after rotation matrix
+			vertexTangent[0] = rotatedTangent[0]
+			vertexTangent[1] = rotatedTangent[1]
+			vertexTangent[2] = rotatedTangent[2]
+
+			rotatedVertexTangents[vertexTangent] = true
+		}
+	}
+
 	f.Bounds = nil
 }
 
@@ -227,7 +294,7 @@ func (f *Facet) translate(translation *vec3.T, translatedPoints map[*vec3.T]bool
 	f.Bounds = nil
 }
 
-func (f *Facet) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool, scaledNormals map[*vec3.T]bool) {
+func (f *Facet) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool, scaledNormals map[*vec3.T]bool, scaledTangents map[*vec3.T]bool) {
 	for _, vertex := range f.Vertices {
 		if !scaledPoints[vertex] {
 			vertex.Sub(scaleOrigin).Mul(scale).Add(scaleOrigin)
@@ -246,6 +313,15 @@ func (f *Facet) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3
 			if !scaledNormals[vertexNormal] {
 				vertexNormal.Mul(scale).Normalize() // keep normals normalized (in unit length)
 				scaledNormals[vertexNormal] = true
+			}
+		}
+	}
+
+	if f.VertexTangents != nil {
+		for _, vertexTangent := range f.VertexTangents {
+			if !scaledTangents[vertexTangent] {
+				vertexTangent.Mul(scale).Normalize() // keep normals normalized (in unit length)
+				scaledTangents[vertexTangent] = true
 			}
 		}
 	}
@@ -271,6 +347,16 @@ func (f *Facet) ChangeWindingOrder() {
 	} else if amountVertexNormals > 3 {
 		for i := 0; i < amountVertexNormals/2; i++ {
 			f.VertexNormals[i], f.VertexNormals[amountVertexNormals-i-1] = f.VertexNormals[amountVertexNormals-i-1], f.Vertices[i]
+		}
+	}
+
+	amountVertexTangents := len(f.VertexTangents)
+	if amountVertexTangents == 3 {
+		// Flip the second and third vertex in triangle (facet) to change the winding order of facet vertices
+		f.VertexTangents[0], f.VertexTangents[2] = f.VertexTangents[2], f.VertexTangents[0]
+	} else if amountVertexTangents > 3 {
+		for i := 0; i < amountVertexTangents/2; i++ {
+			f.VertexTangents[i], f.VertexTangents[amountVertexTangents-i-1] = f.VertexTangents[amountVertexTangents-i-1], f.Vertices[i]
 		}
 	}
 }
@@ -302,4 +388,18 @@ func (f *Facet) Tessellate() ([]*Facet, error) {
 
 func (f *Facet) IsMultiPointFacet() bool {
 	return len(f.Vertices) > 3
+}
+
+func (f *Facet) IsTriangleFacet() bool {
+	return len(f.Vertices) == 3
+}
+
+func (f *Facet) GetTextureByType(textureType TextureType) *FacetTexture {
+	for _, texture := range f.Textures {
+		if texture.Texture != nil && texture.Texture.Type == textureType {
+			return texture
+		}
+	}
+
+	return nil
 }

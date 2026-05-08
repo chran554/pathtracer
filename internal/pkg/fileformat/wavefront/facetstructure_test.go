@@ -1,7 +1,8 @@
-package wavefrontobj
+package wavefront
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"pathtracer/internal/pkg/scene"
 	"testing"
@@ -13,7 +14,9 @@ import (
 
 func Test_LoadFile(t *testing.T) {
 	t.Run("loading of obj-file (cube - vanilla)", func(t *testing.T) {
-		cube := loadTestCube("vanilla")
+		cube, err := loadTestCube(t, "vanilla")
+		assert.NoError(t, err)
+
 		assert.NotNil(t, cube)
 	})
 }
@@ -23,7 +26,8 @@ func Test_LoadFile(t *testing.T) {
 // {on: UnitCube, sn: -, mn: -, f: 12}
 func Test_CubeVanilla(t *testing.T) {
 	t.Run("obj file: cube - vanilla", func(t *testing.T) {
-		cube := loadTestCube("vanilla")
+		cube, err := loadTestCube(t, "vanilla")
+		assert.NoError(t, err)
 		fmt.Printf("Facet structure to be tested: %+v\n", cube)
 		expectedFullCubeBounds := scene.Bounds{Xmin: -1, Xmax: 1, Ymin: -1, Ymax: 1, Zmin: -1, Zmax: 1}
 		assertFacetStructure(t, cube, "UnitCube", "", "", 6*2, 6*2, 8, 0, expectedFullCubeBounds)
@@ -39,7 +43,8 @@ func Test_CubeVanilla(t *testing.T) {
 //	{on: -, sn: -, mn: blue, f: 4}
 func Test_CubeColors(t *testing.T) {
 	t.Run("obj file: cube - colors", func(t *testing.T) {
-		cube := loadTestCube("colors")
+		cube, err := loadTestCube(t, "colors")
+		assert.NoError(t, err)
 		fmt.Printf("Facet structure to be tested: %+v\n", cube)
 		expectedFullCubeBounds := scene.Bounds{Xmin: -1, Xmax: 1, Ymin: -1, Ymax: 1, Zmin: -1, Zmax: 1}
 		assertFacetStructure(t, cube, "UnitCube", "", "", 0, 12, 8, 3, expectedFullCubeBounds)
@@ -58,7 +63,8 @@ func Test_CubeColors(t *testing.T) {
 //	{on: -, sn: -, mn: blue, f: 4}
 func Test_CubeColors2(t *testing.T) {
 	t.Run("obj file: cube - colors_2", func(t *testing.T) {
-		cube := loadTestCube("colors_2")
+		cube, err := loadTestCube(t, "colors_2")
+		assert.NoError(t, err)
 		fmt.Printf("Facet structure to be tested: %+v\n", cube)
 		expectedFullCubeBounds := scene.Bounds{Xmin: -1, Xmax: 1, Ymin: -1, Ymax: 1, Zmin: -1, Zmax: 1}
 		assertFacetStructure(t, cube, "UnitCube", "", "", 4, 12, 8, 2, expectedFullCubeBounds)
@@ -77,7 +83,8 @@ func Test_CubeColors2(t *testing.T) {
 //	{on: -, sn: z, mn: -, f: 4}
 func Test_CubeGroups(t *testing.T) {
 	t.Run("obj file: cube - groups", func(t *testing.T) {
-		cube := loadTestCube("groups")
+		cube, err := loadTestCube(t, "groups")
+		assert.NoError(t, err)
 		fmt.Printf("Facet structure to be tested: %+v\n", cube)
 		expectedFullCubeBounds := scene.Bounds{Xmin: -1, Xmax: 1, Ymin: -1, Ymax: 1, Zmin: -1, Zmax: 1}
 		assertFacetStructure(t, cube, "UnitCube", "", "", 0, 12, 8, 3, expectedFullCubeBounds)
@@ -96,7 +103,8 @@ func Test_CubeGroups(t *testing.T) {
 //	{on: z, sn: -, mn: -, f: 4}
 func Test_CubeGroups_2(t *testing.T) {
 	t.Run("obj file: cube - groups_2", func(t *testing.T) {
-		cube := loadTestCube("groups_2")
+		cube, err := loadTestCube(t, "groups_2")
+		assert.NoError(t, err)
 		fmt.Printf("Facet structure to be tested: %+v\n", cube)
 		expectedFullCubeBounds := scene.Bounds{Xmin: -1, Xmax: 1, Ymin: -1, Ymax: 1, Zmin: -1, Zmax: 1}
 		assertFacetStructure(t, cube, "UnitCube", "", "", 2*2, 12, 8, 2, expectedFullCubeBounds)
@@ -115,7 +123,8 @@ func Test_CubeGroups_2(t *testing.T) {
 //	{on: -, sn: z, mn: -, f: 4}
 func Test_CubeGroups_3(t *testing.T) {
 	t.Run("obj file: cube - groups_3", func(t *testing.T) {
-		cube := loadTestCube("groups_3")
+		cube, err := loadTestCube(t, "groups_3")
+		assert.NoError(t, err)
 		fmt.Printf("Facet structure to be tested: %+v\n", cube)
 		expectedFullCubeBounds := scene.Bounds{Xmin: -1, Xmax: 1, Ymin: -1, Ymax: 1, Zmin: -1, Zmax: 1}
 		assertFacetStructure(t, cube, "cube_groups_3", "", "", 0, 12, 8, 3, expectedFullCubeBounds)
@@ -135,7 +144,8 @@ func Test_CubeGroups_3(t *testing.T) {
 //	{on: z, sn: -, mn: blue, f: 4}
 func Test_CubeGroupsColors(t *testing.T) {
 	t.Run("obj file: cube - groups colors", func(t *testing.T) {
-		cube := loadTestCube("groups_colors")
+		cube, err := loadTestCube(t, "groups_colors")
+		assert.NoError(t, err)
 		fmt.Printf("Facet structure to be tested: %+v\n", cube)
 		expectedFullCubeBounds := scene.Bounds{Xmin: -1, Xmax: 1, Ymin: -1, Ymax: 1, Zmin: -1, Zmax: 1}
 		assertFacetStructure(t, cube, "UnitCube", "", "", 0, 12, 8, 3, expectedFullCubeBounds)
@@ -155,7 +165,8 @@ func Test_CubeGroupsColors(t *testing.T) {
 //	{on: z, sn: -, mn: blue,  f: 4}
 func Test_CubeGroupsColors2(t *testing.T) {
 	t.Run("obj file: cube - groups colors_2", func(t *testing.T) {
-		cube := loadTestCube("groups_colors_2")
+		cube, err := loadTestCube(t, "groups_colors_2")
+		assert.NoError(t, err)
 		fmt.Printf("Facet structure to be tested: %+v\n", cube)
 		expectedFullCubeBounds := scene.Bounds{Xmin: -1, Xmax: 1, Ymin: -1, Ymax: 1, Zmin: -1, Zmax: 1}
 		assertFacetStructure(t, cube, "UnitCube", "", "", 0, 12, 8, 3, expectedFullCubeBounds)
@@ -176,7 +187,8 @@ func Test_CubeGroupsColors2(t *testing.T) {
 //	 {on:  , sn: -, mn: blue,  f: 4}
 func Test_CubeGroupsColors3(t *testing.T) {
 	t.Run("obj file: cube - groups colors_3", func(t *testing.T) {
-		cube := loadTestCube("groups_colors_3")
+		cube, err := loadTestCube(t, "groups_colors_3")
+		assert.NoError(t, err)
 		fmt.Printf("Facet structure to be tested: %+v\n", cube)
 		expectedFullCubeBounds := scene.Bounds{Xmin: -1, Xmax: 1, Ymin: -1, Ymax: 1, Zmin: -1, Zmax: 1}
 		assertFacetStructure(t, cube, "UnitCube", "", "", 0, 12, 8, 2, expectedFullCubeBounds)
@@ -202,7 +214,8 @@ func Test_CubeGroupsColors3(t *testing.T) {
 //	{on: z, sn: -, mn: green, f: 4}
 func Test_CubeGroupsColors4(t *testing.T) {
 	t.Run("obj file: cube - groups colors_4", func(t *testing.T) {
-		cube := loadTestCube("groups_colors_4")
+		cube, err := loadTestCube(t, "groups_colors_4")
+		assert.NoError(t, err)
 		fmt.Printf("Facet structure to be tested: %+v\n", cube)
 		expectedFullCubeBounds := scene.Bounds{Xmin: -1, Xmax: 1, Ymin: -1, Ymax: 1, Zmin: -1, Zmax: 1}
 		assertFacetStructure(t, cube, "UnitCube", "", "", 0, 12, 8, 3, expectedFullCubeBounds)
@@ -222,7 +235,8 @@ func Test_CubeGroupsColors4(t *testing.T) {
 //	{on: z, sn: -, mn: blue,  f: 4}
 func Test_CubeGroupsColors5(t *testing.T) {
 	t.Run("obj file: cube - groups colors_5", func(t *testing.T) {
-		cube := loadTestCube("groups_colors_5")
+		cube, err := loadTestCube(t, "groups_colors_5")
+		assert.NoError(t, err)
 		fmt.Printf("Facet structure to be tested: %+v\n", cube)
 		expectedFullCubeBounds := scene.Bounds{Xmin: -1, Xmax: 1, Ymin: -1, Ymax: 1, Zmin: -1, Zmax: 1}
 		assertFacetStructure(t, cube, "UnitCube", "", "", 0, 12, 8, 3, expectedFullCubeBounds)
@@ -241,7 +255,8 @@ func Test_CubeGroupsColors5(t *testing.T) {
 //	{on: z, sn: -, mn: blue,  f: 4}
 func Test_CubeGroupsColors6(t *testing.T) {
 	t.Run("obj file: cube - groups colors_6", func(t *testing.T) {
-		cube := loadTestCube("groups_colors_6")
+		cube, err := loadTestCube(t, "groups_colors_6")
+		assert.NoError(t, err)
 		fmt.Printf("Facet structure to be tested: %+v\n", cube)
 		expectedFullCubeBounds := scene.Bounds{Xmin: -1, Xmax: 1, Ymin: -1, Ymax: 1, Zmin: -1, Zmax: 1}
 		assertFacetStructure(t, cube, "UnitCube", "", "", 2*2, 12, 8, 2, expectedFullCubeBounds)
@@ -261,7 +276,8 @@ func Test_CubeGroupsColors6(t *testing.T) {
 //	{on: -, sn: z, mn: blue,  f: 4}
 func Test_CubeGroupsColors7(t *testing.T) {
 	t.Run("obj file: cube - groups colors_7", func(t *testing.T) {
-		cube := loadTestCube("groups_colors_7")
+		cube, err := loadTestCube(t, "groups_colors_7")
+		assert.NoError(t, err)
 		fmt.Printf("Facet structure to be tested: %+v\n", cube)
 		expectedFullCubeBounds := scene.Bounds{Xmin: -1, Xmax: 1, Ymin: -1, Ymax: 1, Zmin: -1, Zmax: 1}
 		assertFacetStructure(t, cube, "UnitCube", "", "", 0, 12, 8, 2, expectedFullCubeBounds)
@@ -288,7 +304,8 @@ func Test_CubeGroupsColors7(t *testing.T) {
 //	{on: -, sn: z, mn: green,  f: 4}
 func Test_CubeGroupsColors8(t *testing.T) {
 	t.Run("obj file: cube - groups colors_8", func(t *testing.T) {
-		cube := loadTestCube("groups_colors_8")
+		cube, err := loadTestCube(t, "groups_colors_8")
+		assert.NoError(t, err)
 		fmt.Printf("Facet structure to be tested: %+v\n", cube)
 		expectedFullCubeBounds := scene.Bounds{Xmin: -1, Xmax: 1, Ymin: -1, Ymax: 1, Zmin: -1, Zmax: 1}
 		assertFacetStructure(t, cube, "UnitCube", "", "", 0, 12, 8, 2, expectedFullCubeBounds)
@@ -315,7 +332,8 @@ func Test_CubeGroupsColors8(t *testing.T) {
 //	 {on: -, sn: -, mn: blue,  f: 4}
 func Test_CubeGroupsColors9(t *testing.T) {
 	t.Run("obj file: cube - groups colors_9", func(t *testing.T) {
-		cube := loadTestCube("groups_colors_9")
+		cube, err := loadTestCube(t, "groups_colors_9")
+		assert.NoError(t, err)
 		fmt.Printf("Facet structure to be tested: %+v\n", cube)
 		expectedFullCubeBounds := scene.Bounds{Xmin: -1, Xmax: 1, Ymin: -1, Ymax: 1, Zmin: -1, Zmax: 1}
 		assertFacetStructure(t, cube, "UnitCube", "", "", 0, 12, 8, 2, expectedFullCubeBounds)
@@ -340,7 +358,8 @@ func Test_CubeGroupsColors9(t *testing.T) {
 //	{on: z, sn: -, mn: blue, f: 4}
 func Test_CubeObjects(t *testing.T) {
 	t.Run("obj file: cube - objects", func(t *testing.T) {
-		cube := loadTestCube("objects")
+		cube, err := loadTestCube(t, "objects")
+		assert.NoError(t, err)
 		fmt.Printf("Facet structure to be tested: %+v\n", cube)
 		expectedFullCubeBounds := scene.Bounds{Xmin: -1, Xmax: 1, Ymin: -1, Ymax: 1, Zmin: -1, Zmax: 1}
 		assertFacetStructure(t, cube, "cube_objects", "", "", 0, 12, 8, 3, expectedFullCubeBounds)
@@ -360,7 +379,8 @@ func Test_CubeObjects(t *testing.T) {
 //	{on: z, sn: -, mn: blue, f: 4}
 func Test_CubeObjects2(t *testing.T) {
 	t.Run("obj file: cube - objects_2", func(t *testing.T) {
-		cube := loadTestCube("objects_2")
+		cube, err := loadTestCube(t, "objects_2")
+		assert.NoError(t, err)
 		fmt.Printf("Facet structure to be tested: %+v\n", cube)
 		expectedFullCubeBounds := scene.Bounds{Xmin: -1, Xmax: 1, Ymin: -1, Ymax: 1, Zmin: -1, Zmax: 1}
 		assertFacetStructure(t, cube, "cube_objects_2", "", "", 0, 12, 8, 3, expectedFullCubeBounds)
@@ -380,7 +400,8 @@ func Test_CubeObjects2(t *testing.T) {
 //	{on: z, sn: -, mn: blue, f: 4}
 func Test_CubeObjectsColors(t *testing.T) {
 	t.Run("obj file: cube - objects_colors", func(t *testing.T) {
-		cube := loadTestCube("objects_colors")
+		cube, err := loadTestCube(t, "objects_colors")
+		assert.NoError(t, err)
 		fmt.Printf("Facet structure to be tested: %+v\n", cube)
 		expectedFullCubeBounds := scene.Bounds{Xmin: -1, Xmax: 1, Ymin: -1, Ymax: 1, Zmin: -1, Zmax: 1}
 		assertFacetStructure(t, cube, "cube_objects_colors", "", "", 0, 12, 8, 3, expectedFullCubeBounds)
@@ -400,7 +421,8 @@ func Test_CubeObjectsColors(t *testing.T) {
 //	{on: -, sn: z, mn: -, f: 4}
 func Test_CubeObjectsMaterials2(t *testing.T) {
 	t.Run("obj file: cube - objects_materials_2", func(t *testing.T) {
-		cube := loadTestCube("objects_materials_2")
+		cube, err := loadTestCube(t, "objects_materials_2")
+		assert.NoError(t, err)
 		fmt.Printf("Facet structure to be tested: %+v\n", cube)
 		expectedFullCubeBounds := scene.Bounds{Xmin: -1, Xmax: 1, Ymin: -1, Ymax: 1, Zmin: -1, Zmax: 1}
 		assertFacetStructure(t, cube, "UnitCube", "", "", 0, 12, 8, 3, expectedFullCubeBounds)
@@ -466,7 +488,7 @@ func assertFacetStructure(t *testing.T, f *scene.FacetStructure, name, substruct
 	assertBounds(t, expectedBounds, f.Bounds)
 
 	// Get the recursive amount of unique vertices for the facet structure f
-	vertices := make(map[*vec3.T]bool)
+	vertices := make(map[*vec3.T]struct{})
 	facetStructures := []*scene.FacetStructure{f}
 	for len(facetStructures) > 0 {
 		facetStructure := facetStructures[0]
@@ -474,7 +496,7 @@ func assertFacetStructure(t *testing.T, f *scene.FacetStructure, name, substruct
 
 		for _, facet := range facetStructure.Facets {
 			for _, vertex := range facet.Vertices {
-				vertices[vertex] = true
+				vertices[vertex] = struct{}{}
 			}
 		}
 
@@ -495,11 +517,12 @@ func assertBounds(t *testing.T, expectedBounds scene.Bounds, actualBounds *scene
 	assert.Equal(t, expectedBounds.Zmax, actualBounds.Zmax)
 }
 
-func loadTestCube(flavour string) *scene.FacetStructure {
+func loadTestCube(t *testing.T, flavour string) (*scene.FacetStructure, error) {
 	var objFilename = "cube_" + flavour + ".obj"
 	var objFilenamePath = filepath.Join("../../../../objects/obj/", "test", objFilename)
 
-	testCube := ReadOrPanic(objFilenamePath)
+	objFile, err := os.Open(objFilenamePath)
+	assert.NoError(t, err)
 
-	return testCube
+	return ReadFacetStructure(objFile)
 }

@@ -24,10 +24,9 @@ const (
 type ProjectionType string
 
 const (
-	ProjectionTypeParallel       ProjectionType = "Parallel"
-	ProjectionTypeCylindrical    ProjectionType = "Cylindrical"
-	ProjectionTypeSpherical      ProjectionType = "Spherical"
-	ProjectionTypeTextureMapping ProjectionType = "TextureMapping"
+	ProjectionTypeParallel    ProjectionType = "Parallel"
+	ProjectionTypeCylindrical ProjectionType = "Cylindrical"
+	ProjectionTypeSpherical   ProjectionType = "Spherical"
 )
 
 type ImageProjection struct {
@@ -55,10 +54,6 @@ func NewCylindricalImageProjection(texture *floatimage.FloatImage, origin *vec3.
 
 func NewSphericalImageProjection(texture *floatimage.FloatImage, origin *vec3.T, u vec3.T, v vec3.T) ImageProjection {
 	return NewImageProjection(ProjectionTypeSpherical, texture, origin, u, v, false, true, false, false)
-}
-
-func NewTextureMappingImageProjection(texture *floatimage.FloatImage) ImageProjection {
-	return NewImageProjection(ProjectionTypeTextureMapping, texture, &vec3.T{}, vec3.T{}, vec3.T{}, false, false, false, false)
 }
 
 func NewImageProjection(projectionType ProjectionType, texture *floatimage.FloatImage, origin *vec3.T, u vec3.T, v vec3.T, repeatU bool, repeatV bool, flipU bool, flipV bool) ImageProjection {
@@ -321,9 +316,6 @@ func (imageProjection *ImageProjection) Initialize() {
 
 	case ProjectionTypeParallel:
 		imageProjection.initializeParallelProjection()
-
-	case ProjectionTypeTextureMapping:
-		imageProjection.initializeTextureMapping()
 
 	default:
 		fmt.Printf("can not initialize unknown projection type \"%s\"\n", imageProjection.ProjectionType)

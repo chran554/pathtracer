@@ -26,7 +26,7 @@ var maxRecursionDepth = 6
 var cameraAperture = 0.0
 var cameraZoom = 1.0
 
-var lampIntensity = 8.0
+var lampIntensity = 12.0
 var lightIntensityFactor = 0.15
 var sphereRadius = 1.5
 
@@ -45,10 +45,16 @@ func main() {
 	}
 
 	// Cornell box
-	cornellBox := obj.NewWhiteCornellBox(&vec3.T{16, 5, 16}, true, lightIntensityFactor) // cm, as units. I.e. a 5x3x5m room
+	cornellBox := obj.NewWhiteCornellBox(&vec3.T{16, 6, 16}, true, lightIntensityFactor) // cm, as units. I.e. a 5x3x5m room
 	cornellBox.RemoveObjectsByName("Lamp")
 
-	floorMaterial := cornellBox.GetFirstMaterialByName("Floor")
+	normalGrayColor := color.NewColorGrey(1.0)
+
+	cornellBox.GetFirstMaterialByName("Left").C(normalGrayColor)
+	cornellBox.GetFirstMaterialByName("Right").C(normalGrayColor)
+	cornellBox.GetFirstMaterialByName("Back").C(normalGrayColor)
+
+	floorMaterial := cornellBox.GetFirstMaterialByName("Floor").C(normalGrayColor)
 	floorMaterial.M(0.01, 0.3).PP(textureGround, &vec3.Zero, vec3.T{4, 0, 0}, vec3.T{0, 0, 4})
 	floorMaterial.FresnelMaxGlossiness = 0.15
 
@@ -70,7 +76,7 @@ func main() {
 	ceilingMaterial := cornellBox.GetFirstMaterialByName("Ceiling").C(color.NewColor(1.0, 1.0, 1.0).Multiply(0.30))
 	ceilingMaterial.FresnelMaxGlossiness = 0.15
 
-	behindWall := obj.NewSquareFacetStructure(obj.SquareTypeXYPlane, false, true)
+	behindWall := obj.NewSquareFacetStructure(obj.SquareTypeXYPlane, nil, true)
 	behindWall.Name = "Behind"
 	behindWall.Scale(&vec3.Zero, &vec3.T{cornellBox.Bounds.SizeX(), cornellBox.Bounds.SizeY(), 1})
 	behindWall.Translate(&vec3.T{0, -behindWall.Bounds.Ymin, cornellBox.Bounds.Zmin})
@@ -81,46 +87,42 @@ func main() {
 	//textureSphere, err := floatimage.EmptyPlaceholderImage("textures/equirectangular/earth/light.jpg")
 	//textureSphere, err := floatimage.EmptyPlaceholderImage("textures/planets/earth/earth_grey_50.png")
 	//textureSphere, err := floatimage.EmptyPlaceholderImage("textures/planets/earth/earth_daymap_dark.jpg")
-	textureSphere, err := floatimage.EmptyPlaceholderImage("textures/dirtyoldbrickwall/Brick wall 4_baseColor 2xWidth AO flipped.png")
+	textureSphere, err := floatimage.EmptyPlaceholderImage("textures/football/football-diffuse-512_02.png")
 	if err != nil {
 		panic(err)
 	}
 
-	textureNormals, err := floatimage.EmptyPlaceholderImage("textures/dirtyoldbrickwall/Brick wall 4_normal 2xWidth smooth flipped.png")
+	textureNormals, err := floatimage.EmptyPlaceholderImage("textures/football/football-normals-512.png")
 	if err != nil {
 		panic(err)
 	}
 
 	//goldColor := color.NewColor(1.00, 0.85, 0.58).Multiply(0.9)
 	//silverColor := color.NewColor(0.85, 0.85, 0.9).Multiply(1.0)
-	sphereMaterial := scene.NewMaterial().N("sphere").
-		//C(silverColor).
-		M(0.01, 0.6)
+	sphereMaterial := scene.NewMaterial().N("sphere").M(0.4, 0.75)
 	sphereMaterial.FresnelMaxGlossiness = 0.10
-	//sphereMaterial.ColorizeReflection = true
 
-	lampPosition := vec3.Zero.Added(&vec3.T{-4, 3, -4})
-	lamp := scene.NewSphere(&lampPosition, 1.5, scene.NewMaterial().
-		N("lamp").
-		E(color.KelvinTemperatureColor2(5500), lampIntensity, true))
+	s1Material := sphereMaterial.Copy()
+	s1Material.SP(textureSphere, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+	s1Material.Projection.NormalMap = textureNormals
+	s1 := scene.NewSphere(&vec3.T{0, 0, 0}, sphereRadius, s1Material)
+	s1.RotateX(s1.Bounds().Center(), util.DegToRad(23.4)) // axial tilt                         // TODO remove
+	s1.Translate(&vec3.T{0, sphereRadius, 0})
+	//s1.Translate(&vec3.T{-sphereRadius * 1.25, sphereRadius, 0})
 
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
 	for frameIndex := 0; frameIndex < amountAnimationFrames; frameIndex++ {
 		animationProgress := float64(frameIndex) / float64(amountAnimationFrames)
 
-		s1Material := sphereMaterial.Copy()
-		s1Material.SP(textureSphere, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
-		s1Material.Projection.NormalMap = textureNormals
-
-		s1 := scene.NewSphere(&vec3.T{0, 0, 0}, sphereRadius, s1Material)
-		s1.RotateY(s1.Bounds().Center(), util.DegToRad(animationProgress*360+45)) // TODO remove
-		s1.RotateX(s1.Bounds().Center(), util.DegToRad(23.4))                     // axial tilt                         // TODO remove
-		s1.Translate(&vec3.T{0, sphereRadius, 0})
-		//s1.Translate(&vec3.T{-sphereRadius * 1.25, sphereRadius, 0})
+		lampPosition := vec3.Zero.Added(&vec3.T{-5, 4, -5})
+		lamp := scene.NewSphere(&lampPosition, 1.5, scene.NewMaterial().
+			N("lamp").
+			E(color.KelvinTemperatureColor2(5500), lampIntensity, true))
+		lamp.RotateY(s1.Bounds().Center(), util.DegToRad(animationProgress*360))
 
 		// cameraPosition := &vec3.T{0, 3, -6}
-		cameraPosition := &vec3.T{0, 3, -6}
+		cameraPosition := &vec3.T{0, 3, -4}
 
 		//cameraAim := &vec3.T{0, sphereRadius, 0} // TODO restore
 		cameraAim := s1.Bounds().Center() // TODO remove
@@ -131,7 +133,7 @@ func main() {
 			D(maxRecursionDepth).
 			A(cameraAperture, nil).
 			F(cameraFocusVector.Length()).
-			V(800 * cameraZoom)
+			V(550 * cameraZoom)
 
 		scn := scene.NewSceneNode().FS(cornellBox).S(lamp).S(s1)
 

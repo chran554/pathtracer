@@ -54,6 +54,9 @@ func (b *Bounds) SizeZ() float64 {
 }
 
 func (b *Bounds) AddBounds(bounds *Bounds) {
+	if bounds == nil {
+		return
+	}
 	b.Xmin = min(b.Xmin, bounds.Xmin)
 	b.Xmax = max(b.Xmax, bounds.Xmax)
 	b.Ymin = min(b.Ymin, bounds.Ymin)
@@ -63,6 +66,9 @@ func (b *Bounds) AddBounds(bounds *Bounds) {
 }
 
 func (b *Bounds) IncludeVertex(vertex *vec3.T) {
+	if vertex == nil {
+		return
+	}
 	b.Xmin = min(b.Xmin, vertex[0])
 	b.Xmax = max(b.Xmax, vertex[0])
 	b.Ymin = min(b.Ymin, vertex[1])

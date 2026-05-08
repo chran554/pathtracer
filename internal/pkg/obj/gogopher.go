@@ -3,7 +3,7 @@ package obj
 import (
 	"fmt"
 	"path/filepath"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
+	"pathtracer/internal/pkg/fileformat/wavefront"
 	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -17,7 +17,7 @@ func NewGopher(scale float64) *scene.FacetStructure {
 }
 
 func loadGopher() *scene.FacetStructure {
-	gopher := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "go_gopher_color.obj"))
+	gopher := wavefront.ReadFacetStructureOrPanic(filepath.Join(ObjFileDir, "go_gopher_color.obj"))
 	gopher.FlipX(&vec3.Zero)
 
 	ymin := gopher.Bounds.Ymin

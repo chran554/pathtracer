@@ -15,13 +15,13 @@ import (
 var animationName = "earth"
 
 var amountAnimationFrames = 32 // 72 * 2 // TODO set to 1
-var startFrameIndex = 0
+var startFrameIndex = 6
 
 var imageWidth = 640 * 1
 var imageHeight = 480 * 1
 var magnification = 2.0
 
-var amountSamples = 512 * 2 * 12
+var amountSamples = 512 * 2 * 4 //* 12 // * 12
 var maxRecursionDepth = 16
 
 var cameraAperture = 0.0
@@ -60,7 +60,7 @@ func main() {
 
 	sunMaterial := scene.NewMaterial().N("sun")
 	//sunMaterial.SP(textureSun, copy(solarSystemOrigin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
-	sunMaterial.E(color.White, 75.0, true)
+	sunMaterial.E(color.White, 75.0*0.8, true)
 	sunMaterial.FresnelMaxGlossiness = 0.0
 	sun := scene.NewSphere(copy(solarSystemOrigin), sunRadius*20, sunMaterial)
 	sun.Translate(&vec3.T{0, 0, 0})
@@ -100,7 +100,7 @@ func main() {
 			F(cameraFocusVector.Length()).
 			V(800 * zoom * cameraZoom)
 
-		scn := scene.NewSceneNode().S(spaceEnvironment).S(sun, moon).SN(earth)
+		scn := scene.NewSceneNode().S(spaceEnvironment).S(sun).SN(earth) //.S(moon)
 
 		fi := -1
 		if amountAnimationFrames > 1 {
@@ -119,7 +119,14 @@ func main() {
 }
 
 func createEarth(radius float64, position *vec3.T) *scene.SceneNode {
-	textureEarthDay, err := floatimage.EmptyPlaceholderImage("textures/planets/earth/earth_daymap.jpg")
+	// textureEarthDay, err := floatimage.EmptyPlaceholderImage("textures/planets/earth/earth_daymap.jpg")
+	// textureEarthDay, err := floatimage.EmptyPlaceholderImage("textures/planets/earth/earth_daymap_dark.jpg")
+	textureEarthDay, err := floatimage.EmptyPlaceholderImage("textures/planets/earth/earth_grey_18.png")
+	if err != nil {
+		panic(err)
+	}
+
+	textureEarthNormalMap, err := floatimage.EmptyPlaceholderImage("textures/planets/earth/earth_normal_map.png")
 	if err != nil {
 		panic(err)
 	}
@@ -145,6 +152,8 @@ func createEarth(radius float64, position *vec3.T) *scene.SceneNode {
 	earthMantleMaterial.SP(textureEarthDay, copy(origin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
 	earthMantleMaterial.Projection.Interpolation = floatimage.InterpolationBicubic
 	earthMantleMaterial.FresnelMaxGlossiness = 0.0
+	earthMantleMaterial.M(0.5, 0.3)
+	earthMantleMaterial.Projection.NormalMap = textureEarthNormalMap
 	earthMantle := scene.NewSphere(copy(origin), radius, earthMantleMaterial)
 	earthMantle.Translate(position)
 
@@ -165,12 +174,12 @@ func createEarth(radius float64, position *vec3.T) *scene.SceneNode {
 	earthLightsMaterial := scene.NewMaterial().N("earth lights").C(color.NewColor(1.0, 1.0, 1.0))
 	earthLightsMaterial.SP(textureEarthLights, copy(origin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
 	earthLightsMaterial.Projection.Interpolation = floatimage.InterpolationBicubic
-	earthLightsMaterial.E(color.White, 0.75, false)
+	earthLightsMaterial.E(color.White, 1.5, false)
 	earthLightsMaterial.FresnelMaxGlossiness = 0.0
-	earthLights := scene.NewSphere(copy(origin), radius+0.002, earthLightsMaterial)
+	earthLights := scene.NewSphere(copy(origin), radius+0.05, earthLightsMaterial)
 	earthLights.Translate(position)
 
-	earth := &scene.SceneNode{Spheres: []*scene.Sphere{earthMantle, earthSpec, earthLights, earthCloud}}
+	earth := &scene.SceneNode{Spheres: []*scene.Sphere{earthMantle /*earthSpec, earthLights , earthCloud*/}}
 	earth.UpdateBounds()
 
 	return earth

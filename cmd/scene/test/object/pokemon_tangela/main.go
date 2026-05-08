@@ -16,7 +16,7 @@ var animationName = "pokemon_tangela"
 
 var amountFrames = 1
 
-var amountSamples = 1024 * 3 * 3
+var amountSamples = 1024 * 3 * 3 * 2
 
 var imageWidth = 800
 var imageHeight = 600
@@ -24,24 +24,21 @@ var magnification = 1.0
 
 func main() {
 	// Ground
-	groundMaterial := scene.NewMaterial().PP(floatimage.LoadOrPanic("textures/floor/Calacatta-Vena-French-Pattern-Architextures.jpg"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(150), vec3.UnitZ.Scaled(150))
+	groundTexture := floatimage.LoadOrPanic("textures/floor/Calacatta-Vena-French-Pattern-Architextures.jpg")
+	groundMaterial := scene.NewMaterial().
+		C(color.White.Copy().Multiply(0.2)).
+		PP(groundTexture, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(150), vec3.UnitZ.Scaled(150))
 	ground := &scene.Disc{Name: "ground", Origin: &vec3.T{0, 0, 0}, Normal: &vec3.UnitY, Radius: 5000.0, Material: groundMaterial}
-
-	// Sky
-	skyMaterial := scene.NewMaterial().
-		E(color.White, 0.5, true).
-		SP(floatimage.LoadOrPanic("textures/equirectangular/wirebox 6192x3098.png"), &vec3.T{0, 0, 0}, vec3.UnitX, vec3.UnitY)
-	skyDome := scene.NewSphere(&vec3.T{0, 0, 0}, 5000, skyMaterial).N("sky dome")
 
 	// Object
 	object := obj.NewPokemonTangela(200.0)
 	object.RotateY(&vec3.Zero, math.Pi*7.0/8.0)
 
-	lightMaterial := scene.NewMaterial().E(color.KelvinTemperatureColor2(5500), 40, true)
-	light := scene.NewSphere(&vec3.T{-150, 250, -175}, 45.0, lightMaterial).N("light")
+	lightMaterial := scene.NewMaterial().E(color.KelvinTemperatureColor2(5500), 50, true)
+	light := scene.NewSphere(&vec3.T{-150, 250, -175}, 30.0, lightMaterial).N("light")
 
 	scn := scene.NewSceneNode().
-		S(light, skyDome).
+		S(light).
 		D(ground).
 		FS(object)
 

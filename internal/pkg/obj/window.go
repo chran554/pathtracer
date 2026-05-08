@@ -3,7 +3,7 @@ package obj
 import (
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
+	"pathtracer/internal/pkg/fileformat/wavefront"
 	"pathtracer/internal/pkg/scene"
 	"pathtracer/internal/pkg/util"
 
@@ -42,5 +42,5 @@ func NewWindow(scale float64) *scene.FacetStructure {
 }
 
 func loadWindow() *scene.FacetStructure {
-	return wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "window.obj"))
+	return wavefront.ReadFacetStructureOrPanic(filepath.Join(ObjFileDir, "window.obj"))
 }

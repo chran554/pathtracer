@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/fileformat/wavefront"
 	"pathtracer/internal/pkg/floatimage"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
 
@@ -88,7 +88,7 @@ func main() {
 }
 
 func NewCornellBox(scale float64) *scene.FacetStructure {
-	cornellBox := wavefrontobj.ReadOrPanic(cornellBoxFilenamePath)
+	cornellBox := wavefront.ReadFacetStructureOrPanic(cornellBoxFilenamePath)
 	cornellBox.ScaleUniform(&vec3.Zero, scale)
 
 	cornellBox.ReplaceMaterial("Right", scene.NewMaterial().N("Right").C(color.NewColor(0.9, 0.1, 0.1)).M(0.1, 0.2))

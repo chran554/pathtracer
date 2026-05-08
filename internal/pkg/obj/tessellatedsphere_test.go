@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 	"os"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
+	"pathtracer/internal/pkg/fileformat/wavefront"
 	"pathtracer/internal/pkg/scene"
 	"testing"
 
@@ -59,7 +59,7 @@ func Test_TessellatedSphereObject(t *testing.T) {
 		mtlFile := createFile("tessellated_sphere.mtl")
 		defer mtlFile.Close()
 
-		wavefrontobj.WriteObjFile(objFile, mtlFile, sphere, nil)
+		wavefront.WriteObjFile(objFile, mtlFile, sphere, nil)
 
 		defer os.Remove(objFile.Name())
 		defer os.Remove(mtlFile.Name())

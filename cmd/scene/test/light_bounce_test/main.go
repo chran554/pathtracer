@@ -45,17 +45,17 @@ func main() {
 	skyDome.RotateY(&vec3.Zero, util.DegToRad(0))
 
 	// Floor
-	floor := obj.NewSquareFacetStructure(obj.SquareTypeXZPlane, false, true)
+	floor := obj.NewSquareFacetStructure(obj.SquareTypeXZPlane, nil, true)
 	floor.Scale(&vec3.Zero, &vec3.T{1000, 1, 1000})
 	floor.Material = scene.NewMaterial().N("floor").C(color.NewColorGrey(0.5))
 
 	wallDistance := 40.0
 	wallLength := wallDistance * 10
-	wall1 := obj.NewSquareFacetStructure(obj.SquareTypeXYPlane, false, false)
+	wall1 := obj.NewSquareFacetStructure(obj.SquareTypeXYPlane, nil, false)
 	wall1.Scale(&vec3.Zero, &vec3.T{wallLength, wallDistance, 1})
 	wall1.Translate(&vec3.T{-(wallLength + wallDistance/2), 0, +wallDistance / 2})
 
-	wall2 := obj.NewSquareFacetStructure(obj.SquareTypeXYPlane, false, false)
+	wall2 := obj.NewSquareFacetStructure(obj.SquareTypeXYPlane, nil, false)
 	wall2.Scale(&vec3.Zero, &vec3.T{wallLength, wallDistance, 1})
 	wall2.Translate(&vec3.T{-wallLength + wallDistance, 0, -wallDistance / 2})
 
@@ -70,7 +70,7 @@ func main() {
 	var wallDivisions []*scene.FacetStructure
 	wallDivisionSpacing := wallDistance
 	for wallDivisionIndex := 0; wallDivisionIndex < int(wallLength/wallDivisionSpacing); wallDivisionIndex++ {
-		wallDivision := obj.NewSquareFacetStructure(obj.SquareTypeYZPlane, false, false)
+		wallDivision := obj.NewSquareFacetStructure(obj.SquareTypeYZPlane, nil, false)
 		wallDivision.Material = wallMaterial
 		wallDivision.Scale(&vec3.Zero, &vec3.T{1, wallDistance, wallDistance / 2})
 

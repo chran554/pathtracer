@@ -111,7 +111,10 @@ func (s *serializer) deserializeFrame(frameInformation *FrameInformation) (*scen
 				return nil, err
 			}
 
-			sceneNode := s.deserializeSceneNode(frame.SceneNode)
+			sceneNode, err := s.deserializeSceneNode(frame.SceneNode)
+			if err != nil {
+				return nil, err
+			}
 
 			return &scene.Frame{
 				Filename:  frame.Filename,
@@ -147,6 +150,7 @@ func (s *serializer) initFrameCache(frameInformation *FrameInformation) error {
 				s.sv = append(s.sv, &vec3.T{vector.X, vector.Y, vector.Z})
 			}
 		}
+
 		if file.Name == frameInformation.Vector2DFile {
 			// fmt.Println("Initializing: Reading ", file.Name)
 
@@ -165,6 +169,7 @@ func (s *serializer) initFrameCache(frameInformation *FrameInformation) error {
 				s.sv2d = append(s.sv2d, &vec2.T{vector.X, vector.Y})
 			}
 		}
+
 		if file.Name == frameInformation.ColorFile {
 			// fmt.Println("Initializing: Reading ", file.Name)
 
@@ -184,6 +189,7 @@ func (s *serializer) initFrameCache(frameInformation *FrameInformation) error {
 			}
 		}
 	}
+
 	for _, file := range s.zipReader.File {
 		if file.Name == frameInformation.MaterialFile {
 			// fmt.Println("Initializing: Reading ", file.Name)
@@ -219,6 +225,34 @@ func (s *serializer) initFrameCache(frameInformation *FrameInformation) error {
 					RayTerminator:        m.RayTerminator,
 					ColorizeReflection:   m.ColorizeReflection,
 					FresnelMaxGlossiness: m.FresnelMaxGlossiness,
+				})
+			}
+		}
+
+		if file.Name == frameInformation.TextureFile {
+			// fmt.Println("Initializing: Reading ", file.Name)
+
+			fileData, err := readZipFileEntry(file)
+			if err != nil {
+				return err
+			}
+
+			var textures []Texture
+			err = msgpack.Unmarshal(fileData, &textures)
+			if err != nil {
+				return fmt.Errorf("could not unmarshal textures from file %s: %w", file.Name, err)
+			}
+
+			for _, t := range textures {
+				textureImage, err := s.resourceImage(t.ImageResourceIndex)
+				if err != nil {
+					return err
+				}
+				s.st = append(s.st, &scene.Texture{
+					Image:         textureImage,
+					Type:          scene.TextureType(t.Type),
+					Interpolation: floatimage.Interpolation(t.Interpolation),
+					Strength:      t.Strength,
 				})
 			}
 		}
@@ -263,62 +297,132 @@ func (s *serializer) deserializeSceneFile(sceneFilename string) (*scene.SceneNod
 				return nil, fmt.Errorf("could not unmarshal scene from file %s: %w", file.Name, err)
 			}
 
-			return s.deserializeSceneNode(&sceneNode), nil
+			return s.deserializeSceneNode(&sceneNode)
 		}
 	}
 
 	return nil, fmt.Errorf("could not find scene file %s", sceneFilename)
 }
 
-func (s *serializer) deserializeSceneNode(sceneNode *SceneNode) *scene.SceneNode {
+func (s *serializer) deserializeSceneNode(sceneNode *SceneNode) (*scene.SceneNode, error) {
+	facetStructures, err := s.deserializeFacetStructures(sceneNode.FacetStructures)
+	if err != nil {
+		return nil, err
+	}
+
+	childNodes, err := s.deserializeSceneNodes(sceneNode.ChildNodes)
+	if err != nil {
+		return nil, err
+	}
+
 	return &scene.SceneNode{
 		Spheres:         s.deserializeSpheres(sceneNode.Spheres),
 		Discs:           s.deserializeDiscs(sceneNode.Discs),
-		ChildNodes:      s.deserializeSceneNodes(sceneNode.ChildNodes),
-		FacetStructures: s.deserializeFacetStructures(sceneNode.FacetStructures),
+		ChildNodes:      childNodes,
+		FacetStructures: facetStructures,
 		//Bounds:          nil,
-	}
+	}, nil
 }
 
-func (s *serializer) deserializeSceneNodes(sceneNodes []*SceneNode) []*scene.SceneNode {
+func (s *serializer) deserializeSceneNodes(sceneNodes []*SceneNode) ([]*scene.SceneNode, error) {
 	var nodes []*scene.SceneNode
+
 	for _, sceneNode := range sceneNodes {
-		nodes = append(nodes, s.deserializeSceneNode(sceneNode))
+		node, err := s.deserializeSceneNode(sceneNode)
+		if err != nil {
+			return nil, err
+		}
+		nodes = append(nodes, node)
 	}
 
-	return nodes
+	return nodes, nil
 }
 
-func (s *serializer) deserializeFacetStructures(facetStructures []*FacetStructure) []*scene.FacetStructure {
+func (s *serializer) deserializeFacetStructures(facetStructures []*FacetStructure) ([]*scene.FacetStructure, error) {
 	var structures []*scene.FacetStructure
+
 	for _, structure := range facetStructures {
+		facets, err := s.deserializeFacets(structure.Facets)
+		if err != nil {
+			return nil, err
+		}
+
+		facetSubStructures, err := s.deserializeFacetStructures(structure.FacetStructures)
+		if err != nil {
+			return nil, err
+		}
+
 		structures = append(structures, &scene.FacetStructure{
 			Name:             structure.Name,
 			SubstructureName: structure.SubstructureName,
 			Material:         s.sceneMaterial(structure.Material),
-			Facets:           s.deserializeFacets(structure.Facets),
-			FacetStructures:  s.deserializeFacetStructures(structure.FacetStructures),
+			Facets:           facets,
+			FacetStructures:  facetSubStructures,
 			IgnoreBounds:     structure.IgnoreBounds,
 			//Bounds:           nil,
 		})
 	}
-	return structures
+
+	return structures, nil
 }
 
-func (s *serializer) deserializeFacets(facets []*Facet) []*scene.Facet {
+func (s *serializer) deserializeFacets(facets []*Facet) ([]*scene.Facet, error) {
 	var sceneFacets []*scene.Facet
+
 	for _, facet := range facets {
+		textures, err := s.deserializeFacetTextures(facet.Textures)
+		if err != nil {
+			return nil, err
+		}
+
 		sceneFacets = append(sceneFacets, &scene.Facet{
-			Vertices:           s.sceneVectors(facet.Vertices),
-			VertexNormals:      s.sceneVectors(facet.VertexNormals),
-			TextureCoordinates: s.sceneVectors2D(facet.TextureCoordinates),
+			Vertices:       s.sceneVectors(facet.Vertices),
+			VertexNormals:  s.sceneVectors(facet.VertexNormals),
+			VertexTangents: s.sceneVectors(facet.VertexTangents),
+			Textures:       textures,
 			//Normal:             nil,
 			//Bounds:             nil,
 		})
 	}
-	return sceneFacets
+	return sceneFacets, nil
 }
 
+func (s *serializer) deserializeFacetTextures(facetTextures []*FacetTexture) ([]*scene.FacetTexture, error) {
+	var sceneFacetTextures []*scene.FacetTexture
+
+	for _, facetTexture := range facetTextures {
+		deserializedFacetTexture, err := s.deserializeFacetTexture(facetTexture)
+		if err != nil {
+			return nil, err
+		}
+
+		sceneFacetTextures = append(sceneFacetTextures, deserializedFacetTexture)
+	}
+
+	return sceneFacetTextures, nil
+}
+
+func (s *serializer) deserializeFacetTexture(facetTexture *FacetTexture) (*scene.FacetTexture, error) {
+	return &scene.FacetTexture{
+		Texture:     s.sceneTexture(facetTexture.Texture),
+		Coordinates: s.sceneVectors2D(facetTexture.TextureCoordinates),
+	}, nil
+}
+
+/*
+	func (s *serializer) deserializeTexture(texture *Texture) (*scene.Texture, error) {
+		img, err := s.resourceImage(texture.ImageResourceIndex)
+		if err != nil {
+			return nil, err
+		}
+
+		return &scene.Texture{
+			Type:     scene.TextureType(texture.Type),
+			Strength: texture.Strength,
+			Image:    img,
+		}, nil
+	}
+*/
 func (s *serializer) deserializeDiscs(discs []*Disc) []*scene.Disc {
 	var sceneDiscs []*scene.Disc
 	for _, disc := range discs {

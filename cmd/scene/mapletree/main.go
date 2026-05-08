@@ -55,7 +55,7 @@ func main() {
 		panic(err)
 	}
 
-	leafMaterial := scene.NewMaterial().TP(textureLeaf).
+	leafMaterial := scene.NewMaterial().
 		C(color.NewColorRGBA(1.0, 1.0, 1.0, 1.0)).
 		T(0.10, false, 1.44). // Refraction index green leaves 1.40-1.48
 		M(0.15, 0.85)
@@ -68,7 +68,7 @@ func main() {
 	skyDome.RotateY(&vec3.Zero, util.DegToRad(-20))
 	skyDome.Translate(&vec3.T{0, 2, 0})
 
-	ground := obj.NewSquareFacetStructure(obj.SquareTypeXZPlane, false, true)
+	ground := obj.NewSquareFacetStructure(obj.SquareTypeXZPlane, nil, true)
 	ground.ScaleUniform(&vec3.T{0, 0, 0}, skyDomeRadius*2)
 	groundMaterial := scene.NewMaterial().
 		N("ground").
@@ -79,12 +79,12 @@ func main() {
 
 	sun := scene.NewSphere(&vec3.T{-130, 130, -130}, 150, scene.NewMaterial().
 		N("sun").
-		E(color.KelvinTemperatureColor2(6000), 2.0, true))
+		E(color.KelvinTemperatureColor2(6000), 1.0, true))
 
 	var trees []*scene.FacetStructure
 	treeCount := 3
 	for i := 0; i < treeCount; i++ {
-		tree := createTree(int64(1337+i), textureBark, leafMaterial, mapleTreeParams())
+		tree := createTree(int64(1337+i), textureBark, textureLeaf, leafMaterial, mapleTreeParams())
 		if i == 0 {
 			tree.Translate(&vec3.T{0, 0, 0})
 		} else if i == 1 {
@@ -118,13 +118,13 @@ func main() {
 	}
 }
 
-func createTree(rndSeed int64, textureBark *floatimage.FloatImage, leafMaterial *scene.Material, treeParams Params) *scene.FacetStructure {
+func createTree(rndSeed int64, textureBark *floatimage.FloatImage, textureLeaf *floatimage.FloatImage, leafMaterial *scene.Material, treeParams Params) *scene.FacetStructure {
 	branchConfigurations := GenerateTreeLines(rndSeed, vec3.Zero, treeParams)
 
 	var branches []*scene.FacetStructure
 	for _, branchConfiguration := range branchConfigurations {
 		extraLeafCount := max(0, 3-branchConfiguration.Level) // 1 and 2 extra leaves on the branch on level 2 and 1 respectively
-		branch := NewBranch(branchConfiguration, textureBark, leafMaterial, extraLeafCount)
+		branch := NewBranch(branchConfiguration, textureBark, textureLeaf, leafMaterial, extraLeafCount)
 		branches = append(branches, branch)
 	}
 
@@ -134,8 +134,8 @@ func createTree(rndSeed int64, textureBark *floatimage.FloatImage, leafMaterial 
 	return tree
 }
 
-func createLeaf(leafMaterial *scene.Material, minSize, maxSize float64) *scene.FacetStructure {
-	leaf := obj.NewSquareFacetStructure(obj.SquareTypeXYPlane, true, true)
+func createLeaf(textureLeaf *floatimage.FloatImage, leafMaterial *scene.Material, minSize, maxSize float64) *scene.FacetStructure {
+	leaf := obj.NewSquareFacetStructure(obj.SquareTypeXYPlane, textureLeaf, true)
 	leaf.Material = leafMaterial
 
 	// Scale leaf
@@ -209,7 +209,7 @@ func birchTreeParams() Params {
 	}
 }
 
-func NewBranch(conf Line, texture *floatimage.FloatImage, leafMaterial *scene.Material, extraLeaves int) *scene.FacetStructure {
+func NewBranch(conf Line, texture *floatimage.FloatImage, textureLeaf *floatimage.FloatImage, leafMaterial *scene.Material, extraLeaves int) *scene.FacetStructure {
 	branch := &scene.FacetStructure{Name: fmt.Sprintf("branch %d", conf.Level)}
 
 	branch.Material = scene.NewMaterial().N("branch")
@@ -259,7 +259,7 @@ func NewBranch(conf Line, texture *floatimage.FloatImage, leafMaterial *scene.Ma
 		someWayUpOnBranch := branchVector.Scaled(float64(leafIndex) / float64(leafCount))
 		leafPosition.Add(&someWayUpOnBranch)
 
-		leaf := createLeaf(leafMaterial, leafMinSize*leafScale, leafMaxSize*leafScale)
+		leaf := createLeaf(textureLeaf, leafMaterial, leafMinSize*leafScale, leafMaxSize*leafScale)
 		leaf.UpdateVertexNormals(false)
 		leaf.Translate(&leafPosition)
 

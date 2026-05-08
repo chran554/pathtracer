@@ -24,6 +24,7 @@ type FrameInformation struct {
 	Vector2DFile string `json:"vector2d-file,omitempty"`
 	MaterialFile string `json:"material-file,omitempty"`
 	ColorFile    string `json:"color-file,omitempty"`
+	TextureFile  string `json:"texture-file,omitempty"`
 	// Camera       *Camera `json:"camera"`
 }
 
@@ -66,9 +67,22 @@ type FacetStructure struct {
 }
 
 type Facet struct {
-	Vertices           []VectorIndex   `msgpack:"vertices"`
-	VertexNormals      []VectorIndex   `msgpack:"vertex-normals,omitempty"`
+	Vertices       []VectorIndex   `msgpack:"vertices"`
+	VertexNormals  []VectorIndex   `msgpack:"vertex-normals,omitempty"`
+	VertexTangents []VectorIndex   `msgpack:"vertex-tangents,omitempty"`
+	Textures       []*FacetTexture `msgpack:"textures,omitempty"`
+}
+
+type FacetTexture struct {
+	Texture            TextureIndex    `msgpack:"texture,omitempty"`
 	TextureCoordinates []Vector2DIndex `msgpack:"texture-coordinates,omitempty"`
+}
+
+type Texture struct {
+	ImageResourceIndex ResourceIndex `msgpack:"image"`
+	Interpolation      string        `msgpack:"interpolation"`
+	Type               string        `msgpack:"type"`
+	Strength           float64       `msgpack:"strength"`
 }
 
 type Sphere struct {
@@ -90,6 +104,7 @@ type ColorIndex uint
 type ResourceIndex uint
 type VectorIndex uint
 type Vector2DIndex uint
+type TextureIndex uint
 type MaterialIndex uint
 
 type Vector struct {
@@ -113,7 +128,7 @@ type Color struct {
 type Projection struct {
 	ProjectionType string        `msgpack:"projection-type"`
 	Image          ResourceIndex `msgpack:"image-resource-index"`
-	Interpolation  int           `msgpack:"interpolation,omitempty"`
+	Interpolation  string        `msgpack:"interpolation,omitempty"`
 	NormalMap      ResourceIndex `msgpack:"normal-map-resource-index"`
 	Origin         VectorIndex   `msgpack:"origin"`
 	U              VectorIndex   `msgpack:"u"`

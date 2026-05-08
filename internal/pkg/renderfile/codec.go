@@ -11,6 +11,7 @@ import (
 	"pathtracer/internal/pkg/imagecache"
 	"pathtracer/internal/pkg/scene"
 	"regexp"
+	"slices"
 	"time"
 
 	"github.com/ungerik/go3d/float64/vec2"
@@ -24,6 +25,9 @@ type serializer struct {
 	vector2Ds          []*Vector2D
 	vector2DToIndexMap map[*vec2.T]Vector2DIndex
 
+	textures []*Texture
+	//textureToIndexMap map[*scene.Texture]TextureIndex
+
 	materials          []*Material
 	materialToIndexMap map[*scene.Material]MaterialIndex
 
@@ -36,6 +40,7 @@ type serializer struct {
 	sv2d []*vec2.T         // sv2d is scene 2D vectors
 	sc   []*color.Color    // sc is scene colors
 	sm   []*scene.Material // sm is scene materials
+	st   []*scene.Texture  // st is scene textures
 
 	zipWriter *zip.Writer
 	zipReader *zip.Reader
@@ -46,11 +51,13 @@ func (s *serializer) clearFrameCache() {
 	s.vector2Ds = nil
 	s.materials = nil
 	s.colors = nil
+	s.textures = nil
 
 	s.vectorToIndexMap = make(map[*vec3.T]VectorIndex)
 	s.vector2DToIndexMap = make(map[*vec2.T]Vector2DIndex)
 	s.materialToIndexMap = make(map[*scene.Material]MaterialIndex)
 	s.colorToIndexMap = make(map[*color.Color]ColorIndex)
+	//s.textureToIndexMap = make(map[*scene.Texture]TextureIndex)
 
 	// Not the resource file map. That is shared and reused between frames.
 	// resourceFileMap = make(map[string]ResourceIndex)
@@ -59,6 +66,7 @@ func (s *serializer) clearFrameCache() {
 	s.sv2d = nil
 	s.sc = nil
 	s.sm = nil
+	s.st = nil
 }
 
 func newSerializer(zipWriter *zip.Writer) *serializer {
@@ -69,6 +77,7 @@ func newSerializer(zipWriter *zip.Writer) *serializer {
 		resourceHashToIndex: make(map[string]ResourceIndex),
 		materialToIndexMap:  make(map[*scene.Material]MaterialIndex),
 		colorToIndexMap:     make(map[*color.Color]ColorIndex),
+		//textureToIndexMap:   make(map[*scene.Texture]TextureIndex),
 	}
 }
 
@@ -80,6 +89,7 @@ func newDeserializer(reader *zip.Reader) (*serializer, error) {
 		resourceHashToIndex: make(map[string]ResourceIndex),
 		materialToIndexMap:  make(map[*scene.Material]MaterialIndex),
 		colorToIndexMap:     make(map[*color.Color]ColorIndex),
+		//textureToIndexMap:   make(map[*scene.Texture]TextureIndex),
 	}
 
 	return s, nil
@@ -116,6 +126,39 @@ func (s *serializer) vector2DIndex(vector2D *vec2.T) Vector2DIndex {
 	} else {
 		return index
 	}
+}
+
+func (s *serializer) textureIndex(texture *scene.Texture) (TextureIndex, error) {
+	if texture == nil {
+		return 0, nil
+	}
+
+	fileResourceIndex, err := s.fileResourceIndex(texture.Image)
+	if err != nil {
+		return 0, err
+	}
+
+	// Map the *scene.Texture to a local Texture struct
+	mappedTexture := &Texture{
+		ImageResourceIndex: fileResourceIndex,
+		Interpolation:      string(texture.Interpolation),
+		Type:               string(texture.Type),
+		Strength:           texture.Strength,
+	}
+
+	// Check if the texture has already been indexed
+	if textureIndex := slices.IndexFunc(s.textures, func(t *Texture) bool {
+		return *t == *mappedTexture
+	}); textureIndex != -1 {
+		return TextureIndex(textureIndex + 1), nil
+	}
+
+	// Assign a new index for the material
+	newIndex := TextureIndex(len(s.textures) + 1)
+	s.textures = append(s.textures, mappedTexture)
+	// s.textureToIndexMap[texture] = newIndex // Not needed, the index is already in the s.textures slice
+
+	return newIndex, nil // Return the newly assigned texture index
 }
 
 func (s *serializer) fileResourceIndex(floatImage *floatimage.FloatImage) (ResourceIndex, error) {
@@ -297,6 +340,13 @@ func (s *serializer) sceneMaterial(index MaterialIndex) *scene.Material {
 		return nil
 	}
 	return s.sm[index-1]
+}
+
+func (s *serializer) sceneTexture(index TextureIndex) *scene.Texture {
+	if index == 0 {
+		return nil
+	}
+	return s.st[index-1]
 }
 
 func (s *serializer) resourceImage(resourceIndex ResourceIndex) (*floatimage.FloatImage, error) {

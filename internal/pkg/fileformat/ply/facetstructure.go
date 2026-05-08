@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/scene"
 	"strings"
 
@@ -34,14 +36,14 @@ func ReadFacetStructureOrPanic(plyFilenamePath string, rightHandCoordinateSystem
 func ReadFacetStructure(file *os.File, rightHandCoordinateSystem bool) (*scene.FacetStructure, error) {
 	reader := bufio.NewReader(file)
 	fmt.Printf("Reading ply file %s\n", file.Name())
-	_, elementValues, err := Read(reader)
+	ply, err := Read(reader)
 	if err != nil {
 		return nil, fmt.Errorf("could read ply file '%s': %w", file.Name(), err)
 	}
 
 	fmt.Printf("Converting to face structure\n")
 	var facetStructure *scene.FacetStructure
-	if facetStructure, err = convertToFacetStructure(elementValues); err != nil {
+	if facetStructure, err = convertToFacetStructure(ply.Elements, ply.Header.TextureFilename); err != nil {
 		return nil, fmt.Errorf("could not convert ply file '%s' values to facet structure: %w", file.Name(), err)
 	}
 
@@ -61,26 +63,41 @@ func ReadFacetStructure(file *os.File, rightHandCoordinateSystem bool) (*scene.F
 	return facetStructure, nil
 }
 
-func convertToFacetStructure(values []*Element) (*scene.FacetStructure, error) {
+func convertToFacetStructure(elements []*Element, textureFilename string) (*scene.FacetStructure, error) {
 	var vertices []*vec3.T
 	var vertexNormals []*vec3.T
 	var textureCoordinates []*vec2.T
 	var facets []*scene.Facet
 	var err error
 
-	if vertices, vertexNormals, textureCoordinates, err = extractVertices(values); err != nil {
-		return nil, fmt.Errorf("could not extract verticies from ply values: %w", err)
+	if vertices, vertexNormals, textureCoordinates, _, err = extractVertices(elements); err != nil {
+		return nil, fmt.Errorf("could not extract vertices from ply values: %w", err)
 	}
 
-	if facets, err = extractFacets(values, vertices, vertexNormals, textureCoordinates); err != nil {
+	if facets, err = extractFacets(elements, vertices, vertexNormals, textureCoordinates, textureFilename); err != nil {
 		return nil, fmt.Errorf("could not extract facets from ply values: %w", err)
 	}
 
 	return &scene.FacetStructure{Facets: facets}, nil
 }
 
-func extractFacets(elements []*Element, vertices []*vec3.T, vertexNormals []*vec3.T, textureCoordinates []*vec2.T) ([]*scene.Facet, error) {
+func extractFacets(elements []*Element, vertices []*vec3.T, vertexNormals []*vec3.T, textureCoordinates []*vec2.T, textureFilename string) ([]*scene.Facet, error) {
 	var facets []*scene.Facet
+
+	var texture *scene.Texture
+
+	if textureFilename != "" {
+		textureImage, err := floatimage.EmptyPlaceholderImage(textureFilename)
+		if err != nil {
+			return nil, err
+		}
+		texture = &scene.Texture{
+			Image:         textureImage,
+			Type:          scene.TextureTypeAlbedo,
+			Interpolation: floatimage.InterpolationNearestNeighbor,
+			Strength:      1.0,
+		}
+	}
 
 	for _, element := range elements {
 		if (element.Name == "facet") || (element.Name == "face") {
@@ -96,7 +113,10 @@ func extractFacets(elements []*Element, vertices []*vec3.T, vertexNormals []*vec
 						facet.VertexNormals = append(facet.VertexNormals, vertexNormals[referenceID])
 					}
 					if textureCoordinates != nil {
-						facet.TextureCoordinates = append(facet.TextureCoordinates, textureCoordinates[referenceID])
+						if facet.Textures == nil {
+							facet.Textures = []*scene.FacetTexture{{Texture: texture}}
+						}
+						facet.Textures[0].Coordinates = append(facet.Textures[0].Coordinates, textureCoordinates[referenceID])
 					}
 				} else {
 					// If facet vertices is not a list of vertex indices in ply file, what is it then?
@@ -110,20 +130,22 @@ func extractFacets(elements []*Element, vertices []*vec3.T, vertexNormals []*vec
 	return facets, nil
 }
 
-func extractVertices(elements []*Element) (vertices []*vec3.T, vertexNormals []*vec3.T, textureCoordinates []*vec2.T, err error) {
+func extractVertices(elements []*Element) (vertices []*vec3.T, vertexNormals []*vec3.T, textureCoordinates []*vec2.T, vertexColors []*color.Color, err error) {
 	anyVertex := false
 	anyVertexNormal := false
 	anyTextureCoordinate := false
+	anyVertexColor := false
 
 	for _, e := range elements {
 		if e.Name == "vertex" {
 			if e.ID != len(vertices) {
-				return nil, nil, nil, fmt.Errorf("illegal vertex value index (%d), it do not match slice index (%d)", e.ID, len(vertices))
+				return nil, nil, nil, nil, fmt.Errorf("illegal vertex value index (%d), it do not match slice index (%d)", e.ID, len(vertices))
 			}
 
 			vertex := vec3.T{}
 			vertexNormal := vec3.T{}
 			textureCoordinate := vec2.T{}
+			vertexColor := color.Color{}
 			for _, p := range e.Properties {
 				switch p.Name {
 				case "x":
@@ -146,18 +168,32 @@ func extractVertices(elements []*Element) (vertices []*vec3.T, vertexNormals []*
 					vertexNormal[2] = getPropertyFloatValue(p)
 					anyVertexNormal = true
 
-				case "u":
+				case "u", "s":
 					textureCoordinate[0] = getPropertyFloatValue(p)
 					anyTextureCoordinate = true
-				case "v":
+				case "v", "t":
 					textureCoordinate[1] = getPropertyFloatValue(p)
 					anyTextureCoordinate = true
+
+				case "r", "red":
+					vertexColor.R = float32(getPropertyFloatValue(p))
+					anyVertexColor = true
+				case "g", "green":
+					vertexColor.G = float32(getPropertyFloatValue(p))
+					anyVertexColor = true
+				case "b", "blue":
+					vertexColor.B = float32(getPropertyFloatValue(p))
+					anyVertexColor = true
+				case "a", "alpha":
+					vertexColor.A = float32(getPropertyFloatValue(p))
+					anyVertexColor = true
 				}
 			}
 
 			vertices = append(vertices, &vertex)
 			vertexNormals = append(vertexNormals, &vertexNormal)
 			textureCoordinates = append(textureCoordinates, &textureCoordinate)
+			vertexColors = append(vertexColors, &vertexColor)
 		}
 	}
 
@@ -173,7 +209,11 @@ func extractVertices(elements []*Element) (vertices []*vec3.T, vertexNormals []*
 		textureCoordinates = nil
 	}
 
-	return vertices, vertexNormals, textureCoordinates, nil
+	if !anyVertexColor {
+		vertexColors = nil
+	}
+
+	return vertices, vertexNormals, textureCoordinates, vertexColors, nil
 }
 
 func getPropertyFloatValue(property *Property) float64 {

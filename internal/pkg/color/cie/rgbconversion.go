@@ -77,14 +77,14 @@ var (
 // | R_linear |   | +3.2406255 -1.5372080 -0.4986286 |   | X_d65 |
 // | G_linear | = | -0.9689307 +1.8757561 +0.0415175 | * | Y_d65 |
 // | B_linear |   | +0.0557101 -0.2040211 +1.0569959 |   | Z_d65 |
-func (xyz CIEXYZ) D65_SRGB() color.Color {
+func (xyz CIEXYZ) D65_SRGB() *color.Color {
 	nxyz := xyz.NormalizeYLevel(1.0)
 
 	rLinear := +3.2406255*nxyz.X + -1.5372080*nxyz.Y + -0.4986286*nxyz.Z
 	gLinear := -0.9689307*nxyz.X + +1.8757561*nxyz.Y + +0.0415175*nxyz.Z
 	bLinear := +0.0557101*nxyz.X + -0.2040211*nxyz.Y + +1.0569959*nxyz.Z
 
-	return color.Color{
+	return &color.Color{
 		R: float32(util.ClampFloat64(0.0, 1.0, srgbGammaCompression(rLinear))),
 		G: float32(util.ClampFloat64(0.0, 1.0, srgbGammaCompression(gLinear))),
 		B: float32(util.ClampFloat64(0.0, 1.0, srgbGammaCompression(bLinear))),
@@ -94,7 +94,7 @@ func (xyz CIEXYZ) D65_SRGB() color.Color {
 
 // RGB converts CIE 1931 XYZ to RGB (with reference to a specified white point).
 // Result RGB color is gamma corrected using gamma compression.
-func (xyz CIEXYZ) RGB(conversionMatrix XYZtoRGB, gamma float64) color.Color {
+func (xyz CIEXYZ) RGB(conversionMatrix XYZtoRGB, gamma float64) *color.Color {
 	m := conversionMatrix
 	nxyz := xyz.NormalizeYLevel(1.0)
 
@@ -102,7 +102,7 @@ func (xyz CIEXYZ) RGB(conversionMatrix XYZtoRGB, gamma float64) color.Color {
 	gLinear := m[1][0]*nxyz.X + m[1][1]*nxyz.Y + m[1][2]*nxyz.Z
 	bLinear := m[2][0]*nxyz.X + m[2][1]*nxyz.Y + m[2][2]*nxyz.Z
 
-	return color.Color{
+	return &color.Color{
 		R: float32(util.ClampFloat64(0.0, 1.0, GammaCompression(rLinear, gamma))),
 		G: float32(util.ClampFloat64(0.0, 1.0, GammaCompression(gLinear, gamma))),
 		B: float32(util.ClampFloat64(0.0, 1.0, GammaCompression(bLinear, gamma))),
@@ -110,7 +110,7 @@ func (xyz CIEXYZ) RGB(conversionMatrix XYZtoRGB, gamma float64) color.Color {
 	}
 }
 
-func RGBColorToXYZ(c color.Color, conversionMatrix RGBtoXYZ, gamma float64, Ylevel float64) CIEXYZ {
+func RGBColorToXYZ(c *color.Color, conversionMatrix RGBtoXYZ, gamma float64, Ylevel float64) CIEXYZ {
 	m := conversionMatrix
 
 	R := GammaExpansion(float64(c.R), gamma)

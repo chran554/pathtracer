@@ -3,7 +3,7 @@ package obj
 import (
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
+	"pathtracer/internal/pkg/fileformat/wavefront"
 	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -27,6 +27,6 @@ func NewLens(scale float64) *scene.FacetStructure {
 }
 
 func loadLens() *scene.FacetStructure {
-	glass := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "lens.obj"))
+	glass := wavefront.ReadFacetStructureOrPanic(filepath.Join(ObjFileDir, "lens.obj"))
 	return glass
 }

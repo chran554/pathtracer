@@ -1,6 +1,7 @@
 package obj
 
 import (
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec2"
@@ -15,8 +16,8 @@ const (
 	SquareTypeXZPlane                   // Square lower left corner is located at (0,0,0) on axes. Each side is 1 unit in length from [0, 1]. Normal anti-parallel to y-axis (parallel to inverted direction of y-axis).
 )
 
-func NewSquareFacetStructure(squareType SquareType, addTextureCoordinates bool, centerOnOrigin bool) *scene.FacetStructure {
-	fs := &scene.FacetStructure{Facets: NewSquare(squareType, addTextureCoordinates)}
+func NewSquareFacetStructure(squareType SquareType, texture *floatimage.FloatImage, centerOnOrigin bool) *scene.FacetStructure {
+	fs := &scene.FacetStructure{Facets: NewSquare(squareType, texture)}
 	fs.UpdateBounds()
 	if centerOnOrigin {
 		fs.Translate(fs.Bounds.Center().Scale(-1.0))
@@ -24,7 +25,7 @@ func NewSquareFacetStructure(squareType SquareType, addTextureCoordinates bool, 
 	return fs
 }
 
-func NewSquare(squareType SquareType, addTextureCoordinates bool) []*scene.Facet {
+func NewSquare(squareType SquareType, texture *floatimage.FloatImage) []*scene.Facet {
 	p1 := vec3.T{1, 1, 0} // Top right close            3----------2
 	// p2 := vec3.T{1, 1, 1} // Top right away         /          /|         y
 	p3 := vec3.T{0, 1, 1} // Top left away            /          / |         ^
@@ -36,30 +37,26 @@ func NewSquare(squareType SquareType, addTextureCoordinates bool) []*scene.Facet
 
 	switch squareType {
 	case SquareTypeXYPlane:
-		return getSquareFacets(&p8, &p5, &p1, &p4, addTextureCoordinates)
+		return getSquareFacets(&p8, &p5, &p1, &p4, texture)
 	case SquareTypeYZPlane:
-		return getSquareFacets(&p8, &p4, &p3, &p7, addTextureCoordinates)
+		return getSquareFacets(&p8, &p7, &p3, &p4, texture)
 	case SquareTypeXZPlane:
 		fallthrough
 	default:
-		return getSquareFacets(&p8, &p5, &p6, &p7, addTextureCoordinates)
+		return getSquareFacets(&p8, &p5, &p6, &p7, texture)
 	}
 }
 
-// getSquareFacets creates a "four corner facet" using four points (p1,p2,p3,p4).
+// getSquareFacets creates a "four-corner facet" using four points (p1,p2,p3,p4).
 // The result is two triangles side by side (p1,p2,p4) and (p4,p2,p3).
-// Normal direction is calculated as pointing towards observer if the points are listed in counter-clockwise order.
-// No test nor calculation is made that the points are exactly in the same plane.
-func getSquareFacets(p1, p2, p3, p4 *vec3.T, addTextureCoordinates bool) []*scene.Facet {
-	//       p1
-	//       *
-	//      / \
-	//     /   \
-	// p2 *-----* p4
-	//     \   /
-	//      \ /
-	//       *
-	//      p3
+// Normal direction is calculated as pointing towards the observer if the points are listed in counter-clockwise order.
+// No test nor calculation is made that the points are exactly on the same plane.
+func getSquareFacets(p1, p2, p3, p4 *vec3.T, texture *floatimage.FloatImage) []*scene.Facet {
+	//  p4 *---* p3
+	//     |\  |
+	//     | \ |
+	//     |  \|
+	//  p1 *---* p2
 	//
 	// (Normal calculated for each sub-triangle and s aimed towards observer.)
 
@@ -76,9 +73,10 @@ func getSquareFacets(p1, p2, p3, p4 *vec3.T, addTextureCoordinates bool) []*scen
 	facet1 := scene.Facet{Vertices: []*vec3.T{p1, p2, p4}, Normal: &normal1}
 	facet2 := scene.Facet{Vertices: []*vec3.T{p4, p2, p3}, Normal: &normal2}
 
-	if addTextureCoordinates {
-		facet1.TextureCoordinates = []*vec2.T{{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}}
-		facet2.TextureCoordinates = []*vec2.T{{0.0, 1.0}, {1.0, 0.0}, {1.0, 1.0}}
+	if texture != nil {
+		t := &scene.Texture{Type: scene.TextureTypeAlbedo, Strength: 1, Image: texture, Interpolation: floatimage.InterpolationBicubic}
+		facet1.Textures = append(facet1.Textures, &scene.FacetTexture{Texture: t, Coordinates: []*vec2.T{{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}}})
+		facet2.Textures = append(facet2.Textures, &scene.FacetTexture{Texture: t, Coordinates: []*vec2.T{{0.0, 1.0}, {1.0, 0.0}, {1.0, 1.0}}})
 	}
 
 	return []*scene.Facet{&facet1, &facet2}

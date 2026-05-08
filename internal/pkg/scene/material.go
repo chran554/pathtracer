@@ -14,7 +14,7 @@ type Material struct {
 	Diffuse              float64
 	Emission             *color.Color
 	Glossiness           float64 // Glossiness is the percent amount that will make out specular reflection. Values [0.0, 1.0] with default 0.0. The lower value, the more diffuse color will appear, and the higher value, the more mirror reflection will appear.
-	Roughness            float64 // Roughness is the diffuse spread of the specular reflection. Values [0.0, 1.0] with default 0.0. Lower is like "brushed metal" or "foggy/hazy reflection" and higher value gives a more mirror like reflection. A value of 1.0 is perfect mirror reflection and a value of 0.0 is a perfect diffuse material (no mirror at all).
+	Roughness            float64 // Roughness is the diffuse spread of the glossiness (specular reflection). Values [0.0, 1.0] with default 1.0. Higher value is like "brushed metal" or "foggy/hazy reflection" and a lower value gives a more mirror like reflection. A value of 0.0 is perfect mirror reflection and a value of 1.0 is a perfect diffuse material (no mirror at all).
 	Projection           *ImageProjection
 	RefractionIndex      float64
 	SolidObject          bool    // SolidObject is if the material denotes a solid object with volume, not a hollow or open object or object nor an object with plane-thin walls. Solid transparent objects can refract light, hollow objects don't.
@@ -31,8 +31,8 @@ func NewMaterial() *Material {
 		Color:                color.White,
 		Diffuse:              1.0,
 		Emission:             nil,
-		Glossiness:           0.0,
-		Roughness:            1.0,
+		Glossiness:           0.0, // No mirror reflection (specularity)
+		Roughness:            1.0, // Full roughness by default (diffuse spread of specularity)
 		Projection:           nil,
 		RefractionIndex:      RefractionIndex_Air,
 		SolidObject:          false,
@@ -119,14 +119,7 @@ func (m *Material) SP(texture *floatimage.FloatImage, origin *vec3.T, u vec3.T, 
 	return m
 }
 
-// TP is a texture projection
-func (m *Material) TP(texture *floatimage.FloatImage) *Material {
-	textureMappingImageProjection := NewTextureMappingImageProjection(texture)
-	m.Projection = &textureMappingImageProjection
-	return m
-}
-
-// CP is a cylindrical projection properties
+// CP is a cylindrical projection property
 func (m *Material) CP(texture *floatimage.FloatImage, origin *vec3.T, u vec3.T, v vec3.T, repeat bool) *Material {
 	sphericalImageProjection := NewCylindricalImageProjection(texture, origin, u, v)
 	sphericalImageProjection.RepeatV = repeat

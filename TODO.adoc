@@ -1,0 +1,5 @@
+= TODO
+
+* Make `Material.Glossy` (mirrorness) be more visually linear over the range [0, 1].
+* Make `Projection` for `Material` use `[]*Texture` structure.
+* Make Normal maps be stored as textures in materials and facets.

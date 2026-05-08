@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/fileformat/wavefront"
 	"pathtracer/internal/pkg/floatimage"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
 	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -50,7 +50,7 @@ func NewSodaCanTest(scale float64) *scene.FacetStructure {
 }
 
 func loadSodaCan(textureFileName string, tabColor *color.Color, scale float64) *scene.FacetStructure {
-	sodaCan := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "sodacan.obj"))
+	sodaCan := wavefront.ReadFacetStructureOrPanic(filepath.Join(ObjFileDir, "sodacan.obj"))
 	sodaCan.CenterOn(&vec3.Zero)
 
 	ymin := sodaCan.Bounds.Ymin

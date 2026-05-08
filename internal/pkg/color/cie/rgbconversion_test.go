@@ -1,13 +1,14 @@
 package cie
 
 import (
-	"github.com/stretchr/testify/assert"
 	"pathtracer/internal/pkg/color"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestXYZtoRGB(t *testing.T) {
-	c := color.Color{R: 1.0, G: 1.0, B: 1.0, A: 1.0}
+	c := &color.Color{R: 1.0, G: 1.0, B: 1.0, A: 1.0}
 
 	xyz := RGBColorToXYZ(c, SRGB_D65_RGBtoXYZ, 2.4, 100)
 	c1 := xyz.RGB(SRGB_D65_XYZtoRGB, 2.4)

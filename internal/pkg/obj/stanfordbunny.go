@@ -3,7 +3,7 @@ package obj
 import (
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
+	"pathtracer/internal/pkg/fileformat/wavefront"
 	"pathtracer/internal/pkg/scene"
 	"pathtracer/internal/pkg/util"
 
@@ -30,5 +30,5 @@ func NewStanfordBunny(scale float64) *scene.FacetStructure {
 }
 
 func loadStanfordBunny() *scene.FacetStructure {
-	return wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "stanfordbunny.obj"))
+	return wavefront.ReadFacetStructureOrPanic(filepath.Join(ObjFileDir, "stanfordbunny.obj"))
 }

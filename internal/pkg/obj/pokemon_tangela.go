@@ -2,8 +2,8 @@ package obj
 
 import (
 	"path/filepath"
+	"pathtracer/internal/pkg/fileformat/wavefront"
 	"pathtracer/internal/pkg/floatimage"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
 	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -24,5 +24,5 @@ func NewPokemonTangela(scale float64) *scene.FacetStructure {
 }
 
 func loadPokemonTangela() *scene.FacetStructure {
-	return wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "pokemon_tangela.obj"))
+	return wavefront.ReadFacetStructureOrPanic(filepath.Join(ObjFileDir, "pokemon_tangela.obj"))
 }

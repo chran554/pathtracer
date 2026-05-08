@@ -2,7 +2,7 @@ package obj
 
 import (
 	"path/filepath"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
+	"pathtracer/internal/pkg/fileformat/wavefront"
 	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -16,7 +16,7 @@ func NewTree01(scale float64) *scene.FacetStructure {
 }
 
 func loadTree01() *scene.FacetStructure {
-	tree := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "tree/Tree1 - middle.obj"))
+	tree := wavefront.ReadFacetStructureOrPanic(filepath.Join(ObjFileDir, "tree/Tree1 - middle.obj"))
 
 	ymin := tree.Bounds.Ymin
 	ymax := tree.Bounds.Ymax

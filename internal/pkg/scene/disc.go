@@ -95,7 +95,7 @@ func (d *Disc) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.
 
 	panic("Scale of disc is not yet implemented")
 
-	d.UpdateBounds()
+	// d.UpdateBounds()
 }
 
 func (d *Disc) RotateX(rotationOrigin *vec3.T, angle float64) {

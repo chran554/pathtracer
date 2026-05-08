@@ -24,14 +24,17 @@ func NewBoxWithEmission(boxType BoxType, c *color.Color, scaleEmission float64, 
 	box := NewBox(boxType)
 
 	box.Material = scene.NewMaterial().E(c, scaleEmission, true)
-	if texture != nil {
-		box.Material.TP(texture)
+
+	facetTexture := &scene.Texture{Type: scene.TextureTypeAlbedo, Strength: 1, Image: texture, Interpolation: floatimage.InterpolationBicubic}
+	for _, facetStructure := range box.FacetStructures {
+		facetStructure.Facets[0].Textures[0].Texture = facetTexture
+		facetStructure.Facets[1].Textures[0].Texture = facetTexture
 	}
 
 	return box, box.Material
 }
 
-// NewBox return a box which sides all have the unit length 1.
+// NewBox return a box which sides all have the length of 1 unit.
 // Side normals point outwards from each side.
 func NewBox(boxType BoxType) *scene.FacetStructure {
 	p1 := vec3.T{1, 1, 0} // Top right close            3----------2
@@ -94,8 +97,15 @@ func GetRectangleFacets(p1, p2, p3, p4 *vec3.T) []*scene.Facet {
 	normal2 := vec3.Cross(&n2v1, &n2v2)
 	normal2.Normalize()
 
+	t1 := &vec2.T{0, 0}
+	t2 := &vec2.T{1, 0}
+	t3 := &vec2.T{1, 1}
+	t4 := &vec2.T{0, 1}
+
+	textureCoordinates1 := []*vec2.T{t1, t2, t4}
+	textureCoordinates2 := []*vec2.T{t4, t2, t3}
 	return []*scene.Facet{
-		{Vertices: []*vec3.T{p1, p2, p4}, Normal: &normal1, TextureCoordinates: []*vec2.T{{1, 0}, {1, 1}, {0, 0}}},
-		{Vertices: []*vec3.T{p4, p2, p3}, Normal: &normal2, TextureCoordinates: []*vec2.T{{0, 0}, {1, 1}, {0, 1}}},
+		{Vertices: []*vec3.T{p1, p2, p4}, Normal: &normal1, Textures: []*scene.FacetTexture{{Coordinates: textureCoordinates1}}},
+		{Vertices: []*vec3.T{p4, p2, p3}, Normal: &normal2, Textures: []*scene.FacetTexture{{Coordinates: textureCoordinates2}}},
 	}
 }

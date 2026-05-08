@@ -38,9 +38,8 @@ func main() {
 		Name: "backplane",
 		Material: scene.NewMaterial().N("backplane").
 			C(color.NewColor(0.95, 0.95, 0.95)).
-			E(color.White, 0.05, false).
-			TP(textureBackplane),
-		Facets: obj.NewSquare(obj.SquareTypeXYPlane, true),
+			E(color.White, 0.05, false),
+		Facets: obj.NewSquare(obj.SquareTypeXYPlane, textureBackplane),
 	}
 	backplane.Scale(&vec3.Zero, &vec3.T{200, 200, 1})
 	backplane.Translate(&vec3.T{-backplane.Bounds.SizeX() / 2, -backplane.Bounds.SizeY() / 2, 0})

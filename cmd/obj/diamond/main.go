@@ -7,7 +7,7 @@ import (
 	"os"
 	"pathtracer/cmd/obj/diamond/pkg/diamond"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
+	"pathtracer/internal/pkg/fileformat/wavefront"
 	"pathtracer/internal/pkg/scene"
 	"strings"
 )
@@ -41,7 +41,7 @@ func writeDiamondObjFile(filename string, diamond *scene.FacetStructure, comment
 	mtlFile := createFile(filename + ".mtl")
 	defer mtlFile.Close()
 
-	wavefrontobj.WriteObjFile(objFile, mtlFile, diamond, comments)
+	wavefront.WriteObjFile(objFile, mtlFile, diamond, comments)
 	return objFile
 }
 

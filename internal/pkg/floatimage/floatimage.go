@@ -23,9 +23,13 @@ import (
 	"github.com/vmihailenco/msgpack/v5"
 )
 
+const (
+	noHash = ""
+)
+
 type FloatImage struct {
 	name   string
-	pixels []*color.Color
+	pixels []color.Color
 	Width  int
 	Height int
 	_hash  string
@@ -34,13 +38,14 @@ type FloatImage struct {
 func NewFloatImage(name string, width, height int) *FloatImage {
 	floatImage := FloatImage{
 		name:   name,
-		pixels: make([]*color.Color, width*height),
+		pixels: make([]color.Color, width*height),
 		Width:  width,
 		Height: height,
+		_hash:  noHash,
 	}
 
 	for i := range floatImage.pixels {
-		floatImage.pixels[i] = color.Black.Copy()
+		floatImage.pixels[i] = *color.Black
 	}
 
 	return &floatImage
@@ -67,9 +72,10 @@ func (fi *FloatImage) String() string {
 func (fi *FloatImage) Copy() *FloatImage {
 	return &FloatImage{
 		name:   fi.name,
-		pixels: append([]*color.Color{}, fi.pixels...),
+		pixels: append([]color.Color{}, fi.pixels...),
 		Width:  fi.Width,
 		Height: fi.Height,
+		_hash:  fi._hash,
 	}
 }
 
@@ -99,17 +105,24 @@ func (fi *FloatImage) GetPixel(x, y int) *color.Color {
 	if (x >= fi.Width) || (y >= fi.Height) || (x < 0) || (y < 0) {
 		fmt.Printf("Illegal pixel access in image \"%s\" of size (%d x %d). There is no pixel at (%d x %d).\n", fi.name, fi.Width, fi.Height, x, y)
 	}
-	return fi.pixels[y*fi.Width+x]
+	return &fi.pixels[y*fi.Width+x]
 }
 
 func (fi *FloatImage) SetPixel(x, y int, color *color.Color) {
-	fi.pixels[y*fi.Width+x].Set(color)
+	oldValue := fi.pixels[y*fi.Width+x]
+	newValue := *color
+
+	if oldValue != newValue {
+		fi.pixels[y*fi.Width+x] = newValue
+		fi._hash = ""
+	}
 }
 
 func (fi *FloatImage) Fill(color *color.Color) {
 	for i := range fi.pixels {
-		fi.pixels[i].Set(color)
+		fi.pixels[i] = *color
 	}
+	fi._hash = ""
 }
 
 // EmptyPlaceholderImage returns a new FloatImage with the given filename as the name.
@@ -118,6 +131,9 @@ func (fi *FloatImage) Fill(color *color.Color) {
 func EmptyPlaceholderImage(filename string) (*FloatImage, error) {
 	info, err := os.Stat(filename)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, fmt.Errorf("float image file \"%s\" does not exist", filename)
+		}
 		return nil, err
 	}
 
@@ -337,22 +353,16 @@ func writeBinaryInt32(buffer *bytes.Buffer, value int32) {
 
 // GammaEncode (or gamma compression) converts this image with values in linear space to have values in gamma space.
 func (fi *FloatImage) GammaEncode() {
-	for y := 0; y < fi.Height; y++ {
-		for x := 0; x < fi.Width; x++ {
-			linearPixelValue := fi.GetPixel(x, y)
-			gammaPixelValue := linearPixelValue.GammaEncodeSRGB()
-			fi.SetPixel(x, y, gammaPixelValue)
-		}
+	for i := range fi.pixels {
+		fi.pixels[i] = *fi.pixels[i].GammaEncodeSRGB()
 	}
+	fi._hash = noHash
 }
 
 // GammaDecode (or gamma expansion) converts this image with values in gamma space to have values in linear space.
 func (fi *FloatImage) GammaDecode() {
-	for y := 0; y < fi.Height; y++ {
-		for x := 0; x < fi.Width; x++ {
-			gammaPixelValue := fi.GetPixel(x, y)
-			linearPixelValue := gammaPixelValue.GammaDecodeSRGB()
-			fi.SetPixel(x, y, linearPixelValue)
-		}
+	for i := range fi.pixels {
+		fi.pixels[i] = *fi.pixels[i].GammaDecodeSRGB()
 	}
+	fi._hash = noHash
 }

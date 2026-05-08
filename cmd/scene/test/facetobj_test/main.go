@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/fileformat/wavefront"
 	"pathtracer/internal/pkg/floatimage"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
 
@@ -72,7 +72,7 @@ func main() {
 		fmt.Printf("\n\nCostructing frame %d\n", imageIndex)
 		fmt.Printf("Reading file: %s\n", objectFilename)
 
-		facetStructure := wavefrontobj.ReadOrPanic(objectFilename)
+		facetStructure := wavefront.ReadFacetStructureOrPanic(objectFilename)
 
 		facetStructure.UpdateBounds()
 		fmt.Printf("Object in file \"%s\" has bounds %+v.\n", objectFilename, facetStructure.Bounds)

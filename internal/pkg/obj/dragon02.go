@@ -4,7 +4,7 @@ import (
 	"math"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
+	"pathtracer/internal/pkg/fileformat/wavefront"
 	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -46,6 +46,6 @@ func NewDragon02(scale float64, includeDragon bool, includePillar bool) *scene.F
 }
 
 func loadDragon02() *scene.FacetStructure {
-	dragon := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "dragon_02.obj"))
+	dragon := wavefront.ReadFacetStructureOrPanic(filepath.Join(ObjFileDir, "dragon_02.obj"))
 	return dragon
 }

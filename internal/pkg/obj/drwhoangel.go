@@ -3,7 +3,7 @@ package obj
 import (
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/obj/wavefrontobj"
+	"pathtracer/internal/pkg/fileformat/wavefront"
 	"pathtracer/internal/pkg/scene"
 	"pathtracer/internal/pkg/util"
 
@@ -42,6 +42,6 @@ func NewDrWhoAngel(scale float64, includeAngel bool, includePillar bool) *scene.
 }
 
 func loadDrWhoAngel() *scene.FacetStructure {
-	angel := wavefrontobj.ReadOrPanic(filepath.Join(ObjFileDir, "drwhoangel.obj"))
+	angel := wavefront.ReadFacetStructureOrPanic(filepath.Join(ObjFileDir, "drwhoangel.obj"))
 	return angel
 }
