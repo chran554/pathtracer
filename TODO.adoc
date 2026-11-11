@@ -2,4 +2,7 @@
 
 * Make `Material.Glossy` (mirrorness) be more visually linear over the range [0, 1].
 * Make `Projection` for `Material` use `[]*Texture` structure.
-* Make Normal maps be stored as textures in materials and facets.
+* RNM for adding texture normals together (https://blog.selfshadow.com/publications/blending-in-detail/#detail-oriented)
+* Change reflection use `Roughness` and `Metallic` instead of `Glossiniess` and `Roughness`.
+* Add texture support for `Roughness` and `Metallic`.
+* Texture normals for cylindrical projection.
