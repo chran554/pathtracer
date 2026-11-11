@@ -18,6 +18,8 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
+// https://computergraphicsguide.blogspot.com/2015/08/wavefront-obj-file-format-and-normal.html
+
 func Read(objFile *os.File) (*Wavefront, error) {
 	reader := bufio.NewReader(objFile)
 	lines, err := readLines(reader)

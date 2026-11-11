@@ -135,3 +135,21 @@ func KelvinTemperatureCCT(c *Color) float64 {
 
 	return temperature
 }
+
+// KelvinTemperatureCCT2 estimates the correlated color temperature (CCT) of a
+// linear-light sRGB color.
+//
+// The returned CCT is the temperature, in Kelvin, of the nearest Planckian
+// radiator in the CIE 1960 u,v chromaticity diagram. Duv is the signed
+// perpendicular distance from that radiator to the input chromaticity; a
+// positive value is on the high-v side of the Planckian locus. The alpha
+// channel is ignored and RGB scale does not affect the result.
+//
+// The valid result is based on finite, physically usable CIE XYZ values and a
+// distance of at most 0.05 from the Planckian locus. For a finite but
+// non-Planckian color, cct and duv still contain the nearest-locus result while
+// valid is false. Nil, non-finite, zero-luminance, or otherwise unusable input
+// returns zero values and false.
+func KelvinTemperatureCCT2(linearRGB *Color) (cct, duv float64, valid bool) {
+	return kelvinTemperatureCCT2(linearRGB)
+}

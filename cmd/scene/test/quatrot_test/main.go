@@ -43,7 +43,7 @@ func main() {
 	roomScale := 2.0
 	cornellBox := obj.NewWhiteCornellBox(&vec3.T{4 * roomScale, sphereRadius * 4, 4 * roomScale}, true, lightIntensityFactor) // cm, as units. I.e. a 5x3x5m room
 	floorMaterial := cornellBox.GetFirstMaterialByName("Floor")
-	floorMaterial.M(0.01, 0.3).PP(textureGround, &vec3.Zero, vec3.T{1, 0, 0}, vec3.T{0, 0, 1})
+	floorMaterial.M(0.01, 0.3).PP(textureGround, scene.TextureTypeAlbedo, &vec3.Zero, vec3.T{1, 0, 0}, vec3.T{0, 0, 1})
 	floorMaterial.FresnelMaxGlossiness = 0.15
 
 	lamp := scene.NewSphere(&vec3.T{-1.5, sphereRadius * 3, -2}, 0.5, scene.NewMaterial().

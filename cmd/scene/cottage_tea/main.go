@@ -37,7 +37,7 @@ func main() {
 	skyDome := scene.NewSphere(&vec3.T{0, 0, 0}, 200*100, scene.NewMaterial().
 		E(color.White, skyDomeEmission, true).
 		//C(color.NewColorGrey(0.2))).
-		SP(floatimage.LoadOrPanic("textures/equirectangular/331_PDM_BG1.jpg"), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+		SP(floatimage.LoadOrPanic("textures/equirectangular/331_PDM_BG1.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 	// SP("textures/equirectangular/white room 02 612x612.jpg", &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 	skyDome.RotateY(&vec3.Zero, util.DegToRad(-20))
 
@@ -46,7 +46,7 @@ func main() {
 	tableBoard.Translate(&vec3.T{0, -tableBoard.Bounds.Ymax + 80, 0})
 	tableBoard.Material = scene.NewMaterial().
 		C(color.NewColorGrey(1.0)).
-		PP(floatimage.LoadOrPanic("textures/wallpaper/Blossom2_Image_Tile_Item_9471w.jpg"), &vec3.T{0, 0, 0}, vec3.T{60, 0, 0}, vec3.T{0, 0, 40})
+		PP(floatimage.LoadOrPanic("textures/wallpaper/Blossom2_Image_Tile_Item_9471w.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{60, 0, 0}, vec3.T{0, 0, 40})
 
 	wallZ := tableBoard.Bounds.Zmax + 2.0
 
@@ -64,7 +64,7 @@ func main() {
 
 	wall := createWindowWall(wallWidth, wallHeight, windowXPos, windowYPos, windowWidth, windowHeight)
 	wall.Translate(&vec3.T{-wallWidth / 2, 0, wallZ})
-	wall.Material = scene.NewMaterial().PP(floatimage.LoadOrPanic("textures/wallpaper/Slottsteatern_Image_Flatshot_Item_4507.jpg"), &vec3.T{0, 0, 0}, vec3.T{52, 0, 0}, vec3.T{0, 52, 0})
+	wall.Material = scene.NewMaterial().PP(floatimage.LoadOrPanic("textures/wallpaper/Slottsteatern_Image_Flatshot_Item_4507.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{52, 0, 0}, vec3.T{0, 52, 0})
 	//wall.Material = scene.NewMaterial().PP("textures/wallpaper/Ester_Image_Flatshot_Item_7659.jpg", &vec3.T{0, 0, 0}, vec3.T{100, 0, 0}, vec3.T{0, 100, 0})
 	//wall.Material = scene.NewMaterial().PP("textures/wallpaper/RoseGarden_Image_Tile_Item_7464.jpg", &vec3.T{0, 0, 0}, vec3.T{100, 0, 0}, vec3.T{0, 50, 0})
 
@@ -108,7 +108,7 @@ func main() {
 	kitchenDome.Translate(&vec3.T{0, wallHeight / 2, -100})
 	kitchenDome.Material = scene.NewMaterial().
 		E(color.NewColorKelvin(2000), 0.125, true).
-		SP(textureKitchen, kitchenDome.Bounds.Center(), vec3.UnitX.Scaled(-1), vec3.UnitY)
+		SP(textureKitchen, scene.TextureTypeAlbedo, kitchenDome.Bounds.Center(), vec3.UnitX.Scaled(-1), vec3.UnitY)
 
 	scn := scene.NewSceneNode().
 		S(skyDome).

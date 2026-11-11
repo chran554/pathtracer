@@ -20,6 +20,8 @@ func (fi *FloatImage) GetInterpolatedPixelByNormalizedCoordinates(srcX, srcY flo
 	return fi.GetInterpolatedPixel(pixelX, pixelY, interpolation)
 }
 
+// GetInterpolatedPixel gets the pixel value at given coordinates.
+// The color of the pixel is calculated using the requested interpolation.
 func (fi *FloatImage) GetInterpolatedPixel(srcX, srcY float64, interpolation Interpolation) *color.Color {
 	switch interpolation {
 	case InterpolationBilinear:

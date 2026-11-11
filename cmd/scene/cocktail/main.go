@@ -33,7 +33,7 @@ func main() {
 	ceilingLightShade.Scale(&vec3.Zero, &vec3.T{300, 20, 1})
 	ceilingLightShade.Material = scene.NewMaterial().N("ceiling light shade").
 		C(color.White).
-		PP(textureDarkWood, &vec3.T{0, 0, 0}, vec3.UnitY.Scaled(ceilingLightShade.Bounds.SizeY()), vec3.UnitX.Scaled(ceilingLightShade.Bounds.SizeX()/3))
+		PP(textureDarkWood, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitY.Scaled(ceilingLightShade.Bounds.SizeY()), vec3.UnitX.Scaled(ceilingLightShade.Bounds.SizeX()/3))
 	ceilingLightShade.Translate(&vec3.T{-150, 64, -10})
 
 	brickWall := createWall(450.0)
@@ -53,7 +53,7 @@ func main() {
 	bench.Material = scene.NewMaterial().N("ceiling light shade").
 		C(color.White).
 		M(0.50, 0.50).
-		PP(textureDarkWood, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(bench.Bounds.SizeX()/3), vec3.UnitZ.Scaled(bench.Bounds.SizeZ()))
+		PP(textureDarkWood, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(bench.Bounds.SizeX()/3), vec3.UnitZ.Scaled(bench.Bounds.SizeZ()))
 	bench.Translate(&vec3.T{-150, -80, -60})
 
 	lightBoxBlinds := obj.NewLightBox(&vec3.T{200, 150, 1600}, color.KelvinTemperatureColor2(2500), 1000.0, "textures/misc/cocktail/blinds_1_2.png")
@@ -102,11 +102,11 @@ func createCeilingLight(emission float64) *scene.FacetStructure {
 	lightPanel := &scene.FacetStructure{Facets: obj.NewSquare(obj.SquareTypeXZPlane, nil)}
 	lightPanel.Material = scene.NewMaterial().N("light strip").
 		E(color.KelvinTemperatureColor2(3000), emission, true).
-		PP(textureLightStrip, &vec3.T{0, 0, 0}, vec3.UnitX, vec3.UnitZ)
+		PP(textureLightStrip, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX, vec3.UnitZ)
 
 	shadePanel := &scene.FacetStructure{Facets: obj.NewSquare(obj.SquareTypeXZPlane, nil)}
 	shadePanel.Material = scene.NewMaterial().N("shade strip").
-		PP(textureLightStripShade, &vec3.T{0, 0, 0}, vec3.UnitX, vec3.UnitZ)
+		PP(textureLightStripShade, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX, vec3.UnitZ)
 
 	lightPanel.Translate(&vec3.T{0, 4, 0})
 
@@ -131,9 +131,9 @@ func createNeonSign(neonSignWidth float64, coreEmission, haloEmission float64, l
 	core1.Material = scene.NewMaterial().N("core").
 		E(color.White, coreEmission, false).
 		T(1.0, false, scene.RefractionIndex_Air).
-		PP(textureCocktailsNeonSignCore, &lowerLeftCorner, vec3.UnitX.Scaled((neonSignWidth/2)*1.6), vec3.UnitY.Scaled(neonSignWidth/2))
-	core1.Material.Projection.RepeatU = false
-	core1.Material.Projection.RepeatV = false
+		PP(textureCocktailsNeonSignCore, scene.TextureTypeAlbedo, &lowerLeftCorner, vec3.UnitX.Scaled((neonSignWidth/2)*1.6), vec3.UnitY.Scaled(neonSignWidth/2))
+	core1.Material.Projections[0].RepeatU = false
+	core1.Material.Projections[0].RepeatV = false
 	core1.Material.SolidObject = false
 
 	core2.UpdateBounds()
@@ -144,9 +144,9 @@ func createNeonSign(neonSignWidth float64, coreEmission, haloEmission float64, l
 	core2.Material = scene.NewMaterial().N("core").
 		E(color.White, coreEmission*1.5, false).
 		T(1.0, false, scene.RefractionIndex_Air).
-		PP(textureCocktailsNeonSignCore, &lowerLeftCorner, vec3.UnitX.Scaled((neonSignWidth/2)*1.6), vec3.UnitY.Scaled(neonSignWidth/2))
-	core2.Material.Projection.RepeatU = false
-	core2.Material.Projection.RepeatV = false
+		PP(textureCocktailsNeonSignCore, scene.TextureTypeAlbedo, &lowerLeftCorner, vec3.UnitX.Scaled((neonSignWidth/2)*1.6), vec3.UnitY.Scaled(neonSignWidth/2))
+	core2.Material.Projections[0].RepeatU = false
+	core2.Material.Projections[0].RepeatV = false
 	core2.Material.SolidObject = false
 
 	halo.UpdateBounds()
@@ -156,9 +156,9 @@ func createNeonSign(neonSignWidth float64, coreEmission, haloEmission float64, l
 	halo.Material = scene.NewMaterial().N("halo").
 		E(color.White, haloEmission, false).
 		T(1.0, false, scene.RefractionIndex_Air).
-		PP(textureCocktailsNeonSignHalo, &lowerLeftCorner, vec3.UnitX.Scaled((neonSignWidth/2)*1.6), vec3.UnitY.Scaled(neonSignWidth/2))
-	halo.Material.Projection.RepeatU = false
-	halo.Material.Projection.RepeatV = false
+		PP(textureCocktailsNeonSignHalo, scene.TextureTypeAlbedo, &lowerLeftCorner, vec3.UnitX.Scaled((neonSignWidth/2)*1.6), vec3.UnitY.Scaled(neonSignWidth/2))
+	halo.Material.Projections[0].RepeatU = false
+	halo.Material.Projections[0].RepeatV = false
 	halo.Material.SolidObject = false
 
 	sign := &scene.FacetStructure{Name: "sign", FacetStructures: []*scene.FacetStructure{core1, halo}}
@@ -176,7 +176,7 @@ func createWall(wallScale float64) *scene.FacetStructure {
 	wall.ScaleUniform(&vec3.Zero, wallScale)
 	wall.Material = scene.NewMaterial().N("wall").
 		M(0.05, 0.8).
-		PP(textureWallBricks, &vec3.Zero, vec3.UnitX.Scaled(75), vec3.UnitY.Scaled(75))
+		PP(textureWallBricks, scene.TextureTypeAlbedo, &vec3.Zero, vec3.UnitX.Scaled(75), vec3.UnitY.Scaled(75))
 	return wall
 }
 
@@ -188,9 +188,9 @@ func createPoster(posterLocation vec3.T) *scene.FacetStructure {
 	poster.UpdateNormals()
 	poster.Material = scene.NewMaterial().N("poster").
 		M(0.10, 0.2).
-		PP(textureCocktailPoster, &vec3.T{0, 0, 0}, vec3.UnitX, vec3.UnitY)
-	poster.Material.Projection.RepeatU = false
-	poster.Material.Projection.RepeatV = false
+		PP(textureCocktailPoster, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX, vec3.UnitY)
+	poster.Material.Projections[0].RepeatU = false
+	poster.Material.Projections[0].RepeatV = false
 	poster.Material.SolidObject = false
 
 	poster.Scale(&vec3.Zero, &vec3.T{50, 70, 1})

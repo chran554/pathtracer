@@ -134,6 +134,8 @@ func main() {
 	renderMonitor := rendermonitor.NewRenderMonitor()
 	defer renderMonitor.Close()
 
+	startRenderTimestamp := time.Now()
+
 	for frameIndex, frame := range animation.Frames {
 		frameInformation := NewRenderFrameInformation(frame.SceneNode, animation, frame)
 		frameInformation.frameIndex = frameIndex
@@ -152,7 +154,7 @@ func main() {
 		renderedPixelData := floatimage.NewFloatImage(animation.AnimationName, animation.Width, animation.Height)
 		renderedPixelData.Fill(color.NewColorRGBA(0, 0, 0, 0))
 
-		fmt.Println(frameInformationProgressSummary(frameInformation))
+		fmt.Println(frameInformationProgressSummary(frameInformation, startRenderTimestamp))
 		render(frame.Camera, scn, animation.Width, animation.Height, renderedPixelData, renderMonitor)
 
 		fmt.Println("Releasing resources...")
@@ -169,14 +171,15 @@ func main() {
 	fmt.Printf("Total execution time (for %d frames): %s\n", len(animation.Frames), time.Since(startTimestamp))
 }
 
-func frameInformationProgressSummary(frameInformation RenderFrameInformation) string {
+func frameInformationProgressSummary(frameInformation RenderFrameInformation, startRenderTimestamp time.Time) string {
 	animationProgressText := fmt.Sprintf("animation progress, before rendering frame, %.2f%%", (float64(frameInformation.frameIndex)/float64(frameInformation.animationFrameCount))*100.0)
 	animationEstimatedRemainingTimeText := ""
 	if frameInformation.frameIndex > 0 {
-		renderTime := time.Since(frameInformation.renderStartTime)
-		timePerFrame := float64(renderTime) / float64(frameInformation.frameIndex)
-		animationEstimatedRemainingTime := timePerFrame * float64(frameInformation.animationFrameCount-(frameInformation.frameIndex))
-		animationEstimatedRemainingTimeText = fmt.Sprintf(" with %d to go", time.Duration(int64(animationEstimatedRemainingTime)).Round(time.Minute))
+		totalFrameRenderTime := time.Since(startRenderTimestamp)
+		averageFrameRenderTime := float64(totalFrameRenderTime) / float64(frameInformation.frameIndex)
+		animationEstimatedRemainingTime := time.Duration(int64(averageFrameRenderTime * float64(frameInformation.animationFrameCount-(frameInformation.frameIndex))))
+		animationEstimatedRemainingTimeString := animationEstimatedRemainingTime.Round(time.Minute).String()
+		animationEstimatedRemainingTimeText = fmt.Sprintf(" with %s to go", animationEstimatedRemainingTimeString)
 	}
 
 	if frameInformation.animationFrameCount > 1 {
@@ -351,18 +354,20 @@ func deInitializeScene(scene *scene.SceneNode) {
 	discs := scene.GetDiscs()
 
 	for _, disc := range discs {
-		projection := disc.Material.Projection
-		if projection != nil {
-			projection.ClearProjection()
+		if disc.Material != nil {
+			for _, projection := range disc.Material.Projections {
+				projection.ClearProjection()
+			}
 		}
 	}
 
 	spheres := scene.GetSpheres()
 
 	for _, sphere := range spheres {
-		projection := sphere.Material.Projection
-		if projection != nil {
-			projection.ClearProjection()
+		if sphere.Material != nil {
+			for _, projection := range sphere.Material.Projections {
+				projection.ClearProjection()
+			}
 		}
 	}
 }
@@ -650,8 +655,8 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 			}
 		}
 
-		if (textureAlbedoColor == nil) && (ii.material.Projection != nil) {
-			textureAlbedoColor = ii.material.Projection.GetColor(ii.intersectionPoint)
+		if (textureAlbedoColor == nil) && (ii.material.Projections != nil) {
+			textureAlbedoColor = ii.material.ProjectionColor(ii.intersectionPoint, scene.TextureTypeAlbedo)
 		}
 
 		if textureAlbedoColor == nil {
@@ -946,20 +951,37 @@ func processFacetStructureIntersection(ray *scene.Ray, facetStructure *scene.Fac
 			ii.intersectionPoint = tmpIntersectionPoint // Save the intersection point of the closest intersection
 			ii.material = tmpMaterial
 			ii.normalAtIntersection = tmpIntersectionNormal // Should be normalized from initialization
-			ii.intersectedFacet = tmpIntersectionFacet
 			ii.intersectedFacetVertexWeights = tmpIntersectionFacetVertexWeights
-			ii.intersectedSphere = nil
-			ii.intersectedDisc = nil
 
 			if ii.material == nil {
 				ii.material = scene.NewMaterial() // If, for some erroneous reason, there is an intersection without any material, use default (diffuse white).
 				fmt.Printf("Warning: Could not find any material for intersection point on facet structure '%s' ('%s').\n", facetStructure.Name, facetStructure.SubstructureName)
+			} else {
+				accumulatedPerturbedNormal := &vec3.T{}
+				objectNormal := ii.normalAtIntersection
+				objectIntersectionPoint := ii.intersectionPoint
+				for _, projection := range ii.material.ProjectionsOfType(scene.TextureTypeNormalMap) {
+					// Sequentially apply normal perturbation to the object normal and use the new perturbed normal as the object normal for next perturbation
+					// Beware that this can cause the perturbed normal to be bent very close or below the object surface!
+					perturbedNormal := perturbedFacetProjectionNormal(objectIntersectionPoint, objectNormal, projection)
+					objectNormal = perturbedNormal
+					accumulatedPerturbedNormal = objectNormal
+				}
+				if !accumulatedPerturbedNormal.IsZeroEps(0.00001) {
+					ii.perturbedNormalAtIntersection = accumulatedPerturbedNormal.Normalize()
+				}
+
+				// TODO: Add check if the perturbed normal is below object surface/intersection horizon and, if that is the case, mirror the perturbed normal in the intersection point surface/horizon plane (maybe with an extra small raised epsilon angle to the original object surface normal).
 			}
 
 			if vec3.Dot(ii.normalAtIntersection, tmpIntersectionFacet.Normal) < 0 {
 				//normalAngle := vec3.Angle(ii.normalAtIntersection, tmpIntersectionFacet.Normal)
 				//fmt.Println("Illegal facet inter normal angle (interpolated normal and normal) (in degrees): ", util.RadToDeg(normalAngle))
 			}
+
+			ii.intersectedFacet = tmpIntersectionFacet
+			ii.intersectedSphere = nil
+			ii.intersectedDisc = nil
 		}
 	}
 }
@@ -1008,41 +1030,21 @@ func processSphereIntersection(ray *scene.Ray, sphere *scene.Sphere, ii *Interse
 			ii.normalAtIntersection = sphere.Normal(ii.intersectionPoint)
 
 			if ii.material != nil {
-				projection := ii.material.Projection
-
-				// If a normal map exists, apply normal perturbation
-				if projection != nil && projection.NormalMap != nil {
-					// Find the tangent of an intersection point on a sphere
-					// https://computergraphics.stackexchange.com/questions/5498/compute-sphere-tangent-for-normal-mapping
-
-					// Construct TBN base vectors (tangent, bitangent, normal)
-					N := *ii.normalAtIntersection
-					N.Normalize()           // Needed?
-					N[1], N[2] = N[2], N[1] // Convert to a right-handed coordinate system
-
-					T := *projection.V      // Convert to a right-handed coordinate system. Should really be a setting of a temporary V rather than T, but T is set immediately for efficiency as it should have V as the default value.
-					T[1], T[2] = T[2], T[1] // Convert to a right-handed coordinate system
-					if vec3.Dot(&T, &N) != 0 {
-						T = vec3.Cross(&T, &N)
-					}
-					T.Normalize()
-
-					B := vec3.Cross(&N, &T)
-					B.Normalize()
-
-					mapNormal := projection.GetNormal(ii.intersectionPoint)
-
-					baseTBN := mat3.T{T, B, N}
-					perturbedNormal := baseTBN.MulVec3(mapNormal)
-					perturbedNormal.Normalize()
-					perturbedNormal[1], perturbedNormal[2] = perturbedNormal[2], perturbedNormal[1] // Convert to a left-handed coordinate system
-
-					//if vec3.Dot(ii.normalAtIntersection, &perturbedNormal) < 0 {
-					//	perturbedNormal = *ii.normalAtIntersection
-					//}
-
-					ii.perturbedNormalAtIntersection = &perturbedNormal
+				accumulatedPerturbedNormal := &vec3.T{}
+				objectNormal := ii.normalAtIntersection
+				objectIntersectionPoint := ii.intersectionPoint
+				for _, projection := range ii.material.ProjectionsOfType(scene.TextureTypeNormalMap) {
+					// Sequentially apply normal perturbation to the object normal and use the new perturbed normal as the object normal for next perturbation
+					// Beware that this can cause the perturbed normal to be bent very close or below the object surface!
+					perturbedNormal := perturbedSphereProjectionNormal(objectIntersectionPoint, objectNormal, projection)
+					objectNormal = perturbedNormal
+					accumulatedPerturbedNormal = objectNormal
 				}
+				if !accumulatedPerturbedNormal.IsZero() {
+					ii.perturbedNormalAtIntersection = accumulatedPerturbedNormal.Normalize()
+				}
+
+				// TODO: Add check if the perturbed normal is below object surface/intersection horizon and, if that is the case, mirror the perturbed normal in the intersection point surface/horizon plane (maybe with an extra small raised epsilon angle to the original object surface normal).
 			}
 
 			ii.intersectedFacet = nil
@@ -1055,6 +1057,83 @@ func processSphereIntersection(ray *scene.Ray, sphere *scene.Sphere, ii *Interse
 			//}
 		}
 	}
+}
+
+// perturbedFacetProjectionNormal calculates the perturbed normal (by normal map texture) for a facet intersection point and normal.
+func perturbedFacetProjectionNormal(objectIntersectionPoint *vec3.T, objectNormal *vec3.T, projection *scene.ImageProjection) (perturbedNormal *vec3.T) {
+	mapNormal := projection.GetNormal(objectIntersectionPoint)
+
+	if mapNormal == nil {
+		return objectNormal
+	}
+
+	mapNormal.Mul(&vec3.T{projection.Texture.Strength, projection.Texture.Strength, 1.0})
+
+	// TBN base vectors (T tangent, B bitangent, N normal)
+	var T, B, N vec3.T
+
+	// Construct TBN base vectors (tangent, bitangent, normal)
+	N = *objectNormal
+	N.Normalize()           // Needed?
+	N[1], N[2] = N[2], N[1] // Convert to a right-handed coordinate system
+
+	// U is the projection vector that define the textures projected increasing x direction.
+	T = *projection.U       // Should really be a setting of a temporary U rather than T, but T is set immediately for efficiency as it should have U as the default value.
+	T[1], T[2] = T[2], T[1] // Convert to a right-handed coordinate system
+
+	// Make T orthogonal to N (and B)
+	B = vec3.Cross(&N, &T)
+	B.Normalize()
+	T = vec3.Cross(&B, &N)
+	T.Normalize()
+
+	baseTBN := mat3.T{T, B, N}
+	perturbedNormal_ := baseTBN.MulVec3(mapNormal)
+	perturbedNormal = &perturbedNormal_
+	perturbedNormal[1], perturbedNormal[2] = perturbedNormal[2], perturbedNormal[1] // Convert to a left-handed coordinate system
+
+	perturbedNormal.Normalize()
+
+	return perturbedNormal
+}
+
+func perturbedSphereProjectionNormal(objectIntersectionPoint *vec3.T, objectNormal *vec3.T, projection *scene.ImageProjection) (perturbedNormal *vec3.T) {
+	// Find the tangent of an intersection point on a sphere
+	// https://computergraphics.stackexchange.com/questions/5498/compute-sphere-tangent-for-normal-mapping
+
+	mapNormal := projection.GetNormal(objectIntersectionPoint)
+
+	if mapNormal == nil {
+		return objectNormal
+	}
+
+	mapNormal.Mul(&vec3.T{projection.Texture.Strength, projection.Texture.Strength, 1.0})
+
+	// TBN base vectors (T tangent, B bitangent, N normal)
+	var T, B, N vec3.T
+
+	// Construct TBN base vectors (tangent, bitangent, normal)
+	N = *objectNormal
+	N.Normalize()           // Needed?
+	N[1], N[2] = N[2], N[1] // Convert to a right-handed coordinate system
+
+	B = *projection.V       // Should really be a setting of a temporary V rather than T, but T is set immediately for efficiency as it should have V as the default value.
+	B[1], B[2] = B[2], B[1] // Convert to a right-handed coordinate system
+
+	// Make T orthogonal to N (and B)
+	T = vec3.Cross(&B, &N)
+	T.Normalize()
+	B = vec3.Cross(&N, &T)
+	B.Normalize()
+
+	baseTBN := mat3.T{T, B, N}
+	perturbedNormal_ := baseTBN.MulVec3(mapNormal)
+	perturbedNormal = &perturbedNormal_
+	perturbedNormal[1], perturbedNormal[2] = perturbedNormal[2], perturbedNormal[1] // Convert to a left-handed coordinate system
+
+	perturbedNormal.Normalize()
+
+	return perturbedNormal
 }
 
 func getReflectionVector(normal *vec3.T, incomingVector *vec3.T) *vec3.T {

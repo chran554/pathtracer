@@ -408,21 +408,14 @@ func (s *serializer) serializeProjection(projection *scene.ImageProjection) (*Pr
 		return nil, nil
 	}
 
-	imageResourceIndex, err := s.fileResourceIndex(projection.Image)
-	if err != nil {
-		return nil, err
-	}
-
-	normalMapResourceIndex, err := s.fileResourceIndex(projection.NormalMap)
+	textureIndex, err := s.textureIndex(projection.Texture)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Projection{
-		ProjectionType: string(projection.ProjectionType),
-		Image:          imageResourceIndex,
-		Interpolation:  string(projection.Interpolation),
-		NormalMap:      normalMapResourceIndex,
+		ProjectionType: string(projection.Type),
+		Texture:        []TextureIndex{textureIndex},
 		Origin:         s.vectorIndex(projection.Origin),
 		U:              s.vectorIndex(projection.U),
 		V:              s.vectorIndex(projection.V),

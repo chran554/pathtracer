@@ -98,10 +98,10 @@ func GetCornellBox(scale *vec3.T, lightIntensityFactor float64) *scene.FacetStru
 	textureWalls := floatimage.LoadOrPanic("textures/wallpaper/anemone-rose-flower-eucalyptus-leaves-pampas-grass.png")
 	textureFloor := floatimage.LoadOrPanic("textures/floor/7451-diffuse 02.png")
 
-	backWallMaterial := cornellBox.Material.Copy().PP(textureWalls, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale[0]), vec3.UnitY.Scaled(scale[0]*0.66))
-	leftWallMaterial := cornellBox.Material.Copy().C(color.NewColor(0.75, 0.75, 1.0)).PP(textureWalls, &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(scale[0]), vec3.UnitY.Scaled(scale[0]*0.66))
-	rightWallMaterial := cornellBox.Material.Copy().C(color.NewColor(1.0, 0.75, 0.75)).PP(textureWalls, &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(-scale[0]), vec3.UnitY.Scaled(scale[0]*0.66))
-	floorMaterial := cornellBox.Material.Copy().PP(textureFloor, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale[0]*0.25), vec3.UnitZ.Scaled(scale[0]*0.25))
+	backWallMaterial := cornellBox.Material.Copy().PP(textureWalls, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale[0]), vec3.UnitY.Scaled(scale[0]*0.66))
+	leftWallMaterial := cornellBox.Material.Copy().C(color.NewColor(0.75, 0.75, 1.0)).PP(textureWalls, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(scale[0]), vec3.UnitY.Scaled(scale[0]*0.66))
+	rightWallMaterial := cornellBox.Material.Copy().C(color.NewColor(1.0, 0.75, 0.75)).PP(textureWalls, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(-scale[0]), vec3.UnitY.Scaled(scale[0]*0.66))
+	floorMaterial := cornellBox.Material.Copy().PP(textureFloor, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale[0]*0.25), vec3.UnitZ.Scaled(scale[0]*0.25))
 
 	lampMaterial := scene.NewMaterial().N("Lamp").
 		C(color.White).

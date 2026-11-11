@@ -38,7 +38,7 @@ func main() {
 	textureSkyDome := floatimage.LoadOrPanic("textures/equirectangular/331_PDM_BG1.jpg")
 	skyDome := scene.NewSphere(&vec3.T{0, 0, 0}, 2000, scene.NewMaterial().
 		E(color.White, 0.8, true).
-		SP(textureSkyDome, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+		SP(textureSkyDome, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 	skyDome.RotateY(&vec3.Zero, util.DegToRad(-20))
 
 	backplane := &scene.FacetStructure{

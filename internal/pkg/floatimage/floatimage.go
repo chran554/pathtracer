@@ -174,7 +174,7 @@ func LoadOrPanic(filename string) *FloatImage {
 }
 
 // Read reads an image from the given reader.
-// No gama correction is applied.
+// No gamma correction is applied.
 func Read(imageName string, r io.Reader) (*FloatImage, error) {
 	image, _, err := img.Decode(r)
 	if err != nil {
@@ -186,7 +186,7 @@ func Read(imageName string, r io.Reader) (*FloatImage, error) {
 }
 
 // ConvertImageToFloatImage converts an image.Image to a FloatImage.
-// No gama correction is applied.
+// No gamma correction is applied.
 func ConvertImageToFloatImage(imageName string, textureImage img.Image) *FloatImage {
 	width := textureImage.Bounds().Max.X
 	height := textureImage.Bounds().Max.Y
@@ -209,7 +209,7 @@ func ConvertImageToFloatImage(imageName string, textureImage img.Image) *FloatIm
 			endY := (height * (i + 1)) / numCPU
 
 			for y := startY; y < endY; y++ {
-				for x := 0; x < width; x++ {
+				for x := range width {
 					c1 := textureImage.At(x, y)
 					nrgbaColor := col.NRGBAModel.Convert(c1).(col.NRGBA)
 
@@ -240,8 +240,8 @@ func WriteImage(filename string, floatImage *FloatImage) {
 	image := img.NewNRGBA(img.Rect(0, 0, width, height))
 	// imageAlpha := img.NewRGBA(img.Rect(0, 0, width, height))
 
-	for x := 0; x < width; x++ {
-		for y := 0; y < height; y++ {
+	for x := range width {
+		for y := range height {
 			pixelValue := tmp.GetPixel(x, y)
 
 			r := uint8(util.ClampFloat64(0, 255, math.Round(float64(pixelValue.R)*255.0)))

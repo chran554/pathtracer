@@ -57,7 +57,7 @@ func main() {
 		skyDomeOrigin := vec3.T{0, 0, 0}
 		skyDomeMaterial := scene.NewMaterial().
 			E(color.White, skyDomeEmissionFactor, true).
-			SP(environmentEnvironMap, &skyDomeOrigin, vec3.T{-0.75, 0, -0.25}, vec3.T{0, 1, 0})
+			SP(environmentEnvironMap, scene.TextureTypeAlbedo, &skyDomeOrigin, vec3.T{-0.75, 0, -0.25}, vec3.T{0, 1, 0})
 		skyDome := scene.NewSphere(&skyDomeOrigin, skyDomeRadius, skyDomeMaterial).N("Environment mapping")
 
 		cameraOrigin := ballsBounds.Center().Add(&vec3.T{0, ballsBounds.SizeY() * 1.5 / 10.0, -800})

@@ -52,8 +52,8 @@ func main() {
 	solarSystemOrigin := &vec3.T{0, 0, 0}
 
 	spaceMaterial := scene.NewMaterial().N("space")
-	spaceMaterial.SP(textureSpace, copy(solarSystemOrigin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
-	spaceMaterial.Projection.Interpolation = floatimage.InterpolationBicubic
+	spaceMaterial.SP(textureSpace, scene.TextureTypeAlbedo, copy(solarSystemOrigin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+	spaceMaterial.Projections[0].Texture.Interpolation = floatimage.InterpolationBicubic
 	spaceMaterial.E(color.White, 1.0, true)
 	spaceMaterial.FresnelMaxGlossiness = 0.0
 	spaceEnvironment := scene.NewSphere(copy(solarSystemOrigin), spaceRadius, spaceMaterial)
@@ -69,7 +69,7 @@ func main() {
 	earth := createEarth(earthRadius, earthPosition)
 
 	moonMaterial := scene.NewMaterial().N("moon")
-	moonMaterial.SP(textureMoon, copy(solarSystemOrigin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+	moonMaterial.SP(textureMoon, scene.TextureTypeAlbedo, copy(solarSystemOrigin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
 	//moonMaterial.E(color.White, 1.0, true)
 	moonMaterial.FresnelMaxGlossiness = 0.0
 	moon := scene.NewSphere(copy(solarSystemOrigin), moonRadius*3, moonMaterial)
@@ -149,33 +149,42 @@ func createEarth(radius float64, position *vec3.T) *scene.SceneNode {
 	origin := &vec3.Zero
 
 	earthMantleMaterial := scene.NewMaterial().N("earth").C(color.NewColor(1.0, 1.0, 1.0))
-	earthMantleMaterial.SP(textureEarthDay, copy(origin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
-	earthMantleMaterial.Projection.Interpolation = floatimage.InterpolationBicubic
 	earthMantleMaterial.FresnelMaxGlossiness = 0.0
 	earthMantleMaterial.M(0.5, 0.3)
-	earthMantleMaterial.Projection.NormalMap = textureEarthNormalMap
+
+	// Earth day texture
+	earthMantleMaterial.SP(textureEarthDay, scene.TextureTypeAlbedo, copy(origin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+	earthMantleMaterial.Projections[0].Texture.Interpolation = floatimage.InterpolationBicubic
+
+	// Earth normal map texture
+	earthMantleMaterial.SP(textureEarthNormalMap, scene.TextureTypeNormalMap, copy(origin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+	earthMantleMaterial.Projections[1].Texture.Interpolation = floatimage.InterpolationBicubic
+
 	earthMantle := scene.NewSphere(copy(origin), radius, earthMantleMaterial)
 	earthMantle.Translate(position)
 
 	earthCloudMaterial := scene.NewMaterial().N("earth clouds").C(color.NewColor(1.0, 1.0, 1.0))
-	earthCloudMaterial.SP(textureEarthCloud, copy(origin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
-	earthCloudMaterial.Projection.Interpolation = floatimage.InterpolationBicubic
 	earthCloudMaterial.FresnelMaxGlossiness = 0.0
+	earthCloudMaterial.SP(textureEarthCloud, scene.TextureTypeAlbedo, copy(origin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+	earthCloudMaterial.Projections[0].Texture.Interpolation = floatimage.InterpolationBicubic
+
 	earthCloud := scene.NewSphere(copy(origin), radius+0.01, earthCloudMaterial)
 	earthCloud.Translate(position)
 
 	earthSpecMaterial := scene.NewMaterial().N("earth specular").C(color.NewColor(1.0, 1.0, 1.0))
-	earthSpecMaterial.SP(textureEarthSpec, copy(origin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
 	earthSpecMaterial.M(0.05, 0.4)
 	earthSpecMaterial.FresnelMaxGlossiness = 0.0
+	earthSpecMaterial.SP(textureEarthSpec, scene.TextureTypeAlbedo, copy(origin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+
 	earthSpec := scene.NewSphere(copy(origin), radius+0.001, earthSpecMaterial)
 	earthSpec.Translate(position)
 
 	earthLightsMaterial := scene.NewMaterial().N("earth lights").C(color.NewColor(1.0, 1.0, 1.0))
-	earthLightsMaterial.SP(textureEarthLights, copy(origin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
-	earthLightsMaterial.Projection.Interpolation = floatimage.InterpolationBicubic
 	earthLightsMaterial.E(color.White, 1.5, false)
 	earthLightsMaterial.FresnelMaxGlossiness = 0.0
+	earthLightsMaterial.SP(textureEarthLights, scene.TextureTypeAlbedo, copy(origin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+	earthLightsMaterial.Projections[0].Texture.Interpolation = floatimage.InterpolationBicubic
+
 	earthLights := scene.NewSphere(copy(origin), radius+0.05, earthLightsMaterial)
 	earthLights.Translate(position)
 

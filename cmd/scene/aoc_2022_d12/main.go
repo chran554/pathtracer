@@ -39,7 +39,7 @@ func main() {
 	skyDomeOrigin := &vec3.T{0, 0, 0}
 	skyDomeMaterial := scene.NewMaterial().
 		E(color.White, environmentEmissionFactor, true).
-		SP(environmentEnvironMap, skyDomeOrigin, vec3.T{-0.55, 0, -0.45}, vec3.T{0, 1, 0})
+		SP(environmentEnvironMap, scene.TextureTypeAlbedo, skyDomeOrigin, vec3.T{-0.55, 0, -0.45}, vec3.T{0, 1, 0})
 	skyDome := scene.NewSphere(skyDomeOrigin, environmentRadius, skyDomeMaterial).N("sky dome")
 
 	//moonColor := color.NewColor(0.9, 0.9, 1.0)
@@ -51,7 +51,7 @@ func main() {
 	//sun := scene.NewSphere(&vec3.T{3000, 600, 1600}, 400, sunMaterial).N("sun")
 
 	// Ground
-	groundMaterial := scene.NewMaterial().N("Ground material").PP(floatimage.LoadOrPanic("textures/ground/soil-cracked.png"), &vec3.Zero, vec3.UnitX.Scaled(150*3), vec3.UnitZ.Scaled(150*3))
+	groundMaterial := scene.NewMaterial().N("Ground material").PP(floatimage.LoadOrPanic("textures/ground/soil-cracked.png"), scene.TextureTypeAlbedo, &vec3.Zero, vec3.UnitX.Scaled(150*3), vec3.UnitZ.Scaled(150*3))
 	ground := scene.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
 
 	mapTextLines, _ := readLines("cmd/scene/aoc_2022_d12/resources/map.txt")
@@ -76,7 +76,7 @@ func main() {
 		C(color.White).
 		E(color.White, 1.5, false).
 		M(0.2, 0.3).
-		SP(floatimage.LoadOrPanic("textures/planets/sun.jpg"), &vec3.T{1540 / 2, -1540 / 2, 820 / 2}, vec3.UnitX.Scaled(-100), vec3.UnitZ.Scaled(100))
+		SP(floatimage.LoadOrPanic("textures/planets/sun.jpg"), scene.TextureTypeAlbedo, &vec3.T{1540 / 2, -1540 / 2, 820 / 2}, vec3.UnitX.Scaled(-100), vec3.UnitZ.Scaled(100))
 
 	pathMaterial := scene.NewMaterial().
 		C(pathColor).

@@ -47,7 +47,7 @@ func main() {
 	environmentSphere := scene.NewSphere(&vec3.T{0, 0, 0}, 1700, scene.NewMaterial().
 		E(color.White, 1, true).
 		//C(color.NewColorGrey(0.2))).
-		SP(textureEnvironment, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+		SP(textureEnvironment, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 
 	scn := scene.NewSceneNode().FS(cornellBox).S(environmentSphere)
 
@@ -86,7 +86,7 @@ func main() {
 				textureOrigin := sphereOrigin.Added(&vec3.T{-ballRadius, -ballRadius, 0})
 				sphereMaterial.
 					C(color.NewColorGrey(0.8)).
-					PP(texturePixarBall, &textureOrigin, vec3.UnitX.Scaled(ballRadius*2), vec3.UnitY.Scaled(ballRadius*2))
+					PP(texturePixarBall, scene.TextureTypeAlbedo, &textureOrigin, vec3.UnitX.Scaled(ballRadius*2), vec3.UnitY.Scaled(ballRadius*2))
 
 				sphere.RotateY(sphereOrigin, util.DegToRad(40))
 				sphere.RotateX(sphereOrigin, util.DegToRad(-10))

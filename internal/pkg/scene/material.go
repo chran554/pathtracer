@@ -15,7 +15,7 @@ type Material struct {
 	Emission             *color.Color
 	Glossiness           float64 // Glossiness is the percent amount that will make out specular reflection. Values [0.0, 1.0] with default 0.0. The lower value, the more diffuse color will appear, and the higher value, the more mirror reflection will appear.
 	Roughness            float64 // Roughness is the diffuse spread of the glossiness (specular reflection). Values [0.0, 1.0] with default 1.0. Higher value is like "brushed metal" or "foggy/hazy reflection" and a lower value gives a more mirror like reflection. A value of 0.0 is perfect mirror reflection and a value of 1.0 is a perfect diffuse material (no mirror at all).
-	Projection           *ImageProjection
+	Projections          []*ImageProjection
 	RefractionIndex      float64
 	SolidObject          bool    // SolidObject is if the material denotes a solid object with volume, not a hollow or open object or object nor an object with plane-thin walls. Solid transparent objects can refract light, hollow objects don't.
 	Transparency         float64 // Transparency is the amount [0,1.0) of transparency vs diffuse contribution.
@@ -33,7 +33,7 @@ func NewMaterial() *Material {
 		Emission:             nil,
 		Glossiness:           0.0, // No mirror reflection (specularity)
 		Roughness:            1.0, // Full roughness by default (diffuse spread of specularity)
-		Projection:           nil,
+		Projections:          nil,
 		RefractionIndex:      RefractionIndex_Air,
 		SolidObject:          false,
 		Transparency:         0.0,
@@ -92,14 +92,17 @@ func (m *Material) T(transparency float64, solidObject bool, refractionIndex flo
 
 // P is projection properties
 func (m *Material) P(projection *ImageProjection) *Material {
-	m.Projection = projection
+	if m.Projections == nil {
+		m.Projections = make([]*ImageProjection, 0)
+	}
+	m.Projections = append(m.Projections, projection)
 	return m
 }
 
 // PP is a parallel projection property
-func (m *Material) PP(texture *floatimage.FloatImage, origin *vec3.T, u vec3.T, v vec3.T) *Material {
-	parallelImageProjection := NewParallelImageProjection(texture, origin, u, v)
-	m.Projection = &parallelImageProjection
+func (m *Material) PP(texture *floatimage.FloatImage, textureType TextureType, origin *vec3.T, u vec3.T, v vec3.T) *Material {
+	parallelImageProjection := NewParallelImageProjection(texture, textureType, origin, u, v)
+	m.Projections = append(m.Projections, &parallelImageProjection)
 	return m
 }
 
@@ -113,18 +116,56 @@ func (m *Material) PP(texture *floatimage.FloatImage, origin *vec3.T, u vec3.T, 
 //
 // v vector is the "up" vector of the projection.
 // The intersection point on the sphere (of the v vector) corresponds to the pixel row at the top of the texture.
-func (m *Material) SP(texture *floatimage.FloatImage, origin *vec3.T, u vec3.T, v vec3.T) *Material {
-	sphericalImageProjection := NewSphericalImageProjection(texture, origin, u, v)
-	m.Projection = &sphericalImageProjection
+func (m *Material) SP(texture *floatimage.FloatImage, textureType TextureType, origin *vec3.T, u vec3.T, v vec3.T) *Material {
+	sphericalImageProjection := NewSphericalImageProjection(texture, textureType, origin, u, v)
+	m.Projections = append(m.Projections, &sphericalImageProjection)
 	return m
 }
 
 // CP is a cylindrical projection property
-func (m *Material) CP(texture *floatimage.FloatImage, origin *vec3.T, u vec3.T, v vec3.T, repeat bool) *Material {
-	sphericalImageProjection := NewCylindricalImageProjection(texture, origin, u, v)
+func (m *Material) CP(texture *floatimage.FloatImage, textureType TextureType, origin *vec3.T, u vec3.T, v vec3.T, repeat bool) *Material {
+	sphericalImageProjection := NewCylindricalImageProjection(texture, textureType, origin, u, v)
 	sphericalImageProjection.RepeatV = repeat
-	m.Projection = &sphericalImageProjection
+	m.Projections = append(m.Projections, &sphericalImageProjection)
 	return m
+}
+
+// ProjectionColor return the image projection color for a texture of matching type.
+//
+// Return value may be nil as no Projections might be defined for the material,
+// no matching texture of requested type is available,
+// or no valid projected color is defined for the point
+// (i.e. the point is outside the projected area of the texture).
+func (m *Material) ProjectionColor(point *vec3.T, textureType TextureType) *color.Color {
+	var c *color.Color
+	for _, projection := range m.Projections {
+		if projection.Texture == nil {
+			continue
+		}
+
+		if projection.Texture.Type == textureType {
+			col := projection.GetColor(point)
+			if col != nil {
+				if c == nil {
+					c = col.Copy()
+				} else {
+					c.Over(col)
+				}
+			}
+		}
+	}
+
+	return c
+}
+
+func (m *Material) ProjectionsOfType(textureType TextureType) []*ImageProjection {
+	var projections []*ImageProjection
+	for _, projection := range m.Projections {
+		if projection.Texture != nil && projection.Texture.Type == textureType {
+			projections = append(projections, projection)
+		}
+	}
+	return projections
 }
 
 func NewMaterialGlass(name string) *Material {

@@ -48,22 +48,22 @@ func main() {
 	cornellBox.RemoveObjectsByName("Lamp")
 
 	floorMaterial := cornellBox.GetFirstMaterialByName("Floor")
-	floorMaterial.M(0.01, 0.3).PP(textureGround, &vec3.Zero, vec3.T{4, 0, 0}, vec3.T{0, 0, 4})
+	floorMaterial.M(0.01, 0.3).PP(textureGround, scene.TextureTypeAlbedo, &vec3.Zero, vec3.T{4, 0, 0}, vec3.T{0, 0, 4})
 	floorMaterial.FresnelMaxGlossiness = 0.15
 
 	wallpaperZoomFactor := 1.0
 	wallpaperSize := cornellBox.Bounds.SizeY() / wallpaperZoomFactor
 
 	leftWallMaterial := cornellBox.GetFirstMaterialByName("Left")
-	leftWallMaterial.PP(textureWall, &vec3.T{0, cornellBox.Bounds.Ymin, cornellBox.Bounds.Zmin}, vec3.T{0, wallpaperSize, 0}, vec3.T{0, 0, wallpaperSize})
+	leftWallMaterial.PP(textureWall, scene.TextureTypeAlbedo, &vec3.T{0, cornellBox.Bounds.Ymin, cornellBox.Bounds.Zmin}, vec3.T{0, wallpaperSize, 0}, vec3.T{0, 0, wallpaperSize})
 	leftWallMaterial.FresnelMaxGlossiness = 0.15
 
 	rightWallMaterial := cornellBox.GetFirstMaterialByName("Right")
-	rightWallMaterial.PP(textureWall, &vec3.T{0, cornellBox.Bounds.Ymin, cornellBox.Bounds.Zmin}, vec3.T{0, wallpaperSize, 0}, vec3.T{0, 0, wallpaperSize})
+	rightWallMaterial.PP(textureWall, scene.TextureTypeAlbedo, &vec3.T{0, cornellBox.Bounds.Ymin, cornellBox.Bounds.Zmin}, vec3.T{0, wallpaperSize, 0}, vec3.T{0, 0, wallpaperSize})
 	rightWallMaterial.FresnelMaxGlossiness = 0.15
 
 	backWallMaterial := cornellBox.GetFirstMaterialByName("Back")
-	backWallMaterial.PP(textureWall, &vec3.T{cornellBox.Bounds.Xmin, cornellBox.Bounds.Ymin, 0}, vec3.T{0, wallpaperSize, 0}, vec3.T{wallpaperSize, 0, 0})
+	backWallMaterial.PP(textureWall, scene.TextureTypeAlbedo, &vec3.T{cornellBox.Bounds.Xmin, cornellBox.Bounds.Ymin, 0}, vec3.T{0, wallpaperSize, 0}, vec3.T{wallpaperSize, 0, 0})
 	backWallMaterial.FresnelMaxGlossiness = 0.15
 
 	ceilingMaterial := cornellBox.GetFirstMaterialByName("Ceiling").C(color.NewColor(1.0, 1.0, 1.0).Multiply(0.90))
@@ -112,8 +112,8 @@ func main() {
 		animationProgress := float64(frameIndex) / float64(amountAnimationFrames)
 
 		s1Material := sphereMaterial.Copy()
-		s1Material.SP(textureSphere, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
-		s1Material.Projection.NormalMap = textureNormals
+		s1Material.SP(textureSphere, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+		s1Material.SP(textureNormals, scene.TextureTypeNormalMap, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
 
 		s1 := scene.NewSphere(&vec3.T{0, 0, 0}, sphereRadius, s1Material)
 		s1.RotateY(s1.Bounds().Center(), util.DegToRad(animationProgress*360)) // TODO remove

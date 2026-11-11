@@ -44,16 +44,16 @@ func main() {
 	cornellBoxUnit := cornellBox.Bounds.SizeY() / 2
 
 	leftWall := cornellBox.GetFirstObjectByMaterialName("Left")
-	leftWall.Material = scene.NewMaterial().N("Left").PP(wallTexture, &vec3.T{leftWall.Bounds.Xmin, leftWall.Bounds.Ymin, leftWall.Bounds.Zmin}, vec3.UnitZ.Scaled(cornellBoxUnit), vec3.UnitY.Scaled(cornellBoxUnit))
+	leftWall.Material = scene.NewMaterial().N("Left").PP(wallTexture, scene.TextureTypeAlbedo, &vec3.T{leftWall.Bounds.Xmin, leftWall.Bounds.Ymin, leftWall.Bounds.Zmin}, vec3.UnitZ.Scaled(cornellBoxUnit), vec3.UnitY.Scaled(cornellBoxUnit))
 
 	rightWall := cornellBox.GetFirstObjectByMaterialName("Right")
-	rightWall.Material = scene.NewMaterial().N("Right").PP(wallTexture, &vec3.T{rightWall.Bounds.Xmax, rightWall.Bounds.Ymin, rightWall.Bounds.Zmax}, vec3.UnitZ.Scaled(-cornellBoxUnit), vec3.UnitY.Scaled(cornellBoxUnit))
+	rightWall.Material = scene.NewMaterial().N("Right").PP(wallTexture, scene.TextureTypeAlbedo, &vec3.T{rightWall.Bounds.Xmax, rightWall.Bounds.Ymin, rightWall.Bounds.Zmax}, vec3.UnitZ.Scaled(-cornellBoxUnit), vec3.UnitY.Scaled(cornellBoxUnit))
 
 	backWall := cornellBox.GetFirstObjectByMaterialName("Back")
-	backWall.Material = scene.NewMaterial().N("Back").PP(wallTexture, &vec3.T{backWall.Bounds.Xmin, backWall.Bounds.Ymin, backWall.Bounds.Zmax}, vec3.UnitX.Scaled(cornellBoxUnit), vec3.UnitY.Scaled(cornellBoxUnit))
+	backWall.Material = scene.NewMaterial().N("Back").PP(wallTexture, scene.TextureTypeAlbedo, &vec3.T{backWall.Bounds.Xmin, backWall.Bounds.Ymin, backWall.Bounds.Zmax}, vec3.UnitX.Scaled(cornellBoxUnit), vec3.UnitY.Scaled(cornellBoxUnit))
 
 	floor := cornellBox.GetFirstObjectByMaterialName("Floor")
-	floor.Material = scene.NewMaterial().N("Floor").PP(floorTexture, &vec3.T{floor.Bounds.Xmin, floor.Bounds.Ymin, floor.Bounds.Zmin}, vec3.UnitX.Scaled(cornellBoxUnit/2), vec3.UnitZ.Scaled(cornellBoxUnit/2))
+	floor.Material = scene.NewMaterial().N("Floor").PP(floorTexture, scene.TextureTypeAlbedo, &vec3.T{floor.Bounds.Xmin, floor.Bounds.Ymin, floor.Bounds.Zmin}, vec3.UnitX.Scaled(cornellBoxUnit/2), vec3.UnitZ.Scaled(cornellBoxUnit/2))
 
 	amountSpheres := 7
 	sphereSpread := ballRadius * 2.0 * (float64(amountSpheres) + 1)

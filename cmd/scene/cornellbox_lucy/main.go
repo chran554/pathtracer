@@ -45,23 +45,23 @@ func main() {
 
 	floor := cornellBox.GetFirstObjectByMaterialName("Floor")
 	floor.Material = scene.NewMaterial().N("Floor").E(color.White, 1.0, true)
-	floor.Material.PP(textureSky, &vec3.Zero, vec3.T{cornellBoxUnit * 2, 0, 0}, vec3.T{0, 0, cornellBoxUnit})
+	floor.Material.PP(textureSky, scene.TextureTypeAlbedo, &vec3.Zero, vec3.T{cornellBoxUnit * 2, 0, 0}, vec3.T{0, 0, cornellBoxUnit})
 
 	roof := cornellBox.GetFirstObjectByMaterialName("Ceiling")
 	roof.Material = scene.NewMaterial().N("Ceiling").E(color.White, 1.0, true)
-	roof.Material.PP(textureSky, &vec3.Zero, vec3.T{cornellBoxUnit * 2, 0, 0}, vec3.T{0, 0, cornellBoxUnit})
+	roof.Material.PP(textureSky, scene.TextureTypeAlbedo, &vec3.Zero, vec3.T{cornellBoxUnit * 2, 0, 0}, vec3.T{0, 0, cornellBoxUnit})
 
 	backWall := cornellBox.GetFirstObjectByMaterialName("Back")
 	backWall.Material = scene.NewMaterial().N("Back").E(color.White, 1.0, true)
-	backWall.Material.PP(textureSky, &vec3.T{-cornellBoxUnit / 2, 0, 0}, vec3.T{cornellBoxUnit * 2, 0, 0}, vec3.T{0, cornellBoxUnit, 0})
+	backWall.Material.PP(textureSky, scene.TextureTypeAlbedo, &vec3.T{-cornellBoxUnit / 2, 0, 0}, vec3.T{cornellBoxUnit * 2, 0, 0}, vec3.T{0, cornellBoxUnit, 0})
 
 	leftWall := cornellBox.GetFirstObjectByMaterialName("Left")
 	leftWall.Material = scene.NewMaterial().N("Left").E(color.White, 1.0, true)
-	leftWall.Material.PP(textureSky, &vec3.T{0, 0, -cornellBoxUnit * 3 / 2}, vec3.T{0, 0, cornellBoxUnit * 2}, vec3.T{0, cornellBoxUnit, 0})
+	leftWall.Material.PP(textureSky, scene.TextureTypeAlbedo, &vec3.T{0, 0, -cornellBoxUnit * 3 / 2}, vec3.T{0, 0, cornellBoxUnit * 2}, vec3.T{0, cornellBoxUnit, 0})
 
 	rightWall := cornellBox.GetFirstObjectByMaterialName("Right")
 	rightWall.Material = scene.NewMaterial().N("Right").E(color.White, 1.0, true)
-	rightWall.Material.PP(textureSky, &vec3.T{0, 0, -cornellBoxUnit * 3 / 2}, vec3.T{0, 0, cornellBoxUnit * 2}, vec3.T{0, cornellBoxUnit, 0})
+	rightWall.Material.PP(textureSky, scene.TextureTypeAlbedo, &vec3.T{0, 0, -cornellBoxUnit * 3 / 2}, vec3.T{0, 0, cornellBoxUnit * 2}, vec3.T{0, cornellBoxUnit, 0})
 
 	lucy := obj.NewLucy(cornellBoxUnit * 0.8)
 
@@ -74,7 +74,7 @@ func main() {
 	u := vec3.T{1, 0, 0}
 	lucy.Material = scene.NewMaterial().N("lucy").
 		C(color.NewColorGrey(0.90)).
-		CP(textureStatue, &vec3.Zero, u, v, true)
+		CP(textureStatue, scene.TextureTypeAlbedo, &vec3.Zero, u, v, true)
 
 	scn := scene.NewSceneNode().FS(lucy).FS(cornellBox)
 

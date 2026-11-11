@@ -60,7 +60,7 @@ func main() {
 	environmentSphere := scene.NewSphere(&vec3.T{0, 0, 0}, 3*100, scene.NewMaterial().
 		E(color.White, 2, true).
 		//C(color.NewColorGrey(0.2))).
-		SP(textureEnvironment, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+		SP(textureEnvironment, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 
 	// Generally speaking, hanging billiard lights about 32"-36" above the bed of the table is about right.
 	//
@@ -97,7 +97,7 @@ func main() {
 	poolTable.Material = scene.NewMaterial().
 		C(color.White).
 		M(0.015, 0.9).
-		PP(textureTableCloth, &vec3.T{2.5, 0, 2.5}, vec3.T{5, 0, 0}, vec3.T{0, 0, 5})
+		PP(textureTableCloth, scene.TextureTypeAlbedo, &vec3.T{2.5, 0, 2.5}, vec3.T{5, 0, 0}, vec3.T{0, 0, 5})
 
 	var balls = [][]SnookerBall{
 		{SnookerBall01, SnookerBall02, SnookerBall03, SnookerBall04, SnookerBall05, SnookerBall06, SnookerBall07, SnookerBall08},
@@ -191,7 +191,7 @@ func NewSnookerBall(ball SnookerBall) *scene.Sphere {
 		T(0.0, true, scene.RefractionIndex_AcrylicPlastic).
 		//SP(textureFilename, &vec3.T{0, radius, 0}, vec3.T{0, 0, diameter}, vec3.T{0, radius, 0})
 		//PP(textureFilename, &vec3.T{-radius, 0, 0}, vec3.T{diameter, 0, 0}, vec3.T{0, diameter, 0})
-		CP(textureFilename, &vec3.T{0, 0, 0}, vec3.UnitZ, vec3.T{0, diameter, 0}, false)
+		CP(textureFilename, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitZ, vec3.T{0, diameter, 0}, false)
 
 	return scene.NewSphere(&vec3.T{0, radius, 0}, radius, ballMaterial)
 }

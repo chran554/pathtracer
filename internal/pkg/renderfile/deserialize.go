@@ -191,44 +191,6 @@ func (s *serializer) initFrameCache(frameInformation *FrameInformation) error {
 	}
 
 	for _, file := range s.zipReader.File {
-		if file.Name == frameInformation.MaterialFile {
-			// fmt.Println("Initializing: Reading ", file.Name)
-
-			fileData, err := readZipFileEntry(file)
-			if err != nil {
-				return err
-			}
-
-			var materials []Material
-			err = msgpack.Unmarshal(fileData, &materials)
-			if err != nil {
-				return fmt.Errorf("could not unmarshal materials from file %s: %w", file.Name, err)
-			}
-
-			for _, m := range materials {
-				projection, err := s.deserializeProjection(m.Projection)
-				if err != nil {
-					return err
-				}
-
-				s.sm = append(s.sm, &scene.Material{
-					Name:                 m.Name,
-					Color:                s.sceneColor(m.Color),
-					Diffuse:              m.Diffuse,
-					Emission:             s.sceneColor(m.Emission),
-					Glossiness:           m.Glossiness,
-					Roughness:            m.Roughness,
-					Projection:           projection,
-					RefractionIndex:      m.RefractionIndex,
-					SolidObject:          m.SolidObject,
-					Transparency:         m.Transparency,
-					RayTerminator:        m.RayTerminator,
-					ColorizeReflection:   m.ColorizeReflection,
-					FresnelMaxGlossiness: m.FresnelMaxGlossiness,
-				})
-			}
-		}
-
 		if file.Name == frameInformation.TextureFile {
 			// fmt.Println("Initializing: Reading ", file.Name)
 
@@ -244,7 +206,25 @@ func (s *serializer) initFrameCache(frameInformation *FrameInformation) error {
 			}
 
 			for _, t := range textures {
-				textureImage, err := s.resourceImage(t.ImageResourceIndex)
+				var textureImage *floatimage.FloatImage
+
+				if t.Type == string(scene.TextureTypeAlbedo) {
+					textureImage, err = s.resourceImage(t.ImageResourceIndex, true, nil)
+					if err != nil {
+						return fmt.Errorf("could not read resource albedo image %s: %w", file.Name, err)
+					}
+				} else if t.Type == string(scene.TextureTypeNormalMap) {
+					textureImage, err = s.resourceImage(t.ImageResourceIndex, false, convertFloatImageToNormalMap)
+					if err != nil {
+						return fmt.Errorf("could not read resource normal map image %s: %w", file.Name, err)
+					}
+				} else {
+					textureImage, err = s.resourceImage(t.ImageResourceIndex, false, nil)
+					if err != nil {
+						return fmt.Errorf("could not read resource image %s: %w", file.Name, err)
+					}
+				}
+
 				if err != nil {
 					return err
 				}
@@ -258,11 +238,71 @@ func (s *serializer) initFrameCache(frameInformation *FrameInformation) error {
 		}
 	}
 
+	for _, file := range s.zipReader.File {
+		if file.Name == frameInformation.MaterialFile {
+			// fmt.Println("Initializing: Reading ", file.Name)
+
+			fileData, err := readZipFileEntry(file)
+			if err != nil {
+				return err
+			}
+
+			var materials []Material
+			err = msgpack.Unmarshal(fileData, &materials)
+			if err != nil {
+				return fmt.Errorf("could not unmarshal materials from file %s: %w", file.Name, err)
+			}
+
+			for _, m := range materials {
+				var projections []*scene.ImageProjection
+				for _, p := range m.Projection {
+					projection, err := s.deserializeProjection(&p)
+					if err != nil {
+						return err
+					}
+					projections = append(projections, projection)
+				}
+
+				s.sm = append(s.sm, &scene.Material{
+					Name:                 m.Name,
+					Color:                s.sceneColor(m.Color),
+					Diffuse:              m.Diffuse,
+					Emission:             s.sceneColor(m.Emission),
+					Glossiness:           m.Glossiness,
+					Roughness:            m.Roughness,
+					Projections:          projections,
+					RefractionIndex:      m.RefractionIndex,
+					SolidObject:          m.SolidObject,
+					Transparency:         m.Transparency,
+					RayTerminator:        m.RayTerminator,
+					ColorizeReflection:   m.ColorizeReflection,
+					FresnelMaxGlossiness: m.FresnelMaxGlossiness,
+				})
+			}
+		}
+	}
+
 	return nil
 }
 
+func convertFloatImageToNormalMap(image *floatimage.FloatImage) {
+	// Convert normal map r,g,b to vector x,y,z values
+	if image != nil {
+		for y := 0; y < image.Height; y++ {
+			for x := 0; x < image.Width; x++ {
+				c := image.GetPixel(x, y)
+				normal := &vec3.T{float64(c.R) - 0.5, float64(c.G) - 0.5, float64(c.B) - 0.5}
+				normal.Normalize()
+				c.R = float32(normal[0])
+				c.G = float32(normal[1])
+				c.B = float32(normal[2])
+			}
+		}
+	}
+}
+
 func (s *serializer) deserializeCamera(camera *Camera) (*scene.Camera, error) {
-	apertureImage, err := s.resourceImage(camera.ApertureShape)
+	apertureImage, err := s.resourceImage(camera.ApertureShape, false, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -411,7 +451,7 @@ func (s *serializer) deserializeFacetTexture(facetTexture *FacetTexture) (*scene
 
 /*
 	func (s *serializer) deserializeTexture(texture *Texture) (*scene.Texture, error) {
-		img, err := s.resourceImage(texture.ImageResourceIndex)
+		img, err := s.resourceImage(texture.ImageResourceIndex, true)
 		if err != nil {
 			return nil, err
 		}
@@ -455,27 +495,20 @@ func (s *serializer) deserializeProjection(projection *Projection) (*scene.Image
 		return nil, nil
 	}
 
-	img, err := s.resourceImage(projection.Image)
-	if err != nil {
-		return nil, err
-	}
-
-	normalMap, err := s.resourceNormalMap(projection.NormalMap)
-	if err != nil {
-		return nil, err
+	var texture *scene.Texture
+	if len(projection.Texture) > 0 {
+		texture = s.sceneTexture(projection.Texture[0])
 	}
 
 	return &scene.ImageProjection{
-		ProjectionType: scene.ProjectionType(projection.ProjectionType),
-		Image:          img,
-		Interpolation:  floatimage.Interpolation(projection.Interpolation),
-		NormalMap:      normalMap,
-		Origin:         s.sceneVector(projection.Origin),
-		U:              s.sceneVector(projection.U),
-		V:              s.sceneVector(projection.V),
-		RepeatU:        projection.RepeatU,
-		RepeatV:        projection.RepeatV,
-		FlipU:          projection.FlipU,
-		FlipV:          projection.FlipV,
+		Type:    scene.ProjectionType(projection.ProjectionType),
+		Texture: texture,
+		Origin:  s.sceneVector(projection.Origin),
+		U:       s.sceneVector(projection.U),
+		V:       s.sceneVector(projection.V),
+		RepeatU: projection.RepeatU,
+		RepeatV: projection.RepeatV,
+		FlipU:   projection.FlipU,
+		FlipV:   projection.FlipV,
 	}, nil
 }

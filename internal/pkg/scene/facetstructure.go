@@ -35,8 +35,7 @@ func (fs *FacetStructure) InitializeProjection() {
 	}
 
 	if fs.Material != nil {
-		projection := fs.Material.Projection
-		if projection != nil {
+		for _, projection := range fs.Material.Projections {
 			projection.Initialize()
 		}
 	}
@@ -161,6 +160,8 @@ func (fs *FacetStructure) RotateX(rotationOrigin *vec3.T, angle float64) {
 	fs.UpdateBounds()
 }
 
+// RotateY
+// angle in radians.
 func (fs *FacetStructure) RotateY(rotationOrigin *vec3.T, angle float64) {
 	rotatedPoints := make(map[*vec3.T]bool)
 	rotatedNormals := make(map[*vec3.T]bool)
@@ -209,28 +210,30 @@ func (fs *FacetStructure) RotateAxis(rotationOrigin *vec3.T, axis *vec3.T, angle
 }
 
 func (fs *FacetStructure) rotateByQuaternion(rotationOrigin *vec3.T, q quaternion.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool, rotatedVertexTangents map[*vec3.T]bool, rotatedImageProjections map[*ImageProjection]bool) {
-	if fs.Material != nil && fs.Material.Projection != nil && !rotatedImageProjections[fs.Material.Projection] {
-		projection := fs.Material.Projection
+	if fs.Material != nil {
+		for _, projection := range fs.Material.Projections {
+			if !rotatedImageProjections[projection] {
+				if !rotatedPoints[projection.Origin] {
+					projection.Origin.Sub(rotationOrigin)
+					q.RotateVec3(projection.Origin)
+					projection.Origin.Add(rotationOrigin)
 
-		if !rotatedPoints[projection.Origin] {
-			projection.Origin.Sub(rotationOrigin)
-			q.RotateVec3(projection.Origin)
-			projection.Origin.Add(rotationOrigin)
+					rotatedPoints[projection.Origin] = true
+				}
 
-			rotatedPoints[projection.Origin] = true
+				if !rotatedPoints[projection.U] {
+					q.RotateVec3(projection.U)
+					rotatedPoints[projection.U] = true
+				}
+
+				if !rotatedPoints[projection.V] {
+					q.RotateVec3(projection.V)
+					rotatedPoints[projection.V] = true
+				}
+
+				rotatedImageProjections[projection] = true
+			}
 		}
-
-		if !rotatedPoints[projection.U] {
-			q.RotateVec3(projection.U)
-			rotatedPoints[projection.U] = true
-		}
-
-		if !rotatedPoints[projection.V] {
-			q.RotateVec3(projection.V)
-			rotatedPoints[projection.V] = true
-		}
-
-		rotatedImageProjections[fs.Material.Projection] = true
 	}
 
 	for _, facet := range fs.Facets {
@@ -245,36 +248,38 @@ func (fs *FacetStructure) rotateByQuaternion(rotationOrigin *vec3.T, q quaternio
 }
 
 func (fs *FacetStructure) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool, rotatedVertexTangents map[*vec3.T]bool, rotatedImageProjections map[*ImageProjection]bool) {
-	if fs.Material != nil && fs.Material.Projection != nil && !rotatedImageProjections[fs.Material.Projection] {
-		projection := fs.Material.Projection
+	if fs.Material != nil {
+		for _, projection := range fs.Material.Projections {
+			if !rotatedImageProjections[projection] {
+				projection.Origin.Sub(rotationOrigin)
+				projection.Origin[2] *= -1
+				rotatedVertex := rotationMatrix.MulVec3(projection.Origin)
+				rotatedVertex[2] *= -1
+				rotatedVertex.Add(rotationOrigin)
 
-		projection.Origin.Sub(rotationOrigin)
-		projection.Origin[2] *= -1
-		rotatedVertex := rotationMatrix.MulVec3(projection.Origin)
-		rotatedVertex[2] *= -1
-		rotatedVertex.Add(rotationOrigin)
+				projection.Origin[0] = rotatedVertex[0]
+				projection.Origin[1] = rotatedVertex[1]
+				projection.Origin[2] = rotatedVertex[2]
 
-		projection.Origin[0] = rotatedVertex[0]
-		projection.Origin[1] = rotatedVertex[1]
-		projection.Origin[2] = rotatedVertex[2]
+				projection.U[2] *= -1
+				rotatedU := rotationMatrix.MulVec3(projection.U)
+				rotatedU[2] *= -1
 
-		projection.U[2] *= -1
-		rotatedU := rotationMatrix.MulVec3(projection.U)
-		rotatedU[2] *= -1
+				projection.U[0] = rotatedU[0]
+				projection.U[1] = rotatedU[1]
+				projection.U[2] = rotatedU[2]
 
-		projection.U[0] = rotatedU[0]
-		projection.U[1] = rotatedU[1]
-		projection.U[2] = rotatedU[2]
+				projection.V[2] *= -1
+				rotatedV := rotationMatrix.MulVec3(projection.V)
+				rotatedV[2] *= -1
 
-		projection.V[2] *= -1
-		rotatedV := rotationMatrix.MulVec3(projection.V)
-		rotatedV[2] *= -1
+				projection.V[0] = rotatedV[0]
+				projection.V[1] = rotatedV[1]
+				projection.V[2] = rotatedV[2]
 
-		projection.V[0] = rotatedV[0]
-		projection.V[1] = rotatedV[1]
-		projection.V[2] = rotatedV[2]
-
-		rotatedImageProjections[fs.Material.Projection] = true
+				rotatedImageProjections[projection] = true
+			}
+		}
 	}
 
 	for _, facet := range fs.Facets {
@@ -298,15 +303,17 @@ func (fs *FacetStructure) Translate(translation *vec3.T) {
 
 func (fs *FacetStructure) translate(translation *vec3.T, translatedPoints map[*vec3.T]bool, translatedImageProjections map[*ImageProjection]bool) {
 	// Translate image projection (i.e. image projection origin)
-	if fs.Material != nil && fs.Material.Projection != nil {
-		origin := fs.Material.Projection.Origin
-		projectionOriginAlreadyTranslated := translatedPoints[origin]
-		projectionAlreadyTranslated := translatedImageProjections[fs.Material.Projection]
+	if fs.Material != nil {
+		for _, projection := range fs.Material.Projections {
+			origin := projection.Origin
+			projectionOriginAlreadyTranslated := translatedPoints[origin]
+			projectionAlreadyTranslated := translatedImageProjections[projection]
 
-		if !projectionOriginAlreadyTranslated && !projectionAlreadyTranslated {
-			origin.Add(translation)
-			translatedPoints[origin] = true
-			translatedImageProjections[fs.Material.Projection] = true
+			if !projectionOriginAlreadyTranslated && !projectionAlreadyTranslated {
+				origin.Add(translation)
+				translatedPoints[origin] = true
+				translatedImageProjections[projection] = true
+			}
 		}
 	}
 
@@ -372,13 +379,16 @@ func (fs *FacetStructure) FlipZ(flipOrigin *vec3.T) {
 }
 
 func (fs *FacetStructure) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool, scaledNormals map[*vec3.T]bool, scaledTangents map[*vec3.T]bool, scaledImageProjections map[*ImageProjection]bool) {
-	if fs.Material != nil && fs.Material.Projection != nil && !scaledImageProjections[fs.Material.Projection] {
-		projection := fs.Material.Projection
-		projection.Origin.Sub(scaleOrigin).Mul(scale).Add(scaleOrigin)
-		projection.U.Mul(scale)
-		projection.V.Mul(scale)
+	if fs.Material != nil {
+		for _, projection := range fs.Material.Projections {
+			if !scaledImageProjections[projection] {
+				projection.Origin.Sub(scaleOrigin).Mul(scale).Add(scaleOrigin)
+				projection.U.Mul(scale)
+				projection.V.Mul(scale)
 
-		scaledImageProjections[projection] = true
+				scaledImageProjections[projection] = true
+			}
+		}
 	}
 
 	for _, facet := range fs.Facets {
@@ -518,9 +528,9 @@ func (fs *FacetStructure) GetFirstMaterialByName(materialName string) *Material 
 
 	if len(objects) > 0 {
 		return objects[0].Material
-	} else {
-		return nil
 	}
+
+	return nil
 }
 
 func getObjectsByName(fs *FacetStructure, name string, matchFunction func(*FacetStructure, string) bool) []*FacetStructure {

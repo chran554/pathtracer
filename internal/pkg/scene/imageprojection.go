@@ -6,7 +6,6 @@ import (
 	"os"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/floatimage"
-	"pathtracer/internal/pkg/util"
 
 	"github.com/ungerik/go3d/float64/mat3"
 	"github.com/ungerik/go3d/float64/vec2"
@@ -30,10 +29,8 @@ const (
 )
 
 type ImageProjection struct {
-	ProjectionType                  ProjectionType
-	Image                           *floatimage.FloatImage
-	Interpolation                   floatimage.Interpolation
-	NormalMap                       *floatimage.FloatImage
+	Type                            ProjectionType
+	Texture                         *Texture
 	Origin                          *vec3.T
 	U                               *vec3.T
 	V                               *vec3.T
@@ -44,139 +41,129 @@ type ImageProjection struct {
 	_invertedCoordinateSystemMatrix *mat3.T
 }
 
-func NewParallelImageProjection(texture *floatimage.FloatImage, origin *vec3.T, u vec3.T, v vec3.T) ImageProjection {
-	return NewImageProjection(ProjectionTypeParallel, texture, origin, u, v, true, true, false, false)
-}
-
-func NewCylindricalImageProjection(texture *floatimage.FloatImage, origin *vec3.T, u vec3.T, v vec3.T) ImageProjection {
-	return NewImageProjection(ProjectionTypeCylindrical, texture, origin, u, v, false, true, false, false)
-}
-
-func NewSphericalImageProjection(texture *floatimage.FloatImage, origin *vec3.T, u vec3.T, v vec3.T) ImageProjection {
-	return NewImageProjection(ProjectionTypeSpherical, texture, origin, u, v, false, true, false, false)
-}
-
-func NewImageProjection(projectionType ProjectionType, texture *floatimage.FloatImage, origin *vec3.T, u vec3.T, v vec3.T, repeatU bool, repeatV bool, flipU bool, flipV bool) ImageProjection {
-	return ImageProjection{
-		ProjectionType: projectionType,
-		Image:          texture,
-		Interpolation:  floatimage.InterpolationNearestNeighbor,
-		Origin:         origin,
-		U:              &u,
-		V:              &v,
-		RepeatU:        repeatU,
-		RepeatV:        repeatV,
-		FlipU:          flipU,
-		FlipV:          flipV,
+func NewImageProjection(projectionType ProjectionType, image *floatimage.FloatImage, imageType TextureType, origin *vec3.T, u vec3.T, v vec3.T, repeatU bool, repeatV bool, flipU bool, flipV bool) ImageProjection {
+	texture := &Texture{
+		Type:          imageType,
+		Strength:      1.0,
+		Interpolation: floatimage.InterpolationNearestNeighbor,
+		Image:         image,
 	}
+
+	return ImageProjection{
+		Type:    projectionType,
+		Texture: texture,
+		Origin:  origin,
+		U:       &u,
+		V:       &v,
+		RepeatU: repeatU,
+		RepeatV: repeatV,
+		FlipU:   flipU,
+		FlipV:   flipV,
+	}
+}
+
+func NewParallelImageProjection(texture *floatimage.FloatImage, textureType TextureType, origin *vec3.T, u vec3.T, v vec3.T) ImageProjection {
+	return NewImageProjection(ProjectionTypeParallel, texture, textureType, origin, u, v, true, true, false, false)
+}
+
+func NewCylindricalImageProjection(texture *floatimage.FloatImage, textureType TextureType, origin *vec3.T, u vec3.T, v vec3.T) ImageProjection {
+	return NewImageProjection(ProjectionTypeCylindrical, texture, textureType, origin, u, v, false, true, false, false)
+}
+
+func NewSphericalImageProjection(texture *floatimage.FloatImage, textureType TextureType, origin *vec3.T, u vec3.T, v vec3.T) ImageProjection {
+	return NewImageProjection(ProjectionTypeSpherical, texture, textureType, origin, u, v, false, true, false, false)
 }
 
 func (imageProjection *ImageProjection) GetColor(point *vec3.T) *color.Color {
-	if imageProjection.Image == nil {
-		return color.BlackTransparent
+	if imageProjection.Texture == nil || imageProjection.Texture.Image == nil {
+		return nil
 	}
 
-	if imageProjection.ProjectionType == ProjectionTypeParallel {
-		return imageProjection.getParallelColor(point)
-	}
-	if imageProjection.ProjectionType == ProjectionTypeCylindrical {
-		return imageProjection.getCylindricalColor(point)
-	}
-	if imageProjection.ProjectionType == ProjectionTypeSpherical {
-		return imageProjection.getSphericalColor(point)
-	}
-	// ProjectionTypeTextureMapping is not handled here
+	var normalizedTextureCoordinate *vec2.T
 
-	return color.BlackTransparent
+	if imageProjection.Type == ProjectionTypeParallel {
+		normalizedTextureCoordinate = imageProjection.getParallelXY(point)
+	} else if imageProjection.Type == ProjectionTypeCylindrical {
+		normalizedTextureCoordinate = imageProjection.getCylindricalXY(point)
+	} else if imageProjection.Type == ProjectionTypeSpherical {
+		normalizedTextureCoordinate = imageProjection.getSphericalXY(point)
+	}
+
+	if normalizedTextureCoordinate == nil {
+		return nil
+	}
+
+	textureX := normalizedTextureCoordinate[0] * float64(imageProjection.Texture.Image.Width)
+	textureY := normalizedTextureCoordinate[1] * float64(imageProjection.Texture.Image.Height)
+
+	return imageProjection.Texture.Image.GetInterpolatedPixel(textureX, textureY, imageProjection.Texture.Interpolation)
 }
 
 func (imageProjection *ImageProjection) GetNormal(point *vec3.T) *vec3.T {
-	var normal *vec3.T
-	if imageProjection.NormalMap == nil {
-		return normal
-	}
+	c := imageProjection.GetColor(point)
 
-	switch imageProjection.ProjectionType {
-	case ProjectionTypeParallel:
-		normal = nil // TODO implement
-	case ProjectionTypeCylindrical:
-		normal = nil // TODO implement
-	case ProjectionTypeSpherical:
-		normal = imageProjection.getSphericalNormal(point)
-	}
-	// ProjectionTypeTextureMapping is not handled here
-
-	normal.Normalize()
-
-	return normal
-}
-
-func (imageProjection *ImageProjection) GetColorAt(coordinate *vec2.T) *color.Color {
-	textureX := util.ClampInt(0, imageProjection.Image.Width-1, int(coordinate[0]*float64(imageProjection.Image.Width)))
-	textureY := util.ClampInt(0, imageProjection.Image.Height-1, int((1.0-coordinate[1])*float64(imageProjection.Image.Height)))
-	return imageProjection.Image.GetPixel(textureX, textureY)
-}
-
-func (imageProjection *ImageProjection) getSphericalColor2(point *vec3.T) *color.Color {
-	translatedPoint := *point
-	translatedPoint.Sub(imageProjection.Origin)
-
-	p := imageProjection._invertedCoordinateSystemMatrix.MulVec3(&translatedPoint)
-
-	theta := math.Acos(p[1] / p.Length())
-
-	var phi float64
-	if p[0] > 0 {
-		phi = math.Atan(p[2] / p[0])
-
-	} else if (p[0] < 0) && (p[2] >= 0) {
-		phi = math.Atan(p[2]/p[0]) + pi
-
-	} else if (p[0] < 0) && (p[2] < 0) {
-		phi = math.Atan(p[2]/p[0]) - pi
-
-	} else if (p[0] == 0) && (p[2] >= 0) {
-		phi = pi05
-
-	} else if (p[0] == 0) && (p[2] < 0) {
-		phi = -pi05
-	}
-
-	textureX := int((phi * pi2Inv) * float64(imageProjection.Image.Width))
-	textureY := int((theta * piInv) * float64(imageProjection.Image.Height))
-
-	return imageProjection.Image.GetPixel(textureX, textureY)
-}
-
-func (imageProjection *ImageProjection) getSphericalColor(point *vec3.T) *color.Color {
-	if imageProjection.Image == nil {
+	if c == nil {
 		return nil
 	}
 
-	normalizedTextureCoordinate := imageProjection.getSphericalXY(point)
+	// Texture values are already converted/decoded from texture color values to normal values
+	n := &vec3.T{float64(c.R), float64(c.G), float64(c.B)}
+	n.Normalize()
 
-	textureX := normalizedTextureCoordinate[0] * float64(imageProjection.Image.Width)
-	textureY := normalizedTextureCoordinate[1] * float64(imageProjection.Image.Height)
-
-	return imageProjection.Image.GetInterpolatedPixel(textureX, textureY, imageProjection.Interpolation)
+	return n
 }
 
-func (imageProjection *ImageProjection) getSphericalNormal(point *vec3.T) *vec3.T {
-	if imageProjection.NormalMap == nil {
+func (imageProjection *ImageProjection) getCylindricalXY(point *vec3.T) *vec2.T {
+	translatedPoint := point.Subed(imageProjection.Origin)
+
+	uvPoint := imageProjection._invertedCoordinateSystemMatrix.MulVec3(&translatedPoint)
+
+	invLength := 1 / math.Sqrt(uvPoint[0]*uvPoint[0]+uvPoint[2]*uvPoint[2])
+	cosineOfAngle := uvPoint[0] * invLength
+	sineOfAngle := uvPoint[2] * invLength
+
+	var radAngle float64
+	if sineOfAngle >= 0.0 {
+		radAngle = math.Acos(cosineOfAngle)
+	} else {
+		radAngle = pi2 - math.Acos(cosineOfAngle)
+	}
+
+	textureLatitudeRepetitions := 1.0
+
+	u, fracU := math.Modf((radAngle * textureLatitudeRepetitions) * pi2Inv)
+	v := uvPoint[1]
+	_, fracV := math.Modf(v)
+
+	// imageProjection.RepeatU:
+	// Repeat (as true/false) along U or equator/latitude is not applicable for cylindrical projection.
+	// TODO: Amount repeats along the equator/latitude can be of use though, see "textureLatitudeRepetitions".
+
+	// If not repeat along the cylinder axis and point is above or below texture projection
+	// Then no texture coordinate is returned.
+	if !imageProjection.RepeatV && ((v >= 1.0) || (v < 0.0)) {
 		return nil
 	}
 
-	normalizedTextureCoordinate := imageProjection.getSphericalXY(point)
+	if fracU < 0.0 {
+		fracU = fracU + 1.0
+	}
+	if fracV < 0.0 {
+		fracV = fracV + 1.0
+	}
 
-	textureX := normalizedTextureCoordinate[0] * float64(imageProjection.NormalMap.Width)
-	textureY := normalizedTextureCoordinate[1] * float64(imageProjection.NormalMap.Height)
+	if imageProjection.FlipU && (int(math.Abs(math.Floor(u)))%2 == 1) {
+		fracU = 1.0 - fracU
+	}
+	if imageProjection.FlipV && (int(math.Abs(math.Floor(v)))%2 == 1) {
+		fracV = 1.0 - fracV
+	}
 
-	c := imageProjection.NormalMap.GetInterpolatedPixel(textureX, textureY, imageProjection.Interpolation)
-
-	return &vec3.T{float64(c.R), float64(c.G), float64(c.B)}
+	// The pixel at UV-origin should be the pixel at bottom left in image
+	return &vec2.T{math.Abs(fracU), 1 - math.Abs(fracV)}
 }
 
-func (imageProjection *ImageProjection) getSphericalXY(point *vec3.T) vec2.T {
+func (imageProjection *ImageProjection) getSphericalXY(point *vec3.T) *vec2.T {
 	translatedPoint := *point
 	translatedPoint.Sub(imageProjection.Origin)
 
@@ -208,61 +195,10 @@ func (imageProjection *ImageProjection) getSphericalXY(point *vec3.T) vec2.T {
 		theta -= pi2
 	}
 
-	return vec2.T{theta * pi2Inv, phi * piInv}
+	return &vec2.T{theta * pi2Inv, phi * piInv}
 }
 
-func (imageProjection *ImageProjection) getCylindricalColor(point *vec3.T) *color.Color {
-	translatedPoint := point.Subed(imageProjection.Origin)
-
-	uvPoint := imageProjection._invertedCoordinateSystemMatrix.MulVec3(&translatedPoint)
-
-	invLength := 1 / math.Sqrt(uvPoint[0]*uvPoint[0]+uvPoint[2]*uvPoint[2])
-	cosineOfAngle := uvPoint[0] * invLength
-	sineOfAngle := uvPoint[2] * invLength
-
-	var radAngle float64
-	if sineOfAngle >= 0.0 {
-		radAngle = math.Acos(cosineOfAngle)
-	} else {
-		radAngle = pi2 - math.Acos(cosineOfAngle)
-	}
-
-	textureLatitudeRepetitions := 1.0
-
-	u, fracU := math.Modf((radAngle * textureLatitudeRepetitions) * pi2Inv)
-	v := uvPoint[1]
-	_, fracV := math.Modf(v)
-
-	// imageProjection.RepeatU:
-	// Repeat (as true/false) along U or equator/latitude is not applicable for cylindrical projection.
-	// (Amount repeats along the equator/latitude can be of use though, see "textureLatitudeRepetitions".)
-
-	if !imageProjection.RepeatV && ((v >= 1.0) || (v < 0.0)) {
-		return color.BlackTransparent
-	}
-
-	if fracU < 0.0 {
-		fracU = fracU + 1.0
-	}
-	if fracV < 0.0 {
-		fracV = fracV + 1.0
-	}
-
-	if imageProjection.FlipU && (int(math.Abs(math.Floor(u)))%2 == 1) {
-		fracU = 1.0 - fracU
-	}
-	if imageProjection.FlipV && (int(math.Abs(math.Floor(v)))%2 == 1) {
-		fracV = 1.0 - fracV
-	}
-
-	textureX := int(math.Abs(fracU) * float64(imageProjection.Image.Width))
-	textureY := int(math.Abs(fracV) * float64(imageProjection.Image.Height))
-	textureY = (imageProjection.Image.Height - 1) - textureY // The pixel at UV-origin should be the pixel at bottom left in image
-
-	return imageProjection.Image.GetPixel(textureX, textureY)
-}
-
-func (imageProjection *ImageProjection) getParallelColor(point *vec3.T) *color.Color {
+func (imageProjection *ImageProjection) getParallelXY(point *vec3.T) *vec2.T {
 	translatedPoint := *point
 	translatedPoint.Sub(imageProjection.Origin)
 
@@ -273,11 +209,11 @@ func (imageProjection *ImageProjection) getParallelColor(point *vec3.T) *color.C
 	_, fracV := math.Modf(v)
 
 	if !imageProjection.RepeatU && ((u >= 1.0) || (u < 0.0)) {
-		return color.BlackTransparent.Copy()
+		return nil
 	}
 
 	if !imageProjection.RepeatV && ((v >= 1.0) || (v < 0.0)) {
-		return color.BlackTransparent.Copy()
+		return nil
 	}
 
 	if fracU < 0.0 {
@@ -294,20 +230,18 @@ func (imageProjection *ImageProjection) getParallelColor(point *vec3.T) *color.C
 		fracV = 1.0 - fracV
 	}
 
-	textureX := min(imageProjection.Image.Width-1, int(math.Abs(fracU*float64(imageProjection.Image.Width))))
-	textureY := min(imageProjection.Image.Height-1, int(math.Abs(fracV*float64(imageProjection.Image.Height))))
-	textureY = (imageProjection.Image.Height - 1) - textureY // The pixel at UV-origin should be the pixel at bottom left in image
-
-	return imageProjection.Image.GetPixel(textureX, textureY)
+	return &vec2.T{math.Abs(fracU), 1 - math.Abs(fracV)}
 }
 
 func (imageProjection *ImageProjection) ClearProjection() {
-	imageProjection.Image = nil
+	if imageProjection.Texture != nil {
+		imageProjection.Texture.Image = nil
+	}
 	imageProjection._invertedCoordinateSystemMatrix = nil
 }
 
 func (imageProjection *ImageProjection) Initialize() {
-	switch imageProjection.ProjectionType {
+	switch imageProjection.Type {
 	case ProjectionTypeSpherical:
 		imageProjection.initializeSphericalProjection()
 
@@ -318,7 +252,7 @@ func (imageProjection *ImageProjection) Initialize() {
 		imageProjection.initializeParallelProjection()
 
 	default:
-		fmt.Printf("can not initialize unknown projection type \"%s\"\n", imageProjection.ProjectionType)
+		fmt.Printf("can not initialize unknown projection type \"%s\"\n", imageProjection.Type)
 	}
 }
 
@@ -331,7 +265,11 @@ func (imageProjection *ImageProjection) initializeParallelProjection() {
 		W := vec3.Cross(imageProjection.U, imageProjection.V)
 		imageProjection._invertedCoordinateSystemMatrix = &mat3.T{*imageProjection.U, *imageProjection.V, W}
 		if _, err := imageProjection._invertedCoordinateSystemMatrix.Invert(); err != nil {
-			fmt.Println("could not initialize parallel projection as invert matrix for uv system could not be created.", imageProjection.Image.Name(), imageProjection.U, imageProjection.V, imageProjection.Origin)
+			imageName := "nil"
+			if imageProjection.Texture != nil && imageProjection.Texture.Image != nil {
+				imageName = imageProjection.Texture.Image.Name()
+			}
+			fmt.Println("could not initialize parallel projection as invert matrix for uv system could not be created.", imageName, imageProjection.U, imageProjection.V, imageProjection.Origin)
 			os.Exit(1)
 		}
 	}
@@ -345,7 +283,11 @@ func (imageProjection *ImageProjection) initializeCylindricalProjection() {
 		U := vec3.Cross(&Vn, &W)
 		imageProjection._invertedCoordinateSystemMatrix = &mat3.T{U, *imageProjection.V, W}
 		if _, err := imageProjection._invertedCoordinateSystemMatrix.Invert(); err != nil {
-			fmt.Println("could not initialize cylindrical projection as inverted matrix for uv system could not be created.", imageProjection.Image.Name(), imageProjection.U, imageProjection.V, imageProjection.Origin)
+			imageName := "nil"
+			if imageProjection.Texture != nil && imageProjection.Texture.Image != nil {
+				imageName = imageProjection.Texture.Image.Name()
+			}
+			fmt.Println("could not initialize cylindrical projection as inverted matrix for uv system could not be created.", imageName, imageProjection.U, imageProjection.V, imageProjection.Origin)
 			os.Exit(1)
 		}
 	}
@@ -359,7 +301,11 @@ func (imageProjection *ImageProjection) initializeSphericalProjection() {
 		//U := vec3.Cross(&Vn, &W)
 		imageProjection._invertedCoordinateSystemMatrix = &mat3.T{Un, Vn, Wn}
 		if _, err := imageProjection._invertedCoordinateSystemMatrix.Invert(); err != nil {
-			fmt.Println("could not initialize spherical projection as inverted matrix for uv system could not be created.", imageProjection.Image.Name(), imageProjection.U, imageProjection.V, imageProjection.Origin)
+			imageName := "nil"
+			if imageProjection.Texture != nil && imageProjection.Texture.Image != nil {
+				imageName = imageProjection.Texture.Image.Name()
+			}
+			fmt.Println("could not initialize spherical projection as inverted matrix for uv system could not be created.", imageName, imageProjection.U, imageProjection.V, imageProjection.Origin)
 			os.Exit(1)
 		}
 	}

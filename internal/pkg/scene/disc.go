@@ -1,8 +1,6 @@
 package scene
 
 import (
-	"fmt"
-
 	"github.com/ungerik/go3d/float64/mat3"
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -32,9 +30,10 @@ func NewDisc(origin *vec3.T, normal *vec3.T, radius float64, material *Material)
 func (d *Disc) Initialize() {
 	d.Normal.Normalize()
 
-	projection := d.Material.Projection
-	if projection != nil {
-		projection.Initialize()
+	if d.Material != nil {
+		for _, projection := range d.Material.Projections {
+			projection.Initialize()
+		}
 	}
 }
 
@@ -59,15 +58,17 @@ func (d *Disc) Translate(translation *vec3.T) {
 
 func (d *Disc) translate(translation *vec3.T, translatedPoints map[*vec3.T]bool, translatedImageProjections map[*ImageProjection]bool) {
 	// Translate image projection (i.e. image projection origin)
-	if d.Material != nil && d.Material.Projection != nil {
-		origin := d.Material.Projection.Origin
-		projectionOriginAlreadyTranslated := translatedPoints[origin]
-		projectionAlreadyTranslated := translatedImageProjections[d.Material.Projection]
+	if d.Material != nil {
+		for _, projection := range d.Material.Projections {
+			origin := projection.Origin
+			projectionOriginAlreadyTranslated := translatedPoints[origin]
+			projectionAlreadyTranslated := translatedImageProjections[projection]
 
-		if !projectionOriginAlreadyTranslated && !projectionAlreadyTranslated {
-			origin.Add(translation)
-			translatedPoints[origin] = true
-			translatedImageProjections[d.Material.Projection] = true
+			if !projectionOriginAlreadyTranslated && !projectionAlreadyTranslated {
+				origin.Add(translation)
+				translatedPoints[origin] = true
+				translatedImageProjections[projection] = true
+			}
 		}
 	}
 
@@ -89,8 +90,8 @@ func (d *Disc) Scale(scaleOrigin *vec3.T, scale *vec3.T) {
 }
 
 func (d *Disc) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool, scaledImageProjections map[*ImageProjection]bool) {
-	if d.Material != nil && d.Material.Projection != nil {
-		panic(fmt.Sprintf("No disc translation implementation for projection type %s", d.Material.Projection.ProjectionType))
+	if d.Material != nil && len(d.Material.Projections) > 0 {
+		panic("No disc scale implementation for projections")
 	}
 
 	panic("Scale of disc is not yet implemented")
@@ -142,8 +143,8 @@ func (d *Disc) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T) {
 	d.Origin[1] = rotatedOrigin[1]
 	d.Origin[2] = rotatedOrigin[2]
 
-	if d.Material != nil && d.Material.Projection != nil {
-		panic(fmt.Sprintf("No disc rotation implementation for projection type %s", d.Material.Projection.ProjectionType))
+	if d.Material != nil && len(d.Material.Projections) > 0 {
+		panic("No disc rotation implementation for projection")
 	}
 
 	d.UpdateBounds()

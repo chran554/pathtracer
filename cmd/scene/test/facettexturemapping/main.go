@@ -31,7 +31,7 @@ func main() {
 
 	environmentDome := scene.NewSphere(&vec3.T{0, 0, 0}, 200*100, scene.NewMaterial().N("environment dome").
 		E(color.NewColorGrey(1.0), skyDomeEmission, true).
-		SP(environmentTexture, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("environment dome")
+		SP(environmentTexture, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("environment dome")
 	environmentDome.RotateY(&vec3.Zero, util.DegToRad(-20))
 
 	// transparencyImage := floatimage.LoadOrPanic("textures/test/test_alpha_transparency.png")

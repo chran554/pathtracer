@@ -229,9 +229,15 @@ func (s *serializer) materialIndex(material *scene.Material) (MaterialIndex, err
 		return materialIndex, nil // Reuse existing index
 	}
 
-	projection, err := s.serializeProjection(material.Projection)
-	if err != nil {
-		return 0, err
+	var projections []Projection
+	for _, p := range material.Projections {
+		serializedProjection, err := s.serializeProjection(p)
+		if err != nil {
+			return 0, err
+		}
+		if serializedProjection != nil {
+			projections = append(projections, *serializedProjection)
+		}
 	}
 
 	// Map the *scene.Material to a local Material struct
@@ -246,7 +252,7 @@ func (s *serializer) materialIndex(material *scene.Material) (MaterialIndex, err
 		SolidObject:          material.SolidObject,
 		Transparency:         material.Transparency,
 		RayTerminator:        material.RayTerminator,
-		Projection:           projection,
+		Projection:           projections,
 		ColorizeReflection:   material.ColorizeReflection,
 		FresnelMaxGlossiness: material.FresnelMaxGlossiness,
 	}
@@ -349,7 +355,7 @@ func (s *serializer) sceneTexture(index TextureIndex) *scene.Texture {
 	return s.st[index-1]
 }
 
-func (s *serializer) resourceImage(resourceIndex ResourceIndex) (*floatimage.FloatImage, error) {
+func (s *serializer) resourceImage(resourceIndex ResourceIndex, gammaDecode bool, postProcessFn func(*floatimage.FloatImage)) (*floatimage.FloatImage, error) {
 	if resourceIndex == 0 {
 		return nil, nil
 	}
@@ -364,34 +370,7 @@ func (s *serializer) resourceImage(resourceIndex ResourceIndex) (*floatimage.Flo
 			}
 			defer fileReader.Close()
 
-			floatImage, err := imagecache.GetOrReadCachedImage(filename, fileReader, true, false)
-			if err != nil {
-				return nil, fmt.Errorf("could not decode resource image file %s: %w", filename, err)
-			}
-
-			return floatImage, nil
-		}
-	}
-
-	return nil, fmt.Errorf("could not find resource file for resource index %d", resourceIndex)
-}
-
-func (s *serializer) resourceNormalMap(resourceIndex ResourceIndex) (*floatimage.FloatImage, error) {
-	if resourceIndex == 0 {
-		return nil, nil
-	}
-
-	for _, file := range s.zipReader.File {
-		filename := file.Name
-
-		if match, _ := regexp.Match(fmt.Sprintf("resources/%03d_.*", resourceIndex), []byte(filename)); match {
-			fileReader, err := file.Open()
-			if err != nil {
-				return nil, fmt.Errorf("could not open resource image file %s: %w", filename, err)
-			}
-			defer fileReader.Close()
-
-			floatImage, err := imagecache.GetOrReadCachedImage(filename, fileReader, false, true)
+			floatImage, err := imagecache.GetOrReadCachedImage(filename, fileReader, gammaDecode, postProcessFn)
 			if err != nil {
 				return nil, fmt.Errorf("could not decode resource image file %s: %w", filename, err)
 			}

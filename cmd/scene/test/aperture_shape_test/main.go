@@ -46,7 +46,7 @@ func main() {
 	skyDomeOrigin := vec3.T{0, 0, 0}
 	skyDomeMaterial := scene.NewMaterial().
 		E(color.White, environmentEmissionFactor, true).
-		SP(floatimage.LoadOrPanic(environmentEnvironMap), &skyDomeOrigin, vec3.T{0, 0, 1}, vec3.T{0, 1, 0})
+		SP(floatimage.LoadOrPanic(environmentEnvironMap), scene.TextureTypeAlbedo, &skyDomeOrigin, vec3.T{0, 0, 1}, vec3.T{0, 1, 0})
 	skyDome := scene.NewSphere(&skyDomeOrigin, environmentRadius, skyDomeMaterial).N("sky dome")
 
 	// Gopher
@@ -63,7 +63,7 @@ func main() {
 
 	// Ground
 
-	groundProjection := scene.NewParallelImageProjection(floatimage.LoadOrPanic("textures/ground/soil-cracked.png"), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(gopher.Bounds.SizeY()*2), vec3.UnitZ.Scaled(gopher.Bounds.SizeY()*2))
+	groundProjection := scene.NewParallelImageProjection(floatimage.LoadOrPanic("textures/ground/soil-cracked.png"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(gopher.Bounds.SizeY()*2), vec3.UnitZ.Scaled(gopher.Bounds.SizeY()*2))
 	groundMaterial := scene.NewMaterial().N("Ground material").P(&groundProjection)
 	ground := scene.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
 

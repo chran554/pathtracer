@@ -62,7 +62,7 @@ func main() {
 
 	skydomeMaterial := scene.NewMaterial().
 		E(color.White, skyDomeEmission, true).
-		SP(textureEnv, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+		SP(textureEnv, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
 
 	skyDome := scene.NewSphere(&vec3.T{0, 0, 0}, skyDomeRadius, skydomeMaterial).N("sky dome")
 	skyDome.RotateY(&vec3.Zero, util.DegToRad(-20))
@@ -72,7 +72,7 @@ func main() {
 	ground.ScaleUniform(&vec3.T{0, 0, 0}, skyDomeRadius*2)
 	groundMaterial := scene.NewMaterial().
 		N("ground").
-		PP(textureGround, &vec3.Zero, vec3.T{5, 0, 0}, vec3.T{0, 0, 5})
+		PP(textureGround, scene.TextureTypeAlbedo, &vec3.Zero, vec3.T{5, 0, 0}, vec3.T{0, 0, 5})
 	groundMaterial.FresnelMaxGlossiness = 0.15
 
 	ground.Material = groundMaterial
@@ -266,7 +266,7 @@ func NewBranch(conf Line, texture *floatimage.FloatImage, textureLeaf *floatimag
 		leaves = append(leaves, leaf)
 	}
 
-	branch.Material.CP(texture, &vec3.T{}, *lowPoints[0], branchVector, true)
+	branch.Material.CP(texture, scene.TextureTypeAlbedo, &vec3.T{}, *lowPoints[0], branchVector, true)
 	branch.UpdateVertexNormals(false)
 	branch.FacetStructures = append(branch.FacetStructures, leaves...) // Add leaves to branch
 	branch.Translate(&conf.Start)                                      // Move branch (and leaves) into position in the tree

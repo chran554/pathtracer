@@ -75,6 +75,30 @@ func (c *Color) Copy() *Color {
 	return &col
 }
 
+func (c *Color) Over(src *Color) *Color {
+	c.Set(Over(c, src))
+	return c
+}
+
+// Over composites src over dst using Porter-Duff "over".
+//
+// Input and output colors are encoded using straight-alpha/non-premultiplied RGBA.
+func Over(dst *Color, src *Color) *Color {
+	x := dst.A * (1 - src.A)
+	outA := src.A + x
+	if outA == 0 {
+		return &Color{}
+	}
+
+	aOutInv := 1.0 / outA
+
+	outR := (src.R*src.A + dst.R*x) * aOutInv
+	outG := (src.G*src.A + dst.G*x) * aOutInv
+	outB := (src.B*src.A + dst.B*x) * aOutInv
+
+	return &Color{R: outR, G: outG, B: outB, A: outA}
+}
+
 func (c *Color) ChannelAdd(color *Color) *Color {
 	c.R += color.R
 	c.G += color.G

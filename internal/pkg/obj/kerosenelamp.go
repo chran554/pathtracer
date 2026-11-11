@@ -32,7 +32,7 @@ func NewKeroseneLamp(scale float64, emission float64, sootness float64) *scene.F
 		C(color.White).
 		T(1.0, false, scene.RefractionIndex_Air).
 		E(color.White, emission, false).
-		CP(flameTexture, &vec3.T{flameCenterBounds[0], flame.Bounds.Ymin, flameCenterBounds[2]}, vec3.UnitZ, (vec3.UnitY).Scaled(flame.Bounds.SizeY()*0.95), false)
+		CP(flameTexture, scene.TextureTypeAlbedo, &vec3.T{flameCenterBounds[0], flame.Bounds.Ymin, flameCenterBounds[2]}, vec3.UnitZ, (vec3.UnitY).Scaled(flame.Bounds.SizeY()*0.95), false)
 
 	glassMaterial := scene.NewMaterial().N("glass").
 		//C(color.NewColor(0.93, 0.94, 0.95)).
@@ -44,7 +44,7 @@ func NewKeroseneLamp(scale float64, emission float64, sootness float64) *scene.F
 		C(color.White).
 		T(1.0-sootness, false, scene.RefractionIndex_Air).
 		M(0.0, 1.0).
-		CP(sootSmudgeTexture, &vec3.T{glassCenterBounds[0], glass.Bounds.Ymin, glassCenterBounds[2]}, vec3.UnitX, (vec3.UnitY).Scaled(glass.Bounds.SizeY()), false)
+		CP(sootSmudgeTexture, scene.TextureTypeAlbedo, &vec3.T{glassCenterBounds[0], glass.Bounds.Ymin, glassCenterBounds[2]}, vec3.UnitX, (vec3.UnitY).Scaled(glass.Bounds.SizeY()), false)
 
 	keroseneLamp.GetFirstObjectByMaterialName("base").Material = brassMaterial
 	keroseneLamp.GetFirstObjectByMaterialName("handle").Material = brassMaterial

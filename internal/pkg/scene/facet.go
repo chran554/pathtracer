@@ -3,31 +3,12 @@ package scene
 import (
 	"fmt"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 
 	"github.com/ungerik/go3d/float64/mat3"
 	"github.com/ungerik/go3d/float64/quaternion"
 	"github.com/ungerik/go3d/float64/vec2"
 	"github.com/ungerik/go3d/float64/vec3"
 )
-
-type TextureType string
-
-const (
-	TextureTypeAlbedo       TextureType = "albedo"
-	TextureTypeNormalMap    TextureType = "normalmap"
-	TextureTypeTransparency TextureType = "transparency"
-	TextureTypeGlossy       TextureType = "glossy" // Reflection
-)
-
-func (t TextureType) String() string { return string(t) }
-
-type Texture struct {
-	Type          TextureType
-	Strength      float64
-	Interpolation floatimage.Interpolation
-	Image         *floatimage.FloatImage
-}
 
 type FacetTexture struct {
 	Texture     *Texture
@@ -220,9 +201,9 @@ func (f *Facet) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoi
 	for _, vertex := range f.Vertices {
 		if !rotatedPoints[vertex] {
 			newVertex := vertex.Subed(rotationOrigin)
-			newVertex[2] *= -1 // Convert to right hand coordinate system before rotation matrix
+			newVertex[2] *= -1 // Convert to right-hand coordinate system before rotation matrix
 			rotatedVertex := rotationMatrix.MulVec3(&newVertex)
-			rotatedVertex[2] *= -1 // Convert back to left hand coordinate system after rotation matrix
+			rotatedVertex[2] *= -1 // Convert back to left-hand coordinate system after rotation matrix
 			rotatedVertex.Add(rotationOrigin)
 
 			vertex[0] = rotatedVertex[0]
@@ -235,9 +216,9 @@ func (f *Facet) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoi
 
 	if !rotatedNormals[f.Normal] {
 		normal := *f.Normal
-		normal[2] *= -1 // Convert to right hand coordinate system before rotation matrix
+		normal[2] *= -1 // Convert to right-hand coordinate system before rotation matrix
 		rotatedNormal := rotationMatrix.MulVec3(&normal)
-		rotatedNormal[2] *= -1 // Convert back to left hand coordinate system after rotation matrix
+		rotatedNormal[2] *= -1 // Convert back to left-hand coordinate system after rotation matrix
 		f.Normal[0] = rotatedNormal[0]
 		f.Normal[1] = rotatedNormal[1]
 		f.Normal[2] = rotatedNormal[2]
@@ -248,9 +229,9 @@ func (f *Facet) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoi
 	for _, vertexNormal := range f.VertexNormals {
 		if !rotatedVertexNormals[vertexNormal] {
 			normal := *vertexNormal
-			normal[2] *= -1 // Convert to right hand coordinate system before rotation matrix
+			normal[2] *= -1 // Convert to right-hand coordinate system before rotation matrix
 			rotatedNormal := rotationMatrix.MulVec3(&normal)
-			rotatedNormal[2] *= -1 // Convert back to left hand coordinate system after rotation matrix
+			rotatedNormal[2] *= -1 // Convert back to left-hand coordinate system after rotation matrix
 			vertexNormal[0] = rotatedNormal[0]
 			vertexNormal[1] = rotatedNormal[1]
 			vertexNormal[2] = rotatedNormal[2]
@@ -262,9 +243,9 @@ func (f *Facet) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoi
 	for _, vertexTangent := range f.VertexTangents {
 		if !rotatedVertexNormals[vertexTangent] {
 			tangent := *vertexTangent
-			tangent[2] *= -1 // Convert to right hand coordinate system before rotation matrix
+			tangent[2] *= -1 // Convert to right-hand coordinate system before rotation matrix
 			rotatedTangent := rotationMatrix.MulVec3(&tangent)
-			rotatedTangent[2] *= -1 // Convert back to left hand coordinate system after rotation matrix
+			rotatedTangent[2] *= -1 // Convert back to left-hand coordinate system after rotation matrix
 			vertexTangent[0] = rotatedTangent[0]
 			vertexTangent[1] = rotatedTangent[1]
 			vertexTangent[2] = rotatedTangent[2]

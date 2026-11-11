@@ -27,7 +27,7 @@ func main() {
 	groundTexture := floatimage.LoadOrPanic("textures/floor/Calacatta-Vena-French-Pattern-Architextures.jpg")
 	groundMaterial := scene.NewMaterial().
 		C(color.White.Copy().Multiply(0.2)).
-		PP(groundTexture, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(150), vec3.UnitZ.Scaled(150))
+		PP(groundTexture, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(150), vec3.UnitZ.Scaled(150))
 	ground := &scene.Disc{Name: "ground", Origin: &vec3.T{0, 0, 0}, Normal: &vec3.UnitY, Radius: 5000.0, Material: groundMaterial}
 
 	// Object

@@ -6,8 +6,6 @@ import (
 	"pathtracer/internal/pkg/floatimage"
 	"strings"
 	"sync"
-
-	"github.com/ungerik/go3d/float64/vec3"
 )
 
 type Cache map[string]*floatimage.FloatImage
@@ -35,7 +33,7 @@ func GetCachedImage(filename string) *floatimage.FloatImage {
 	return floatImage
 }
 
-func GetOrReadCachedImage(imageName string, r io.Reader, gammaDecode bool, normalMap bool) (*floatimage.FloatImage, error) {
+func GetOrReadCachedImage(imageName string, r io.Reader, gammaDecode bool, postProcessFn func(*floatimage.FloatImage)) (*floatimage.FloatImage, error) {
 	globalImageCacheLock.Lock()
 	defer globalImageCacheLock.Unlock()
 
@@ -56,18 +54,8 @@ func GetOrReadCachedImage(imageName string, r io.Reader, gammaDecode bool, norma
 			fimg.GammaDecode()
 		}
 
-		// Convert normal map r,g,b to vector x,y,z values
-		if fimg != nil && normalMap {
-			for y := 0; y < fimg.Height; y++ {
-				for x := 0; x < fimg.Width; x++ {
-					c := fimg.GetPixel(x, y)
-					normal := &vec3.T{float64(c.R) - 0.5, float64(c.G) - 0.5, float64(c.B) - 0.5}
-					normal.Normalize()
-					c.R = float32(normal[0])
-					c.G = float32(normal[1])
-					c.B = float32(normal[2])
-				}
-			}
+		if postProcessFn != nil {
+			postProcessFn(fimg)
 		}
 
 		fmt.Println("Image cache reading file:", imageName, "... done", fimg.String())
