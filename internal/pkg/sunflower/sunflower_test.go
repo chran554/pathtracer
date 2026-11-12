@@ -88,6 +88,7 @@ func TestSunflowerRandomizedUniformDisk(t *testing.T) {
 	const samples = 65536
 	const radialBins = 4
 	const angularBins = 8
+
 	tests := []struct {
 		amountPoints int
 		pointNumber  int
@@ -97,24 +98,30 @@ func TestSunflowerRandomizedUniformDisk(t *testing.T) {
 		{10, 10},
 		{100000, 100000},
 	}
+
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("n=%d/k=%d", tt.amountPoints, tt.pointNumber), func(t *testing.T) {
 			var counts [radialBins][angularBins]int
 			var sumX, sumY, sumRadiusSquared float64
 			boundarySamples := 0
+
 			for range samples {
 				x, y := Sunflower(tt.amountPoints, 0, tt.pointNumber, true)
 				radiusSquared := x*x + y*y
+
 				if math.IsNaN(radiusSquared) || math.IsInf(radiusSquared, 0) || radiusSquared > 1+1e-14 {
 					t.Fatalf("invalid disk sample (%g, %g)", x, y)
 				}
+
 				if radiusSquared >= 1-1e-12 {
 					boundarySamples++
 				}
+
 				angle := math.Atan2(y, x)
 				if angle < 0 {
 					angle += 2 * math.Pi
 				}
+
 				// Allow floating-point rounding at the upper endpoints.
 				radialBin := min(int(radiusSquared*radialBins), radialBins-1)
 				angularBin := min(int(angle/(2*math.Pi)*angularBins), angularBins-1)
@@ -123,6 +130,7 @@ func TestSunflowerRandomizedUniformDisk(t *testing.T) {
 				sumY += y
 				sumRadiusSquared += radiusSquared
 			}
+
 			// A narrow rim has negligible area; tolerate rounding, but not a
 			// discrete probability mass on the boundary.
 			if boundarySamples > 2 {
@@ -134,6 +142,7 @@ func TestSunflowerRandomizedUniformDisk(t *testing.T) {
 			if math.Abs(sumRadiusSquared/samples-0.5) > 0.01 {
 				t.Errorf("mean radius squared is %g, want approximately 0.5", sumRadiusSquared/samples)
 			}
+
 			const expected = samples / (radialBins * angularBins)
 			// This tolerance exceeds eleven standard deviations per bin for
 			// uniform samples, while catching the old restricted spiral arcs.
