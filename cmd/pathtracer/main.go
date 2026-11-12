@@ -946,6 +946,7 @@ func processFacetStructureIntersection(ray *scene.Ray, facetStructure *scene.Fac
 	if tmpIntersection {
 		distance := vec3.Distance(ray.Origin, tmpIntersectionPoint)
 		if distance < ii.shortestDistance && distance > epsilonDistance {
+			ii.perturbedNormalAtIntersection = nil      // Discard the previous hit's normal map.
 			ii.shortestDistance = distance              // Save the shortest intersection distance
 			ii.intersection = tmpIntersection           // Set to true, there has been an intersection
 			ii.intersectionPoint = tmpIntersectionPoint // Save the intersection point of the closest intersection
@@ -992,6 +993,7 @@ func processDiscIntersection(ray *scene.Ray, disc *scene.Disc, ii *IntersectionI
 	if tempIntersection {
 		distance := vec3.Distance(ray.Origin, tempIntersectionPoint)
 		if distance < ii.shortestDistance && distance > epsilonDistance {
+			ii.perturbedNormalAtIntersection = nil       // Discard the previous hit's normal map.
 			ii.intersection = tempIntersection           // Set to true, there has been an intersection
 			ii.intersectionPoint = tempIntersectionPoint // Save the intersection point of the closest intersection
 			ii.shortestDistance = distance               // Save the shortest intersection distance
@@ -1022,6 +1024,7 @@ func processSphereIntersection(ray *scene.Ray, sphere *scene.Sphere, ii *Interse
 		//}
 
 		if distance < ii.shortestDistance && distance > epsilonDistance {
+			ii.perturbedNormalAtIntersection = nil       // Discard the previous hit's normal map.
 			ii.intersection = tempIntersection           // Set to true, there has been an intersection
 			ii.intersectionPoint = tempIntersectionPoint // Save the intersection point of the closest intersection
 			ii.shortestDistance = distance               // Save the shortest intersection distance
