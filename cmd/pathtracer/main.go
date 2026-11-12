@@ -572,7 +572,7 @@ func getRandomHemisphereVector(hemisphereHeading *vec3.T) *vec3.T {
 // https://www.csie.ntu.edu.tw/~cyy/courses/rendering/05fall/lectures/handouts/lec10_mc_4up.pdf (page 12)
 func getRandomCosineWeightedHemisphereVector(n *vec3.T) *vec3.T {
 	amountPoints := 100_000
-	x, y := sunflower.Sunflower(amountPoints, 0.0, rand.Intn(amountPoints), true)
+	x, y := sunflower.Sunflower(amountPoints, 0.0, rand.Intn(amountPoints)+1, true)
 	// ret.z = sqrtf(max(0.f,1.f - ret.x*ret.x - ret.y*ret.y));
 	z := math.Sqrt(math.Max(0.0, 1.0-x*x-y*y))
 	generatedUnitHemisphereVector := vec3.T{x, y, z}
@@ -833,9 +833,9 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 				newRayOrigin := ii.intersectionPoint.Added(&rayStartOffset)
 				newRay := scene.Ray{Origin: &newRayOrigin, Heading: newRayHeading}
 
-				incomingEmission := tracePath(&newRay, camera, scn, currentDepth+1, rayContexts)
-				incomingEmissionOnSurface := incomingEmission
-				// incomingEmissionOnSurface.Multiply(float32(cosineNewRayAndNormal))
+				incomingRadiance := tracePath(&newRay, camera, scn, currentDepth+1, rayContexts)
+				incomingRadianceOnSurface := incomingRadiance
+				// incomingRadianceOnSurface.Multiply(float32(cosineNewRayAndNormal))
 
 				if useDiffuseRay {
 					//projectionCol := fixTransparentColor(projectionColor)
@@ -847,9 +847,9 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 					//materialCol = materialCol.Fade(color.White, 1-materialCol.A)
 
 					outgoingEmission = &color.Color{
-						R: incomingEmissionOnSurface.R * materialCol.R * projectionCol.R,
-						G: incomingEmissionOnSurface.G * materialCol.G * projectionCol.G,
-						B: incomingEmissionOnSurface.B * materialCol.B * projectionCol.B,
+						R: incomingRadianceOnSurface.R * materialCol.R * projectionCol.R,
+						G: incomingRadianceOnSurface.G * materialCol.G * projectionCol.G,
+						B: incomingRadianceOnSurface.B * materialCol.B * projectionCol.B,
 						A: 1.0,
 					}
 				} else if useReflectionRay {
@@ -864,16 +864,16 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 					if ii.material.ColorizeReflection {
 						// fmt.Println("colorizing reflection for ", ii.material.Name)
 						outgoingEmission = &color.Color{
-							R: incomingEmissionOnSurface.R * materialCol.R * projectionCol.R,
-							G: incomingEmissionOnSurface.G * materialCol.G * projectionCol.G,
-							B: incomingEmissionOnSurface.B * materialCol.B * projectionCol.B,
+							R: incomingRadianceOnSurface.R * materialCol.R * projectionCol.R,
+							G: incomingRadianceOnSurface.G * materialCol.G * projectionCol.G,
+							B: incomingRadianceOnSurface.B * materialCol.B * projectionCol.B,
 							A: 1.0,
 						}
 					} else {
 						outgoingEmission = &color.Color{
-							R: incomingEmissionOnSurface.R,
-							G: incomingEmissionOnSurface.G,
-							B: incomingEmissionOnSurface.B,
+							R: incomingRadianceOnSurface.R,
+							G: incomingRadianceOnSurface.G,
+							B: incomingRadianceOnSurface.B,
 							A: 1.0,
 						}
 					}
@@ -894,15 +894,15 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 
 					outgoingEmission = &color.Color{
 						// Non colorizing transparency "like light going through plain glass"
-						R: incomingEmissionOnSurface.R, // * materialCol.R * projectionCol.R,
-						G: incomingEmissionOnSurface.G, // * materialCol.G * projectionCol.G,
-						B: incomingEmissionOnSurface.B, // * materialCol.B * projectionCol.B,
+						R: incomingRadianceOnSurface.R, // * materialCol.R * projectionCol.R,
+						G: incomingRadianceOnSurface.G, // * materialCol.G * projectionCol.G,
+						B: incomingRadianceOnSurface.B, // * materialCol.B * projectionCol.B,
 						A: 1.0,
 
 						// Colorizing transparency "like light going through colored/painted glass"
-						// R: incomingEmissionOnSurface.R * materialCol.R * projectionCol.R,
-						// G: incomingEmissionOnSurface.G * materialCol.G * projectionCol.G,
-						// B: incomingEmissionOnSurface.B * materialCol.B * projectionCol.B,
+						// R: incomingRadianceOnSurface.R * materialCol.R * projectionCol.R,
+						// G: incomingRadianceOnSurface.G * materialCol.G * projectionCol.G,
+						// B: incomingRadianceOnSurface.B * materialCol.B * projectionCol.B,
 						// A: 1.0,
 					}
 				}
