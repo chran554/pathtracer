@@ -679,19 +679,15 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 			if !ii.material.RayTerminator {
 				var newRayHeading *vec3.T
 
-				// Flip normal if it is pointing away from the incoming ray on a non-solid object
-				if !ii.material.SolidObject && util.CosinePositive(ii.normalAtIntersection, ray.Heading) {
-					ii.normalAtIntersection.Invert()
-				}
-				isIngoingRay := util.CosineNegative(ii.normalAtIntersection, ray.Heading)
+				geometricNormal, shadingNormal, isIngoingRay := orientSurfaceNormals(ii, ray.Heading)
 
 				currentRayContext := rayContexts[len(rayContexts)-1]
 
 				var reflectionProbability float64
-				if isIngoingRay {
-					// Add Fresnel reflection if it is an ingoing array (for now)
+				if isIngoingRay || !ii.material.SolidObject {
+					// Thin surfaces keep the same Fresnel behavior on either side.
 					perceptualGlossiness := ii.material.Glossiness * ii.material.Glossiness * ii.material.Glossiness * ii.material.Glossiness // Nothing scientific, just a fix for a more (perceptual) linear scale for glossiness
-					reflectionProbability = FresnelReflectAmount(currentRayContext.RefractionIndex, ii.material.RefractionIndex, ii.normalAtIntersection, ray.Heading, perceptualGlossiness, ii.material.FresnelMaxGlossiness)
+					reflectionProbability = FresnelReflectAmount(currentRayContext.RefractionIndex, ii.material.RefractionIndex, &geometricNormal, ray.Heading, perceptualGlossiness, ii.material.FresnelMaxGlossiness)
 				} else {
 					// previousRayContext := rayContexts[len(rayContexts)-2]
 					// normal := ii.normalAtIntersection.Inverted()
@@ -717,56 +713,10 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 					panic("No ray type selected!")
 				}
 
-				//cosineNewRayAndNormal := 1.0
-
-				// Uniform random hemisphere sampling
-				//diffuseHeading := getRandomHemisphereVector(ii.normalAtIntersection)
-				//cosineNewRayAndNormal := 1.0
-
 				if useDiffuseRay {
-					// Weight for cosine weighted hemisphere sampling
-					//cosineNewRayAndNormal = 0.5 // remove the cosine factor as it is already included in hemisphere sampling
-					//cosineNewRayAndNormal = 1.0 // remove the cosine factor as it is already included in hemisphere sampling
-
-					surfaceNormal := ii.normalAtIntersection
-					if ii.perturbedNormalAtIntersection != nil {
-						surfaceNormal = ii.perturbedNormalAtIntersection
-					}
-
-					// Iterate new creating a new heading ray until it is facing in the valid hemisphere direction
-					validNewRay := false
-					maxIter := 100
-					for iter := 0; validNewRay == false && iter < maxIter; iter++ {
-						newRayHeading = getRandomCosineWeightedHemisphereVector(surfaceNormal)
-						validNewRay = vec3.Dot(ii.normalAtIntersection, newRayHeading) > 0.0
-					}
-
-					// Uniform random hemisphere sampling
-					// cosineNewRayAndNormal = vec3.Dot(ii.normalAtIntersection, newRayHeading) / (ii.normalAtIntersection.Length() * newRayHeading.Length())
-
+					newRayHeading = sampleDiffuseHeading(&geometricNormal, &shadingNormal)
 				} else if useReflectionRay {
-					// Iterate new creating a new heading ray until it is facing in the valid hemisphere direction
-					validNewRay := false
-					maxIter := 100
-					for iter := 0; validNewRay == false && iter < maxIter; iter++ {
-						surfaceNormal := ii.normalAtIntersection
-						if ii.perturbedNormalAtIntersection != nil {
-							surfaceNormal = ii.perturbedNormalAtIntersection
-						}
-
-						diffuseHeading := getRandomCosineWeightedHemisphereVector(surfaceNormal)
-						perfectReflectionHeading := getReflectionVector(surfaceNormal, ray.Heading)
-
-						interpolationWeight := ii.material.Roughness * ii.material.Roughness
-						interpolatedHeading := vec3.Interpolate(perfectReflectionHeading, diffuseHeading, interpolationWeight)
-						interpolatedHeading.Normalize()
-
-						// Weight for cosine-weighted hemisphere sampling
-						//cosineNewRayAndNormal = 0.5*interpolationWeight + (1.0 - interpolationWeight) // Interpolated weight diffuse --> specular
-						newRayHeading = &interpolatedHeading
-						validNewRay = vec3.Dot(ii.normalAtIntersection, newRayHeading) > 0.0
-					}
-
+					newRayHeading = sampleReflectionHeading(&geometricNormal, &shadingNormal, ray.Heading, ii.material.Roughness)
 				} else if useTransparencyRay {
 					if ii.material.SolidObject && (ii.material.RefractionIndex > 0.0) {
 
@@ -775,7 +725,7 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 							//fmt.Printf("Ingoing... %s\n", ii.material.Name)
 
 							var totalInternalReflection bool
-							newRayHeading, totalInternalReflection = getRefractionVector(ii.normalAtIntersection, ray.Heading, currentRayContext.RefractionIndex, ii.material.RefractionIndex)
+							newRayHeading, totalInternalReflection = getRefractionVector(&geometricNormal, ray.Heading, currentRayContext.RefractionIndex, ii.material.RefractionIndex)
 
 							if !totalInternalReflection {
 								rayContexts = append(rayContexts, ii.material)
@@ -797,13 +747,8 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 								previousRayContext = rayContexts[len(rayContexts)-1] // Get actual previous ray context
 							}
 
-							// Flip normal if needed, to face ray
-							if util.CosinePositive(ii.normalAtIntersection, ray.Heading) {
-								ii.normalAtIntersection.Invert()
-							}
-
 							var totalInternalReflection bool
-							newRayHeading, totalInternalReflection = getRefractionVector(ii.normalAtIntersection, ray.Heading, currentRayContext.RefractionIndex, previousRayContext.RefractionIndex)
+							newRayHeading, totalInternalReflection = getRefractionVector(&geometricNormal, ray.Heading, currentRayContext.RefractionIndex, previousRayContext.RefractionIndex)
 
 							if totalInternalReflection {
 								rayContexts = append(rayContexts, currentRayContext) // We are not leaving current ray context, due to total internal reflection
@@ -825,8 +770,8 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 				newRayHeading.Normalize() // TODO remove?
 
 				//rayStartOffset := newRayHeading.Scaled(epsilonDistance)
-				rayStartOffset := ii.normalAtIntersection.Scaled(epsilonDistance)
-				if util.CosineNegative(newRayHeading, ii.normalAtIntersection) {
+				rayStartOffset := geometricNormal.Scaled(epsilonDistance)
+				if util.CosineNegative(newRayHeading, &geometricNormal) {
 					(&rayStartOffset).Invert()
 				}
 
