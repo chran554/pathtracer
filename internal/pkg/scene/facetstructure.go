@@ -151,12 +151,12 @@ func (fs *FacetStructure) String() string {
 }
 
 func (fs *FacetStructure) RotateX(rotationOrigin *vec3.T, angle float64) {
-	rotatedPoints := make(map[*vec3.T]bool)
-	rotatedNormals := make(map[*vec3.T]bool)
-	rotatedVertexNormals := make(map[*vec3.T]bool)
-	rotatedVertexTangents := make(map[*vec3.T]bool)
+	rotatedPoints := make(map[*vec3.T]struct{})
+	rotatedNormals := make(map[*vec3.T]struct{})
+	rotatedVertexNormals := make(map[*vec3.T]struct{})
+	rotatedVertexTangents := make(map[*vec3.T]struct{})
 
-	rotatedImageProjections := make(map[*ImageProjection]bool)
+	rotatedImageProjections := make(map[*ImageProjection]struct{})
 
 	rotationMatrix := mat3.T{}
 	rotationMatrix.AssignXRotation(angle)
@@ -168,12 +168,12 @@ func (fs *FacetStructure) RotateX(rotationOrigin *vec3.T, angle float64) {
 // RotateY
 // angle in radians.
 func (fs *FacetStructure) RotateY(rotationOrigin *vec3.T, angle float64) {
-	rotatedPoints := make(map[*vec3.T]bool)
-	rotatedNormals := make(map[*vec3.T]bool)
-	rotatedVertexNormals := make(map[*vec3.T]bool)
-	rotatedVertexTangents := make(map[*vec3.T]bool)
+	rotatedPoints := make(map[*vec3.T]struct{})
+	rotatedNormals := make(map[*vec3.T]struct{})
+	rotatedVertexNormals := make(map[*vec3.T]struct{})
+	rotatedVertexTangents := make(map[*vec3.T]struct{})
 
-	rotatedImageProjections := make(map[*ImageProjection]bool)
+	rotatedImageProjections := make(map[*ImageProjection]struct{})
 
 	rotationMatrix := mat3.T{}
 	rotationMatrix.AssignYRotation(angle)
@@ -183,12 +183,12 @@ func (fs *FacetStructure) RotateY(rotationOrigin *vec3.T, angle float64) {
 }
 
 func (fs *FacetStructure) RotateZ(rotationOrigin *vec3.T, angle float64) {
-	rotatedPoints := make(map[*vec3.T]bool)
-	rotatedNormals := make(map[*vec3.T]bool)
-	rotatedVertexNormals := make(map[*vec3.T]bool)
-	rotatedVertexTangents := make(map[*vec3.T]bool)
+	rotatedPoints := make(map[*vec3.T]struct{})
+	rotatedNormals := make(map[*vec3.T]struct{})
+	rotatedVertexNormals := make(map[*vec3.T]struct{})
+	rotatedVertexTangents := make(map[*vec3.T]struct{})
 
-	rotatedImageProjections := make(map[*ImageProjection]bool)
+	rotatedImageProjections := make(map[*ImageProjection]struct{})
 
 	rotationMatrix := mat3.T{}
 	rotationMatrix.AssignZRotation(angle)
@@ -201,12 +201,12 @@ func (fs *FacetStructure) RotateZ(rotationOrigin *vec3.T, angle float64) {
 // The parameter axis needs to be normalized, and the rotation angle needs to be in radians.
 // The rotation is counter-clockwise when viewed in the axis direction.
 func (fs *FacetStructure) RotateAxis(rotationOrigin *vec3.T, axis *vec3.T, angle float64) {
-	rotatedPoints := make(map[*vec3.T]bool)
-	rotatedNormals := make(map[*vec3.T]bool)
-	rotatedVertexNormals := make(map[*vec3.T]bool)
-	rotatedVertexTangents := make(map[*vec3.T]bool)
+	rotatedPoints := make(map[*vec3.T]struct{})
+	rotatedNormals := make(map[*vec3.T]struct{})
+	rotatedVertexNormals := make(map[*vec3.T]struct{})
+	rotatedVertexTangents := make(map[*vec3.T]struct{})
 
-	rotatedImageProjections := make(map[*ImageProjection]bool)
+	rotatedImageProjections := make(map[*ImageProjection]struct{})
 
 	q := quaternion.FromAxisAngle(axis, angle)
 
@@ -214,29 +214,29 @@ func (fs *FacetStructure) RotateAxis(rotationOrigin *vec3.T, axis *vec3.T, angle
 	fs.UpdateBounds()
 }
 
-func (fs *FacetStructure) rotateByQuaternion(rotationOrigin *vec3.T, q quaternion.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool, rotatedVertexTangents map[*vec3.T]bool, rotatedImageProjections map[*ImageProjection]bool) {
+func (fs *FacetStructure) rotateByQuaternion(rotationOrigin *vec3.T, q quaternion.T, rotatedPoints map[*vec3.T]struct{}, rotatedNormals map[*vec3.T]struct{}, rotatedVertexNormals map[*vec3.T]struct{}, rotatedVertexTangents map[*vec3.T]struct{}, rotatedImageProjections map[*ImageProjection]struct{}) {
 	if fs.Material != nil {
 		for _, projection := range fs.Material.Projections {
-			if !rotatedImageProjections[projection] {
-				if !rotatedPoints[projection.Origin] {
+			if _, ok := rotatedImageProjections[projection]; !ok {
+				if _, ok := rotatedPoints[projection.Origin]; !ok {
 					projection.Origin.Sub(rotationOrigin)
 					q.RotateVec3(projection.Origin)
 					projection.Origin.Add(rotationOrigin)
 
-					rotatedPoints[projection.Origin] = true
+					rotatedPoints[projection.Origin] = struct{}{}
 				}
 
-				if !rotatedPoints[projection.U] {
+				if _, ok := rotatedPoints[projection.U]; !ok {
 					q.RotateVec3(projection.U)
-					rotatedPoints[projection.U] = true
+					rotatedPoints[projection.U] = struct{}{}
 				}
 
-				if !rotatedPoints[projection.V] {
+				if _, ok := rotatedPoints[projection.V]; !ok {
 					q.RotateVec3(projection.V)
-					rotatedPoints[projection.V] = true
+					rotatedPoints[projection.V] = struct{}{}
 				}
 
-				rotatedImageProjections[projection] = true
+				rotatedImageProjections[projection] = struct{}{}
 			}
 		}
 	}
@@ -252,10 +252,10 @@ func (fs *FacetStructure) rotateByQuaternion(rotationOrigin *vec3.T, q quaternio
 	}
 }
 
-func (fs *FacetStructure) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool, rotatedVertexTangents map[*vec3.T]bool, rotatedImageProjections map[*ImageProjection]bool) {
+func (fs *FacetStructure) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]struct{}, rotatedNormals map[*vec3.T]struct{}, rotatedVertexNormals map[*vec3.T]struct{}, rotatedVertexTangents map[*vec3.T]struct{}, rotatedImageProjections map[*ImageProjection]struct{}) {
 	if fs.Material != nil {
 		for _, projection := range fs.Material.Projections {
-			if !rotatedImageProjections[projection] {
+			if _, ok := rotatedImageProjections[projection]; !ok {
 				projection.Origin.Sub(rotationOrigin)
 				projection.Origin[2] *= -1
 				rotatedVertex := rotationMatrix.MulVec3(projection.Origin)
@@ -282,7 +282,7 @@ func (fs *FacetStructure) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, 
 				projection.V[1] = rotatedV[1]
 				projection.V[2] = rotatedV[2]
 
-				rotatedImageProjections[projection] = true
+				rotatedImageProjections[projection] = struct{}{}
 			}
 		}
 	}
@@ -299,25 +299,25 @@ func (fs *FacetStructure) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, 
 }
 
 func (fs *FacetStructure) Translate(translation *vec3.T) {
-	translatedPoints := make(map[*vec3.T]bool)
-	translatedImageProjections := make(map[*ImageProjection]bool)
+	translatedPoints := make(map[*vec3.T]struct{})
+	translatedImageProjections := make(map[*ImageProjection]struct{})
 
 	fs.translate(translation, translatedPoints, translatedImageProjections)
 	fs.UpdateBounds()
 }
 
-func (fs *FacetStructure) translate(translation *vec3.T, translatedPoints map[*vec3.T]bool, translatedImageProjections map[*ImageProjection]bool) {
+func (fs *FacetStructure) translate(translation *vec3.T, translatedPoints map[*vec3.T]struct{}, translatedImageProjections map[*ImageProjection]struct{}) {
 	// Translate image projection (i.e. image projection origin)
 	if fs.Material != nil {
 		for _, projection := range fs.Material.Projections {
 			origin := projection.Origin
-			projectionOriginAlreadyTranslated := translatedPoints[origin]
-			projectionAlreadyTranslated := translatedImageProjections[projection]
+			_, projectionOriginAlreadyTranslated := translatedPoints[origin]
+			_, projectionAlreadyTranslated := translatedImageProjections[projection]
 
 			if !projectionOriginAlreadyTranslated && !projectionAlreadyTranslated {
 				origin.Add(translation)
-				translatedPoints[origin] = true
-				translatedImageProjections[projection] = true
+				translatedPoints[origin] = struct{}{}
+				translatedImageProjections[projection] = struct{}{}
 			}
 		}
 	}
@@ -344,54 +344,54 @@ func (fs *FacetStructure) Scale(scaleOrigin *vec3.T, scale *vec3.T) {
 		return
 	}
 
-	scaledPoints := make(map[*vec3.T]bool)
-	scaledNormals := make(map[*vec3.T]bool)
-	scaledTangents := make(map[*vec3.T]bool)
-	scaledImageProjections := make(map[*ImageProjection]bool)
+	scaledPoints := make(map[*vec3.T]struct{})
+	scaledNormals := make(map[*vec3.T]struct{})
+	scaledTangents := make(map[*vec3.T]struct{})
+	scaledImageProjections := make(map[*ImageProjection]struct{})
 	fs.scale(scaleOrigin, scale, scaledPoints, scaledNormals, scaledTangents, scaledImageProjections)
 
 	fs.UpdateBounds()
 }
 
 func (fs *FacetStructure) FlipX(flipOrigin *vec3.T) {
-	scaledPoints := make(map[*vec3.T]bool)
-	scaledNormals := make(map[*vec3.T]bool)
-	scaledTangents := make(map[*vec3.T]bool)
-	scaledImageProjections := make(map[*ImageProjection]bool)
+	scaledPoints := make(map[*vec3.T]struct{})
+	scaledNormals := make(map[*vec3.T]struct{})
+	scaledTangents := make(map[*vec3.T]struct{})
+	scaledImageProjections := make(map[*ImageProjection]struct{})
 	fs.scale(flipOrigin, &vec3.T{-1, 1, 1}, scaledPoints, scaledNormals, scaledTangents, scaledImageProjections)
 
 	fs.UpdateBounds()
 }
 
 func (fs *FacetStructure) FlipY(flipOrigin *vec3.T) {
-	scaledPoints := make(map[*vec3.T]bool)
-	scaledNormals := make(map[*vec3.T]bool)
-	scaledTangents := make(map[*vec3.T]bool)
-	scaledImageProjections := make(map[*ImageProjection]bool)
+	scaledPoints := make(map[*vec3.T]struct{})
+	scaledNormals := make(map[*vec3.T]struct{})
+	scaledTangents := make(map[*vec3.T]struct{})
+	scaledImageProjections := make(map[*ImageProjection]struct{})
 	fs.scale(flipOrigin, &vec3.T{1, -1, 1}, scaledPoints, scaledNormals, scaledTangents, scaledImageProjections)
 
 	fs.UpdateBounds()
 }
 
 func (fs *FacetStructure) FlipZ(flipOrigin *vec3.T) {
-	scaledPoints := make(map[*vec3.T]bool)
-	scaledNormals := make(map[*vec3.T]bool)
-	scaledTangents := make(map[*vec3.T]bool)
-	scaledImageProjections := make(map[*ImageProjection]bool)
+	scaledPoints := make(map[*vec3.T]struct{})
+	scaledNormals := make(map[*vec3.T]struct{})
+	scaledTangents := make(map[*vec3.T]struct{})
+	scaledImageProjections := make(map[*ImageProjection]struct{})
 	fs.scale(flipOrigin, &vec3.T{1, 1, -1}, scaledPoints, scaledNormals, scaledTangents, scaledImageProjections)
 
 	fs.UpdateBounds()
 }
 
-func (fs *FacetStructure) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool, scaledNormals map[*vec3.T]bool, scaledTangents map[*vec3.T]bool, scaledImageProjections map[*ImageProjection]bool) {
+func (fs *FacetStructure) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]struct{}, scaledNormals map[*vec3.T]struct{}, scaledTangents map[*vec3.T]struct{}, scaledImageProjections map[*ImageProjection]struct{}) {
 	if fs.Material != nil {
 		for _, projection := range fs.Material.Projections {
-			if !scaledImageProjections[projection] {
+			if _, ok := scaledImageProjections[projection]; !ok {
 				projection.Origin.Sub(scaleOrigin).Mul(scale).Add(scaleOrigin)
 				projection.U.Mul(scale)
 				projection.V.Mul(scale)
 
-				scaledImageProjections[projection] = true
+				scaledImageProjections[projection] = struct{}{}
 			}
 		}
 	}
@@ -410,9 +410,9 @@ func (fs *FacetStructure) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints
 func (fs *FacetStructure) TwistY(origin *vec3.T, anglePerYUnit float64) {
 	structureVertices := fs.getVertices()
 
-	var verticesSet = make(map[*vec3.T]bool, 0)
+	var verticesSet = make(map[*vec3.T]struct{}, 0)
 	for _, vertex := range structureVertices {
-		verticesSet[vertex] = true
+		verticesSet[vertex] = struct{}{}
 	}
 
 	for vertex := range verticesSet {
@@ -950,14 +950,14 @@ func areTrianglesEdgeConnected(facet1, facet2 *Facet) bool {
 	// The vertices must, in this implementation, be equal by reference not only by value
 	// (as equal by value is still considered two different vertices).
 
-	var facet2VertexSet map[*vec3.T]bool
+	var facet2VertexSet map[*vec3.T]struct{}
 	for _, vertex := range facet2.Vertices {
-		facet2VertexSet[vertex] = true
+		facet2VertexSet[vertex] = struct{}{}
 	}
 
 	amountCommonVertices := 0
 	for _, vertex := range facet1.Vertices {
-		if facet2VertexSet[vertex] {
+		if _, ok := facet2VertexSet[vertex]; ok {
 			amountCommonVertices++
 		}
 	}

@@ -126,16 +126,16 @@ func (sn *SceneNode) GetFacetStructures() []*FacetStructure {
 }
 
 func (sn *SceneNode) Scale(scaleOrigin *vec3.T, scale *vec3.T) {
-	scaledPoints := make(map[*vec3.T]bool)
-	scaledNormals := make(map[*vec3.T]bool)
-	scaledTangents := make(map[*vec3.T]bool)
-	scaledImageProjections := make(map[*ImageProjection]bool)
+	scaledPoints := make(map[*vec3.T]struct{})
+	scaledNormals := make(map[*vec3.T]struct{})
+	scaledTangents := make(map[*vec3.T]struct{})
+	scaledImageProjections := make(map[*ImageProjection]struct{})
 
 	sn.scale(scaleOrigin, scale, scaledPoints, scaledNormals, scaledTangents, scaledImageProjections)
 	sn.UpdateBounds()
 }
 
-func (sn *SceneNode) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool, scaledNormals map[*vec3.T]bool, scaledTangents map[*vec3.T]bool, scaledImageProjections map[*ImageProjection]bool) {
+func (sn *SceneNode) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]struct{}, scaledNormals map[*vec3.T]struct{}, scaledTangents map[*vec3.T]struct{}, scaledImageProjections map[*ImageProjection]struct{}) {
 	for _, sphere := range sn.GetSpheres() {
 		sphere.scale(scaleOrigin, scale, scaledPoints, scaledImageProjections)
 	}
@@ -154,14 +154,14 @@ func (sn *SceneNode) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[
 }
 
 func (sn *SceneNode) Translate(translation *vec3.T) {
-	translatedPoints := make(map[*vec3.T]bool)
-	translatedImageProjections := make(map[*ImageProjection]bool)
+	translatedPoints := make(map[*vec3.T]struct{})
+	translatedImageProjections := make(map[*ImageProjection]struct{})
 
 	sn.translate(translation, translatedPoints, translatedImageProjections)
 	sn.UpdateBounds()
 }
 
-func (sn *SceneNode) translate(translation *vec3.T, translatedPoints map[*vec3.T]bool, translatedImageProjections map[*ImageProjection]bool) {
+func (sn *SceneNode) translate(translation *vec3.T, translatedPoints map[*vec3.T]struct{}, translatedImageProjections map[*ImageProjection]struct{}) {
 	for _, sphere := range sn.GetSpheres() {
 		sphere.translate(translation, translatedPoints, translatedImageProjections)
 	}
@@ -180,11 +180,11 @@ func (sn *SceneNode) translate(translation *vec3.T, translatedPoints map[*vec3.T
 }
 
 func (sn *SceneNode) RotateX(rotationOrigin *vec3.T, angle float64) {
-	rotatedPoints := make(map[*vec3.T]bool)
-	rotatedNormals := make(map[*vec3.T]bool)
-	rotatedVertexNormals := make(map[*vec3.T]bool)
-	rotatedVertexTangents := make(map[*vec3.T]bool)
-	rotatedImageProjections := make(map[*ImageProjection]bool)
+	rotatedPoints := make(map[*vec3.T]struct{})
+	rotatedNormals := make(map[*vec3.T]struct{})
+	rotatedVertexNormals := make(map[*vec3.T]struct{})
+	rotatedVertexTangents := make(map[*vec3.T]struct{})
+	rotatedImageProjections := make(map[*ImageProjection]struct{})
 
 	rotationMatrix := mat3.T{}
 	rotationMatrix.AssignXRotation(angle)
@@ -194,11 +194,11 @@ func (sn *SceneNode) RotateX(rotationOrigin *vec3.T, angle float64) {
 }
 
 func (sn *SceneNode) RotateY(rotationOrigin *vec3.T, angle float64) {
-	rotatedPoints := make(map[*vec3.T]bool)
-	rotatedNormals := make(map[*vec3.T]bool)
-	rotatedVertexNormals := make(map[*vec3.T]bool)
-	rotatedVertexTangents := make(map[*vec3.T]bool)
-	rotatedImageProjections := make(map[*ImageProjection]bool)
+	rotatedPoints := make(map[*vec3.T]struct{})
+	rotatedNormals := make(map[*vec3.T]struct{})
+	rotatedVertexNormals := make(map[*vec3.T]struct{})
+	rotatedVertexTangents := make(map[*vec3.T]struct{})
+	rotatedImageProjections := make(map[*ImageProjection]struct{})
 
 	rotationMatrix := mat3.T{}
 	rotationMatrix.AssignYRotation(angle)
@@ -208,11 +208,11 @@ func (sn *SceneNode) RotateY(rotationOrigin *vec3.T, angle float64) {
 }
 
 func (sn *SceneNode) RotateZ(rotationOrigin *vec3.T, angle float64) {
-	rotatedPoints := make(map[*vec3.T]bool)
-	rotatedNormals := make(map[*vec3.T]bool)
-	rotatedVertexNormals := make(map[*vec3.T]bool)
-	rotatedVertexTangents := make(map[*vec3.T]bool)
-	rotatedImageProjections := make(map[*ImageProjection]bool)
+	rotatedPoints := make(map[*vec3.T]struct{})
+	rotatedNormals := make(map[*vec3.T]struct{})
+	rotatedVertexNormals := make(map[*vec3.T]struct{})
+	rotatedVertexTangents := make(map[*vec3.T]struct{})
+	rotatedImageProjections := make(map[*ImageProjection]struct{})
 
 	rotationMatrix := mat3.T{}
 	rotationMatrix.AssignZRotation(angle)
@@ -221,7 +221,7 @@ func (sn *SceneNode) RotateZ(rotationOrigin *vec3.T, angle float64) {
 	sn.UpdateBounds()
 }
 
-func (sn *SceneNode) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool, rotatedVertexTangents map[*vec3.T]bool, rotatedImageProjections map[*ImageProjection]bool) {
+func (sn *SceneNode) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]struct{}, rotatedNormals map[*vec3.T]struct{}, rotatedVertexNormals map[*vec3.T]struct{}, rotatedVertexTangents map[*vec3.T]struct{}, rotatedImageProjections map[*ImageProjection]struct{}) {
 	for _, sphere := range sn.GetSpheres() {
 		sphere.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedImageProjections)
 	}

@@ -50,46 +50,46 @@ func (d *Disc) UpdateBounds() {
 }
 
 func (d *Disc) Translate(translation *vec3.T) {
-	translatedPoints := make(map[*vec3.T]bool)
-	translatedImageProjections := make(map[*ImageProjection]bool)
+	translatedPoints := make(map[*vec3.T]struct{})
+	translatedImageProjections := make(map[*ImageProjection]struct{})
 
 	d.translate(translation, translatedPoints, translatedImageProjections)
 }
 
-func (d *Disc) translate(translation *vec3.T, translatedPoints map[*vec3.T]bool, translatedImageProjections map[*ImageProjection]bool) {
+func (d *Disc) translate(translation *vec3.T, translatedPoints map[*vec3.T]struct{}, translatedImageProjections map[*ImageProjection]struct{}) {
 	// Translate image projection (i.e. image projection origin)
 	if d.Material != nil {
 		for _, projection := range d.Material.Projections {
 			origin := projection.Origin
-			projectionOriginAlreadyTranslated := translatedPoints[origin]
-			projectionAlreadyTranslated := translatedImageProjections[projection]
+			_, projectionOriginAlreadyTranslated := translatedPoints[origin]
+			_, projectionAlreadyTranslated := translatedImageProjections[projection]
 
 			if !projectionOriginAlreadyTranslated && !projectionAlreadyTranslated {
 				origin.Add(translation)
-				translatedPoints[origin] = true
-				translatedImageProjections[projection] = true
+				translatedPoints[origin] = struct{}{}
+				translatedImageProjections[projection] = struct{}{}
 			}
 		}
 	}
 
-	originAlreadyTranslated := translatedPoints[d.Origin]
+	_, originAlreadyTranslated := translatedPoints[d.Origin]
 
 	if !originAlreadyTranslated {
 		d.Origin.Add(translation)
-		translatedPoints[d.Origin] = true
+		translatedPoints[d.Origin] = struct{}{}
 	}
 
 	d.UpdateBounds()
 }
 
 func (d *Disc) Scale(scaleOrigin *vec3.T, scale *vec3.T) {
-	scaledPoints := make(map[*vec3.T]bool)
-	scaledImageProjections := make(map[*ImageProjection]bool)
+	scaledPoints := make(map[*vec3.T]struct{})
+	scaledImageProjections := make(map[*ImageProjection]struct{})
 
 	d.scale(scaleOrigin, scale, scaledPoints, scaledImageProjections)
 }
 
-func (d *Disc) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool, scaledImageProjections map[*ImageProjection]bool) {
+func (d *Disc) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]struct{}, scaledImageProjections map[*ImageProjection]struct{}) {
 	if d.Material != nil && len(d.Material.Projections) > 0 {
 		panic("No disc scale implementation for projections")
 	}

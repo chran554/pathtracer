@@ -134,10 +134,10 @@ func (f *Facet) Center() *vec3.T {
 }
 
 func (f *Facet) RotateX(rotationOrigin *vec3.T, angle float64) {
-	rotatedPoints := make(map[*vec3.T]bool)
-	rotatedNormals := make(map[*vec3.T]bool)
-	rotatedVertexNormals := make(map[*vec3.T]bool)
-	rotatedVertexTangents := make(map[*vec3.T]bool)
+	rotatedPoints := make(map[*vec3.T]struct{})
+	rotatedNormals := make(map[*vec3.T]struct{})
+	rotatedVertexNormals := make(map[*vec3.T]struct{})
+	rotatedVertexTangents := make(map[*vec3.T]struct{})
 
 	rotationMatrix := mat3.T{}
 	rotationMatrix.AssignXRotation(angle)
@@ -146,10 +146,10 @@ func (f *Facet) RotateX(rotationOrigin *vec3.T, angle float64) {
 }
 
 func (f *Facet) RotateY(rotationOrigin *vec3.T, angle float64) {
-	rotatedPoints := make(map[*vec3.T]bool)
-	rotatedNormals := make(map[*vec3.T]bool)
-	rotatedVertexNormals := make(map[*vec3.T]bool)
-	rotatedVertexTangents := make(map[*vec3.T]bool)
+	rotatedPoints := make(map[*vec3.T]struct{})
+	rotatedNormals := make(map[*vec3.T]struct{})
+	rotatedVertexNormals := make(map[*vec3.T]struct{})
+	rotatedVertexTangents := make(map[*vec3.T]struct{})
 
 	rotationMatrix := mat3.T{}
 	rotationMatrix.AssignYRotation(angle)
@@ -158,10 +158,10 @@ func (f *Facet) RotateY(rotationOrigin *vec3.T, angle float64) {
 }
 
 func (f *Facet) RotateZ(rotationOrigin *vec3.T, angle float64) {
-	rotatedPoints := make(map[*vec3.T]bool)
-	rotatedNormals := make(map[*vec3.T]bool)
-	rotatedVertexNormals := make(map[*vec3.T]bool)
-	rotatedVertexTangents := make(map[*vec3.T]bool)
+	rotatedPoints := make(map[*vec3.T]struct{})
+	rotatedNormals := make(map[*vec3.T]struct{})
+	rotatedVertexNormals := make(map[*vec3.T]struct{})
+	rotatedVertexTangents := make(map[*vec3.T]struct{})
 
 	rotationMatrix := mat3.T{}
 	rotationMatrix.AssignZRotation(angle)
@@ -169,42 +169,42 @@ func (f *Facet) RotateZ(rotationOrigin *vec3.T, angle float64) {
 	f.rotate(rotationOrigin, rotationMatrix, rotatedPoints, rotatedNormals, rotatedVertexNormals, rotatedVertexTangents)
 }
 
-func (f *Facet) rotateByQuaternion(rotationOrigin *vec3.T, q quaternion.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool, rotatedVertexTangents map[*vec3.T]bool) {
+func (f *Facet) rotateByQuaternion(rotationOrigin *vec3.T, q quaternion.T, rotatedPoints map[*vec3.T]struct{}, rotatedNormals map[*vec3.T]struct{}, rotatedVertexNormals map[*vec3.T]struct{}, rotatedVertexTangents map[*vec3.T]struct{}) {
 	for _, vertex := range f.Vertices {
-		if !rotatedPoints[vertex] {
+		if _, ok := rotatedPoints[vertex]; !ok {
 			vertex.Sub(rotationOrigin)
 			q.RotateVec3(vertex)
 			vertex.Add(rotationOrigin)
 
-			rotatedPoints[vertex] = true
+			rotatedPoints[vertex] = struct{}{}
 		}
 	}
 
-	if !rotatedNormals[f.Normal] {
+	if _, ok := rotatedNormals[f.Normal]; !ok {
 		q.RotatedVec3(f.Normal)
-		rotatedNormals[f.Normal] = true
+		rotatedNormals[f.Normal] = struct{}{}
 	}
 
 	for _, vertexNormal := range f.VertexNormals {
-		if !rotatedVertexNormals[vertexNormal] {
+		if _, ok := rotatedVertexNormals[vertexNormal]; !ok {
 			q.RotatedVec3(vertexNormal)
-			rotatedVertexNormals[vertexNormal] = true
+			rotatedVertexNormals[vertexNormal] = struct{}{}
 		}
 	}
 
 	for _, vertexTangent := range f.VertexTangents {
-		if !rotatedVertexTangents[vertexTangent] {
+		if _, ok := rotatedVertexTangents[vertexTangent]; !ok {
 			q.RotatedVec3(vertexTangent)
-			rotatedVertexTangents[vertexTangent] = true
+			rotatedVertexTangents[vertexTangent] = struct{}{}
 		}
 	}
 
 	f.Bounds = nil
 }
 
-func (f *Facet) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]bool, rotatedNormals map[*vec3.T]bool, rotatedVertexNormals map[*vec3.T]bool, rotatedVertexTangents map[*vec3.T]bool) {
+func (f *Facet) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoints map[*vec3.T]struct{}, rotatedNormals map[*vec3.T]struct{}, rotatedVertexNormals map[*vec3.T]struct{}, rotatedVertexTangents map[*vec3.T]struct{}) {
 	for _, vertex := range f.Vertices {
-		if !rotatedPoints[vertex] {
+		if _, ok := rotatedPoints[vertex]; !ok {
 			newVertex := vertex.Subed(rotationOrigin)
 			rotateVector(&newVertex, rotationMatrix)
 			newVertex.Add(rotationOrigin)
@@ -213,26 +213,26 @@ func (f *Facet) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoi
 			vertex[1] = newVertex[1]
 			vertex[2] = newVertex[2]
 
-			rotatedPoints[vertex] = true
+			rotatedPoints[vertex] = struct{}{}
 		}
 	}
 
-	if !rotatedNormals[f.Normal] {
+	if _, ok := rotatedNormals[f.Normal]; !ok {
 		rotateVector(f.Normal, rotationMatrix)
-		rotatedNormals[f.Normal] = true
+		rotatedNormals[f.Normal] = struct{}{}
 	}
 
 	for _, vertexNormal := range f.VertexNormals {
-		if !rotatedVertexNormals[vertexNormal] {
+		if _, ok := rotatedVertexNormals[vertexNormal]; !ok {
 			rotateVector(vertexNormal, rotationMatrix)
-			rotatedVertexNormals[vertexNormal] = true
+			rotatedVertexNormals[vertexNormal] = struct{}{}
 		}
 	}
 
 	for _, vertexTangent := range f.VertexTangents {
-		if !rotatedVertexNormals[vertexTangent] {
+		if _, ok := rotatedVertexNormals[vertexTangent]; !ok {
 			rotateVector(vertexTangent, rotationMatrix)
-			rotatedVertexTangents[vertexTangent] = true
+			rotatedVertexTangents[vertexTangent] = struct{}{}
 		}
 	}
 
@@ -249,9 +249,9 @@ func rotateVector(vector *vec3.T, rotationMatrix mat3.T) {
 	vector[2] = rotatedVector[2]
 }
 
-func (f *Facet) translate(translation *vec3.T, translatedPoints map[*vec3.T]bool) {
+func (f *Facet) translate(translation *vec3.T, translatedPoints map[*vec3.T]struct{}) {
 	for _, vertex := range f.Vertices {
-		vertexAlreadyTranslated := translatedPoints[vertex]
+		_, vertexAlreadyTranslated := translatedPoints[vertex]
 
 		if !vertexAlreadyTranslated {
 			newVertex := vertex.Added(translation)
@@ -260,41 +260,41 @@ func (f *Facet) translate(translation *vec3.T, translatedPoints map[*vec3.T]bool
 			vertex[1] = newVertex[1]
 			vertex[2] = newVertex[2]
 
-			translatedPoints[vertex] = true
+			translatedPoints[vertex] = struct{}{}
 		}
 	}
 
 	f.Bounds = nil
 }
 
-func (f *Facet) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]bool, scaledNormals map[*vec3.T]bool, scaledTangents map[*vec3.T]bool) {
+func (f *Facet) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3.T]struct{}, scaledNormals map[*vec3.T]struct{}, scaledTangents map[*vec3.T]struct{}) {
 	for _, vertex := range f.Vertices {
-		if !scaledPoints[vertex] {
+		if _, ok := scaledPoints[vertex]; !ok {
 			vertex.Sub(scaleOrigin).Mul(scale).Add(scaleOrigin)
-			scaledPoints[vertex] = true
+			scaledPoints[vertex] = struct{}{}
 		}
 	}
 
 	if f.Normal != nil {
 		// f.UpdateNormal()
 		f.Normal.Mul(scale).Normalize()
-		scaledNormals[f.Normal] = true
+		scaledNormals[f.Normal] = struct{}{}
 	}
 
 	if f.VertexNormals != nil {
 		for _, vertexNormal := range f.VertexNormals {
-			if !scaledNormals[vertexNormal] {
+			if _, ok := scaledNormals[vertexNormal]; !ok {
 				vertexNormal.Mul(scale).Normalize() // keep normals normalized (in unit length)
-				scaledNormals[vertexNormal] = true
+				scaledNormals[vertexNormal] = struct{}{}
 			}
 		}
 	}
 
 	if f.VertexTangents != nil {
 		for _, vertexTangent := range f.VertexTangents {
-			if !scaledTangents[vertexTangent] {
+			if _, ok := scaledTangents[vertexTangent]; !ok {
 				vertexTangent.Mul(scale).Normalize() // keep normals normalized (in unit length)
-				scaledTangents[vertexTangent] = true
+				scaledTangents[vertexTangent] = struct{}{}
 			}
 		}
 	}
