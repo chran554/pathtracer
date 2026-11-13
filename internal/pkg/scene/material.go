@@ -11,17 +11,17 @@ import (
 type Material struct {
 	Name                 string
 	Color                *color.Color
-	Diffuse              float64
+	Diffuse              float64 // Nonnegative diffuse selection weight, relative to Glossiness and Transparency. RGB albedo controls absorption.
 	Emission             *color.Color
-	Glossiness           float64 // Glossiness is the percent amount that will make out specular reflection. Values [0.0, 1.0] with default 0.0. The lower value, the more diffuse color will appear, and the higher value, the more mirror reflection will appear.
-	Roughness            float64 // Roughness is the diffuse spread of the glossiness (specular reflection). Values [0.0, 1.0] with default 1.0. Higher value is like "brushed metal" or "foggy/hazy reflection" and a lower value gives a more mirror like reflection. A value of 0.0 is perfect mirror reflection and a value of 1.0 is a perfect diffuse material (no mirror at all).
+	Glossiness           float64 // Nonnegative reflection selection weight, relative to Diffuse and Transparency, before Fresnel adjustment.
+	Roughness            float64 // Reflection roughness in [0,1]. Zero is a perfect mirror; positive values use single-scattering GGX with width Roughness squared.
 	Projections          []*ImageProjection
 	RefractionIndex      float64
 	SolidObject          bool    // SolidObject is if the material denotes a solid object with volume, not a hollow or open object or object nor an object with plane-thin walls. Solid transparent objects can refract light, hollow objects don't.
-	Transparency         float64 // Transparency is the amount [0,1.0) of transparency vs diffuse contribution.
+	Transparency         float64 // Nonnegative optical transmission selection weight, relative to Diffuse and Glossiness. Color alpha controls surface coverage.
 	RayTerminator        bool    // RayTerminator decide if the ray should terminate after hit with the object. Example can be an environment sphere or environment cube where a hit to the wall is the same as "no hit, continue in infinity". Extremely bright lights can also be ray terminators, their appearance will not notably be affected by further tracing.
 	ColorizeReflection   bool    // ColorizeReflection is if the reflection color should be colorized based on the material color. Shiny metal materials will colorize reflection. Dielectric materials will not colorize reflection.
-	FresnelMaxGlossiness float64
+	FresnelMaxGlossiness float64 // Reflection probability approached as dielectric Fresnel reflectance approaches 1. Values [0,1].
 }
 
 // NewMaterial creates a new material with sensible defaults.
@@ -173,5 +173,5 @@ func NewMaterialGlass(name string) *Material {
 		N(name).
 		C(color.NewColor(0.90, 0.92, 0.95)).
 		M(0.270, 0.030).
-		T(0.700, true, RefractionIndex_Glass)
+		T(0.98, true, RefractionIndex_Glass)
 }

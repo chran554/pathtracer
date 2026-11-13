@@ -52,6 +52,11 @@ func (fs *FacetStructure) UpdateMaterials() {
 	}
 }
 
+// UpdateNormals calculates a normalized normal for each facet in face structure.
+//
+// Clockwise (CW) ordered points produce a normal going towards the observer.
+//
+// Counter-Clockwise (CCW) ordered points produce a normal going away from the observer.
 func (fs *FacetStructure) UpdateNormals() {
 	for _, facet := range fs.Facets {
 		facet.UpdateNormal()

@@ -95,6 +95,11 @@ func (f *Facet) GetBounds() *Bounds {
 	return f.Bounds
 }
 
+// UpdateNormal calculates a normalized normal for the facet.
+//
+// Clockwise (CW) ordered points produce a normal going towards the observer.
+//
+// Counter-Clockwise (CCW) ordered points produce a normal going away from the observer.
 func (f *Facet) UpdateNormal() {
 	sideVector1 := vec3.Sub(f.Vertices[1], f.Vertices[0])
 	sideVector2 := vec3.Sub(f.Vertices[2], f.Vertices[0])
@@ -201,60 +206,47 @@ func (f *Facet) rotate(rotationOrigin *vec3.T, rotationMatrix mat3.T, rotatedPoi
 	for _, vertex := range f.Vertices {
 		if !rotatedPoints[vertex] {
 			newVertex := vertex.Subed(rotationOrigin)
-			newVertex[2] *= -1 // Convert to right-hand coordinate system before rotation matrix
-			rotatedVertex := rotationMatrix.MulVec3(&newVertex)
-			rotatedVertex[2] *= -1 // Convert back to left-hand coordinate system after rotation matrix
-			rotatedVertex.Add(rotationOrigin)
+			rotateVector(&newVertex, rotationMatrix)
+			newVertex.Add(rotationOrigin)
 
-			vertex[0] = rotatedVertex[0]
-			vertex[1] = rotatedVertex[1]
-			vertex[2] = rotatedVertex[2]
+			vertex[0] = newVertex[0]
+			vertex[1] = newVertex[1]
+			vertex[2] = newVertex[2]
 
 			rotatedPoints[vertex] = true
 		}
 	}
 
 	if !rotatedNormals[f.Normal] {
-		normal := *f.Normal
-		normal[2] *= -1 // Convert to right-hand coordinate system before rotation matrix
-		rotatedNormal := rotationMatrix.MulVec3(&normal)
-		rotatedNormal[2] *= -1 // Convert back to left-hand coordinate system after rotation matrix
-		f.Normal[0] = rotatedNormal[0]
-		f.Normal[1] = rotatedNormal[1]
-		f.Normal[2] = rotatedNormal[2]
-
+		rotateVector(f.Normal, rotationMatrix)
 		rotatedNormals[f.Normal] = true
 	}
 
 	for _, vertexNormal := range f.VertexNormals {
 		if !rotatedVertexNormals[vertexNormal] {
-			normal := *vertexNormal
-			normal[2] *= -1 // Convert to right-hand coordinate system before rotation matrix
-			rotatedNormal := rotationMatrix.MulVec3(&normal)
-			rotatedNormal[2] *= -1 // Convert back to left-hand coordinate system after rotation matrix
-			vertexNormal[0] = rotatedNormal[0]
-			vertexNormal[1] = rotatedNormal[1]
-			vertexNormal[2] = rotatedNormal[2]
-
+			rotateVector(vertexNormal, rotationMatrix)
 			rotatedVertexNormals[vertexNormal] = true
 		}
 	}
 
 	for _, vertexTangent := range f.VertexTangents {
 		if !rotatedVertexNormals[vertexTangent] {
-			tangent := *vertexTangent
-			tangent[2] *= -1 // Convert to right-hand coordinate system before rotation matrix
-			rotatedTangent := rotationMatrix.MulVec3(&tangent)
-			rotatedTangent[2] *= -1 // Convert back to left-hand coordinate system after rotation matrix
-			vertexTangent[0] = rotatedTangent[0]
-			vertexTangent[1] = rotatedTangent[1]
-			vertexTangent[2] = rotatedTangent[2]
-
+			rotateVector(vertexTangent, rotationMatrix)
 			rotatedVertexTangents[vertexTangent] = true
 		}
 	}
 
 	f.Bounds = nil
+}
+
+func rotateVector(vector *vec3.T, rotationMatrix mat3.T) {
+	tmpVector := *vector
+	tmpVector[2] *= -1 // Convert to right-hand coordinate system before rotation matrix
+	rotatedVector := rotationMatrix.MulVec3(&tmpVector)
+	rotatedVector[2] *= -1 // Convert back to left-hand coordinate system after rotation matrix
+	vector[0] = rotatedVector[0]
+	vector[1] = rotatedVector[1]
+	vector[2] = rotatedVector[2]
 }
 
 func (f *Facet) translate(translation *vec3.T, translatedPoints map[*vec3.T]bool) {
