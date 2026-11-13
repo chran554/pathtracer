@@ -102,7 +102,7 @@ func main() {
 	lampMaterial := scene.NewMaterial().N("lamp").E(color.White, lampScale, true)
 	lamp := scene.NewSphere(&vec3.T{0, lampRadius, lampRadius + wallDistance/2}, lampRadius, lampMaterial).N("lamp")
 
-	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
+	for frameIndex := range amountFrames {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
 
 		scn := scene.NewSceneNode().FS(floor).S(lamp).FS(wall1, wall2).FS(wallDivisions...).S(decorativeLamps...)

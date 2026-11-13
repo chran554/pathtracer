@@ -36,7 +36,7 @@ func main() {
 	nominalFocusDistance := cameraOrigin.Length()
 
 	ballAngle := (2.0 * math.Pi) / float64(amountBalls)
-	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
+	for frameIndex := range amountFrames {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
 		deltaFrameAngle := ballAngle * animationProgress
 
@@ -50,7 +50,7 @@ func main() {
 
 		scn := scene.NewSceneNode().D(ground)
 
-		for ballIndex := 0; ballIndex < amountBalls; ballIndex++ {
+		for ballIndex := range amountBalls {
 			s := 2.0 * math.Pi
 			t := float64(ballIndex) / float64(amountBalls)
 			angle := s * t

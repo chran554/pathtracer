@@ -106,7 +106,7 @@ func main() {
 
 	r := rand.New(rand.NewSource(99))
 	var snookerballs []*scene.Sphere
-	for j := 0; j < len(balls); j++ {
+	for j := range balls {
 		for i := 0; i < len(balls[j]); i++ {
 			snookerball := NewSnookerBall(balls[j][i])
 			snookerball.RotateX(snookerball.Bounds().Center(), util.DegToRad(-10)) // Tilt the ball number slightly upwards
@@ -147,7 +147,7 @@ func main() {
 		FS(poolTable, lamp2)
 
 	//animationStep := 1.0 / float64(amountAnimationFrames)
-	for animationFrameIndex := 0; animationFrameIndex < amountAnimationFrames; animationFrameIndex++ {
+	for animationFrameIndex := range amountAnimationFrames {
 		// animationProgress := float64(animationFrameIndex) * animationStep
 
 		cameraOrigin := &vec3.T{0, 9, -40}

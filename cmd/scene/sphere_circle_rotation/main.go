@@ -57,7 +57,7 @@ var amountBallsToRotateBeforeMovieLoop = len(projectionTextures)
 func main() {
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, true)
 
-	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
+	for frameIndex := range amountFrames {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
 
 		ballAnimationTravelAngle := (2.0 * math.Pi) * float64(amountBallsToRotateBeforeMovieLoop) / float64(amountBalls)
@@ -101,7 +101,7 @@ func main() {
 func addBallsToScene(deltaBallAngle float64, projectionAngle float64, projectionData []projection) []*scene.Sphere {
 	var balls []*scene.Sphere
 
-	for ballIndex := 0; ballIndex < amountBalls; ballIndex++ {
+	for ballIndex := range amountBalls {
 		s := 2.0 * math.Pi
 		t := float64(ballIndex) / float64(amountBalls)
 		ballNominalAngle := s * t

@@ -187,7 +187,7 @@ func readASCII(r io.Reader) (*Stl, error) {
 					}
 
 					added := false
-					for i := 0; i < 3; i++ {
+					for i := range 3 {
 						if currentFacet.Vertices[i] == nil {
 							currentFacet.Vertices[i] = v
 							added = true
@@ -251,7 +251,7 @@ func readBinary(r io.Reader) (*Stl, error) {
 		facet.Normal.Y = math.Float32frombits(binary.LittleEndian.Uint32(data[4:8]))
 		facet.Normal.Z = math.Float32frombits(binary.LittleEndian.Uint32(data[8:12]))
 
-		for v := 0; v < 3; v++ {
+		for v := range 3 {
 			vx := math.Float32frombits(binary.LittleEndian.Uint32(data[12+v*12 : 16+v*12]))
 			vy := math.Float32frombits(binary.LittleEndian.Uint32(data[16+v*12 : 20+v*12]))
 			vz := math.Float32frombits(binary.LittleEndian.Uint32(data[20+v*12 : 24+v*12]))
@@ -277,7 +277,7 @@ func parseMagicsTags(stl *Stl, header []byte) {
 	colorIdx := -1
 	for i := 0; i <= len(header)-len(colorTag); i++ {
 		match := true
-		for j := 0; j < len(colorTag); j++ {
+		for j := range colorTag {
 			if header[i+j] != colorTag[j] {
 				match = false
 				break
@@ -302,7 +302,7 @@ func parseMagicsTags(stl *Stl, header []byte) {
 	matIdx := -1
 	for i := 0; i <= len(header)-len(matTag); i++ {
 		match := true
-		for j := 0; j < len(matTag); j++ {
+		for j := range matTag {
 			if header[i+j] != matTag[j] {
 				match = false
 				break

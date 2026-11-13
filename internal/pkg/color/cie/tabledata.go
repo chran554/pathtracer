@@ -104,7 +104,7 @@ func (td *TableData) combineInterpolated(data TableData, f func(a, b float64) fl
 
 	newData := make([]float64, amountSteps) // TODO reuse existing slice if possible
 
-	for i := 0; i < amountSteps; i++ {
+	for i := range amountSteps {
 		x := minX + (i * td.Step)
 
 		value, err := td.Value(x)

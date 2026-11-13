@@ -83,7 +83,7 @@ func main() {
 
 	var trees []*scene.FacetStructure
 	treeCount := 3
-	for i := 0; i < treeCount; i++ {
+	for i := range treeCount {
 		tree := createTree(int64(1337+i), textureBark, textureLeaf, leafMaterial, mapleTreeParams())
 		if i == 0 {
 			tree.Translate(&vec3.T{0, 0, 0})
@@ -229,7 +229,7 @@ func NewBranch(conf Line, texture *floatimage.FloatImage, textureLeaf *floatimag
 	var highPoints []*vec3.T
 
 	const halfProgress = 0.5 * (1.0 / sections)
-	for i := 0; i < sections; i++ {
+	for i := range sections {
 		progress := float64(i) / sections
 		lowPoint := &vec3.T{conf.StartRadius * math.Cos(util.DegToRad(360*progress)), 0, conf.StartRadius * math.Sin(util.DegToRad(360*progress))}
 		highPoint := &vec3.T{conf.EndRadius * math.Cos(util.DegToRad(360*(progress-halfProgress))), branchLength, conf.EndRadius * math.Sin(util.DegToRad(360*(progress-halfProgress)))}
@@ -241,7 +241,7 @@ func NewBranch(conf Line, texture *floatimage.FloatImage, textureLeaf *floatimag
 		highPoints = append(highPoints, highPoint)
 	}
 
-	for i := 0; i < sections; i++ {
+	for i := range sections {
 		f1 := &scene.Facet{Vertices: []*vec3.T{lowPoints[i], highPoints[i], highPoints[(i+1)%sections]}}
 		f2 := &scene.Facet{Vertices: []*vec3.T{lowPoints[i], highPoints[(i+1)%sections], lowPoints[(i+1)%sections]}}
 

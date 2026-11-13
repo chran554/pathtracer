@@ -285,8 +285,8 @@ func (fi *FloatImage) Image() *img.NRGBA {
 	newImage := img.NewNRGBA(img.Rect(0, 0, width, height))
 	// imageAlpha := img.NewRGBA(img.Rect(0, 0, width, height))
 
-	for x := 0; x < width; x++ {
-		for y := 0; y < height; y++ {
+	for x := range width {
+		for y := range height {
 			pixelValue := tmp.GetPixel(x, y)
 
 			r := uint8(util.ClampFloat64(0, 255, math.Round(float64(pixelValue.R)*255.0)))

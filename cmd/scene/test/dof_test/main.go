@@ -65,7 +65,7 @@ func main() {
 		T(0.0, true, scene.RefractionIndex_AcrylicPlastic)
 
 	var spheres []*scene.Sphere
-	for i := 0; i < amountSpheres; i++ {
+	for i := range amountSpheres {
 		positionOffsetX := (-sphereSpread/2.0 + float64(i)*sphereCC) * 0.50
 		positionOffsetZ := (-sphereSpread/2.0 + float64(i)*sphereCC) * 0.75
 
@@ -83,7 +83,7 @@ func main() {
 
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
-	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
+	for frameIndex := range amountFrames {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
 
 		lensRadius := maxLensRadius * (0.5 + math.Sin(-math.Pi/2+math.Pi*animationProgress)*0.5) // Slow start and slow end

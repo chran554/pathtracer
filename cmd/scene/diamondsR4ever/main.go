@@ -63,7 +63,7 @@ func main() {
 	floor := scene.NewDisc(&vec3.T{0, floorLevel, 0}, &vec3.T{0, 1, 0}, roomScale*1.5, floorMaterial).N("Floor")
 
 	animationStep := 1.0 / float64(amountAnimationFrames)
-	for animationFrameIndex := 0; animationFrameIndex < amountAnimationFrames; animationFrameIndex++ {
+	for animationFrameIndex := range amountAnimationFrames {
 		animationProgress := float64(animationFrameIndex) * animationStep
 
 		diamond := dmd.NewDiamondRoundBrilliantCut(d, 75.0, *diamondMaterial)

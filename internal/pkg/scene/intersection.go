@@ -188,7 +188,7 @@ func interpolateTriangleFacetNormal(facet *Facet, vertexWeights *vec3.T) vec3.T 
 	normal := vec3.T{0, 0, 0}
 	amountVertexNormals := len(facet.VertexNormals)
 	if (amountVertexNormals > 0) && (amountVertexNormals <= len(vertexWeights)) {
-		for i := 0; i < amountVertexNormals; i++ {
+		for i := range amountVertexNormals {
 			weightedVertexNormal := facet.VertexNormals[i].Scaled(vertexWeights[i])
 			normal.Add(&weightedVertexNormal)
 		}

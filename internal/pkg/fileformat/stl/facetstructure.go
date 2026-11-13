@@ -71,7 +71,7 @@ func convertToFacetStructure(stl *Stl) *scene.FacetStructure {
 	for _, stlFacet := range stl.Facets {
 		sceneFacet := &scene.Facet{}
 		// STL facets have exactly 3 vertices
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			v := stlFacet.Vertices[i]
 			if _, exist := vertexMap[v]; !exist {
 				vertexMap[v] = &vec3.T{float64(v.X), float64(v.Y), float64(v.Z)}

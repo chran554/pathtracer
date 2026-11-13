@@ -64,8 +64,8 @@ func TestFloatImage_Fill(t *testing.T) {
 	c := color.NewColor(0.5, 0.5, 0.5)
 	fi.Fill(c)
 
-	for y := 0; y < 10; y++ {
-		for x := 0; x < 10; x++ {
+	for y := range 10 {
+		for x := range 10 {
 			assert.Equal(t, *c, *fi.GetPixel(x, y))
 		}
 	}

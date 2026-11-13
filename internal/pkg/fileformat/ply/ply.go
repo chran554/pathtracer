@@ -185,7 +185,7 @@ func parseBinaryElement(r io.Reader, elementID int, elementDefinition *ElementDe
 
 		element.ReferenceType = strings.ToLower(elementDefinition.ReferenceList.getReferenceType())
 
-		for referenceIndex := 0; referenceIndex < expectedAmountReferences; referenceIndex++ {
+		for range expectedAmountReferences {
 			val, err := readInt(r, elementDefinition.ReferenceList.IDDataType, byteOrder)
 			if err != nil {
 				return nil, err

@@ -68,7 +68,7 @@ func main() {
 
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
-	for imageIndex := 0; imageIndex < amountImages; imageIndex++ {
+	for imageIndex := range amountImages {
 		fmt.Printf("\n\nCostructing frame %d\n", imageIndex)
 		fmt.Printf("Reading file: %s\n", objectFilename)
 

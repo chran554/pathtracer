@@ -38,7 +38,7 @@ func main() {
 	environmentEnvironMap := floatimage.LoadOrPanic("textures/equirectangular/open_grassfield_sunny_day.jpg")
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
-	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
+	for frameIndex := range amountFrames {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
 
 		recursiveBalls := getRecursiveBalls(startSphereRadius, maxSphereRecursionDepth)

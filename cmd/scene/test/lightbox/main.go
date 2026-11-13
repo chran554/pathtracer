@@ -51,7 +51,7 @@ func main() {
 	cameraFocusPoint := &vec3.T{0, 30, -10}
 	camera := scene.NewCamera(&cameraOrigin, cameraFocusPoint, amountSamples, magnification).D(maxRecursion).A(apertureSize, nil)
 
-	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
+	for frameIndex := range amountFrames {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
 
 		lamp, lampMaterial := obj.NewBoxWithEmission(obj.BoxCenteredYPositive, color.White, 40, textureLightBox)

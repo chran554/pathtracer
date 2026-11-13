@@ -67,7 +67,7 @@ func main() {
 	// lampMaterial := scene.NewMaterial().N("lamp material").E(color.White, 75.0, true)
 	lampMaterial2 := scene.NewMaterial().N("lamp material").E(color.White, 35.0, true)
 
-	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
+	for frameIndex := range amountFrames {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
 
 		lamp, lampMaterial := obj.NewBoxWithEmission(obj.BoxCenteredYPositive, color.White, 75, imageLightBox)

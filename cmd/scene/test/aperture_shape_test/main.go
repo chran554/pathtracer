@@ -70,7 +70,7 @@ func main() {
 	// Spheres
 
 	childSceneNode := scene.NewSceneNode()
-	for sphereIndex := 0; sphereIndex < amountSpheres; sphereIndex++ {
+	for range amountSpheres {
 		sphere := getSphere(sphereRadius, sphereMinDistance, sphereMaxDistance)
 		childSceneNode.S(sphere)
 	}
@@ -88,7 +88,7 @@ func main() {
 
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
-	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
+	for frameIndex := range amountFrames {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
 
 		focusPoint := vec3.T{0, gopher.Bounds.SizeY() * 0.75, 0}

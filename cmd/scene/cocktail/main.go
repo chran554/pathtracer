@@ -80,7 +80,7 @@ func main() {
 
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, true)
 
-	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
+	for frameIndex := range amountFrames {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
 
 		camera := getCamera(animationProgress)

@@ -20,8 +20,8 @@ type blackBodyLocus struct {
 var blackBodyLocuses []blackBodyLocus
 
 func init() {
-	blackBodyLocusTextLines := strings.Split(blackBodyLocusText, "\n")
-	for _, line := range blackBodyLocusTextLines {
+	blackBodyLocusTextLines := strings.SplitSeq(blackBodyLocusText, "\n")
+	for line := range blackBodyLocusTextLines {
 		if !strings.HasPrefix(line, "#") && strings.TrimSpace(line) != "" {
 			tokens := strings.Split(line, "\t")
 			wavelength, _ := strconv.Atoi(tokens[0])

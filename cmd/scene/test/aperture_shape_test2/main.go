@@ -42,8 +42,8 @@ func main() {
 		quadrantSpheres[i] = make([]*scene.Sphere, 0)
 	}
 
-	for sz := 0; sz < amountSpheres; sz++ {
-		for sx := 0; sx < amountSpheres; sx++ {
+	for sz := range amountSpheres {
+		for sx := range amountSpheres {
 			positionOffsetX := sphereSpread * float64(sx+1)
 			positionOffsetZ := sphereSpread * float64(sz)
 
@@ -54,7 +54,7 @@ func main() {
 			sphereColor := color.NewColor(r, g, b)
 			sphereMaterial := scene.NewMaterial().C(sphereColor).E(sphereColor, sphereEmissionFactor, true)
 
-			for quad := 0; quad < 4; quad++ {
+			for quad := range 4 {
 				sphere := scene.NewSphere(&vec3.T{positionOffsetX, sphereRadius * 3.0, positionOffsetZ}, sphereRadius, sphereMaterial)
 				sphere.RotateY(&vec3.Zero, float64(quad)*math.Pi/2)
 
@@ -72,7 +72,7 @@ func main() {
 
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
-	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
+	for frameIndex := range amountFrames {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
 
 		camera := getCamera(animationProgress, "textures/aperture/letter_F.png")

@@ -34,7 +34,7 @@ var apertureSize = 2.0
 func main() {
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
-	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
+	for frameIndex := range amountFrames {
 		//animationProgress := float64(frameIndex) / float64(amountFrames)
 
 		// Sky dome

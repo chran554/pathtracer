@@ -58,7 +58,7 @@ func (c *Curve) GetControlPoint(pointIndex int) (*vec3.T, error) {
 }
 
 func (c *Curve) Smooth(n int) {
-	for _i := 0; _i < n; _i++ {
+	for range n {
 		c.points = fast3DStep(c.points)
 	}
 	c.smoothLevel += n

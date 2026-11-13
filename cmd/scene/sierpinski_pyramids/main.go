@@ -91,7 +91,7 @@ func (p *Pyramid) SierpinskiSubPyramids() []*Pyramid {
 func main() {
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
-	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
+	for frameIndex := range amountFrames {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
 
 		sierpinskiPyramid := getSierpinskiPyramid()

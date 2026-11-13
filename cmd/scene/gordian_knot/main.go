@@ -46,7 +46,7 @@ var scale = 100.0
 func main() {
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
-	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {
+	for frameIndex := range amountFrames {
 		animationProgress := float64(frameIndex) / float64(amountFrames)
 
 		//ballSpeed := amountBalls / 5.0 // All balls make 1/5:th of a full loop during the whole animation
@@ -82,7 +82,7 @@ func getKnotBalls(ballRadius float64, amountBalls int, scale float64, animationP
 
 	sphereMaterial := scene.NewMaterial().C(color.NewColor(0.95, 0.95, 0.95)).M(0.9, 0.1)
 
-	for ballIndex := 0; ballIndex < amountBalls; ballIndex++ {
+	for ballIndex := range amountBalls {
 		t := (radianDistanceBetweenBalls * float64(ballIndex)) + (animationProgress * ballSpeed * radianDistanceBetweenBalls)
 
 		x := scale * (math.Cos(t) + 2.0*math.Cos(2.0*t))

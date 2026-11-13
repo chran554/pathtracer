@@ -108,7 +108,7 @@ func main() {
 
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
-	for frameIndex := 0; frameIndex < amountAnimationFrames; frameIndex++ {
+	for frameIndex := range amountAnimationFrames {
 		animationProgress := float64(frameIndex) / float64(amountAnimationFrames)
 
 		s1Material := sphereMaterial.Copy()

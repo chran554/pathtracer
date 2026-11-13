@@ -71,7 +71,7 @@ func main() {
 		FS(tableBoard, sodaCanCocaCola, sodaCanPepsi, sodaCanMtnDew, sodaCanFanta)
 
 	//animationStep := 1.0 / float64(amountAnimationFrames)
-	for animationFrameIndex := 0; animationFrameIndex < amountAnimationFrames; animationFrameIndex++ {
+	for range amountAnimationFrames {
 		// animationProgress := float64(animationFrameIndex) * animationStep
 
 		cameraOrigin := (&vec3.T{0, 9, -15}).Scale(1.7).Add(&vec3.T{0, dy, 0})

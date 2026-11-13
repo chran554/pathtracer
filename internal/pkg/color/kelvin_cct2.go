@@ -301,10 +301,7 @@ func kelvinCCT2NearestLocusPoint(locus []kelvinCCT2LocusPoint, target kelvinCCT2
 
 func kelvinCCT2CandidateSegments(locus []kelvinCCT2LocusPoint, nearest int) []kelvinCCT2Segment {
 	segments := make([]kelvinCCT2Segment, 0, 3)
-	start := nearest - 1
-	if start < 0 {
-		start = 0
-	}
+	start := max(nearest-1, 0)
 	end := nearest + 1
 	if end >= len(locus)-1 {
 		end = len(locus) - 2
@@ -334,7 +331,7 @@ func kelvinCCT2MinimizeSegment(low, high float64, target kelvinCCT2UV) (kelvinCC
 	fc := kelvinCCT2DistanceAtLogTemperature(c, target)
 	fd := kelvinCCT2DistanceAtLogTemperature(d, target)
 
-	for i := 0; i < kelvinCCT2GoldenIterations; i++ {
+	for range kelvinCCT2GoldenIterations {
 		if fc < fd {
 			b = d
 			d = c

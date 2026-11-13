@@ -152,7 +152,7 @@ func (s *serializer) serializeFrameFile(frame *scene.Frame) (*FrameInformation, 
 	return frameInformation, nil
 }
 
-func (s *serializer) writeMarshalledDataToZipEntry(data interface{}, filename string) error {
+func (s *serializer) writeMarshalledDataToZipEntry(data any, filename string) error {
 	marshalledData, err := msgpack.Marshal(data)
 	if err != nil {
 		return err

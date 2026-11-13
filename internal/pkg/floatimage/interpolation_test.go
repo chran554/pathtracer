@@ -16,8 +16,8 @@ func TestInterpolation_Save(t *testing.T) {
 	// The WriteImage function will handle gamma encoding when saving the final image.
 	srcSize := 5
 	src := NewFloatImage("source", srcSize, srcSize)
-	for y := 0; y < srcSize; y++ {
-		for x := 0; x < srcSize; x++ {
+	for y := range srcSize {
+		for x := range srcSize {
 			// Create a simple pattern
 			r := float64(x) / float64(srcSize-1)
 			g := float64(y) / float64(srcSize-1)
@@ -48,10 +48,10 @@ func TestInterpolation_Save(t *testing.T) {
 			dst := NewFloatImage(testCase.name, dstSize, dstSize)
 			scale := float64(srcSize+1) / float64(dstSize-1)
 
-			for y := 0; y < dstSize; y++ {
+			for y := range dstSize {
 				// fmt.Printf("pos: %0.3f\n", float64(y)*scale-0.5)
 
-				for x := 0; x < dstSize; x++ {
+				for x := range dstSize {
 					srcX := float64(x)*scale - 0.5
 					srcY := float64(y)*scale - 0.5
 					srcX += testCase.sampleOffset
@@ -74,8 +74,8 @@ func TestInterpolation_Save(t *testing.T) {
 func TestInterpolation(t *testing.T) {
 	fi := NewFloatImage("test", 4, 4)
 	// Fill with some pattern
-	for y := 0; y < 4; y++ {
-		for x := 0; x < 4; x++ {
+	for y := range 4 {
+		for x := range 4 {
 			fi.SetPixel(x, y, color.NewColor(float64(x)/3.0, float64(y)/3.0, 0))
 		}
 	}

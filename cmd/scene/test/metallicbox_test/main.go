@@ -55,7 +55,7 @@ func main() {
 
 	scn := scene.NewSceneNode().S(football, sphere2, mirrorSphere1, mirrorSphere2, mirrorSphere3).FS(cornellBox)
 
-	for animationFrameIndex := 0; animationFrameIndex < amountAnimationFrames; animationFrameIndex++ {
+	for animationFrameIndex := range amountAnimationFrames {
 		animationProgress := float64(animationFrameIndex) / float64(amountAnimationFrames)
 
 		cameraOrigin := vec3.T{0, scale * 0.5, -600}

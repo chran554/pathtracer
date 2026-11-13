@@ -31,7 +31,7 @@ func NewSmoothCurve(controlPoints []*vec3.T, smoothStrength float64, smoothLevel
 }
 
 func (c *SmoothCurve) Smooth(n int) {
-	for _i := 0; _i < n; _i++ {
+	for range n {
 		c.points = c.smooth(c.points)
 	}
 	c.smoothLevel += n
