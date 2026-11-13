@@ -70,52 +70,39 @@ func TestOrientSurfaceNormals(t *testing.T) {
 	}
 }
 
-// TestSurfaceHeadingFallback checks valid directions after every shading sample is rejected.
+// TestSurfaceHeadingFallback checks invalid mirror directions.
 func TestSurfaceHeadingFallback(t *testing.T) {
 	geometric := vec3.T{0, 0, 1}
-	t.Run("diffuse", func(t *testing.T) {
-		// An opposite hemisphere makes all 100 candidates invalid.
-		got := sampleDiffuseHeading(&geometric, &vec3.T{0, 0, -1})
-		if !validSurfaceHeading(&geometric, got) || !(vec3.Distance(got, &geometric) < 1e-6) {
-			t.Fatalf("invalid diffuse fallback: %v", got)
+	t.Run("mirror reflection", func(t *testing.T) {
+		incoming := vec3.T{-0.6, 0, -0.8}
+		// The perturbed mirror points below the surface; use the geometric mirror instead.
+		got := sampleReflection(&geometric, &vec3.T{0.96, 0, 0.28}, &incoming, 0, 0, 0)
+		want := vec3.T{-0.6, 0, 0.8}
+		if got.heading == nil || !validSurfaceHeading(&geometric, got.heading) || vec3.Distance(got.heading, &want) > 1e-6 || got.weight != 1 {
+			t.Fatalf("mirror fallback = %v, want %v with unit weight", got, want)
 		}
 	})
-	for _, roughness := range []float64{0, 0.1} {
-		t.Run(fmt.Sprintf("reflection/roughness=%g", roughness), func(t *testing.T) {
-			incoming := vec3.T{-0.6, 0, -0.8}
-			// This tilt reflects below the surface even with the small roughness blend.
-			got := sampleReflectionHeading(&geometric, &vec3.T{0.96, 0, 0.28}, &incoming, roughness)
-			want := vec3.T{-0.6, 0, 0.8}
-			if !validSurfaceHeading(&geometric, got) || !(vec3.Distance(got, &want) < 1e-6) {
-				t.Fatalf("reflection fallback = %v, want %v", got, want)
-			}
-		})
-	}
-	t.Run("grazing reflection", func(t *testing.T) {
-		got := sampleReflectionHeading(&geometric, &geometric, &vec3.T{1, 0, 0}, 0)
-		if !validSurfaceHeading(&geometric, got) {
-			t.Fatalf("grazing fallback must leave the surface: %v", got)
+	t.Run("grazing mirror", func(t *testing.T) {
+		got := sampleReflection(&geometric, &geometric, &vec3.T{1, 0, 0}, 0, 0, 0)
+		if got.heading == nil || !validSurfaceHeading(&geometric, got.heading) || got.weight != 1 {
+			t.Fatalf("invalid grazing mirror fallback: %v", got)
 		}
 	})
 }
 
 // TestTracePathReflectionFallback checks that an invalid mapped reflection reaches the geometric fallback light.
 func TestTracePathReflectionFallback(t *testing.T) {
-	for _, roughness := range []float64{0, 0.1} {
-		t.Run(fmt.Sprintf("roughness=%g", roughness), func(t *testing.T) {
-			material := normalMappedTestMaterial(vec3.T{0.96, 0, 0.28}).M(1, roughness)
-			scn := &scene.SceneNode{
-				FacetStructures: []*scene.FacetStructure{orientationTestPlane(material)},
-				Discs:           []*scene.Disc{scene.NewDisc(&vec3.T{-1.5, 0, 1}, &vec3.T{0, 0, 1}, 0.005, scene.NewMaterial().E(color.White, 1, true))},
-			}
-			camera := &scene.Camera{RenderType: scene.Pathtracing, RecursionDepth: 1}
-			ray := &scene.Ray{Origin: &vec3.T{0, 0, 1}, Heading: &vec3.T{-0.6, 0, -0.8}}
-			// All mapped candidates point down; the geometric reflection points at the light.
-			got := tracePath(ray, camera, scn, 0, []*scene.Material{scene.NewMaterial()})
-			if got.R != 1 || got.G != 1 || got.B != 1 {
-				t.Fatalf("fallback failed to reflect toward the light: %v", got)
-			}
-		})
+	material := normalMappedTestMaterial(vec3.T{0.96, 0, 0.28}).M(1, 0)
+	scn := &scene.SceneNode{
+		FacetStructures: []*scene.FacetStructure{orientationTestPlane(material)},
+		Discs:           []*scene.Disc{scene.NewDisc(&vec3.T{-1.5, 0, 1}, &vec3.T{0, 0, 1}, 0.005, scene.NewMaterial().E(color.White, 1, true))},
+	}
+	camera := &scene.Camera{RenderType: scene.Pathtracing, RecursionDepth: 1}
+	ray := &scene.Ray{Origin: &vec3.T{0, 0, 1}, Heading: &vec3.T{-0.6, 0, -0.8}}
+	// The mapped mirror points down; the geometric mirror points at the light.
+	got := tracePath(ray, camera, scn, 0, []*scene.Material{scene.NewMaterial()})
+	if got.R != 1 || got.G != 1 || got.B != 1 {
+		t.Fatalf("fallback failed to reflect toward the light: %v", got)
 	}
 }
 
@@ -174,7 +161,12 @@ func TestTracePathSurfaceSides(t *testing.T) {
 						// Differently colored lights reveal which side the bounce reaches.
 						for range 4 {
 							got := tracePath(ray, camera, scn, 0, []*scene.Material{scene.NewMaterial()})
-							if got.R != want.R || got.G != want.G || got.B != want.B {
+							if mode == "rough reflection" {
+								// GGX may mask or reject samples, but must never illuminate the opposite side.
+								if !(got.R >= 0 && got.R <= want.R && got.G >= 0 && got.G <= want.G) || got.B != 0 || got.A != 1 {
+									t.Fatalf("rough reflection crossed the surface or gained energy: %v", got)
+								}
+							} else if got.R != want.R || got.G != want.G || got.B != want.B {
 								t.Fatalf("bounce reached the wrong side: got %v, want %v", got, want)
 							}
 						}
@@ -201,7 +193,10 @@ func TestTracePathRefractionOrientation(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			glass := normalMappedTestMaterial(vec3.T{0.6, 0, 0.8}).T(1, true, 1.5)
+			// A flat map isolates orientation; TestTracePathSmoothGlass covers tilted maps.
+			glass := normalMappedTestMaterial(vec3.T{0, 0, 1}).T(1, true, 1.5)
+			// Isolate refraction direction from Fresnel roulette; TIR must still reflect.
+			glass.FresnelMaxGlossiness = 0
 			air := scene.NewMaterial().T(1, true, 1)
 			contexts := []*scene.Material{air}
 			if tt.inside {
@@ -217,9 +212,15 @@ func TestTracePathRefractionOrientation(t *testing.T) {
 			}
 			camera := &scene.Camera{RenderType: scene.Pathtracing, RecursionDepth: 1}
 			got := tracePath(&scene.Ray{Origin: &tt.origin, Heading: &tt.heading}, camera, scn, 0, contexts)
-			if got.R != 1 || got.G != 1 || got.B != 1 {
-				t.Fatalf("ray missed the expected refracted/reflected direction: %v", got)
+			// A transmitted hit converts radiance between media; TIR stays in the same medium.
+			wantRadiance := 4.0 / 9
+			if tt.inside {
+				wantRadiance = 2.25
+				if tt.targetZ < 0 {
+					wantRadiance = 1
+				}
 			}
+			assertTransmissionColor(t, got, color.NewColor(wantRadiance, wantRadiance, wantRadiance))
 		})
 	}
 }
@@ -232,9 +233,8 @@ func orientationTestMaterial(mode string, mapped bool) *scene.Material {
 	}
 	material.FresnelMaxGlossiness = 0
 	if mode != "diffuse" {
-		material.Glossiness = 1
+		material.M(1, 0) // Disable the diffuse component for reflection-only fixtures.
 		material.FresnelMaxGlossiness = 1
-		material.Roughness = 0
 		if mode == "rough reflection" {
 			material.Roughness = 1
 		}

@@ -14,7 +14,6 @@ import (
 	"pathtracer/internal/pkg/rendermonitor"
 	"pathtracer/internal/pkg/renderpass"
 	"pathtracer/internal/pkg/scene"
-	"pathtracer/internal/pkg/sunflower"
 	"pathtracer/internal/pkg/util"
 	"strings"
 	"sync"
@@ -444,36 +443,11 @@ func parallelPixelRendering(renderedPixelData *floatimage.FloatImage, camera *sc
 	}
 }
 
-// FresnelReflectAmount
-//
-// refractionIndex1 is the index of the medium that we come from.
-// refractionIndex1 is the index of the medium that we hit.
-// incident is the direction vector of the ray.
-// normal is the normal of the surface we hit (pointing more or less towards our incident vector).
-//
-// https://blog.demofox.org/2020/06/14/casual-shadertoy-path-tracing-3-fresnel-rough-refraction-absorption-orbit-camera/
+// FresnelReflectAmount applies material reflectivity limits to dielectric Fresnel reflectance.
+// The normal faces the incident medium; both directions must be unit vectors.
 func FresnelReflectAmount(refractionIndex1 float64, refractionIndex2 float64, normal *vec3.T, incident *vec3.T, minReflection float64, maxReflection float64) float64 {
-	// Schlick approximation
-	r0 := (refractionIndex1 - refractionIndex2) / (refractionIndex1 + refractionIndex2)
-	r0 *= r0
-
-	cosX := -vec3.Dot(normal, incident)
-	if refractionIndex1 > refractionIndex2 {
-		n := refractionIndex1 / refractionIndex2
-		sinT2 := n * n * (1.0 - cosX*cosX)
-
-		// Total internal reflection
-		if sinT2 > 1.0 {
-			return maxReflection
-		}
-		cosX = math.Sqrt(1.0 - sinT2)
-	}
-
-	x := 1.0 - cosX
-	ret := r0 + (1.0-r0)*x*x*x*x*x
-
-	// adjust reflect multiplier for object reflectivity
-	return minReflection*(1.0-ret) + (maxReflection * ret)
+	reflectance := FresnelDielectric(-vec3.Dot(normal, incident), refractionIndex1, refractionIndex2)
+	return minReflection*(1-reflectance) + maxReflection*reflectance
 }
 
 // FresnelDielectric computes the Fresnel reflectance for a dielectric interface.
@@ -489,9 +463,13 @@ func FresnelDielectric(cosI, nI, nT float64) float64 {
 		cosI = 1
 	}
 
-	// Determine if the ray is entering or exiting
-	entering := cosI > 0
-	if !entering {
+	// Equal indices have no optical boundary, including at grazing incidence.
+	if nI == nT {
+		return 0
+	}
+
+	// A negative cosine describes incidence from the opposite side.
+	if cosI < 0 {
 		// swap indices
 		nI, nT = nT, nI
 		cosI = math.Abs(cosI)
@@ -506,7 +484,8 @@ func FresnelDielectric(cosI, nI, nT float64) float64 {
 		return 1.0
 	}
 
-	cosT := math.Sqrt(1.0 - sinT2)
+	// Fused arithmetic can leave a tiny negative remainder at the critical angle.
+	cosT := math.Sqrt(max(0.0, 1.0-sinT2))
 
 	rsNum := nI*cosI - nT*cosT
 	rsDen := nI*cosI + nT*cosT
@@ -566,46 +545,11 @@ func getRandomHemisphereVector(hemisphereHeading *vec3.T) *vec3.T {
 	return &vector
 }
 
-// getRandomCosineWeightedHemispherePoint gets a unit vector in a hemisphere "facing" the direction of vector n.
-// The hemisphere is cosine weighted i.e. it gives a weighted distribution of vectors towards the "top" of the hemisphere.
-//
-// https://www.csie.ntu.edu.tw/~cyy/courses/rendering/05fall/lectures/handouts/lec10_mc_4up.pdf (page 12)
-func getRandomCosineWeightedHemisphereVector(n *vec3.T) *vec3.T {
-	amountPoints := 100_000
-	x, y := sunflower.Sunflower(amountPoints, 0.0, rand.Intn(amountPoints)+1, true)
-	// ret.z = sqrtf(max(0.f,1.f - ret.x*ret.x - ret.y*ret.y));
-	z := math.Sqrt(math.Max(0.0, 1.0-x*x-y*y))
-	generatedUnitHemisphereVector := vec3.T{x, y, z}
-
-	var t vec3.T
-	a := math.Abs(n[0])
-	b := math.Abs(n[1])
-	c := math.Abs(n[2])
-
-	// Get the unit vector that is "most orthogonal" to the vector n.
-	if a <= b && a <= c {
-		t = vec3.UnitX
-	} else if b <= a && b <= c {
-		t = vec3.UnitY
-	} else {
-		t = vec3.UnitZ
-	}
-
-	u := vec3.Cross(&t, n)
-	u.Normalize()
-	v := vec3.Cross(n, &u)
-	v.Normalize()
-
-	m := mat3.T{u, v, *n}
-	hemisphereVector := m.MulVec3(&generatedUnitHemisphereVector)
-	return &hemisphereVector
-}
-
 func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, currentDepth int, rayContexts []*scene.Material) *color.Color {
-	outgoingEmission := color.NewColorRGBA(0, 0, 0, 0)
+	outgoingRadiance := color.NewColorRGBA(0, 0, 0, 0)
 
 	if currentDepth > camera.RecursionDepth {
-		return outgoingEmission
+		return outgoingRadiance
 	}
 
 	ii := NewIntersectionInformation() // Information on the closest intersection
@@ -667,7 +611,7 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 			incomingRayInverted := ray.Heading.Inverted()
 			cosineIncomingRayAndNormal := util.Cosine(ii.normalAtIntersection, &incomingRayInverted)
 
-			outgoingEmission = &color.Color{
+			outgoingRadiance = &color.Color{
 				R: ii.material.Color.R * float32(cosineIncomingRayAndNormal) * textureAlbedoColor.R,
 				G: ii.material.Color.G * float32(cosineIncomingRayAndNormal) * textureAlbedoColor.G,
 				B: ii.material.Color.B * float32(cosineIncomingRayAndNormal) * textureAlbedoColor.B,
@@ -676,184 +620,97 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 
 		} else if camera.RenderType == scene.Pathtracing {
 
-			if !ii.material.RayTerminator {
-				var newRayHeading *vec3.T
+			// Alpha describes surface coverage; Transparency describes optical transmission.
+			// TODO: Figure out how coverage based on alpha should work with solid objects
 
+			// coverage means the probability that the surface exists at the sampled point, calculated as material alpha × texture alpha.
+			coverage := float64(ii.material.Color.A) * float64(textureAlbedoColor.A)
+			passThroughWithNoInteraction := coverage <= 0 || (coverage < 1 && rand.Float64() >= coverage)
+
+			if passThroughWithNoInteraction || !ii.material.RayTerminator {
 				geometricNormal, shadingNormal, isIngoingRay := orientSurfaceNormals(ii, ray.Heading)
+				newRayHeading := ray.Heading
+				bounce := noBounce
+				bounceRadianceScale := 1.0
 
-				currentRayContext := rayContexts[len(rayContexts)-1]
-
-				var reflectionProbability float64
-				if isIngoingRay || !ii.material.SolidObject {
-					// Thin surfaces keep the same Fresnel behavior on either side.
-					perceptualGlossiness := ii.material.Glossiness * ii.material.Glossiness * ii.material.Glossiness * ii.material.Glossiness // Nothing scientific, just a fix for a more (perceptual) linear scale for glossiness
-					reflectionProbability = FresnelReflectAmount(currentRayContext.RefractionIndex, ii.material.RefractionIndex, &geometricNormal, ray.Heading, perceptualGlossiness, ii.material.FresnelMaxGlossiness)
-				} else {
-					// previousRayContext := rayContexts[len(rayContexts)-2]
-					// normal := ii.normalAtIntersection.Inverted()
-					// reflectionProbability = FresnelReflectAmount(currentRayContext.RefractionIndex, previousRayContext.RefractionIndex, &normal, ray.Heading, ii.material.Glossiness, 1.0)
-
-					perceptualGlossiness := ii.material.Glossiness * ii.material.Glossiness * ii.material.Glossiness * ii.material.Glossiness // Nothing scientific, just a fix for a more (perceptual) linear scale for glossiness
-					reflectionProbability = perceptualGlossiness
-				}
-
-				alpha := (1.0 - ii.material.Transparency) * float64(ii.material.Color.A) * float64(textureAlbedoColor.A)
-				transparencyProbability := 1.0 - alpha
-				diffuseProbability := max(0, ii.material.Diffuse-reflectionProbability) * alpha
-				reflectionProbability = reflectionProbability * alpha
-
-				probabilitySum := reflectionProbability + transparencyProbability + diffuseProbability
-				probabilityValue := rand.Float64() * probabilitySum
-
-				useDiffuseRay := (diffuseProbability > 0) && (probabilityValue < diffuseProbability)
-				useReflectionRay := (reflectionProbability > 0) && (probabilityValue < (diffuseProbability + reflectionProbability)) && !useDiffuseRay
-				useTransparencyRay := (transparencyProbability > 0) && (probabilityValue < (diffuseProbability + reflectionProbability + transparencyProbability)) && !useReflectionRay && !useDiffuseRay
-
-				if !useDiffuseRay && !useReflectionRay && !useTransparencyRay {
-					panic("No ray type selected!")
-				}
-
-				if useDiffuseRay {
-					newRayHeading = sampleDiffuseHeading(&geometricNormal, &shadingNormal)
-				} else if useReflectionRay {
-					newRayHeading = sampleReflectionHeading(&geometricNormal, &shadingNormal, ray.Heading, ii.material.Roughness)
-				} else if useTransparencyRay {
-					if ii.material.SolidObject && (ii.material.RefractionIndex > 0.0) {
-
-						if isIngoingRay {
-							// Ingoing ray to a solid object with refraction index
-							//fmt.Printf("Ingoing... %s\n", ii.material.Name)
-
-							var totalInternalReflection bool
-							newRayHeading, totalInternalReflection = getRefractionVector(&geometricNormal, ray.Heading, currentRayContext.RefractionIndex, ii.material.RefractionIndex)
-
-							if !totalInternalReflection {
-								rayContexts = append(rayContexts, ii.material)
-							}
-						} else {
-							// Outgoing ray from a solid object with refraction index
-							//fmt.Printf("Outgoing... %s\n", ii.material.Name)
-
-							// This is a fallback for error state when we otherwise are about to pop an empty ray context.
-							previousRayContext := rayContexts[len(rayContexts)-1] // Get previous ray context
-
-							// Outgoing ray from a solid object with refraction index
-							rayContexts = rayContexts[:len(rayContexts)-1] // Pop off current ray context
-							if len(rayContexts) == 0 {
-								// Fallback re-use the saved current ray context, as fallback
-								//panic("About to access empty ray context (after popping last context)...")
-								fmt.Println("About to access empty ray context (after popping last context)...")
-							} else {
-								previousRayContext = rayContexts[len(rayContexts)-1] // Get actual previous ray context
-							}
-
-							var totalInternalReflection bool
-							newRayHeading, totalInternalReflection = getRefractionVector(&geometricNormal, ray.Heading, currentRayContext.RefractionIndex, previousRayContext.RefractionIndex)
-
-							if totalInternalReflection {
-								rayContexts = append(rayContexts, currentRayContext) // We are not leaving current ray context, due to total internal reflection
-							} else {
-								// previous ray context is already on top of stack
-							}
-						}
-
-						//cosineNewRayAndNormal = 1.0
-
-					} else if !ii.material.SolidObject {
-						// Just pass through the object in the same direction as before.
-						// The walls of the object are super thin and do not refract the ray.
-						newRayHeading = ray.Heading
-						//cosineNewRayAndNormal = 1.0
-					}
-				}
-
-				newRayHeading.Normalize() // TODO remove?
-
-				//rayStartOffset := newRayHeading.Scaled(epsilonDistance)
-				rayStartOffset := geometricNormal.Scaled(epsilonDistance)
-				if util.CosineNegative(newRayHeading, &geometricNormal) {
-					(&rayStartOffset).Invert()
-				}
-
-				newRayOrigin := ii.intersectionPoint.Added(&rayStartOffset)
-				newRay := scene.Ray{Origin: &newRayOrigin, Heading: newRayHeading}
-
-				incomingRadiance := tracePath(&newRay, camera, scn, currentDepth+1, rayContexts)
-				incomingRadianceOnSurface := incomingRadiance
-				// incomingRadianceOnSurface.Multiply(float32(cosineNewRayAndNormal))
-
-				if useDiffuseRay {
-					//projectionCol := fixTransparentColor(projectionColor)
-					//materialCol := fixTransparentColor(ii.material.Color)
-					projectionCol := textureAlbedoColor
-					materialCol := ii.material.Color
-
-					//projectionCol = projectionCol.Fade(color.White, 1-projectionCol.A)
-					//materialCol = materialCol.Fade(color.White, 1-materialCol.A)
-
-					outgoingEmission = &color.Color{
-						R: incomingRadianceOnSurface.R * materialCol.R * projectionCol.R,
-						G: incomingRadianceOnSurface.G * materialCol.G * projectionCol.G,
-						B: incomingRadianceOnSurface.B * materialCol.B * projectionCol.B,
-						A: 1.0,
-					}
-				} else if useReflectionRay {
-					//projectionCol := fixTransparentColor(projectionColor)
-					//materialCol := fixTransparentColor(ii.material.Color)
-					projectionCol := textureAlbedoColor
-					materialCol := ii.material.Color
-
-					//projectionCol = projectionCol.Fade(color.White, 1-projectionCol.A)
-					//materialCol = materialCol.Fade(color.White, 1-materialCol.A)
-
-					if ii.material.ColorizeReflection {
-						// fmt.Println("colorizing reflection for ", ii.material.Name)
-						outgoingEmission = &color.Color{
-							R: incomingRadianceOnSurface.R * materialCol.R * projectionCol.R,
-							G: incomingRadianceOnSurface.G * materialCol.G * projectionCol.G,
-							B: incomingRadianceOnSurface.B * materialCol.B * projectionCol.B,
-							A: 1.0,
-						}
+				if !passThroughWithNoInteraction {
+					outgoingRadiance.A = 1 // Rejected scattering still hit a covered surface.
+					incidentIndex, transmittedIndex := boundaryRefractionIndices(ii.material, rayContexts, isIngoingRay)
+					boundary := dielectricBoundary{normal: shadingNormal}
+					solidTransmission := ii.material.SolidObject && ii.material.Transparency > 0 && ii.material.RefractionIndex > 0
+					if solidTransmission {
+						boundary = evaluateDielectricBoundary(&geometricNormal, &shadingNormal, ray.Heading, incidentIndex, transmittedIndex)
 					} else {
-						outgoingEmission = &color.Color{
-							R: incomingRadianceOnSurface.R,
-							G: incomingRadianceOnSurface.G,
-							B: incomingRadianceOnSurface.B,
-							A: 1.0,
-						}
+						boundary.fresnel = FresnelDielectric(-vec3.Dot(&shadingNormal, ray.Heading), incidentIndex, transmittedIndex)
 					}
-				} else if useTransparencyRay {
-					// TODO is the following correct?
-					// Is the color calculation correct for a ray going through a transparent object?
-					// Should it be coloured as if the color is on the surface of the object or from travelling through the object?
-					// If it is colored from the surface of the object, the color will be the same as the color of the object?
-					// Or should it be colored twice, first when entering the object and then once more when leaving the object?
-					// If it is going through a single layer of transparent material,
-					// the color should be the same as the color of the object?
 
-					//projectionCol := fixTransparentColor(projectionColor)
-					//materialCol := fixTransparentColor(ii.material.Color)
+					probabilities := surfaceBounceProbabilities(ii.material, boundary.fresnel, boundary.totalInternalReflection)
+					bounce = probabilities.sample(rand.Float64())
+					switch bounce {
+					case diffuseBounce:
+						sample := sampleDiffuse(&geometricNormal, &shadingNormal, ray.Heading, rand.Float64(), rand.Float64())
+						newRayHeading, bounceRadianceScale = sample.heading, sample.weight
+					case reflectionBounce:
+						if boundary.totalInternalReflection {
+							newRayHeading = boundary.heading
+						} else {
+							u1, u2 := 0.0, 0.0
+							if ii.material.Roughness > 0 {
+								u1, u2 = rand.Float64(), rand.Float64()
+							}
+							sample := sampleReflection(&geometricNormal, &boundary.normal, ray.Heading, ii.material.Roughness, u1, u2)
+							newRayHeading, bounceRadianceScale = sample.heading, sample.weight
+						}
+					case transmissionBounce:
+						if solidTransmission {
+							newRayHeading = boundary.heading
+							if newRayHeading == nil {
+								break // Invalid solid transmission must not become straight-through transmission.
+							}
+							// Camera paths transport radiance: refraction contributes (n_incident / n_transmitted)^2.
+							ratio := incidentIndex / transmittedIndex
+							bounceRadianceScale = ratio * ratio
+							// Only a transmitted ray crosses the medium boundary.
+							if isIngoingRay {
+								rayContexts = append(rayContexts, ii.material)
+							} else if len(rayContexts) > 1 {
+								rayContexts = rayContexts[:len(rayContexts)-1]
+							}
+						}
+					case noBounce:
+						// No scattering components: keep the surface opaque and still evaluate emission below.
+						newRayHeading = nil
+					}
+				}
 
-					//projectionCol = projectionCol.Fade(color.White, 1-projectionCol.A)
-					//materialCol = materialCol.Fade(color.White, 1-materialCol.A)
+				if newRayHeading != nil {
+					newRayHeading.Normalize()
+					rayStartOffset := geometricNormal.Scaled(epsilonDistance)
+					if util.CosineNegative(newRayHeading, &geometricNormal) {
+						(&rayStartOffset).Invert()
+					}
 
-					outgoingEmission = &color.Color{
-						// Non colorizing transparency "like light going through plain glass"
-						R: incomingRadianceOnSurface.R, // * materialCol.R * projectionCol.R,
-						G: incomingRadianceOnSurface.G, // * materialCol.G * projectionCol.G,
-						B: incomingRadianceOnSurface.B, // * materialCol.B * projectionCol.B,
-						A: 1.0,
-
-						// Colorizing transparency "like light going through colored/painted glass"
-						// R: incomingRadianceOnSurface.R * materialCol.R * projectionCol.R,
-						// G: incomingRadianceOnSurface.G * materialCol.G * projectionCol.G,
-						// B: incomingRadianceOnSurface.B * materialCol.B * projectionCol.B,
-						// A: 1.0,
+					newRayOrigin := ii.intersectionPoint.Added(&rayStartOffset)
+					newRay := scene.Ray{Origin: &newRayOrigin, Heading: newRayHeading}
+					incomingRadiance := tracePath(&newRay, camera, scn, currentDepth+1, rayContexts)
+					outgoingRadiance = incomingRadiance.Copy()
+					if !passThroughWithNoInteraction {
+						outgoingRadiance.A = 1
+						// Apply the conditional BRDF/PDF or refractive conversion to RGB, before local emission.
+						outgoingRadiance.R *= float32(bounceRadianceScale)
+						outgoingRadiance.G *= float32(bounceRadianceScale)
+						outgoingRadiance.B *= float32(bounceRadianceScale)
+						// Selection probabilities account for mixture weights; albedo supplies color attenuation.
+						if bounce == diffuseBounce || (bounce == reflectionBounce && ii.material.ColorizeReflection) {
+							outgoingRadiance.R *= ii.material.Color.R * textureAlbedoColor.R
+							outgoingRadiance.G *= ii.material.Color.G * textureAlbedoColor.G
+							outgoingRadiance.B *= ii.material.Color.B * textureAlbedoColor.B
+						}
 					}
 				}
 			}
 
-			if ii.material.Emission != nil {
+			if coverage > 0 && ii.material.Emission != nil {
 				//projectionCol := fixTransparentColor(projectionColor)
 				//materialCol := fixTransparentColor(ii.material.Color)
 				projectionCol := textureAlbedoColor
@@ -862,15 +719,15 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 				//projectionCol = projectionCol.Fade(color.White, 1-projectionCol.A)
 				//materialCol = materialCol.Fade(color.White, 1-materialCol.A)
 
-				outgoingEmission.R += (ii.material.Emission.R * ii.material.Emission.A) * (materialCol.R * materialCol.A) * (projectionCol.R * projectionCol.A) // * (1.0 - float32(ii.material.Transparency))
-				outgoingEmission.G += (ii.material.Emission.G * ii.material.Emission.A) * (materialCol.G * materialCol.A) * (projectionCol.G * projectionCol.A) // * (1.0 - float32(ii.material.Transparency))
-				outgoingEmission.B += (ii.material.Emission.B * ii.material.Emission.A) * (materialCol.B * materialCol.A) * (projectionCol.B * projectionCol.A) // * (1.0 - float32(ii.material.Transparency))
-				outgoingEmission.A = 1.0
+				outgoingRadiance.R += (ii.material.Emission.R * ii.material.Emission.A) * (materialCol.R * materialCol.A) * (projectionCol.R * projectionCol.A) // * (1.0 - float32(ii.material.Transparency))
+				outgoingRadiance.G += (ii.material.Emission.G * ii.material.Emission.A) * (materialCol.G * materialCol.A) * (projectionCol.G * projectionCol.A) // * (1.0 - float32(ii.material.Transparency))
+				outgoingRadiance.B += (ii.material.Emission.B * ii.material.Emission.A) * (materialCol.B * materialCol.A) * (projectionCol.B * projectionCol.A) // * (1.0 - float32(ii.material.Transparency))
+				outgoingRadiance.A = 1.0
 			}
 		}
 	}
 
-	return outgoingEmission
+	return outgoingRadiance
 }
 
 // fixTransparentColor fixes colors where an alpha channel is 0. The color information (RGB) values
@@ -1093,10 +950,14 @@ func getReflectionVector(normal *vec3.T, incomingVector *vec3.T) *vec3.T {
 // getRefractionVector according to
 // https://graphics.stanford.edu/courses/cs148-10-summer/docs/2006--degreve--reflection_refraction.pdf
 func getRefractionVector(normal *vec3.T, incomingVector *vec3.T, leavingRefractionIndex float64, enteringRefractionIndex float64) (outgoingVector *vec3.T, totalInternalReflection bool) {
-	outgoingVector = incomingVector // No refraction
+	if leavingRefractionIndex == enteringRefractionIndex {
+		// Avoid cancellation at grazing incidence and do not alias the incoming ray.
+		heading := *incomingVector
+		return &heading, false
+	}
 
 	refractionRatio := leavingRefractionIndex / enteringRefractionIndex
-	cosi := -vec3.Dot(incomingVector, normal)                        // Cosine for an angle of incoming vector and surface normal
+	cosi := min(1.0, max(-1.0, -vec3.Dot(incomingVector, normal)))   // Clamp roundoff in unit-vector dot products, as FresnelDielectric does.
 	sinlsqr := refractionRatio * refractionRatio * (1.0 - cosi*cosi) // Squared sinus for an angle between refraction (leaving) vector and inverted normal
 
 	// If the incoming vector angle is too flat to the surface of an optically lighter material, then
@@ -1106,7 +967,7 @@ func getRefractionVector(normal *vec3.T, incomingVector *vec3.T, leavingRefracti
 		return getReflectionVector(normal, incomingVector), true
 	}
 
-	cosl := math.Sqrt(1.0 - sinlsqr) // Need to verify that this part actually is "cosine" of an angle
+	cosl := math.Sqrt(max(0.0, 1.0-sinlsqr)) // Clamp critical-angle roundoff consistently with FresnelDielectric.
 
 	io := incomingVector.Scaled(refractionRatio)     // Incoming vector part of outgoing (refraction) vector
 	no := normal.Scaled(refractionRatio*cosi - cosl) // Normal vector part of the outgoing (refraction) vector
