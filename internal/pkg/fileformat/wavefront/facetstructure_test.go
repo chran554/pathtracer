@@ -519,10 +519,19 @@ func assertBounds(t *testing.T, expectedBounds scene.Bounds, actualBounds *scene
 
 func loadTestCube(t *testing.T, flavour string) (*scene.FacetStructure, error) {
 	var objFilename = "cube_" + flavour + ".obj"
-	var objFilenamePath = filepath.Join("../../../../objects/obj/", "test", objFilename)
+	return loadObjTestFile(t, objFilename)
+}
 
+func loadObjTestFile(t *testing.T, objFilename string) (*scene.FacetStructure, error) {
+	var objFilenamePath = filepath.Join("../../../../objects/obj/", "test", objFilename)
 	objFile, err := os.Open(objFilenamePath)
 	assert.NoError(t, err)
+	return ReadFacetStructure(objFile)
+}
 
+func loadObjFile(t *testing.T, objFilename string) (*scene.FacetStructure, error) {
+	var objFilenamePath = filepath.Join("../../../../objects/obj/", objFilename)
+	objFile, err := os.Open(objFilenamePath)
+	assert.NoError(t, err)
 	return ReadFacetStructure(objFile)
 }
