@@ -10,9 +10,9 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-// NewCornellBox creates a new cornell box (open in the back) with the center of the floor in origin (0,0,0).
+// NewCornellBox creates a new Cornell box (open in the back) with the center of the floor in origin (0,0,0).
 // Left wall is blue and right wall is red.
-// The scale is the total (width, height, depth) of the cornell box.
+// The scale is the total (width, height, depth) of the Cornell box.
 func NewCornellBox(scale *vec3.T, singleLight bool, lightIntensityFactor float64) *scene.FacetStructure {
 	blueColor := color.NewColor(0.05, 0.05, 0.95)
 	redColor := color.NewColor(0.95, 0.05, 0.05)
@@ -24,8 +24,8 @@ func NewCornellBox(scale *vec3.T, singleLight bool, lightIntensityFactor float64
 	return cornellBox
 }
 
-// NewWhiteCornellBox creates a new, whole white, cornell box (open in the back) with the center of the floor in origin (0,0,0).
-// The scale is the total (width, height, depth) of the cornell box.
+// NewWhiteCornellBox creates a new, whole white, Cornell box (open in the back) with the center of the floor in origin (0,0,0).
+// The scale is the total (width, height, depth) of the Cornell box.
 func NewWhiteCornellBox(scale *vec3.T, singleLight bool, lightIntensityFactor float64) *scene.FacetStructure {
 	return loadCornellBox(scale, singleLight, lightIntensityFactor)
 }

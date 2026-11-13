@@ -12,7 +12,9 @@ func NewPixarBall(pixarBallOrigin *vec3.T, pixarBallRadius float64) *scene.Spher
 	texturePixarBall := floatimage.LoadOrPanic(filepath.Join(TexturesDir, "pixar_ball_02.png"))
 
 	textureOrigin := pixarBallOrigin.Added(&vec3.T{-pixarBallRadius, -pixarBallRadius, 0})
-	material := scene.NewMaterial().N("pixar ball").PP(texturePixarBall, scene.TextureTypeAlbedo, &textureOrigin, vec3.UnitX.Scaled(pixarBallRadius*2), vec3.UnitY.Scaled(pixarBallRadius*2))
+	material := scene.NewMaterial().N("pixar ball").
+		M(0.2, 0.3).
+		PP(texturePixarBall, scene.TextureTypeAlbedo, &textureOrigin, vec3.UnitX.Scaled(pixarBallRadius*2), vec3.UnitY.Scaled(pixarBallRadius*2))
 
 	return scene.NewSphere(pixarBallOrigin, pixarBallRadius, material).N("pixar ball")
 }

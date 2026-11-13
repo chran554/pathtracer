@@ -22,7 +22,7 @@ func NewTessellatedSphere(level int, useVertexNormals bool) *scene.FacetStructur
 	tessellatedSphere := NewIcosahedron()
 	tessellatedSphere.SubstructureName = fmt.Sprintf("tessellated sphere level %d from icosahedron", level)
 
-	for i := 0; i < level; i++ {
+	for range level {
 		tessellateSpherical(tessellatedSphere)
 	}
 
@@ -36,26 +36,35 @@ func NewTessellatedSphere(level int, useVertexNormals bool) *scene.FacetStructur
 	return tessellatedSphere
 }
 
+// NewOctahedron creates an octahedron (with 8 sides) and a radius of 1.
 func NewOctahedron() *scene.FacetStructure {
 	var facets []*scene.Facet
 	pt := &vec3.T{0, 1, 0}  // pt is point at top
 	pb := &vec3.T{0, -1, 0} // pb is point at bottom
 
-	for i := 0; i < 4; i++ {
+	for i := range 4 {
 		angle1 := float64(i) * math.Pi / 2.0
 		angle2 := float64(i+1) * math.Pi / 2.0
 		p1 := &vec3.T{math.Cos(angle1), 0, math.Sin(angle1)}
 		p2 := &vec3.T{math.Cos(angle2), 0, math.Sin(angle2)}
-		facets = append(facets, &scene.Facet{Vertices: []*vec3.T{pt, p1, p2}})
-		facets = append(facets, &scene.Facet{Vertices: []*vec3.T{pb, p2, p1}})
+
+		facet1 := &scene.Facet{Vertices: []*vec3.T{pt, p1, p2}}
+		facet2 := &scene.Facet{Vertices: []*vec3.T{pb, p2, p1}}
+
+		facet1.ChangeWindingOrder()
+		facet2.ChangeWindingOrder()
+
+		facets = append(facets, facet1, facet2)
 	}
 
 	octahedron := &scene.FacetStructure{SubstructureName: "octahedron", Facets: facets}
+	octahedron.UpdateBounds()
 	octahedron.UpdateNormals()
 
 	return octahedron
 }
 
+// NewIcosahedron creates an icosahedron (with 20 sides) and a radius of 1.
 func NewIcosahedron() *scene.FacetStructure {
 	var facets []*scene.Facet
 
@@ -67,7 +76,7 @@ func NewIcosahedron() *scene.FacetStructure {
 	h := math.Sin(math.Pi / 6)
 	r := math.Cos(math.Pi / 6)
 	a := math.Pi * 2 / 5
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		angleTop := float64(i) * a
 		angleBottom := float64(i)*a + (a / 2)
 		tp[i] = &vec3.T{r * math.Cos(angleTop), h, r * math.Sin(angleTop)}
@@ -75,22 +84,32 @@ func NewIcosahedron() *scene.FacetStructure {
 	}
 
 	// Top facets
-	for i := 0; i < len(tp); i++ {
-		facets = append(facets, &scene.Facet{Vertices: []*vec3.T{pt, tp[i%len(tp)], tp[(i+1)%len(tp)]}})
+	for i := range tp {
+		facet := &scene.Facet{Vertices: []*vec3.T{pt, tp[i%len(tp)], tp[(i+1)%len(tp)]}}
+		facet.ChangeWindingOrder() // Change winding order to make normals point outward
+		facets = append(facets, facet)
 	}
 
 	// Middle facets
-	for i := 0; i < len(tp); i++ {
-		facets = append(facets, &scene.Facet{Vertices: []*vec3.T{tp[i%len(tp)], bp[i%len(bp)], tp[(i+1)%len(tp)]}})
-		facets = append(facets, &scene.Facet{Vertices: []*vec3.T{bp[i%len(bp)], bp[(i+1)%len(bp)], tp[(i+1)%len(tp)]}})
+	for i := range tp {
+		facet1 := &scene.Facet{Vertices: []*vec3.T{tp[i%len(tp)], bp[i%len(bp)], tp[(i+1)%len(tp)]}}
+		facet2 := &scene.Facet{Vertices: []*vec3.T{bp[i%len(bp)], bp[(i+1)%len(bp)], tp[(i+1)%len(tp)]}}
+
+		facet1.ChangeWindingOrder() // Change winding order to make normals point outward
+		facet2.ChangeWindingOrder() // Change winding order to make normals point outward
+
+		facets = append(facets, facet1, facet2)
 	}
 
 	// Bottom facets
-	for i := 0; i < len(bp); i++ {
-		facets = append(facets, &scene.Facet{Vertices: []*vec3.T{pb, bp[(i+1)%len(bp)], bp[i%len(bp)]}})
+	for i := range bp {
+		facet := &scene.Facet{Vertices: []*vec3.T{pb, bp[(i+1)%len(bp)], bp[i%len(bp)]}}
+		facet.ChangeWindingOrder() // Change winding order to make normals point outward
+		facets = append(facets, facet)
 	}
 
 	icosahedron := &scene.FacetStructure{SubstructureName: "icosahedron", Facets: facets}
+	icosahedron.UpdateBounds()
 	icosahedron.UpdateNormals()
 
 	return icosahedron

@@ -21,6 +21,53 @@ func Test_tessellateSphere(t *testing.T) {
 	})
 }
 
+func Test_NewOctahedron(t *testing.T) {
+	amountStartFacets := 8 // Octahedron
+
+	t.Run("tessellated octahedron level 0", func(t *testing.T) {
+		level := 0
+
+		octahedron := NewOctahedron()
+
+		// No extra tesselation on level 0
+
+		expectedAmountFacets := int(math.Round(float64(amountStartFacets) * math.Pow(4, float64(level))))
+		assert.Equal(t, expectedAmountFacets, len(octahedron.Facets))
+
+		assertFacetNormalsPointingOutward(t, octahedron)
+	})
+
+	t.Run("tessellated octahedron level 1", func(t *testing.T) {
+		octahedron := NewOctahedron()
+
+		level := 1
+		tessellateSpherical(octahedron)
+		octahedron.UpdateBounds()
+		octahedron.UpdateNormals()
+
+		expectedAmountFacets := int(math.Round(float64(amountStartFacets) * math.Pow(4, float64(level))))
+		assert.Equal(t, expectedAmountFacets, len(octahedron.Facets))
+
+		assertFacetNormalsPointingOutward(t, octahedron)
+	})
+
+	t.Run("tessellated octahedron level 2", func(t *testing.T) {
+		octahedron := NewOctahedron()
+
+		level := 2
+		tessellateSpherical(octahedron)
+		tessellateSpherical(octahedron)
+		octahedron.UpdateBounds()
+		octahedron.UpdateNormals()
+
+		expectedAmountFacets := int(math.Round(float64(amountStartFacets) * math.Pow(4, float64(level))))
+		assert.Equal(t, expectedAmountFacets, len(octahedron.Facets))
+
+		assertFacetNormalsPointingOutward(t, octahedron)
+	})
+
+}
+
 func Test_NewTessellatedSphere(t *testing.T) {
 	amountStartFacets := 20 // icosahedron
 
@@ -30,6 +77,8 @@ func Test_NewTessellatedSphere(t *testing.T) {
 
 		expectedAmountFacets := int(math.Round(float64(amountStartFacets) * math.Pow(4, float64(level))))
 		assert.Equal(t, expectedAmountFacets, len(sphere.Facets))
+
+		assertFacetNormalsPointingOutward(t, sphere)
 	})
 
 	t.Run("tessellated sphere level 1", func(t *testing.T) {
@@ -38,6 +87,8 @@ func Test_NewTessellatedSphere(t *testing.T) {
 
 		expectedAmountFacets := int(math.Round(float64(amountStartFacets) * math.Pow(4, float64(level))))
 		assert.Equal(t, expectedAmountFacets, len(sphere.Facets))
+
+		assertFacetNormalsPointingOutward(t, sphere)
 	})
 
 	t.Run("tessellated sphere level 2", func(t *testing.T) {
@@ -46,7 +97,26 @@ func Test_NewTessellatedSphere(t *testing.T) {
 
 		expectedAmountFacets := int(math.Round(float64(amountStartFacets) * math.Pow(4, float64(level))))
 		assert.Equal(t, expectedAmountFacets, len(sphere.Facets))
+
+		assertFacetNormalsPointingOutward(t, sphere)
 	})
+}
+
+func assertFacetNormalsPointingOutward(t *testing.T, sphere *scene.FacetStructure) {
+	// Test normals pointing outward
+	sphereCenter := sphere.Bounds.Center()
+	for _, facet := range sphere.Facets {
+		facetCenter := facet.Bounds.Center()
+
+		approximateFacetNormal := facetCenter.Subed(sphereCenter)
+		approximateFacetNormal.Normalize()
+
+		assert.True(t, vec3.Cosine(&approximateFacetNormal, facet.Normal) >= 0) // narrow angle between vectors
+
+		for _, vertexNormal := range facet.VertexNormals {
+			assert.True(t, vec3.Cosine(&approximateFacetNormal, vertexNormal) >= 0) // narrow angle between vectors
+		}
+	}
 }
 
 func Test_TessellatedSphereObject(t *testing.T) {
