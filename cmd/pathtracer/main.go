@@ -499,15 +499,23 @@ func FresnelDielectric(cosI, nI, nT float64) float64 {
 	return F
 }
 
-// FresnelSchlick computes an approximation of the Fresnel reflectance for a dielectric interface.
+// FresnelSchlickApproximation computes an approximation of the Fresnel reflectance for a dielectric interface.
 // cosI: cosine of the incident angle (should be positive).
 // nI:   refractive index of incident medium.
 // nT:   refractive index of transmitted medium.
 // Returns reflectance F in [0,1].
-func FresnelSchlick(cosI, nI, nT float64) float64 {
+func FresnelSchlickApproximation(cosI, nI, nT float64) float64 {
 	r0 := (nI - nT) / (nI + nT)
 	r0 *= r0
-	return r0 + (1-r0)*math.Pow(1-cosI, 5)
+
+	// Compact return
+	// return r0 + (1-r0)*math.Pow(1-cosI, 5)
+
+	// Efficient return with expanded Pow(k, 5), where k=1-cosI
+	x := 1 - cosI
+	x2 := x * x
+	xToThePowerOf5 := x2 * x2 * x
+	return r0 + (1-r0)*xToThePowerOf5
 }
 
 func Beer(c *color.Color, distance float64) *color.Color {
