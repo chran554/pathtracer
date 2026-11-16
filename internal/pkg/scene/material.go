@@ -11,17 +11,18 @@ import (
 type Material struct {
 	Name                 string
 	Color                *color.Color
-	Diffuse              float64 // Nonnegative diffuse selection weight, relative to Glossiness and Transparency. RGB albedo controls absorption.
+	Diffuse              float64 // Diffuse is Nonnegative diffuse selection weight, relative to Glossiness and Transparency. RGB albedo controls surface absorption.
 	Emission             *color.Color
-	Glossiness           float64 // Nonnegative reflection selection weight, relative to Diffuse and Transparency, before Fresnel adjustment.
-	Roughness            float64 // Reflection roughness in [0,1]. Zero is a perfect mirror; positive values use single-scattering GGX with width Roughness squared.
+	Glossiness           float64 // Glossiness is the reflection selection weight, relative to Diffuse and Transparency, before Fresnel adjustment.
+	Roughness            float64 // Roughness is the reflection roughness in [0,1]. A value where zero is a perfect mirror. This is the control for single-scattering GGX with width Roughness squared.
 	Projections          []*ImageProjection
 	RefractionIndex      float64
-	SolidObject          bool    // SolidObject is if the material denotes a solid object with volume, not a hollow or open object or object nor an object with plane-thin walls. Solid transparent objects can refract light, hollow objects don't.
-	Transparency         float64 // Nonnegative optical transmission selection weight, relative to Diffuse and Glossiness. Color alpha controls surface coverage.
-	RayTerminator        bool    // RayTerminator decide if the ray should terminate after hit with the object. Example can be an environment sphere or environment cube where a hit to the wall is the same as "no hit, continue in infinity". Extremely bright lights can also be ray terminators, their appearance will not notably be affected by further tracing.
-	ColorizeReflection   bool    // ColorizeReflection is if the reflection color should be colorized based on the material color. Shiny metal materials will colorize reflection. Dielectric materials will not colorize reflection.
-	FresnelMaxGlossiness float64 // Reflection probability approached as dielectric Fresnel reflectance approaches 1. Values [0,1].
+	SolidObject          bool         // SolidObject is if the material denotes a solid object with volume, not a hollow or open object or object nor an object with plane-thin walls. Solid transparent objects can refract light, hollow objects don't.
+	Transparency         float64      // Nonnegative optical transmission selection weight, relative to Diffuse and Glossiness. Color alpha controls surface coverage.
+	Absorption           *color.Color // Homogeneous interior RGB absorption coefficients in inverse scene units (sigma_a >= 0, not limited to 1). Nil means no absorption; alpha is ignored. Used while this material is the active medium, independently of surface Color.
+	RayTerminator        bool         // RayTerminator decide if the ray should terminate after hit with the object. Example can be an environment sphere or environment cube where a hit to the wall is the same as "no hit, continue in infinity". Extremely bright lights can also be ray terminators, their appearance will not notably be affected by further tracing.
+	ColorizeReflection   bool         // ColorizeReflection is if the reflection color should be colorized based on the material color. Shiny metal materials will colorize reflection. Dielectric materials will not colorize reflection.
+	FresnelMaxGlossiness float64      // Reflection probability approached as dielectric Fresnel reflectance approaches 1. Values [0,1].
 }
 
 // NewMaterial creates a new material with sensible defaults.
@@ -37,6 +38,7 @@ func NewMaterial() *Material {
 		RefractionIndex:      RefractionIndex_Air,
 		SolidObject:          false,
 		Transparency:         0.0,
+		Absorption:           nil,
 		RayTerminator:        false,
 		ColorizeReflection:   false,
 		FresnelMaxGlossiness: 1.0,
@@ -88,6 +90,54 @@ func (m *Material) T(transparency float64, solidObject bool, refractionIndex flo
 	m.RefractionIndex = refractionIndex
 	m.Diffuse = 1.0 - math.Min(m.Glossiness+m.Transparency, 1.0)
 	return m
+}
+
+// Absorb sets the interior absorption coefficients in inverse scene units.
+//
+// Each RGB coefficient must be finite and nonnegative.
+// absorption value of nil disables absorption.
+// Closed objects need SolidObject and optical transmission to enter the medium.
+// Setting absorption alone does not make a surface transparent.
+func (m *Material) Absorb(absorption *color.Color) *Material {
+	if absorption != nil {
+		for _, coefficient := range []float32{absorption.R, absorption.G, absorption.B} {
+			if !(coefficient >= 0) || math.IsInf(float64(coefficient), 0) {
+				panic("absorption coefficients must be finite and nonnegative")
+			}
+		}
+	}
+	m.Absorption = absorption
+	return m
+}
+
+// Attenuate specifies the linear RGB transmission through a reference distance
+// of the homogeneous interior, excluding surface reflection and refraction.
+//
+// transmittance value of nil disables absorption.
+// RGB values must be in (0,1] and distance must be finite and positive.
+//
+// For example, (0.5, 1, 1) at distance 2 halves red every 2 scene units.
+//
+// Use near-zero transmission for very strong absorption,
+// or disable Transparency for an opaque surface.
+func (m *Material) Attenuate(transmittance *color.Color, distance float64) *Material {
+	if transmittance == nil {
+		m.Absorption = nil
+		return m
+	}
+	if !(distance > 0) || math.IsInf(distance, 0) {
+		panic("attenuation requires a transmission color and a finite positive distance")
+	}
+	for _, channel := range []float32{transmittance.R, transmittance.G, transmittance.B} {
+		if !(channel > 0 && channel <= 1) {
+			panic("attenuation transmission channels must be in (0,1]")
+		}
+	}
+	return m.Absorb(color.NewColor(
+		-math.Log(float64(transmittance.R))/distance,
+		-math.Log(float64(transmittance.G))/distance,
+		-math.Log(float64(transmittance.B))/distance,
+	))
 }
 
 // P is projection properties

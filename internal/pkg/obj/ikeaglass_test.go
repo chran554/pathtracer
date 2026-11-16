@@ -14,10 +14,10 @@ func Test_IkeaGlassSkoja_glass(t *testing.T) {
 		fmt.Printf("Facet structure to be tested: %+v\n", obj)
 
 		require.NotNil(t, obj)
-		assertFacetStructure(t, obj, "ikea_skoja", "", "", 0, 1)
+		assertFacetStructure(t, obj, "glass_ikea_skoja2", "", "", 0, 1)
 
-		glass := getSubstructure(t, obj, "", "glass", "glass")
-		assertFacetStructure(t, glass, "", "glass", "glass", -1, 0)
+		glass := getSubstructure(t, obj, "glass", "glass", "glass")
+		assertFacetStructure(t, glass, "glass", "glass", "glass", -1, 0)
 	})
 }
 
@@ -28,13 +28,13 @@ func Test_IkeaGlassSkoja_glass_and_liquid(t *testing.T) {
 		fmt.Printf("Facet structure to be tested: %+v\n", obj)
 
 		require.NotNil(t, obj)
-		assertFacetStructure(t, obj, "ikea_skoja", "", "", 0, 2)
+		assertFacetStructure(t, obj, "glass_ikea_skoja2", "", "", 0, 2)
 
-		glass := getSubstructure(t, obj, "", "glass", "glass")
-		assertFacetStructure(t, glass, "", "glass", "glass", -1, 0)
+		glass := getSubstructure(t, obj, "glass", "glass", "glass")
+		assertFacetStructure(t, glass, "glass", "glass", "glass", -1, 0)
 
-		liquid := getSubstructure(t, obj, "", "liquid", "red juice")
-		assertFacetStructure(t, liquid, "", "liquid", "red juice", -1, 0)
+		liquid := getSubstructure(t, obj, "liquid", "liquid", "red juice")
+		assertFacetStructure(t, liquid, "liquid", "liquid", "red juice", -1, 0)
 	})
 }
 

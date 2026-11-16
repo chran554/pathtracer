@@ -17,11 +17,7 @@ func NewGlassIkeaPokal(scale float64) *scene.FacetStructure {
 
 	glass.ScaleUniform(&vec3.Zero, scale/glass.Bounds.Ymax)
 
-	glass.Material = scene.NewMaterial().
-		N("glass").
-		C(color.NewColor(0.90, 0.92, 0.95)).
-		M(0.270, 0.030).
-		T(0.98, true, scene.RefractionIndex_Glass)
+	glass.Material = createGlassMaterial(scale)
 
 	return glass
 }
@@ -37,17 +33,14 @@ func NewGlassIkeaSkoja(scale float64, includeLiquid bool) *scene.FacetStructure 
 	liquidObject := glass.GetFirstObjectBySubstructureName("liquid")
 	glassObject := glass.GetFirstObjectBySubstructureName("glass")
 
-	glassMaterial := scene.NewMaterial().
-		N("glass").
-		C(color.NewColor(0.95, 0.95, 0.97)).
-		M(0.1, 0.05).
-		T(0.98, true, scene.RefractionIndex_Glass)
+	glassMaterial := createGlassMaterial(scale / 2)
 
 	liquidMaterial := scene.NewMaterial().
 		N("red juice").
-		C(color.NewColor(0.97, 0.45, 0.47)).
-		M(0.2, 0.0).
-		T(0.98, true, scene.RefractionIndex_SugarSolution60)
+		C(color.White).
+		M(0.0, 0.0).
+		T(0.98, true, scene.RefractionIndex_SugarSolution60).
+		Attenuate(color.NewColor(0.90, 0.35, 0.37), scale/3)
 
 	glassObject.Material = glassMaterial
 	liquidObject.Material = liquidMaterial
@@ -59,12 +52,21 @@ func NewGlassIkeaSkoja(scale float64, includeLiquid bool) *scene.FacetStructure 
 	return glass
 }
 
+func createGlassMaterial(scale float64) *scene.Material {
+	return scene.NewMaterial().
+		N("glass").
+		C(color.NewColor(0.95, 0.95, 0.97)).
+		M(0.0, 0.0).
+		T(0.98, true, scene.RefractionIndex_Glass).
+		Attenuate(color.NewColor(0.90, 0.95, 0.97), scale)
+}
+
 func loadIkeaGlassPokal() *scene.FacetStructure {
 	glass := wavefront.ReadFacetStructureOrPanic(filepath.Join(ObjFileDir, "glass_ikea_pokal.obj"))
 	return glass
 }
 
 func loadIkeaGlassSkoja() *scene.FacetStructure {
-	glass := wavefront.ReadFacetStructureOrPanic(filepath.Join(ObjFileDir, "glass_ikea_skoja.obj"))
+	glass := wavefront.ReadFacetStructureOrPanic(filepath.Join(ObjFileDir, "glass_ikea_skoja2.obj"))
 	return glass
 }

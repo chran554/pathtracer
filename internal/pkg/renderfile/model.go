@@ -29,25 +29,27 @@ type FrameInformation struct {
 }
 
 type Camera struct {
-	Origin            VectorIndex   `msagpack:"origin"`
-	Heading           VectorIndex   `msagpack:"heading"`
-	ViewUp            VectorIndex   `msagpack:"view-up"`
-	ViewPlaneDistance float64       `msagpack:"view-plane-distance"` // ViewPlaneDistance determine the focal length, the view angle of the camera.
-	ApertureSize      float64       `msagpack:"aperture-size"`       // ApertureSize is the size of the aperture opening. The wider the aperture the less focus depth. Value 0.0 is infinite focus depth.
-	ApertureShape     ResourceIndex `msagpack:"aperture-shape"`      // ApertureShape is the file path to a black and white image where white define the aperture shape. Aperture size determine the size of the longest side (width or height) of the image. If empty string then a default round aperture shape is used.
-	FocusDistance     float64       `msagpack:"focus-distance"`
-	Samples           int           `msagpack:"samples"`
-	AntiAlias         bool          `msagpack:"anti-alias"`
-	Magnification     float64       `msagpack:"magnification"`
-	RenderType        string        `msagpack:"render-type"`
-	RecursionDepth    int           `msagpack:"recursion-depth"`
+	Origin            VectorIndex     `msagpack:"origin"`
+	Heading           VectorIndex     `msagpack:"heading"`
+	ViewUp            VectorIndex     `msagpack:"view-up"`
+	ViewPlaneDistance float64         `msagpack:"view-plane-distance"` // ViewPlaneDistance determine the focal length, the view angle of the camera.
+	ApertureSize      float64         `msagpack:"aperture-size"`       // ApertureSize is the size of the aperture opening. The wider the aperture the less focus depth. Value 0.0 is infinite focus depth.
+	ApertureShape     ResourceIndex   `msagpack:"aperture-shape"`      // ApertureShape is the file path to a black and white image where white define the aperture shape. Aperture size determine the size of the longest side (width or height) of the image. If empty string then a default round aperture shape is used.
+	FocusDistance     float64         `msagpack:"focus-distance"`
+	Samples           int             `msagpack:"samples"`
+	AntiAlias         bool            `msagpack:"anti-alias"`
+	Magnification     float64         `msagpack:"magnification"`
+	RenderType        string          `msagpack:"render-type"`
+	RecursionDepth    int             `msagpack:"recursion-depth"`
+	InitialMedia      []MaterialIndex `msgpack:"initial-media,omitempty"`
 }
 
 type Frame struct {
-	Index     int        `msgpack:"index"`
-	Filename  string     `msgpack:"filename"`
-	SceneNode *SceneNode `msgpack:"scene-node"`
-	Camera    *Camera    `msgpack:"camera"`
+	Index       int           `msgpack:"index"`
+	Filename    string        `msgpack:"filename"`
+	SceneNode   *SceneNode    `msgpack:"scene-node"`
+	Camera      *Camera       `msgpack:"camera"`
+	WorldMedium MaterialIndex `msgpack:"world-medium,omitempty"`
 }
 
 type SceneNode struct {
@@ -142,6 +144,7 @@ type Material struct {
 	Color                ColorIndex   `msgpack:"color,omitempty"`
 	Diffuse              float64      `msgpack:"diffuse,omitempty"`
 	Emission             ColorIndex   `msgpack:"emission,omitempty"`
+	Absorption           ColorIndex   `msgpack:"absorption,omitempty"`
 	Glossiness           float64      `msgpack:"glossiness,omitempty"` // Glossiness is the percent amount that will make out specular reflection. Values [0.0 .. 1.0] with default 0.0. Lower value the more diffuse color will appear and higher value the more mirror reflection will appear.
 	Roughness            float64      `msgpack:"roughness,omitempty"`  // Roughness is the diffuse spread of the specular reflection. Values [0.0 .. 1.0] with default 0.0. Lower is like "brushed metal" or "foggy/hazy reflection" and higher value give a more mirror like reflection. A value of 1.0 is perfect mirror reflection and a value of 0.0 is a perfect diffuse material (no mirror at all).
 	RefractionIndex      float64      `msgpack:"refraction-index,omitempty"`

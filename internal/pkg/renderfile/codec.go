@@ -246,6 +246,7 @@ func (s *serializer) materialIndex(material *scene.Material) (MaterialIndex, err
 		Color:                s.colorIndex(material.Color),
 		Diffuse:              material.Diffuse,
 		Emission:             s.colorIndex(material.Emission),
+		Absorption:           s.colorIndex(material.Absorption),
 		Glossiness:           material.Glossiness,
 		Roughness:            material.Roughness,
 		RefractionIndex:      material.RefractionIndex,
@@ -346,6 +347,15 @@ func (s *serializer) sceneMaterial(index MaterialIndex) *scene.Material {
 		return nil
 	}
 	return s.sm[index-1]
+}
+
+// sceneMedium checks references from the frame/camera before indexing the
+// shared material cache. Zero is reserved for the default world medium.
+func (s *serializer) sceneMedium(index MaterialIndex) (*scene.Material, error) {
+	if index > MaterialIndex(len(s.sm)) {
+		return nil, fmt.Errorf("medium material index %d exceeds material count %d", index, len(s.sm))
+	}
+	return s.sceneMaterial(index), nil
 }
 
 func (s *serializer) sceneTexture(index TextureIndex) *scene.Texture {

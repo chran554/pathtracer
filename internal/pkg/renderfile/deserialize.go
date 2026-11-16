@@ -116,12 +116,21 @@ func (s *serializer) deserializeFrame(frameInformation *FrameInformation) (*scen
 				return nil, err
 			}
 
-			return &scene.Frame{
-				Filename:  frame.Filename,
-				Index:     frame.Index,
-				Camera:    camera,
-				SceneNode: sceneNode,
-			}, nil
+			worldMedium, err := s.sceneMedium(frame.WorldMedium)
+			if err != nil {
+				return nil, fmt.Errorf("world medium: %w", err)
+			}
+			result := &scene.Frame{
+				Filename:    frame.Filename,
+				Index:       frame.Index,
+				Camera:      camera,
+				SceneNode:   sceneNode,
+				WorldMedium: worldMedium,
+			}
+			if _, err := result.InitialMediumStack(); err != nil {
+				return nil, fmt.Errorf("frame %q: %w", frame.Filename, err)
+			}
+			return result, nil
 		}
 	}
 
@@ -268,6 +277,7 @@ func (s *serializer) initFrameCache(frameInformation *FrameInformation) error {
 					Color:                s.sceneColor(m.Color),
 					Diffuse:              m.Diffuse,
 					Emission:             s.sceneColor(m.Emission),
+					Absorption:           s.sceneColor(m.Absorption),
 					Glossiness:           m.Glossiness,
 					Roughness:            m.Roughness,
 					Projections:          projections,
@@ -302,9 +312,24 @@ func convertFloatImageToNormalMap(image *floatimage.FloatImage) {
 }
 
 func (s *serializer) deserializeCamera(camera *Camera) (*scene.Camera, error) {
+	if camera == nil {
+		return nil, fmt.Errorf("frame camera is missing")
+	}
 	apertureImage, err := s.resourceImage(camera.ApertureShape, false, nil)
 	if err != nil {
 		return nil, err
+	}
+
+	var initialMedia []*scene.Material
+	for i, index := range camera.InitialMedia {
+		if index == 0 {
+			return nil, fmt.Errorf("camera initial medium %d: material index must not be zero", i)
+		}
+		medium, err := s.sceneMedium(index)
+		if err != nil {
+			return nil, fmt.Errorf("camera initial medium %d: %w", i, err)
+		}
+		initialMedia = append(initialMedia, medium)
 	}
 
 	return &scene.Camera{
@@ -320,6 +345,7 @@ func (s *serializer) deserializeCamera(camera *Camera) (*scene.Camera, error) {
 		Magnification:     camera.Magnification,
 		RenderType:        scene.RenderType(camera.RenderType),
 		RecursionDepth:    camera.RecursionDepth,
+		InitialMedia:      initialMedia,
 	}, nil
 }
 

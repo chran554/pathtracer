@@ -17,13 +17,16 @@ var animationName = "refraction_test"
 
 var ballRadius float64 = 30
 
+var lensRadius = 0.0 // 2.0        // 0.25
 var maxRecursionDepth = 10
-var amountSamples = 1024 * 8 // ~4096 -> ~4:43 h
-var lensRadius = 0.0         // 2.0        // 0.25
+var amountSamples = 1024 * 2
 
+// 600x400, ~6144 rays per pixel -> ~7:30h
+// 1200x800, 8196 rpp, 10 bounce -> ~14:00h
+
+var magnification = 2.0
 var imageWidth = 600
 var imageHeight = 400
-var magnification = 2.0
 
 func main() {
 	cornellBox := GetCornellBox(&vec3.T{250, 250, 250}, 6.0) // cm, as units. I.e. a 5x3x5m room
@@ -35,9 +38,10 @@ func main() {
 	glassPokal.Translate(&vec3.T{-10, 0, -20})
 
 	glassSkoja := obj.NewGlassIkeaSkoja(40.0, true)
+	//glassSkoja.RemoveObjectsBySubstructureName("glass")
 	glassSkoja.Translate(&vec3.T{-45, 0, -50})
 
-	teapotMaterial := GetGlassMaterial("teapot")
+	teapotMaterial := GetGlassMaterial("teapot", 50)
 	utahTeapot := obj.NewSolidUtahTeapot(50.0, true, true)
 	utahTeapot.RotateY(&vec3.T{0, 0, 0}, math.Pi/6)
 	utahTeapot.Translate(&vec3.T{40, 0, -40})
@@ -51,9 +55,12 @@ func main() {
 	pixarBall.RotateX(pixarBallOrigin, util.DegToRad(-10))
 
 	scn := scene.NewSceneNode().
-		S(sphere). //, sphere2, sphere3).
+		S(sphere).
 		S(pixarBall).
-		FS(cornellBox, glassPokal, glassSkoja, utahTeapot)
+		FS(cornellBox).
+		FS(glassPokal).
+		FS(glassSkoja).
+		FS(utahTeapot)
 
 	cameraOrigin := &vec3.T{0, cornellBox.Bounds.Ymax / 3, -150 * 2}
 	cameraFocusPoint := &vec3.T{0, ballRadius, -(ballRadius * 2 / 3)}
@@ -73,17 +80,18 @@ func main() {
 }
 
 func GetSphere(origin *vec3.T, radius float64, name string) *scene.Sphere {
-	sphereMaterial := GetGlassMaterial(name)
+	sphereMaterial := GetGlassMaterial(name, radius*2)
 	sphere := scene.NewSphere(origin, radius, sphereMaterial).N(name)
 	return sphere
 }
 
-func GetGlassMaterial(name string) *scene.Material {
+func GetGlassMaterial(name string, scale float64) *scene.Material {
 	return scene.NewMaterial().
 		N(name).
-		C(color.NewColor(0.90, 0.92, 0.95)).
-		M(0.270, 0.030).
-		T(0.98, true, scene.RefractionIndex_Glass)
+		C(color.NewColor(0.95, 0.95, 0.95)).
+		M(0.0, 0.0).
+		T(0.98, true, scene.RefractionIndex_Glass).
+		Attenuate(color.NewColor(0.9*0.5, 0.93*0.5, 0.95).Multiply(0.9), scale)
 }
 
 func GetCornellBox(scale *vec3.T, lightIntensityFactor float64) *scene.FacetStructure {

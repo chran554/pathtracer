@@ -65,8 +65,84 @@ func NewKeroseneLamp(scale float64, emission float64, sootness float64) *scene.F
 	return keroseneLamp
 }
 
+func NewKeroseneLamp2(scale float64, emission float64, sootness float64) *scene.FacetStructure {
+	flameTexture := floatimage.LoadOrPanic("textures/misc/kerosenelamp/kerosenelamp_flame_wave.png")
+	sootSmudgeTexture := floatimage.LoadOrPanic("textures/misc/kerosenelamp/kerosenelamp_glass_wave_mod2.png")
+
+	keroseneLamp := loadKeroseneLamp2(scale)
+	//keroseneLamp.RotateZ(&vec3.T{}, math.Pi/2.0)
+
+	flame := keroseneLamp.GetFirstObjectByName("flame")
+	flameCenterBounds := flame.Bounds.Center()
+
+	glass := keroseneLamp.GetFirstObjectByName("glass")
+	glassCenterBounds := glass.Bounds.Center()
+
+	brassMaterial := scene.NewMaterial().N("brass").
+		C(color.NewColor(0.8, 0.60, 0.25).Multiply(0.5)).
+		M(0.95, 0.15)
+	brassMaterial.ColorizeReflection = true
+
+	flameMaterial := scene.NewMaterial().N("flame").
+		C(color.White).
+		T(1.0, false, scene.RefractionIndex_Air).
+		E(color.White, emission, false).
+		CP(flameTexture, scene.TextureTypeAlbedo, &vec3.T{flameCenterBounds[0], flame.Bounds.Ymin, flameCenterBounds[2]}, vec3.UnitZ, (vec3.UnitY).Scaled(flame.Bounds.SizeY()*0.95), false)
+
+	glassMaterial := scene.NewMaterial().N("glass").
+		//C(color.NewColor(0.93, 0.94, 0.95)).
+		T(0.97, true, scene.RefractionIndex_Glass).
+		M(0.02, 0.10).
+		Attenuate(color.NewColor(0.85, 0.87, 0.90), scale*(4.0/30.0))
+
+	smudgedGlassMaterial := scene.NewMaterial().N("smudged_glass").
+		C(color.White).
+		T(1.0-sootness, false, scene.RefractionIndex_Air).
+		M(0.0, 1.0).
+		CP(sootSmudgeTexture, scene.TextureTypeAlbedo, &vec3.T{glassCenterBounds[0], glass.Bounds.Ymin, glassCenterBounds[2]}, vec3.UnitX, (vec3.UnitY).Scaled(glass.Bounds.SizeY()), false)
+
+	keroseneLamp.GetFirstObjectByName("base").Material = brassMaterial
+	keroseneLamp.GetFirstObjectByName("handle").Material = brassMaterial
+	keroseneLamp.GetFirstObjectByName("knob").Material = brassMaterial
+	keroseneLamp.GetFirstObjectByName("wickholder").Material = brassMaterial
+	keroseneLamp.GetFirstObjectByName("flame").Material = flameMaterial
+	keroseneLamp.GetFirstObjectByName("glass").Material = glassMaterial
+	keroseneLamp.GetFirstObjectByName("soot").Material = smudgedGlassMaterial
+
+	// Debug parts of kerosene lamp
+	// keroseneLamp.RemoveObjectsByName("base")
+	// keroseneLamp.RemoveObjectsByName("handle")
+	// keroseneLamp.RemoveObjectsByName("knob")
+	// keroseneLamp.RemoveObjectsByName("wickholder")
+	// keroseneLamp.RemoveObjectsByName("flame")
+	// keroseneLamp.RemoveObjectsByName("glass")
+	// keroseneLamp.RemoveObjectsByName("soot")
+	// keroseneLamp.RemoveObjectsByName("soot")
+
+	if emission == 0.0 {
+		keroseneLamp.RemoveObjectsByMaterialName("flame")
+	}
+
+	return keroseneLamp
+}
+
 func loadKeroseneLamp(scale float64) *scene.FacetStructure {
 	keroseneLamp := wavefront.ReadFacetStructureOrPanic(filepath.Join(ObjFileDir, "kerosene_lamp.obj"))
+
+	ymin := keroseneLamp.Bounds.Ymin
+	ymax := keroseneLamp.Bounds.Ymax
+	keroseneLamp.Translate(&vec3.T{0.0, -ymin, 0.0})       // lamp base touch the ground (xz-plane)
+	keroseneLamp.ScaleUniform(&vec3.Zero, 1.0/(ymax-ymin)) // resize/scale to height == 1.0 units
+
+	keroseneLamp.ScaleUniform(&vec3.Zero, scale)
+
+	fmt.Printf("Kerosene lamp bounds: %+v\n", keroseneLamp.Bounds)
+
+	return keroseneLamp
+}
+
+func loadKeroseneLamp2(scale float64) *scene.FacetStructure {
+	keroseneLamp := wavefront.ReadFacetStructureOrPanic(filepath.Join(ObjFileDir, "kerosene_lamp2.obj"))
 
 	ymin := keroseneLamp.Bounds.Ymin
 	ymax := keroseneLamp.Bounds.Ymax

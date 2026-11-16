@@ -34,7 +34,10 @@ func WriteRenderFile(filename string, animation *scene.Animation) error {
 	s := newSerializer(zipWriter)
 
 	// Serialize the animation and write zip-file entries.
-	animationInformation, _ := s.serializeAnimation(animation)
+	animationInformation, err := s.serializeAnimation(animation)
+	if err != nil {
+		return err
+	}
 
 	// Write the animation meta-information to the zip file.
 	animationInformationData, err := json.MarshalIndent(animationInformation, "", "  ")
@@ -80,6 +83,9 @@ func (s *serializer) serializeFrameFiles(frames []*scene.Frame) ([]*FrameInforma
 }
 
 func (s *serializer) serializeFrameFile(frame *scene.Frame) (*FrameInformation, error) {
+	if _, err := frame.InitialMediumStack(); err != nil {
+		return nil, fmt.Errorf("frame %q: %w", frame.Filename, err)
+	}
 	s.clearFrameCache()
 
 	filePrefix := frame.Filename
@@ -99,13 +105,21 @@ func (s *serializer) serializeFrameFile(frame *scene.Frame) (*FrameInformation, 
 		return nil, err
 	}
 
-	sceneNode, _ := s.serializeSceneNode(frame.SceneNode)
+	sceneNode, err := s.serializeSceneNode(frame.SceneNode)
+	if err != nil {
+		return nil, err
+	}
+	worldMedium, err := s.materialIndex(frame.WorldMedium)
+	if err != nil {
+		return nil, fmt.Errorf("world medium: %w", err)
+	}
 
 	f := &Frame{
-		Filename:  frame.Filename,
-		Index:     frame.Index,
-		Camera:    camera,
-		SceneNode: sceneNode,
+		Filename:    frame.Filename,
+		Index:       frame.Index,
+		Camera:      camera,
+		SceneNode:   sceneNode,
+		WorldMedium: worldMedium,
 	}
 
 	err = s.writeMarshalledDataToZipEntry(f, frameFilename)
@@ -170,6 +184,15 @@ func (s *serializer) serializeCamera(camera *scene.Camera) (*Camera, error) {
 		return nil, err
 	}
 
+	var initialMedia []MaterialIndex
+	for i, medium := range camera.InitialMedia {
+		index, err := s.materialIndex(medium)
+		if err != nil {
+			return nil, fmt.Errorf("camera initial medium %d: %w", i, err)
+		}
+		initialMedia = append(initialMedia, index)
+	}
+
 	return &Camera{
 		Origin:            s.vectorIndex(camera.Origin),
 		Heading:           s.vectorIndex(camera.Heading),
@@ -183,6 +206,7 @@ func (s *serializer) serializeCamera(camera *scene.Camera) (*Camera, error) {
 		Magnification:     camera.Magnification,
 		RenderType:        string(camera.RenderType),
 		RecursionDepth:    camera.RecursionDepth,
+		InitialMedia:      initialMedia,
 	}, nil
 }
 

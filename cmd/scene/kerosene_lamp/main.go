@@ -18,19 +18,24 @@ var imageWidth = 600
 var imageHeight = 800
 var magnification = 1.0
 
-var amountSamples = 1024 * 32
-var maxRayDepth = 10
-var apertureSize = 0.2
+var amountSamples = 1024 * 12 // 32 // 12samp x 1.5mag --> 4h
+var maxRayDepth = 15
+var apertureSize = 0.5
 
-var keroseneLampEmission = 15.0
+var keroseneLampEmission = 35.0
 var sootness = 1.0
 var skyDomeEmission = 0.9
 
 func main() {
-	skyDome := scene.NewSphere(&vec3.T{0, 0, 0}, 200*100, scene.NewMaterial().
+	// skyTexture := floatimage.LoadOrPanic("textures/equirectangular/331_PDM_BG1.jpg")
+	// skyTexture := floatimage.LoadOrPanic("textures/equirectangular/6031885477_bbffaa37d7_o.jpg")
+	skyTexture := floatimage.LoadOrPanic("textures/equirectangular/52764896286_fe987865cf_o.jpg")
+
+	skyMaterial := scene.NewMaterial().N("sky dome").
 		E(color.White, skyDomeEmission, true).
-		SP(floatimage.LoadOrPanic("textures/equirectangular/331_PDM_BG1.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
-	skyDome.RotateY(&vec3.Zero, util.DegToRad(-20))
+		SP(skyTexture, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+	skyDome := scene.NewSphere(&vec3.T{0, 0, 0}, 200*100, skyMaterial)
+	skyDome.RotateY(&vec3.Zero, util.DegToRad(180))
 
 	tableBoard := obj.NewBox(obj.BoxCentered)
 	tableBoard.Scale(&vec3.Zero, &vec3.T{110 / 2, 3 / 2, 150 / 2})
@@ -39,9 +44,18 @@ func main() {
 		C(color.NewColorGrey(1.0)).
 		PP(floatimage.LoadOrPanic("textures/wallpaper/Blossom2_Image_Tile_Item_9471w.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{60, 0, 0}, vec3.T{0, 0, 40})
 
-	keroseneLamp := obj.NewKeroseneLamp(40, keroseneLampEmission, sootness)
+	keroseneLamp := obj.NewKeroseneLamp2(40, keroseneLampEmission, sootness)
 	keroseneLamp.RotateY(&vec3.Zero, util.DegToRad(-90))
 	keroseneLamp.Translate(&vec3.T{20, tableBoard.Bounds.Ymax, -20})
+
+	scratchesNormalTexture, err := floatimage.EmptyPlaceholderImage("textures/normal maps/ScratchedPaintedMetal01_MR_4K/ScratchedPaintedMetal01_4K_Normal.png")
+	if err != nil {
+		panic(err)
+	}
+	keroseneBase := keroseneLamp.GetFirstObjectByName("base")
+	keroseneBase.Material.SP(scratchesNormalTexture, scene.TextureTypeNormalMap, keroseneBase.Bounds.Center(), vec3.UnitX, vec3.UnitY)
+	keroseneBase.Material.ProjectionsOfType(scene.TextureTypeNormalMap)[0].Texture.Strength = 0.5
+	keroseneBase.Material.ProjectionsOfType(scene.TextureTypeNormalMap)[0].Texture.Interpolation = floatimage.InterpolationBicubic
 
 	scn := scene.NewSceneNode().S(skyDome).FS(tableBoard).FS(keroseneLamp)
 
@@ -56,12 +70,12 @@ func main() {
 		F(focusDistance).
 		D(maxRayDepth)
 
-	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, true)
+	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 	frame := scene.NewFrame(animation.AnimationName, -1, camera, scn)
 	animation.AddFrame(frame)
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := renderfile.WriteRenderFile(filename, animation)
+	err = renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}

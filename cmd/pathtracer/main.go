@@ -154,7 +154,9 @@ func main() {
 		renderedPixelData.Fill(color.NewColorRGBA(0, 0, 0, 0))
 
 		fmt.Println(frameInformationProgressSummary(frameInformation, startRenderTimestamp))
-		render(frame.Camera, scn, animation.Width, animation.Height, renderedPixelData, renderMonitor)
+		if err := render(frame, animation.Width, animation.Height, renderedPixelData, renderMonitor); err != nil {
+			panic(err)
+		}
 
 		fmt.Println("Releasing resources...")
 		deInitializeScene(scn)
@@ -235,7 +237,10 @@ func writeRenderedImage(animation *scene.Animation, frame *scene.Frame, rendered
 	animationDirectory := filepath.Join(".", "rendered", animation.AnimationName)
 
 	animationFrameFilename := filepath.Join(animationDirectory, frame.Filename+".png")
-	os.MkdirAll(animationDirectory, os.ModePerm)
+	err := os.MkdirAll(animationDirectory, os.ModePerm)
+	if err != nil {
+		panic("could not write text information for frame \"" + frameInformation.imageFilename + "\":" + err.Error())
+	}
 	floatimage.WriteImage(animationFrameFilename, renderedPixelData)
 
 	if animation.WriteRawImageFile {
@@ -246,9 +251,9 @@ func writeRenderedImage(animation *scene.Animation, frame *scene.Frame, rendered
 	if animation.WriteImageInfoFile {
 		frameInfoTextFilename := filepath.Join(animationDirectory, frame.Filename+".txt")
 		frameInfoText := fmt.Sprintf("%s\n%s", frameInformationPreRenderText(frameInformation), frameInformationPostRenderText(frameInformation))
-		err := os.WriteFile(frameInfoTextFilename, []byte(frameInfoText), 0644)
+		err = os.WriteFile(frameInfoTextFilename, []byte(frameInfoText), 0644)
 		if err != nil {
-			panic("could not write text information for frame \"" + frameInformation.imageFilename + "\"")
+			panic("could not write text information for frame \"" + frameInformation.imageFilename + "\":" + err.Error())
 		}
 	}
 }
@@ -371,7 +376,14 @@ func deInitializeScene(scene *scene.SceneNode) {
 	}
 }
 
-func render(camera *scene.Camera, scene *scene.SceneNode, width int, height int, renderedPixelData *floatimage.FloatImage, rm *rendermonitor.RenderMonitor) {
+func render(frame *scene.Frame, width int, height int, renderedPixelData *floatimage.FloatImage, rm *rendermonitor.RenderMonitor) error {
+	initialMedia, err := frame.InitialMediumStack()
+	if err != nil {
+		return fmt.Errorf("frame %q: %w", frame.Filename, err)
+	}
+	camera, scn := frame.Camera, frame.SceneNode
+	// Initialize the lazy camera transform before workers start sharing it.
+	camera.GetCameraCoordinateSystem()
 	var wg sync.WaitGroup
 
 	amountSamples := camera.Samples
@@ -393,7 +405,7 @@ func render(camera *scene.Camera, scene *scene.SceneNode, width int, height int,
 	for _, renderPass := range renderPasses.RenderPasses {
 		for y := 0; (y + renderPass.Dy) < height; y += renderPasses.MaxPixelHeight {
 			wg.Add(1)
-			go parallelPixelRendering(renderedPixelData, camera, scene, width, height, y, renderPass, renderPasses.MaxPixelWidth, amountSamples, &wg, pixelCounter, progressbar, rm)
+			go parallelPixelRendering(renderedPixelData, camera, scn, initialMedia, width, height, y, renderPass, renderPasses.MaxPixelWidth, amountSamples, &wg, pixelCounter, progressbar, rm)
 		}
 		wg.Wait()
 	}
@@ -408,27 +420,25 @@ func render(camera *scene.Camera, scene *scene.SceneNode, width int, height int,
 			renderedPixelData.GetPixel(x, y).Divide(float32(amountSamples))
 		}
 	}
+	return nil
 }
 
-func parallelPixelRendering(renderedPixelData *floatimage.FloatImage, camera *scene.Camera, scn *scene.SceneNode, width int, height int, y int, renderPass renderpass.RenderPass, maxPixelWidth int, amountSamples int, wg *sync.WaitGroup, pixelCounter *atomic.Int64, progressbar *progressbar2.ProgressBar, rm *rendermonitor.RenderMonitor) {
+func parallelPixelRendering(renderedPixelData *floatimage.FloatImage, camera *scene.Camera, scn *scene.SceneNode, initialMedia []*scene.Material, width int, height int, y int, renderPass renderpass.RenderPass, maxPixelWidth int, amountSamples int, wg *sync.WaitGroup, pixelCounter *atomic.Int64, progressbar *progressbar2.ProgressBar, rm *rendermonitor.RenderMonitor) {
 	defer wg.Done()
-
-	defaultRenderContext := scene.NewMaterial().N("default render context").C(color.White).T(1.0, true, scene.RefractionIndex_Air)
-	rayContexts := []*scene.Material{defaultRenderContext}
 
 	// Debug ray at a specific pixel
 	if debugPixel.y == y && debugPixel.x >= 0 && debugPixel.y >= 0 {
 		fmt.Printf("debugging at pixel (%d, %d)...\n", debugPixel.x, debugPixel.y)
 
 		cameraRay := scene.CreateCameraRay(debugPixel.x, debugPixel.y, width, height, camera, 1)
-		col := tracePath(cameraRay, camera, scn, 0, rayContexts)
+		col := traceCameraPath(cameraRay, camera, scn, initialMedia)
 		fmt.Printf("Debug pixel %+v has color: %+v\n", debugPixel, col)
 	}
 
 	for x := 0; (x + renderPass.Dx) < width; x += maxPixelWidth {
 		for sampleIndex := 0; sampleIndex < amountSamples; sampleIndex++ {
 			cameraRay := scene.CreateCameraRay(x+renderPass.Dx, y+renderPass.Dy, width, height, camera, sampleIndex)
-			col := tracePath(cameraRay, camera, scn, 0, rayContexts)
+			col := traceCameraPath(cameraRay, camera, scn, initialMedia)
 			renderedPixelData.GetPixel(x+renderPass.Dx, y+renderPass.Dy).ChannelAdd(col)
 
 			progressbar.Add(1)
@@ -518,13 +528,27 @@ func FresnelSchlickApproximation(cosI, nI, nT float64) float64 {
 	return r0 + (1-r0)*xToThePowerOf5
 }
 
-func Beer(c *color.Color, distance float64) *color.Color {
-	const a = 0.15
-	k := a * (-distance)
+// Beer returns linear RGB transmittance exp(-sigma_a * distance) through a
+// homogeneous, absorbing medium. Absorption is in inverse scene units; alpha
+// is ignored. Nil or zero absorption transmits all light. Negative coefficients
+// and distances are treated as zero so they cannot amplify radiance.
+// https://pbr-book.org/4ed/Volume_Scattering/Transmittance
+func Beer(absorption *color.Color, distance float64) *color.Color {
+	if absorption == nil || distance <= 0 {
+		return color.White
+	}
+
+	beerTransmittance := func(coefficient float64) float64 {
+		if coefficient <= 0 {
+			return 1 // Also avoid 0 * infinity for an unbounded, nonabsorbing channel.
+		}
+		return math.Exp(-coefficient * distance)
+	}
+
 	return color.NewColor(
-		math.Exp((1-float64(c.R))*k),
-		math.Exp((1-float64(c.G))*k),
-		math.Exp((1-float64(c.B))*k),
+		beerTransmittance(float64(absorption.R)),
+		beerTransmittance(float64(absorption.G)),
+		beerTransmittance(float64(absorption.B)),
 	)
 }
 
@@ -627,6 +651,9 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 			}
 
 		} else if camera.RenderType == scene.Pathtracing {
+			// Capture the medium of origin -> hit before transmission changes the stack.
+			// The hit material describes the boundary, not necessarily this segment.
+			incidentMedium := rayContexts[len(rayContexts)-1]
 
 			// Alpha describes surface coverage; Transparency describes optical transmission.
 			// TODO: Figure out how coverage based on alpha should work with solid objects
@@ -732,6 +759,15 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 				outgoingRadiance.B += (ii.material.Emission.B * ii.material.Emission.A) * (materialCol.B * materialCol.A) * (projectionCol.B * projectionCol.A) // * (1.0 - float32(ii.material.Transparency))
 				outgoingRadiance.A = 1.0
 			}
+
+			if incidentMedium.Absorption != nil {
+				// All radiance from the hit, including emission and reflected paths,
+				// travels this segment. shortestDistance is a world-space length.
+				transmittance := Beer(incidentMedium.Absorption, ii.shortestDistance)
+				outgoingRadiance.R *= transmittance.R
+				outgoingRadiance.G *= transmittance.G
+				outgoingRadiance.B *= transmittance.B
+			}
 		}
 	}
 
@@ -827,11 +863,6 @@ func processSphereIntersection(ray *scene.Ray, sphere *scene.Sphere, ii *Interse
 
 	if tempIntersection {
 		distance := vec3.Distance(ray.Origin, tempIntersectionPoint)
-
-		// TODO Remove
-		//if distance < 0.000001 {
-		//	panic(fmt.Sprintf("Not a legal intersection point, no ray has less length than 0.0001. Length: %f", distance))
-		//}
 
 		if distance < ii.shortestDistance && distance > epsilonDistance {
 			ii.perturbedNormalAtIntersection = nil       // Discard the previous hit's normal map.

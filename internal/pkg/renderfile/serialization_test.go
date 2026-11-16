@@ -3,13 +3,40 @@ package renderfile
 import (
 	"archive/zip"
 	"os"
+	"path/filepath"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/scene"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/ungerik/go3d/float64/vec3"
 )
+
+func TestAbsorptionSerialization(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		absorption *color.Color
+	}{
+		{"legacy no absorption", nil},
+		{"zero absorption", color.Black},
+		{"colored absorption above one", color.NewColor(0.1, 2, 3)},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			material := scene.NewMaterial().T(1, true, 1.5).Absorb(tc.absorption)
+			node := scene.NewSceneNode()
+			node.Spheres = []*scene.Sphere{scene.NewSphere(&vec3.T{}, 1, material)}
+			camera := scene.NewCamera(&vec3.T{0, 0, 3}, &vec3.T{}, 1, 1)
+			animation := scene.NewAnimation("absorption", 2, 2, 1, false, false).
+				AddFrame(scene.NewFrame("absorption", 0, camera, node))
+			filename := filepath.Join(t.TempDir(), "absorption.render.zip")
+			require.NoError(t, WriteRenderFile(filename, animation))
+			restored, err := ReadRenderFile(filename)
+			require.NoError(t, err)
+			assert.Equal(t, material, restored.Frames[0].SceneNode.Spheres[0].Material)
+		})
+	}
+}
 
 func TestAnimationSerialization(t *testing.T) {
 	// Create a simple animation

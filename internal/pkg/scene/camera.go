@@ -26,6 +26,7 @@ type Camera struct {
 	Magnification     float64
 	RenderType        RenderType
 	RecursionDepth    int
+	InitialMedia      []*Material // Camera initial enclosing object materials, from outermost to innermost, excluding the Frame.WorldMedium. Empty (or nil) means the camera starts in the world medium.
 }
 
 func NewCamera(origin *vec3.T, viewPoint *vec3.T, amountSamples int, magnification float64) *Camera {

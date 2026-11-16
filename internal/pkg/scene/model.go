@@ -85,10 +85,11 @@ func (a *Animation) AddFrame(frame *Frame) *Animation {
 }
 
 type Frame struct {
-	Filename  string
-	Index     int
-	Camera    *Camera
-	SceneNode *SceneNode
+	Filename    string
+	Index       int
+	Camera      *Camera
+	SceneNode   *SceneNode
+	WorldMedium *Material // Medium outside all bounded objects. Nil means air with zero absorption. Only RefractionIndex and Absorption affect medium transport.
 }
 
 func NewFrame(fileName string, frameIndex int, camera *Camera, scene *SceneNode) *Frame {
