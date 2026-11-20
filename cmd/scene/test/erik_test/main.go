@@ -45,10 +45,10 @@ func main() {
 	window := createWindow(windowX, windowHeightOverFloor, windowWidth, windowHeight)
 
 	// Diffuse sphere
-	sphere1 := scene.NewSphere(&vec3.T{0, 12, -30}, 12, scene.NewMaterial().C(color.NewColor(0.9, 0.8, 0.7)).M(0.0, 1.0))
+	sphere1 := scene.NewSphere(&vec3.T{0, 12, -30}, 12, scene.NewMaterial().C(color.NewColor(0.9, 0.8, 0.7)).M(0, 1.0))
 
 	// Mirror sphere
-	sphere2 := scene.NewSphere(&vec3.T{28, 16, 15}, 16, scene.NewMaterial().C(color.NewColor(0.97, 0.97, 0.843)).M(0.8, 0.0))
+	sphere2 := scene.NewSphere(&vec3.T{28, 16, 15}, 16, scene.NewMaterial().C(color.NewColor(0.97, 0.97, 0.843)).M(1, 0.0))
 
 	scn := scene.NewSceneNode().
 		FS(room, window).
@@ -96,7 +96,7 @@ func createWindow(windowX float64, windowHeightOverFloor float64, windowWidth fl
 	windowRightBoard.Scale(&vec3.Zero, &vec3.T{windowBoardThickness, windowHeight / 2, windowBoardWidth / 2})
 	windowRightBoard.Translate(&vec3.T{windowX, windowHeightOverFloor + windowHeight/2, -windowWidth / 2})
 
-	windowFrameMaterial := scene.NewMaterial().M(0.6, 1.0)
+	windowFrameMaterial := scene.NewMaterial().M(0, 1.0)
 	windowFrame := &scene.FacetStructure{
 		SubstructureName: "window frame",
 		Material:         windowFrameMaterial,

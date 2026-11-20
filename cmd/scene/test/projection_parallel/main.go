@@ -47,7 +47,7 @@ func main() {
 
 	sphere3Origin := vec3.T{-discRadius / 2, sphereRadius, -discRadius / 2}
 	treeSphereProjectionOrigin := vec3.From(&sphere3Origin)
-	treeSphereMaterial := scene.NewMaterial().T(0.0, true, scene.RefractionIndex_WoodSap).M(0.0, 0.0).PP(floatimage.LoadOrPanic("textures/tree/tree_rings_03.jpg"), scene.TextureTypeAlbedo, (&treeSphereProjectionOrigin).Add(&vec3.T{-sphereRadius, 0, -sphereRadius}), *(&vec3.T{1, 0, 0}).Scale(sphereRadius * 2), *(&vec3.T{0, 0, 1}).Scale(sphereRadius * 2))
+	treeSphereMaterial := scene.NewMaterial().T(0.0, true, scene.RefractionIndex_WoodSap).M(0, 0.0).PP(floatimage.LoadOrPanic("textures/tree/tree_rings_03.jpg"), scene.TextureTypeAlbedo, (&treeSphereProjectionOrigin).Add(&vec3.T{-sphereRadius, 0, -sphereRadius}), *(&vec3.T{1, 0, 0}).Scale(sphereRadius * 2), *(&vec3.T{0, 0, 1}).Scale(sphereRadius * 2))
 	sphere3 := scene.NewSphere(&sphere3Origin, sphereRadius, treeSphereMaterial).N("tree sphere")
 	sphere3.RotateX(sphere3.Bounds().Center(), math.Pi/180*22.5)
 	sphere3.RotateY(sphere3.Bounds().Center(), math.Pi/180*45)

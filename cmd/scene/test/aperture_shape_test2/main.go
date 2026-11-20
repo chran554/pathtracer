@@ -108,7 +108,7 @@ func GetCornellBox(scale *vec3.T, lightIntensityFactor float64) *scene.FacetStru
 	projectionZoom := 0.33
 	floorProjection := scene.NewParallelImageProjection(floatimage.LoadOrPanic("textures/floor/7451-diffuse 02 low contrast.png"), scene.TextureTypeAlbedo, &vec3.T{-scale[0] * projectionZoom / 8, 0, -scale[0] * projectionZoom / 8}, vec3.UnitX.Scaled(scale[0]*projectionZoom), vec3.UnitZ.Scaled(scale[0]*projectionZoom))
 	floorMaterial := *cornellBox.Material
-	floorMaterial.M(0.0, 1.0)
+	floorMaterial.M(0, 1.0)
 	floorMaterial.P(&floorProjection)
 	cornellBox.GetFirstObjectBySubstructureName("Floor").Material = &floorMaterial
 

@@ -29,11 +29,11 @@ func NewDrWhoAngel(scale float64, includeAngel bool, includePillar bool) *scene.
 
 	statueMaterial := scene.NewMaterial().N("angel").
 		C(color.NewColor(0.9, 0.9, 0.9)).
-		M(0.3, 0.6)
+		M(0, 0.6)
 
 	pillarMaterial := scene.NewMaterial().N("pillar").
 		C(color.NewColor(0.8, 0.8, 0.8)).
-		M(0.1, 0.8)
+		M(0, 0.8)
 
 	angel.ReplaceMaterial("angel", statueMaterial)
 	angel.ReplaceMaterial("pillar", pillarMaterial)

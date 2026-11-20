@@ -45,7 +45,6 @@ func TestTracePathTransmissionRadiance(test *testing.T) {
 	for _, testCase := range testCases {
 		test.Run(testCase.name, func(test *testing.T) {
 			glass := scene.NewMaterial().M(0, 0).T(1, !testCase.thin, testCase.glassIndex)
-			glass.FresnelMaxGlossiness = 0 // Isolate transport scaling from Fresnel roulette.
 			if testCase.materialHole {
 				glass.C(color.NewColorRGBA(1, 1, 1, 0))
 			}
@@ -83,7 +82,7 @@ func TestTracePathTransmissionRadiance(test *testing.T) {
 					scene.NewMaterial().E(environmentRadiance, 1, true))},
 			}
 			camera := &scene.Camera{RenderType: scene.Pathtracing, RecursionDepth: 1}
-			actualRadiance := tracePath(&scene.Ray{Origin: &rayOrigin, Heading: &rayHeading}, camera, sceneNode, 0, mediumStack)
+			actualRadiance := traceTransmissionPath(&scene.Ray{Origin: &rayOrigin, Heading: &rayHeading}, camera, sceneNode, 0, mediumStack)
 
 			// PBRT 9.5.2 scales transmitted RGB; add local emission afterward and retain opacity.
 			expectedRadiance := color.NewColor(
@@ -105,12 +104,10 @@ func TestTracePathTransmissionRoundTrip(test *testing.T) {
 		}
 		test.Run(name, func(test *testing.T) {
 			glass := scene.NewMaterial().T(1, true, 1.5)
-			glass.FresnelMaxGlossiness = 0
 			surfaces := []*scene.Sphere{scene.NewSphere(&vec3.T{}, 2, glass)}
 			recursionDepth := 2
 			if nested {
 				water := scene.NewMaterial().T(1, true, 1.33)
-				water.FresnelMaxGlossiness = 0
 				surfaces = append(surfaces, scene.NewSphere(&vec3.T{}, 1, water))
 				recursionDepth = 4
 			}
@@ -124,7 +121,7 @@ func TestTracePathTransmissionRoundTrip(test *testing.T) {
 			mediumStack := []*scene.Material{scene.NewMaterial().T(1, true, 1)}
 
 			// Every index factor must cancel when the path returns to its initial medium.
-			assertTransmissionColor(test, tracePath(ray, camera, sceneNode, 0, mediumStack), environmentRadiance)
+			assertTransmissionColor(test, traceTransmissionPath(ray, camera, sceneNode, 0, mediumStack), environmentRadiance)
 		})
 	}
 }
@@ -143,4 +140,10 @@ func assertTransmissionColor(test *testing.T, actualColor, expectedColor *color.
 	if actualColor.A != expectedColor.A {
 		test.Fatalf("opacity = %g, want %g", actualColor.A, expectedColor.A)
 	}
+}
+
+// traceTransmissionPath selects the transmitted branch where it has nonzero
+// probability. It leaves Fresnel and PDF weights intact; TIR still reflects.
+func traceTransmissionPath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, depth int, media []*scene.Material) *color.Color {
+	return tracePathSampled(ray, camera, scn, depth, media, func() float64 { return math.Nextafter(1, 0) })
 }

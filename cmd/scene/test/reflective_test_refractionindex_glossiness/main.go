@@ -10,7 +10,7 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "reflective_test_refractionindex_glossiness"
+var animationName = "reflective_test_refractionindex_metallicness"
 
 var ballRadius float64 = 20
 
@@ -47,16 +47,16 @@ func main() {
 			xProgress := float64(xIndex) / float64(amountSpheres)
 
 			refractiveIndex := interpolate(xProgress, scene.RefractionIndex_Air, scene.RefractionIndex_Diamond)
-			glossiness := yProgress
+			metallicness := yProgress
 			roughness := 0.0
 
 			sphereMaterial := scene.NewMaterial().
 				C(color.NewColor(0.80, 0.95, 0.80)).
-				M(glossiness, roughness).
+				M(metallicness, roughness).
 				T(0.0, true, refractiveIndex)
 
 			sphereOrigin := vec3.T{-sphereSpread/2.0 + float64(xIndex)*sphereCC, ballRadius, -sphereSpread/2.0 + float64(yIndex)*sphereCC}
-			sphere := scene.NewSphere(&sphereOrigin, ballRadius, sphereMaterial).N(fmt.Sprintf("Sphere (glossy:%02f rough:%02f)", xProgress, yProgress))
+			sphere := scene.NewSphere(&sphereOrigin, ballRadius, sphereMaterial).N(fmt.Sprintf("Sphere (metallic:%02f rough:%02f)", xProgress, yProgress))
 
 			scn.S(sphere)
 		}

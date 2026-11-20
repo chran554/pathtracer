@@ -36,7 +36,7 @@ func NewDice(scale float64, hires bool) *scene.FacetStructure {
 	//diceMaterial := scene.NewMaterial().N("dice").
 	//	C(color.NewColorGrey(1.0)). // TODO Set to same color as texture background, should be 0.9 or something. Color should affect color diffuse textures (by operation multiplication)?
 	//	C(color.NewColor(0.9, 0.6, 0.7)).
-	//	M(0.045, 0.1).
+	//	M(0, 0.1).
 	//	T(0.0, true, scene.RefractionIndex_AcrylicPlastic)
 	//dice.Material = diceMaterial
 

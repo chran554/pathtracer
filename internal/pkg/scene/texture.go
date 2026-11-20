@@ -9,7 +9,7 @@ const (
 	TextureTypeNormalMap    TextureType = "normalmap"
 	TextureTypeRoughness    TextureType = "roughness"
 	TextureTypeTransparency TextureType = "transparency"
-	TextureTypeGlossy       TextureType = "glossy" // Reflection
+	TextureTypeMetallicness TextureType = "metallicness"
 )
 
 func (t TextureType) String() string { return string(t) }

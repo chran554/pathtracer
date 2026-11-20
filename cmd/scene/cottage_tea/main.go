@@ -75,12 +75,12 @@ func main() {
 	porcelainMaterial := scene.NewMaterial().
 		N("Porcelain").
 		C(color.NewColorGrey(0.80)).
-		M(0.1, 0.1).
+		M(0, 0.1).
 		T(0.0, true, scene.RefractionIndex_Porcelain)
 
 	steelCutleryMaterial := scene.NewMaterial().N("steel").
 		C(color.NewColor(0.85, 0.85, 0.85).Multiply(0.8)).
-		M(0.9, 0.3).
+		M(1, 0.3).
 		T(0.0, true, scene.RefractionIndex_Silver)
 
 	teapot := obj.NewSolidUtahTeapot(21, true, true)

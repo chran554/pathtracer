@@ -228,10 +228,8 @@ func serializeMaterial(mtlWriter *bufio.Writer, material *scene.Material) {
 		WriteString(mtlWriter, fmt.Sprintf("Tf %1.5f %1.5f %1.5f        # transparency\n", material.Transparency, material.Transparency, material.Transparency))
 	}
 
-	if material.Glossiness > 0.0 {
-		WriteString(mtlWriter, fmt.Sprintf("Ks %1.5f %1.5f %1.5f        # glossiness\n", material.Glossiness, material.Glossiness, material.Glossiness))
-		WriteString(mtlWriter, fmt.Sprintf("sharpness %d                    # roughness (inverted)\n", int(math.Round((1.0-float64(material.Roughness))*1000.0))))
-	}
+	WriteString(mtlWriter, fmt.Sprintf("Pm %1.5f                        # metallicness\n", material.Metallicness))
+	WriteString(mtlWriter, fmt.Sprintf("Pr %1.5f                        # perceptual roughness\n", material.Roughness))
 
 	if material.RefractionIndex > 0.0 {
 		WriteString(mtlWriter, fmt.Sprintf("Ni %1.5f                        # refraction index (for transparency)\n", material.RefractionIndex))

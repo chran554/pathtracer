@@ -32,7 +32,7 @@ func main() {
 	pillar := obj.NewBox(obj.BoxPositive)
 	pillar.Material = scene.NewMaterial().
 		C(color.NewColorGrey(0.9)).
-		M(0.2, 0.3).
+		M(0, 0.3).
 		PP(floatimage.LoadOrPanic("textures/concrete/Polished-Concrete-Architextures.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, (&vec3.UnitX).Scaled(pillarWidth), (&vec3.UnitZ).Add(&vec3.T{0, 0.5, 0}).Scaled(pillarWidth))
 	pillar.Translate(&vec3.T{-0.5, 0, -0.5})
 
@@ -46,7 +46,7 @@ func main() {
 	for degree := minDegree; degree <= maxDegree; degree += 5 {
 		beethoven := obj.NewBeethoven(50.0)
 		beethoven.Translate(&vec3.T{pillar.Bounds.Center()[0], pillar.Bounds.Ymax, pillar.Bounds.Center()[2]})
-		// beethoven.Material = scene.NewMaterial().N("Statue").M(0.1, 0.6).PP("textures/marble/white_marble.png", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(200), vec3.UnitY.Scaled(200))
+		// beethoven.Material = scene.NewMaterial().N("Statue").M(0, 0.6).PP("textures/marble/white_marble.png", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(200), vec3.UnitY.Scaled(200))
 		beethoven.Material = scene.NewMaterial().N("Statue")
 		beethoven.UpdateVertexNormalsWithThreshold(false, float64(degree))
 
@@ -81,5 +81,5 @@ func setCornellBoxMaterial(cornellBox *scene.FacetStructure) {
 	rightWallMaterial.PP(floatimage.LoadOrPanic("textures/wallpaper/geometric-yellow.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(scale), vec3.UnitY.Scaled(scale*0.66))
 
 	floorMaterial := cornellBox.GetFirstObjectByMaterialName("Floor").Material
-	floorMaterial.M(0.6, 0.1).PP(floatimage.LoadOrPanic("textures/floor/Calacatta-Vena-French-Pattern-Architextures.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale/2), vec3.UnitZ.Scaled(scale/2))
+	floorMaterial.M(0, 0.1).PP(floatimage.LoadOrPanic("textures/floor/Calacatta-Vena-French-Pattern-Architextures.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale/2), vec3.UnitZ.Scaled(scale/2))
 }

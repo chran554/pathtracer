@@ -12,7 +12,7 @@ import (
 
 // Two Spheres in a Cornell box (+ a small sphere light in the center).
 // The left sphere has reflections through Fresnel (using refraction index).
-// The right sphere has matching reflections through common mirror (glossiness and roughness).
+// The right sphere uses a glass IOR; the left uses water. Both are dielectrics.
 
 var animationName = "fresnel"
 
@@ -33,17 +33,17 @@ func main() {
 
 	rightSphereMaterial := scene.NewMaterial().N("right_sphere").
 		C(color.NewColor(0.9, 0.8, 0.9)).
-		M(0.04, 0.0).
-		T(0.0, true, scene.RefractionIndex_Air)
+		M(0, 0.0).
+		T(0.0, true, scene.RefractionIndex_Glass)
 
 	leftSphereMaterial := scene.NewMaterial().N("left_sphere").
 		C(color.NewColor(0.9, 0.8, 0.9)).
-		M(0.0, 0.0).
+		M(0, 0.0).
 		T(0.0, true, scene.RefractionIndex_Water)
 
 	middleSphereMaterial := scene.NewMaterial().N("middle_sphere").
 		C(color.NewColorKelvin(3000)).
-		M(0.0, 0.0).
+		M(0, 0.0).
 		E(color.White, 4.0, false)
 
 	lampDepth := cornellBox.GetFirstObjectByName("Lamp").Bounds.Zmax

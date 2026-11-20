@@ -35,7 +35,7 @@ func main() {
 	pillar := obj.NewBox(obj.BoxPositive)
 	pillar.Material = scene.NewMaterial().
 		C(color.NewColorGrey(0.95)).
-		M(0.2, 0.5).
+		M(0, 0.5).
 		PP(floatimage.LoadOrPanic("textures/concrete/Polished-Concrete-Architextures.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, (&vec3.UnitX).Scaled(pillarWidth), (&vec3.UnitZ).Add(&vec3.T{0, 0.5, 0}).Scaled(pillarWidth))
 	pillar.Translate(&vec3.T{-0.5, 0, -0.5})
 	pillar.Scale(&vec3.Zero, &vec3.T{pillarWidth, pillarHeight, pillarWidth})
@@ -89,5 +89,5 @@ func setCornellBoxMaterial(cornellBox *scene.FacetStructure) {
 	rightWallMaterial.PP(floatimage.LoadOrPanic("textures/wallpaper/geometric-yellow.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(scale), vec3.UnitY.Scaled(scale*0.66))
 
 	floorMaterial := cornellBox.GetFirstObjectByMaterialName("Floor").Material
-	floorMaterial.M(0.1, 0.2).PP(floatimage.LoadOrPanic("textures/floor/Calacatta-Vena-French-Pattern-Architextures.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale/2), vec3.UnitZ.Scaled(scale/2))
+	floorMaterial.M(0, 0.2).PP(floatimage.LoadOrPanic("textures/floor/Calacatta-Vena-French-Pattern-Architextures.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale/2), vec3.UnitZ.Scaled(scale/2))
 }

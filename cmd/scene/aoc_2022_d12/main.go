@@ -75,23 +75,23 @@ func main() {
 	lavaMaterial := scene.NewMaterial().
 		C(color.White).
 		E(color.White, 1.5, false).
-		M(0.2, 0.3).
+		M(0, 0.3).
 		SP(floatimage.LoadOrPanic("textures/planets/sun.jpg"), scene.TextureTypeAlbedo, &vec3.T{1540 / 2, -1540 / 2, 820 / 2}, vec3.UnitX.Scaled(-100), vec3.UnitZ.Scaled(100))
 
 	pathMaterial := scene.NewMaterial().
 		C(pathColor).
 		E(pathColor, 2.0*pathEmissionFactor, false).
-		M(0.3, 0.1)
+		M(0, 0.1)
 
 	startMaterial := scene.NewMaterial().
 		C(startColor).
 		E(startColor, 1.5*pathEmissionFactor, false).
-		M(0.3, 0.1)
+		M(0, 0.1)
 
 	endMaterial := scene.NewMaterial().
 		C(endColor).
 		E(endColor, 1.5*pathEmissionFactor, false).
-		M(0.3, 0.1)
+		M(0, 0.1)
 
 	for yPos := 0; yPos < karta.GetHeight(); yPos++ {
 		for xPos := 0; xPos < karta.GetWidth(); xPos++ {

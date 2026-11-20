@@ -17,7 +17,7 @@ func NewCastle(scale float64, lightColor *color.Color, lightEmission float64) *s
 	stainedGlassMaterial := scene.NewMaterial().N("stained_glass").
 		C(color.NewColor(0.95, 0.90, 0.60)).
 		T(0.8, false, 0.0).
-		M(0.2, 0.3)
+		M(0, 0.3)
 	stainedGlassObjects := object.GetObjectsByMaterialName("colored_glass")
 	for _, stainedGlassObject := range stainedGlassObjects {
 		stainedGlassObject.Material = stainedGlassMaterial
@@ -32,7 +32,7 @@ func NewCastle(scale float64, lightColor *color.Color, lightEmission float64) *s
 	glassMaterial := scene.NewMaterial().N("glass").
 		C(color.NewColor(0.93, 0.93, 0.95)).
 		T(0.8, false, 0.0).
-		M(0.2, 0.1)
+		M(0, 0.1)
 	glassObjects := object.GetObjectsByMaterialName("glass")
 	for _, glassObject := range glassObjects {
 		glassObject.Material = glassMaterial

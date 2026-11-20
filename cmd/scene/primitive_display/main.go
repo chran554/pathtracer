@@ -31,10 +31,10 @@ var lightIntensityFactor = 7.0
 func main() {
 	// Cornell box
 	cornellBox := obj.NewWhiteCornellBox(&vec3.T{500 * 4, 300 * 2, 500 * 4}, false, lightIntensityFactor) // cm, as units. I.e. a 5x3x5m room
-	cornellBox.GetFirstMaterialByName("Floor").M(0.01, 0.3)
+	cornellBox.GetFirstMaterialByName("Floor").M(0, 0.3)
 
 	// Gopher
-	gopherPupilMaterial := scene.NewMaterial().C(color.NewColorGrey(0.0)).M(0.05, 0.05)
+	gopherPupilMaterial := scene.NewMaterial().C(color.NewColorGrey(0.0)).M(0, 0.05)
 
 	gopherBlue := obj.NewGopher(180.0)
 	gopherBlue.ReplaceMaterial("eye_pupil", gopherPupilMaterial)
@@ -68,7 +68,7 @@ func main() {
 	diamond.Material = scene.NewMaterial().
 		C(color.NewColor(0.85, 0.85, 0.75)).
 		E(color.NewColor(0.1, 0.08, 0.05), 1.0, false).
-		M(0.05, 0.0)
+		M(0, 0.0)
 
 	podiumHeight := 30.0
 	podiumWidth := 200.0
@@ -90,7 +90,7 @@ func main() {
 	spherePodium.Scale(&vec3.Zero, &vec3.T{podiumWidth, podiumHeight, podiumWidth})
 	spherePodium.Translate(&sphereLocation)
 
-	sphereMaterial := scene.NewMaterial().C(color.NewColor(0.70, 1.00, 0.70)).M(0.1, 0.2)
+	sphereMaterial := scene.NewMaterial().C(color.NewColor(0.70, 1.00, 0.70)).M(0, 0.2)
 	sphere := scene.NewSphere(&vec3.T{0, 0, 0}, sphereRadius, sphereMaterial).N("Sphere primitive")
 	sphere.Translate(&vec3.T{0.0, podiumHeight + sphereRadius, 0.0})
 	sphere.Translate(&sphereLocation)
@@ -114,7 +114,7 @@ func main() {
 	discPodium.Scale(&vec3.Zero, &vec3.T{podiumWidth, podiumHeight, podiumWidth})
 	discPodium.Translate(&discLocation) // Move podium to location
 
-	discMaterial := scene.NewMaterial().C(color.NewColor(1.00, 0.70, 0.70)).M(0.1, 0.2)
+	discMaterial := scene.NewMaterial().C(color.NewColor(1.00, 0.70, 0.70)).M(0, 0.2)
 	disc := scene.NewDisc(&vec3.T{0, 0, 0}, &vec3.T{0, 0, -1}, discRadius, discMaterial).N("Disc primitive")
 	disc.RotateX(&vec3.Zero, -math.Pi/8)
 	disc.RotateY(&vec3.Zero, -math.Pi*2/8)
@@ -149,7 +149,7 @@ func main() {
 }
 
 func trianglePrimitive() *scene.FacetStructure {
-	material := scene.NewMaterial().C(color.NewColor(0.70, 0.70, 1.00)).M(0.1, 0.2)
+	material := scene.NewMaterial().C(color.NewColor(0.70, 0.70, 1.00)).M(0, 0.2)
 	triangleHeight := 1.0
 	triangleWidth := triangleHeight / (2.0 * math.Cos(math.Pi/6.0))
 	triangle := scene.Facet{

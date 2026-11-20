@@ -38,7 +38,7 @@ func NewGlassIkeaSkoja(scale float64, includeLiquid bool) *scene.FacetStructure 
 	liquidMaterial := scene.NewMaterial().
 		N("red juice").
 		C(color.White).
-		M(0.0, 0.0).
+		M(0, 0.0).
 		T(0.98, true, scene.RefractionIndex_SugarSolution60).
 		Attenuate(color.NewColor(0.90, 0.35, 0.37), scale/3)
 
@@ -56,7 +56,7 @@ func createGlassMaterial(scale float64) *scene.Material {
 	return scene.NewMaterial().
 		N("glass").
 		C(color.NewColor(0.95, 0.95, 0.97)).
-		M(0.0, 0.0).
+		M(0, 0.0).
 		T(0.98, true, scene.RefractionIndex_Glass).
 		Attenuate(color.NewColor(0.90, 0.95, 0.97), scale)
 }

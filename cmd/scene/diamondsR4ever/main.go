@@ -2,89 +2,85 @@ package main
 
 import (
 	"fmt"
-	"math"
+	"os"
 	dmd "pathtracer/cmd/obj/diamond/pkg/diamond"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/fileformat/wavefront"
 	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
+	"pathtracer/internal/pkg/util"
 
+	"github.com/ungerik/go3d/float64/mat3"
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "diamondsR4ever"
+const animationName = "diamondsR4ever"
 
-var amountAnimationFrames = 1
+const amountAnimationFrames = 180
 
-var imageWidth = 800
-var imageHeight = 800
-var magnification = 1.0
+const imageWidth = 800
+const imageHeight = 800
+const magnification = 0.25
 
-var amountSamples = 128 * 8
+const amountSamples = 1024
 
-var viewPlaneDistance = 1000.0
-var cameraDistanceFactor = 1.0
+const viewPlaneDistance = 1000.0
+const cameraDistanceFactor = 0.8
+
+const diamondSize = 100.0
+const recursionDepth = 20
+
+const lampEmission = 2
 
 func main() {
-	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
+	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
 	roomScale := 100.0
 	// cornellBox := getCornellBox(cornellBoxFilenamePath, 100.0)
 
-	environmentSphere := scene.NewSphere(&vec3.T{0, 0, 0}, 1000*1000*1000, scene.NewMaterial().
+	environmentSphere := scene.NewSphere(&vec3.T{0, 0, 0}, 30*1000, scene.NewMaterial().
 		E(color.White, 1, true).
-		SP(floatimage.LoadOrPanic("textures/planets/environmentmap/Stellarium3.jpeg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+		SP(floatimage.LoadOrPanic("textures/equirectangular/6031885477_bbffaa37d7_o.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+	environmentSphere.RotateY(environmentSphere.Bounds().Center(), util.DegToRad(40))
 
-	lamp1 := scene.NewSphere(&vec3.T{roomScale * 2.0, roomScale * 0.5, -roomScale * 1.0}, roomScale*0.8, scene.NewMaterial().E(color.White, 20, true)).N("Lamp1")
+	lamp1 := scene.NewSphere(&vec3.T{roomScale * 3.0, roomScale * 1.0, 0}, roomScale*0.8, scene.NewMaterial().E(color.White, lampEmission, true)).N("Lamp1")
+	lamp2 := scene.NewSphere(&vec3.T{-roomScale * 3.0, roomScale * 1.0, 0}, roomScale*0.8, scene.NewMaterial().E(color.White, lampEmission, true)).N("Lamp2")
 
-	lamp2 := scene.NewSphere(&vec3.T{-roomScale * 2.0, roomScale * 0.5, -roomScale * 1.0}, roomScale*0.8, scene.NewMaterial().E(color.White, 9, true)).N("Lamp2")
+	d := dmd.NewDiamond()
+	diamondMaterial := dmd.NewMaterial().Attenuate(color.NewColor(0.995, 0.900, 0.880), diamondSize)
+	diamond := d.RoundBrilliantCutFacetStructure(diamondSize, diamondMaterial)
+	diamondBounds := diamond.Bounds
 
-	diamondMaterial := scene.NewMaterial().
-		N("diamond").
-		C(color.NewColor(0.95, 0.90, 0.9)).
-		T(0.98, true, scene.RefractionIndex_Diamond).
-		M(0.02, 0.0)
+	// writeDiamondWavefrontFile(diamond)
 
-	d := dmd.Diamond{
-		GirdleDiameter:                         1.00, // 100.0%
-		GirdleHeightRelativeGirdleDiameter:     0.03, //   3.0%
-		CrownAngleDegrees:                      34.0, //  34.0°
-		TableFacetSizeRelativeGirdle:           0.56, //  56.0%
-		StarFacetSizeRelativeCrownSide:         0.55, //  55.0%
-		PavilionAngleDegrees:                   41.1, //  41.1°
-		LowerHalfFacetSizeRelativeGirdleRadius: 0.77, //  77.0%
-	}
+	floorTexture := floatimage.LoadOrPanic("textures/marble/white_marble.png")
+	//floorTexture := floatimage.LoadOrPanic("textures/floor/7451-diffuse 02 low contrast.png")
+	floorMaterial := scene.NewMaterial().
+		M(0, 0.05).
+		PP(floorTexture, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{roomScale * 1.5 * 2, 0, 0}, vec3.T{0, 0, roomScale * 1.5 * 2})
+	floor := scene.NewDisc(&vec3.T{0, diamond.Bounds.Ymin, 0}, &vec3.T{0, 1, 0}, roomScale*1.5, floorMaterial).N("Floor")
 
-	diamond2 := dmd.NewDiamondRoundBrilliantCut(d, 75.0, *diamondMaterial)
-	diamond2.UpdateBounds()
-	floorLevel := diamond2.Bounds.Ymin
-
-	floorMaterial := scene.NewMaterial().M(0.8, 0.1).PP(floatimage.LoadOrPanic("textures/marble/white_marble.png"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{roomScale * 1.5 * 2, 0, 0}, vec3.T{0, 0, roomScale * 1.5 * 2})
-	floor := scene.NewDisc(&vec3.T{0, floorLevel, 0}, &vec3.T{0, 1, 0}, roomScale*1.5, floorMaterial).N("Floor")
-
-	animationStep := 1.0 / float64(amountAnimationFrames)
 	for animationFrameIndex := range amountAnimationFrames {
-		animationProgress := float64(animationFrameIndex) * animationStep
+		animationProgress := float64(animationFrameIndex) / float64(amountAnimationFrames)
 
-		diamond := dmd.NewDiamondRoundBrilliantCut(d, 75.0, *diamondMaterial)
-		diamond.RotateY(&vec3.Zero, animationProgress*(math.Pi*2.0/8.0))
-		diamond.RotateZ(&vec3.Zero, -15.0*animationStep*(math.Pi*2.0/8.0))
-		diamond.RotateY(&vec3.Zero, 10.0*animationStep*(math.Pi*2.0/8.0))
-		diamond.UpdateBounds()
-
-		cameraOrigin := vec3.T{20, roomScale * 0.25, -100}
+		cameraOrigin := &vec3.T{0, diamondBounds.Ymax + 50, -200}
 		cameraOrigin.Scale(cameraDistanceFactor)
-		focusPoint := vec3.T{0, 0, 0}
+		focusPoint := &vec3.T{diamondBounds.Center()[0], diamondBounds.Ymax, diamondBounds.Center()[2]}
+
+		rotatePoint(util.DegToRad(360*animationProgress), cameraOrigin, focusPoint)
 
 		scn := scene.NewSceneNode().
 			S(lamp1, lamp2, environmentSphere).
 			D(floor).
 			FS(diamond)
 
-		camera := scene.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).V(viewPlaneDistance)
+		camera := scene.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).
+			V(viewPlaneDistance).
+			D(recursionDepth)
 
 		fi := -1
-		if animationFrameIndex > 1 {
+		if amountAnimationFrames > 1 {
 			fi = animationFrameIndex
 		}
 
@@ -93,8 +89,47 @@ func main() {
 	}
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
+	fmt.Printf("Writing scene file '%s'.\n", filename)
 	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
+	}
+}
+
+func rotatePoint(angle float64, point *vec3.T, rotationOrigin *vec3.T) {
+	rotationMatrix := mat3.T{}
+	rotationMatrix.AssignYRotation(angle)
+	p := point.Subed(rotationOrigin)
+	p[0], p[2] = p[2], p[0] // Change to right hand coordinate system
+	rotationMatrix.TransformVec3(&p)
+	p[0], p[2] = p[2], p[0] // Change back to left hand coordinate system
+	p.Add(rotationOrigin)
+
+	point[0] = p[0]
+	point[1] = p[1]
+	point[2] = p[2]
+}
+
+func writeDiamondWavefrontFile(diamond *scene.FacetStructure) {
+	objFile, err := os.OpenFile("diamond.obj", os.O_WRONLY, os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
+	mtlFile, err := os.OpenFile("diamond.mtl", os.O_WRONLY, os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
+	wavefront.WriteObjFile(objFile, mtlFile, diamond, nil)
+}
+
+func getDiamondConfig() dmd.Diamond {
+	return dmd.Diamond{
+		GirdleDiameter:                         1.00, // 100.0%
+		GirdleHeightRelativeGirdleDiameter:     0.03, //   3.0%
+		CrownAngleDegrees:                      34.0, //  34.0°
+		TableFacetSizeRelativeGirdle:           0.56, //  56.0%
+		StarFacetSizeRelativeCrownSide:         0.55, //  55.0%
+		PavilionAngleDegrees:                   41.1, //  41.1°
+		LowerHalfFacetSizeRelativeGirdleRadius: 0.77, //  77.0%
 	}
 }

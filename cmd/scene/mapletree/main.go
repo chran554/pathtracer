@@ -58,7 +58,7 @@ func main() {
 	leafMaterial := scene.NewMaterial().
 		C(color.NewColorRGBA(1.0, 1.0, 1.0, 1.0)).
 		T(0.10, false, 1.44). // Refraction index green leaves 1.40-1.48
-		M(0.15, 0.85)
+		M(0, 0.85)
 
 	skydomeMaterial := scene.NewMaterial().
 		E(color.White, skyDomeEmission, true).
@@ -73,7 +73,6 @@ func main() {
 	groundMaterial := scene.NewMaterial().
 		N("ground").
 		PP(textureGround, scene.TextureTypeAlbedo, &vec3.Zero, vec3.T{5, 0, 0}, vec3.T{0, 0, 5})
-	groundMaterial.FresnelMaxGlossiness = 0.15
 
 	ground.Material = groundMaterial
 

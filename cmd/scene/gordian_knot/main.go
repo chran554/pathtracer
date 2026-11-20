@@ -80,7 +80,7 @@ func getKnotBalls(ballRadius float64, amountBalls int, scale float64, animationP
 	spheres := make([]*scene.Sphere, 0)
 	radianDistanceBetweenBalls := (math.Pi * 2.0 * pipeLength) / float64(amountBalls)
 
-	sphereMaterial := scene.NewMaterial().C(color.NewColor(0.95, 0.95, 0.95)).M(0.9, 0.1)
+	sphereMaterial := scene.NewMaterial().C(color.NewColor(0.95, 0.95, 0.95)).M(1, 0.1)
 
 	for ballIndex := range amountBalls {
 		t := (radianDistanceBetweenBalls * float64(ballIndex)) + (animationProgress * ballSpeed * radianDistanceBetweenBalls)

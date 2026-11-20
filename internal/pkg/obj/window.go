@@ -25,11 +25,11 @@ func NewWindow(scale float64) *scene.FacetStructure {
 
 	paintMaterial := scene.NewMaterial().N("paint").
 		C(color.NewColorGrey(0.9)).
-		M(0.1, 0.6)
+		M(0, 0.6)
 
 	brassMaterial := scene.NewMaterial().N("brass").
 		C(color.NewColor(0.8, 0.7, 0.15)).
-		M(0.8, 0.4)
+		M(1, 0.4)
 
 	window.ReplaceMaterial("glass", glassMaterial)
 	window.ReplaceMaterial("frame", paintMaterial)

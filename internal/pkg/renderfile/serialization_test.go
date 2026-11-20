@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/ungerik/go3d/float64/vec3"
+	"github.com/vmihailenco/msgpack/v5"
 )
 
 func TestAbsorptionSerialization(t *testing.T) {
@@ -133,4 +134,27 @@ func TestProjectionTextureSerialization(t *testing.T) {
 
 	zw.Close()
 	zipFile.Close()
+}
+
+func TestMetallicRoughnessSerialization(t *testing.T) {
+	for _, metallic := range []float64{0, 0.4, 1} {
+		material := scene.NewMaterial().N("metallic").C(color.NewColor(0.8, 0.4, 0.1)).M(metallic, 0.35).T(0.6, true, 1.6)
+		node := scene.NewSceneNode().S(scene.NewSphere(&vec3.T{}, 1, material))
+		camera := scene.NewCamera(&vec3.T{0, 0, 3}, &vec3.T{}, 1, 1)
+		animation := scene.NewAnimation("metallic", 2, 2, 1, false, false).AddFrame(scene.NewFrame("metallic", 0, camera, node))
+		filename := filepath.Join(t.TempDir(), "metallic.render.zip")
+		require.NoError(t, WriteRenderFile(filename, animation))
+		restored, err := ReadRenderFile(filename)
+		require.NoError(t, err)
+		assert.Equal(t, material, restored.Frames[0].SceneNode.Spheres[0].Material)
+	}
+	// Check wire names explicitly, including removal of the obsolete parameters.
+	data, err := msgpack.Marshal(Material{Metallicness: 0.4, Roughness: 0.35})
+	require.NoError(t, err)
+	var fields map[string]interface{}
+	require.NoError(t, msgpack.Unmarshal(data, &fields))
+	assert.Equal(t, 0.4, fields["metallicness"])
+	for _, key := range []string{"glossiness", "diffuse", "colorize-reflection", "fresnel-max-reflection"} {
+		assert.NotContains(t, fields, key)
+	}
 }

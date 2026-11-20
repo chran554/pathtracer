@@ -95,7 +95,7 @@ func (f *Facet) GetBounds() *Bounds {
 	return f.Bounds
 }
 
-// UpdateNormal calculates a normalized normal for the facet.
+// UpdateNormal calculates a normalized normal for the facet in a left hand system.
 //
 // Clockwise (CW) ordered points produce a normal going towards the observer.
 //
@@ -303,33 +303,19 @@ func (f *Facet) scale(scaleOrigin *vec3.T, scale *vec3.T, scaledPoints map[*vec3
 }
 
 func (f *Facet) ChangeWindingOrder() {
-	amountVertices := len(f.Vertices)
+	changeWindingOrder(f.Vertices)
+	changeWindingOrder(f.VertexNormals)
+	changeWindingOrder(f.VertexTangents)
+}
+
+func changeWindingOrder(vertices []*vec3.T) {
+	amountVertices := len(vertices)
 	if amountVertices == 3 {
 		// Flip the second and third vertex in triangle (facet) to change the winding order of facet vertices
-		f.Vertices[0], f.Vertices[2] = f.Vertices[2], f.Vertices[0]
+		vertices[0], vertices[2] = vertices[2], vertices[0]
 	} else if amountVertices > 3 {
 		for i := 0; i < amountVertices/2; i++ {
-			f.Vertices[i], f.Vertices[amountVertices-i-1] = f.Vertices[amountVertices-i-1], f.Vertices[i]
-		}
-	}
-
-	amountVertexNormals := len(f.VertexNormals)
-	if amountVertexNormals == 3 {
-		// Flip the second and third vertex in triangle (facet) to change the winding order of facet vertices
-		f.VertexNormals[0], f.VertexNormals[2] = f.VertexNormals[2], f.VertexNormals[0]
-	} else if amountVertexNormals > 3 {
-		for i := 0; i < amountVertexNormals/2; i++ {
-			f.VertexNormals[i], f.VertexNormals[amountVertexNormals-i-1] = f.VertexNormals[amountVertexNormals-i-1], f.Vertices[i]
-		}
-	}
-
-	amountVertexTangents := len(f.VertexTangents)
-	if amountVertexTangents == 3 {
-		// Flip the second and third vertex in triangle (facet) to change the winding order of facet vertices
-		f.VertexTangents[0], f.VertexTangents[2] = f.VertexTangents[2], f.VertexTangents[0]
-	} else if amountVertexTangents > 3 {
-		for i := 0; i < amountVertexTangents/2; i++ {
-			f.VertexTangents[i], f.VertexTangents[amountVertexTangents-i-1] = f.VertexTangents[amountVertexTangents-i-1], f.Vertices[i]
+			vertices[i], vertices[amountVertices-i-1] = vertices[amountVertices-i-1], vertices[i]
 		}
 	}
 }

@@ -16,7 +16,7 @@ func NewLamppost(scale float64, emission float64) *scene.FacetStructure {
 
 	lamppostMaterial := scene.NewMaterial().N("lamppost").
 		C(color.NewColor(0.20, 0.10, 0.08)).
-		M(0.2, 0.3)
+		M(0, 0.3)
 
 	warmWhiteColor := color.KelvinTemperatureColor2(5000)
 	lampMaterial0 := scene.NewMaterial().N("lamp_0").C(color.White).E(warmWhiteColor, emission, true)

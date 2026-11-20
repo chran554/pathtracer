@@ -21,7 +21,46 @@ type Diamond struct {
 	LowerHalfFacetSizeRelativeGirdleRadius float64 // // LowerHalfFacetSizeRelativeGirdleRadius is the size of the lower half-facets. It is expressed as a percentage of the length of the side of the pavilion.
 }
 
-// NewDiamondRoundBrilliantCut will return a facet structure of a round, brilliant cut, diamond.
+// NewDiamond creates a new diamond configuration for a round brilliant cut diamond.
+// The configuration is supposed to be "optimal" for a diamond. However, there are many opinions and definitions
+// out there of what are the optimal proportions for a round brilliant cut diamond.
+//
+// This is an "average" estimation of the best proportions of the most prominent quality definitions
+// (Morse, Tolkowsky, GIA, and AGS).
+//
+//	GirdleDiameter:                         1.00,  // 100.0% - Reference size
+//	GirdleHeightRelativeGirdleDiameter:     0.03,  //   3.0% - GIA and AGS values for "medium size"
+//	CrownAngleDegrees:                      34.0,  //  34.0° - GIA value
+//	TableFacetSizeRelativeGirdle:           0.56,  //  56.0% - GIA and AGS values
+//	StarFacetSizeRelativeCrownSide:         0.55,  //  55.0% - GIA and AGS values
+//	PavilionAngleDegrees:                   41.1,  //  41.1° - AGS value
+//	LowerHalfFacetSizeRelativeGirdleRadius: 0.775, //  77.5% - GIA and AGS values
+func NewDiamond() Diamond {
+	return Diamond{
+		GirdleDiameter:                         1.00,  // 100.0%
+		GirdleHeightRelativeGirdleDiameter:     0.03,  //   3.0%
+		CrownAngleDegrees:                      34.0,  //  34.0°
+		TableFacetSizeRelativeGirdle:           0.56,  //  56.0%
+		StarFacetSizeRelativeCrownSide:         0.55,  //  55.0%
+		PavilionAngleDegrees:                   41.1,  //  41.1°
+		LowerHalfFacetSizeRelativeGirdleRadius: 0.775, //  77.5%
+	}
+}
+
+// NewMaterial create a new diamond material.
+// A solid and full transparent white material with refraction index of diamond.
+//
+// For colorization of the diamond use Attenuation on the material.
+//
+//	pinkDiamondMaterial := dmd.NewMaterial().Attenuate(color.NewColor(0.995, 0.900, 0.880), diamondDiameter))
+func NewMaterial() *scene.Material {
+	return scene.NewMaterial().
+		N("Diamond").
+		M(0, 1).
+		T(1.0, true, scene.RefractionIndex_Diamond)
+}
+
+// RoundBrilliantCutFacetStructure will return a facet structure of a round, brilliant cut, diamond.
 // The diamond is a 57-facet, brilliant cut, diamond.
 //
 // It has a faceted girdle. The facets of the girdle are not included in the 57-facet count.
@@ -29,7 +68,7 @@ type Diamond struct {
 // (The girdle itself consists of 32 facets. Two girdle facets per each "upper"/"lower" half-pair facet.)
 //
 // It has no culet (no 58:th facet), at the bottom of the diamond, but is a "pointed" or "None" culet cut.
-func NewDiamondRoundBrilliantCut(d Diamond, scale float64, material scene.Material) *scene.FacetStructure {
+func (d Diamond) RoundBrilliantCutFacetStructure(scale float64, material *scene.Material) *scene.FacetStructure {
 	// The girdle diameter of the diamond is the average widest diameter of the diamond when viewed from above.
 	// The girdle diameter measurement is key as it determines the proportions of the brilliant cut diamond.
 	// Most percentage proportions of the brilliant cut round diamond are calculated as percentages of the girdle diameter.
@@ -45,7 +84,7 @@ func NewDiamondRoundBrilliantCut(d Diamond, scale float64, material scene.Materi
 
 	// Create crown
 
-	// Pre calculations
+	// Pre-calculations
 	girdleRadius := d.GirdleDiameter / 2.0
 	culetRadius := culetDiameter / 2.0
 	tableRadius := girdleRadius * d.TableFacetSizeRelativeGirdle
@@ -272,7 +311,7 @@ func NewDiamondRoundBrilliantCut(d Diamond, scale float64, material scene.Materi
 
 	diamond := scene.FacetStructure{
 		Name:            "Diamond",
-		Material:        &material,
+		Material:        material,
 		FacetStructures: []*scene.FacetStructure{&crown, &pavilion, &girdle},
 	}
 
@@ -281,9 +320,9 @@ func NewDiamondRoundBrilliantCut(d Diamond, scale float64, material scene.Materi
 	// The average girdle thickness percentage is calculated as a percentage of the girdle diameter.
 	// Thin is <1 %, Medium is 1%- 3% and Thick is 4%<
 
+	diamond.ChangeWindingOrder() // Change to CCW winding of facets in diamond
 	diamond.UpdateNormals()
 	diamond.ScaleUniform(&vec3.Zero, scale)
-	diamond.UpdateBounds()
 
 	// fmt.Printf("Crown bounds:    %+v\n", crown.Bounds)
 	// fmt.Printf("Girdle bounds:   %+v\n", girdle.Bounds)

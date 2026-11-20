@@ -118,6 +118,9 @@ type Material struct {
 	// "Roughness" [0.0 .. 1.0]
 	Pr float64
 
+	// Pm is the metallic fraction in the PBR MTL extension.
+	Pm float64
+
 	// Illum statement specifies the illumination model to use in the material.
 	//
 	// Syntax:

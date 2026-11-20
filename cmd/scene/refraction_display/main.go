@@ -89,7 +89,7 @@ func GetGlassMaterial(name string, scale float64) *scene.Material {
 	return scene.NewMaterial().
 		N(name).
 		C(color.NewColor(0.95, 0.95, 0.95)).
-		M(0.0, 0.0).
+		M(0, 0.0).
 		T(0.98, true, scene.RefractionIndex_Glass).
 		Attenuate(color.NewColor(0.9*0.5, 0.93*0.5, 0.95).Multiply(0.9), scale)
 }

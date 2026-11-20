@@ -45,7 +45,7 @@ func main() {
 	tableBoard.Translate(&vec3.T{10, dy, 0})
 	tableBoard.Material = scene.NewMaterial().
 		C(color.NewColorGrey(1.0)).
-		M(0.15, 0.3).
+		M(0, 0.3).
 		PP(floatimage.LoadOrPanic("textures/wood/darkwood.png"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{30, 0, 0}, vec3.T{0, 0, 20})
 
 	sodaCanHeight := 11.6

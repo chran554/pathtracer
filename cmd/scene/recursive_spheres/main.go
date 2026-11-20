@@ -32,7 +32,7 @@ var startSphereRadius = 150.0
 var maxSphereRecursionDepth = 6
 var apertureSize = 3.0
 
-var sphereMaterial = scene.NewMaterial().C(color.NewColorGrey(0.8)).M(0.70, 0.07)
+var sphereMaterial = scene.NewMaterial().C(color.NewColorGrey(0.8)).M(1, 0.07)
 
 func main() {
 	environmentEnvironMap := floatimage.LoadOrPanic("textures/equirectangular/open_grassfield_sunny_day.jpg")

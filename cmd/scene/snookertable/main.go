@@ -94,7 +94,7 @@ func main() {
 	poolTable.CenterOn(&vec3.Zero)
 	poolTable.Scale(&vec3.Zero, &vec3.T{356.9, 1, 177.8})
 	textureTableCloth := floatimage.LoadOrPanic("textures/snooker/cloth02.png")
-	poolTable.Material = scene.NewMaterial().C(color.White).M(0.015, 0.9).PP(textureTableCloth, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{5, 0, 0}, vec3.T{0, 0, 5})
+	poolTable.Material = scene.NewMaterial().C(color.White).M(0, 0.9).PP(textureTableCloth, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{5, 0, 0}, vec3.T{0, 0, 5})
 
 	var balls = [][]SnookerBall{
 		{SnookerBall01, SnookerBall02, SnookerBall03, SnookerBall04, SnookerBall05, SnookerBall06, SnookerBall07, SnookerBall08},
@@ -127,7 +127,7 @@ func main() {
 		}
 	}
 
-	// steelSphere := scene.NewSphere(&vec3.T{0, 5.7, -10}, 5.7, scene.NewMaterial().M(0.9, 0.15))
+	// steelSphere := scene.NewSphere(&vec3.T{0, 5.7, -10}, 5.7, scene.NewMaterial().M(0, 0.15))
 
 	snookerBallsNode := scene.NewSceneNode().S(snookerballs...) // .S(steelSphere)
 
@@ -177,7 +177,7 @@ func NewSnookerBall(ball SnookerBall) *scene.Sphere {
 
 	ballMaterial := scene.NewMaterial().
 		N(fmt.Sprintf("snooker ball %s", ball)).
-		M(0.015, 0.1).
+		M(0, 0.1).
 		T(0.0, true, scene.RefractionIndex_AcrylicPlastic).
 		//SP(textureFilename, &vec3.T{0, radius, 0}, vec3.T{0, 0, diameter}, vec3.T{0, radius, 0})
 		//PP(textureFilename, &vec3.T{-radius, 0, 0}, vec3.T{diameter, 0, 0}, vec3.T{0, diameter, 0})

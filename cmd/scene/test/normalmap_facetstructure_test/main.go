@@ -96,8 +96,7 @@ func createWall() *scene.FacetStructure {
 
 	wallMaterial := scene.NewMaterial().N("wall")
 	wallMaterial.C(colorWhite)
-	wallMaterial.M(0.4, 0.5)
-	wallMaterial.FresnelMaxGlossiness = 0.15
+	wallMaterial.M(0, 0.5)
 
 	wall := obj.NewSquareFacetStructure(obj.SquareTypeXYPlane, nil, true)
 	wall.Name = "wall"

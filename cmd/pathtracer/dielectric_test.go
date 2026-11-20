@@ -43,7 +43,6 @@ func TestTracePathSmoothGlass(test *testing.T) {
 					glass = normalMappedTestMaterial(shadingNormal)
 				}
 				glass.M(0, 0).T(1, true, 1.5)
-				glass.FresnelMaxGlossiness = 0 // Isolate the selected transmission or forced TIR.
 
 				// Exercise both interpolated vertex normals and texture-derived normals.
 				plane := orientationTestPlane(glass)
@@ -97,7 +96,7 @@ func TestTracePathSmoothGlass(test *testing.T) {
 				// Radiance conversion (PBRT 9.5.2; see TestTracePathTransmissionRadiance).
 				expectedRadiance := math.Pow(testCase.incidentIndex/testCase.transmittedIndex, 2)
 				for range 4 {
-					actualRadiance := tracePath(&scene.Ray{Origin: &rayOrigin, Heading: &incomingDirection}, &scene.Camera{RenderType: scene.Pathtracing, RecursionDepth: recursionDepth}, sceneNode, 0, mediumStack)
+					actualRadiance := traceTransmissionPath(&scene.Ray{Origin: &rayOrigin, Heading: &incomingDirection}, &scene.Camera{RenderType: scene.Pathtracing, RecursionDepth: recursionDepth}, sceneNode, 0, mediumStack)
 					assertTransmissionColor(test, actualRadiance, color.NewColor(expectedRadiance, expectedRadiance, expectedRadiance))
 				}
 
@@ -310,12 +309,11 @@ func TestSmoothGlassSharedEdge(test *testing.T) {
 	}
 }
 
-// TestTracePathRejectedSolidTransmission checks that rejected transmission
-// preserves local emission and the medium stack.
-func TestTracePathRejectedSolidTransmission(test *testing.T) {
+// TestTracePathCriticalReflection checks unit Fresnel at the critical angle,
+// preserving local emission and the medium stack.
+func TestTracePathCriticalReflection(test *testing.T) {
 	for _, emissive := range []bool{false, true} {
 		glass := scene.NewMaterial().M(0, 0).T(1, true, 1)
-		glass.FresnelMaxGlossiness = 0 // Force the exactly critical, tangent transmission candidate.
 		expectedRadiance := color.NewColor(0, 0, 0)
 		if emissive {
 			expectedRadiance = color.NewColor(0.2, 0.3, 0.4)
@@ -334,14 +332,17 @@ func TestTracePathRejectedSolidTransmission(test *testing.T) {
 		mediumStack := stackStorage[:1]
 		ray := &scene.Ray{Origin: &vec3.T{0, 0, 1}, Heading: &vec3.T{0.8, 0, -0.6}}
 
-		// Verify a valid transmission selection before checking its tangent-direction rejection.
+		// At the critical angle the tangent transmission is rejected and Fresnel is one.
 		boundary := evaluateDielectricBoundary(&vec3.UnitZ, &vec3.UnitZ, ray.Heading, 1.25, 1)
-		probabilities := surfaceBounceProbabilities(glass, boundary.fresnel, boundary.totalInternalReflection)
-		if boundary.heading != nil || probabilities.transmission != 1 {
-			test.Fatalf("invalid critical-angle fixture: boundary %+v, probabilities %+v", boundary, probabilities)
+		if boundary.heading != nil || boundary.fresnel != 1 {
+			test.Fatalf("invalid critical-angle fixture: %+v", boundary)
 		}
+		expectedRadiance = expectedRadiance.Copy()
+		expectedRadiance.R += 1
+		expectedRadiance.G += 1
+		expectedRadiance.B += 1
 
-		actualRadiance := tracePath(ray, &scene.Camera{RenderType: scene.Pathtracing, RecursionDepth: 1}, sceneNode, 0, mediumStack)
+		actualRadiance := traceTransmissionPath(ray, &scene.Camera{RenderType: scene.Pathtracing, RecursionDepth: 1}, sceneNode, 0, mediumStack)
 		assertTransmissionColor(test, actualRadiance, expectedRadiance)
 		if stackStorage[1] != stackSentinel {
 			test.Fatal("rejected transmission changed the medium stack")
@@ -356,8 +357,6 @@ func TestTracePathSmoothGlassNestedMedia(test *testing.T) {
 		test.Run(fmt.Sprintf("nested=%t", nested), func(test *testing.T) {
 			glass := scene.NewMaterial().M(0, 0).T(1, true, 1.5)
 			water := scene.NewMaterial().M(0, 0).T(1, true, 1.33)
-			glass.FresnelMaxGlossiness = 0
-			water.FresnelMaxGlossiness = 0
 
 			// Record each boundary and the medium on both sides in traversal order.
 			boundaryMaterials := []*scene.Material{glass, glass}
@@ -395,7 +394,7 @@ func TestTracePathSmoothGlassNestedMedia(test *testing.T) {
 
 			// Returning to air cancels every index-ratio factor along this path.
 			sceneNode.Discs = []*scene.Disc{scene.NewDisc(&lightPosition, &vec3.UnitZ, 0.002, scene.NewMaterial().E(color.White, 1, true))}
-			actualRadiance := tracePath(&scene.Ray{Origin: &rayOrigin, Heading: &incomingDirection},
+			actualRadiance := traceTransmissionPath(&scene.Ray{Origin: &rayOrigin, Heading: &incomingDirection},
 				&scene.Camera{RenderType: scene.Pathtracing, RecursionDepth: len(boundaryMaterials)}, sceneNode, 0,
 				[]*scene.Material{scene.NewMaterial().T(1, true, 1)})
 			assertTransmissionColor(test, actualRadiance, color.White)

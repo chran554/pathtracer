@@ -177,6 +177,12 @@ func convertToSceneMaterial(mtl *Material) *scene.Material {
 	if mtl.Pr != -1.0 {
 		m.Roughness = util.ClampFloat64(0.0, 1.0, mtl.Pr)
 	}
+	if mtl.Refl >= 0 {
+		m.Metallicness = util.ClampFloat64(0, 1, mtl.Refl)
+	}
+	if mtl.Pm >= 0 {
+		m.Metallicness = util.ClampFloat64(0, 1, mtl.Pm)
+	}
 	if mtl.Ni != -1.0 {
 		m.RefractionIndex = max(0.0, mtl.Ni)
 	}

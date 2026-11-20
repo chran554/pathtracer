@@ -273,20 +273,17 @@ func (s *serializer) initFrameCache(frameInformation *FrameInformation) error {
 				}
 
 				s.sm = append(s.sm, &scene.Material{
-					Name:                 m.Name,
-					Color:                s.sceneColor(m.Color),
-					Diffuse:              m.Diffuse,
-					Emission:             s.sceneColor(m.Emission),
-					Absorption:           s.sceneColor(m.Absorption),
-					Glossiness:           m.Glossiness,
-					Roughness:            m.Roughness,
-					Projections:          projections,
-					RefractionIndex:      m.RefractionIndex,
-					SolidObject:          m.SolidObject,
-					Transparency:         m.Transparency,
-					RayTerminator:        m.RayTerminator,
-					ColorizeReflection:   m.ColorizeReflection,
-					FresnelMaxGlossiness: m.FresnelMaxGlossiness,
+					Name:            m.Name,
+					Color:           s.sceneColor(m.Color),
+					Emission:        s.sceneColor(m.Emission),
+					Absorption:      s.sceneColor(m.Absorption),
+					Metallicness:    m.Metallicness,
+					Roughness:       m.Roughness,
+					Projections:     projections,
+					RefractionIndex: m.RefractionIndex,
+					SolidObject:     m.SolidObject,
+					Transparency:    m.Transparency,
+					RayTerminator:   m.RayTerminator,
 				})
 			}
 		}

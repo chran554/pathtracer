@@ -13,7 +13,6 @@ import (
 var animationName = "reflective_test_glossy_roughness"
 
 var ballRadius float64 = 20
-var colorizeReflection = true
 
 var maxRecursionDepth = 6
 var amountSamples = 1024 * 12
@@ -48,18 +47,17 @@ func main() {
 			yProgress := float64(yIndex) / float64(amountSpheres)
 			xProgress := float64(xIndex) / float64(amountSpheres)
 
-			refractiveIndex := scene.RefractionIndex_Air
-			glossiness := xProgress
+			refractiveIndex := 1.5
+			metallicness := xProgress
 			roughness := yProgress
 
 			sphereMaterial := scene.NewMaterial().
 				C(color.NewColor(0.80, 0.95, 0.80)).
-				M(glossiness, roughness).
+				M(metallicness, roughness).
 				T(0.0, true, refractiveIndex)
-			sphereMaterial.ColorizeReflection = colorizeReflection
 
 			sphereOrigin := vec3.T{-sphereSpread/2.0 + float64(xIndex)*sphereCC, ballRadius, -sphereSpread/2.0 + float64(yIndex)*sphereCC}
-			sphere := scene.NewSphere(&sphereOrigin, ballRadius, sphereMaterial).N(fmt.Sprintf("Sphere (glossy:%02f rough:%02f)", xProgress, yProgress))
+			sphere := scene.NewSphere(&sphereOrigin, ballRadius, sphereMaterial).N(fmt.Sprintf("Sphere (metallic:%02f rough:%02f)", xProgress, yProgress))
 
 			scn.S(sphere)
 		}

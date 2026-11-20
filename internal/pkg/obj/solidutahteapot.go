@@ -26,13 +26,13 @@ func NewSolidUtahTeapot(scale float64, includeBody bool, includeLid bool) *scene
 	// porcelainMaterial := scene.NewMaterial().
 	//	N("Porcelain material").
 	//	C(color.NewColorGrey(0.85)).
-	//	M(0.1, 0.1).
+	//	M(0, 0.1).
 	//	T(0.0, true, scene.RefractionIndex_Porcelain)
 
 	// glassMaterial := scene.NewMaterial().
 	// 	N("Glass material").
 	// 	C(color.NewColor(0.95, 0.95, 0.97), 1.0).
-	// 	M(0.2, 0.05).
+	// 	M(0, 0.05).
 	// 	T(1.0, true, scene.RefractionIndex_Glass)
 
 	// utahTeaPot.ClearMaterials()

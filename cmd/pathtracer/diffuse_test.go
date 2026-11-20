@@ -33,7 +33,6 @@ func TestTracePathDiffuseNormals(test *testing.T) {
 	for _, testCase := range testCases {
 		test.Run(testCase.name, func(test *testing.T) {
 			material := normalMappedTestMaterial(testCase.shadingNormal)
-			material.FresnelMaxGlossiness = 0 // Isolate diffuse transport from reflection selection.
 			if testCase.mirrorMixture {
 				material.M(0.5, 0)
 			}

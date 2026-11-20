@@ -92,16 +92,15 @@ func main() {
 
 // NewMaterialGlass returns a pale blue solid material named materialName, with
 // transmission weight 0.98 and debug refractive index 1.2.
-// Fresnel reflection is capped at zero; total internal reflection can still occur.
+// Smooth glass uses physical Fresnel reflection and total internal reflection.
 func NewMaterialGlass(materialName string) *scene.Material {
 	glassMaterial := scene.NewMaterial().
 		N(materialName).
 		C(color.NewColor(0.90, 0.92, 0.95)).
-		M(0.0, 0.0).
+		M(0, 0.0).
 		T(0.98, true, 1.2)
 
-	// Suppress Fresnel reflection to expose the transmitted paths in this debug scene.
-	glassMaterial.FresnelMaxGlossiness = 0.0
+	// Transmission and reflection follow the dielectric Fresnel probabilities.
 
 	return glassMaterial
 }

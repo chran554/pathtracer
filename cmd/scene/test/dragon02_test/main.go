@@ -72,7 +72,7 @@ func createPillar(pillarWidth float64, pillarHeight float64) *scene.FacetStructu
 	pillar1 := obj.NewBox(obj.BoxPositive)
 	pillar1.Material = scene.NewMaterial().
 		C(color.NewColorGrey(0.9)).
-		M(0.2, 0.15).
+		M(0, 0.15).
 		PP(floatimage.LoadOrPanic("textures/concrete/Polished-Concrete-Architextures.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, (&vec3.UnitX).Scaled(pillarWidth), (&vec3.UnitZ).Add(&vec3.T{0, 0.5, 0}).Scaled(pillarWidth))
 	pillar1.Translate(&vec3.T{-0.5, 0, -0.5})
 
@@ -94,9 +94,9 @@ func setCornellBoxMaterial(cornellBox *scene.FacetStructure) {
 	cornellBox.GetFirstObjectBySubstructureName("Left").Material = sideWallMaterial
 	cornellBox.GetFirstObjectBySubstructureName("Right").Material = sideWallMaterial
 
-	//floorMaterial := scene.NewMaterial().N("floor").M(0.3, 0.1).PP("textures/marble/marble white tiles 1000x1000.jpg", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale/4), vec3.UnitZ.Scaled(scale/4))
+	//floorMaterial := scene.NewMaterial().N("floor").M(0, 0.1).PP("textures/marble/marble white tiles 1000x1000.jpg", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale/4), vec3.UnitZ.Scaled(scale/4))
 	floorMaterial := scene.NewMaterial().N("floor").
-		C(color.NewColorGrey(0.4)).M(0.15, 0.2).
+		C(color.NewColorGrey(0.4)).M(0, 0.2).
 		PP(floatimage.LoadOrPanic("textures/floor/floor_boards.png"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale), vec3.UnitZ.Scaled(scale))
 	cornellBox.GetFirstObjectBySubstructureName("Floor").Material = floorMaterial
 

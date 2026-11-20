@@ -9,39 +9,33 @@ import (
 )
 
 type Material struct {
-	Name                 string
-	Color                *color.Color
-	Diffuse              float64 // Diffuse is Nonnegative diffuse selection weight, relative to Glossiness and Transparency. RGB albedo controls surface absorption.
-	Emission             *color.Color
-	Glossiness           float64 // Glossiness is the reflection selection weight, relative to Diffuse and Transparency, before Fresnel adjustment.
-	Roughness            float64 // Roughness is the reflection roughness in [0,1]. A value where zero is a perfect mirror. This is the control for single-scattering GGX with width Roughness squared.
-	Projections          []*ImageProjection
-	RefractionIndex      float64
-	SolidObject          bool         // SolidObject is if the material denotes a solid object with volume, not a hollow or open object or object nor an object with plane-thin walls. Solid transparent objects can refract light, hollow objects don't.
-	Transparency         float64      // Nonnegative optical transmission selection weight, relative to Diffuse and Glossiness. Color alpha controls surface coverage.
-	Absorption           *color.Color // Homogeneous interior RGB absorption coefficients in inverse scene units (sigma_a >= 0, not limited to 1). Nil means no absorption; alpha is ignored. Used while this material is the active medium, independently of surface Color.
-	RayTerminator        bool         // RayTerminator decide if the ray should terminate after hit with the object. Example can be an environment sphere or environment cube where a hit to the wall is the same as "no hit, continue in infinity". Extremely bright lights can also be ray terminators, their appearance will not notably be affected by further tracing.
-	ColorizeReflection   bool         // ColorizeReflection is if the reflection color should be colorized based on the material color. Shiny metal materials will colorize reflection. Dielectric materials will not colorize reflection.
-	FresnelMaxGlossiness float64      // Reflection probability approached as dielectric Fresnel reflectance approaches 1. Values [0,1].
+	Name            string
+	Color           *color.Color // Linear RGB base color: diffuse albedo for dielectrics, reflection F0 for metals. Alpha is coverage.
+	Emission        *color.Color
+	Metallicness    float64 // [0,1]: dielectric (0) to conductor (1).
+	Roughness       float64 // Roughness is the reflection roughness in [0,1]. A value where zero is a perfect mirror. This is the control for single-scattering GGX with width Roughness squared.
+	Projections     []*ImageProjection
+	RefractionIndex float64
+	SolidObject     bool         // SolidObject is if the material denotes a solid object with volume, not a hollow or open object or object nor an object with plane-thin walls. Solid transparent objects can refract light, hollow objects don't.
+	Transparency    float64      // [0,1]: transmission fraction of the dielectric portion. Alpha controls coverage.
+	Absorption      *color.Color // Homogeneous interior RGB absorption coefficients in inverse scene units (sigma_a >= 0, not limited to 1). Nil means no absorption; alpha is ignored. Used while this material is the active medium, independently of surface Color.
+	RayTerminator   bool         // RayTerminator decide if the ray should terminate after hit with the object. Example can be an environment sphere or environment cube where a hit to the wall is the same as "no hit, continue in infinity". Extremely bright lights can also be ray terminators, their appearance will not notably be affected by further tracing.
 }
 
-// NewMaterial creates a new material with sensible defaults.
+// NewMaterial creates an opaque, rough white dielectric with IOR 1.5.
 func NewMaterial() *Material {
 	return &Material{
-		Name:                 "",
-		Color:                color.White,
-		Diffuse:              1.0,
-		Emission:             nil,
-		Glossiness:           0.0, // No mirror reflection (specularity)
-		Roughness:            1.0, // Full roughness by default (diffuse spread of specularity)
-		Projections:          nil,
-		RefractionIndex:      RefractionIndex_Air,
-		SolidObject:          false,
-		Transparency:         0.0,
-		Absorption:           nil,
-		RayTerminator:        false,
-		ColorizeReflection:   false,
-		FresnelMaxGlossiness: 1.0,
+		Name:            "",
+		Color:           color.White,
+		Emission:        nil,
+		Metallicness:    0.0, // Dielectric surface
+		Roughness:       1.0, // Full roughness by default (diffuse spread of specularity)
+		Projections:     nil,
+		RefractionIndex: 1.5,
+		SolidObject:     false,
+		Transparency:    0.0,
+		Absorption:      nil,
+		RayTerminator:   false,
 	}
 }
 
@@ -75,20 +69,18 @@ func (m *Material) E(emission *color.Color, scale float64, rayTerminator bool) *
 	return m
 }
 
-// M is metallic properties
-func (m *Material) M(glossiness float64, roughness float64) *Material {
-	m.Roughness = roughness
-	m.Glossiness = glossiness
-	m.Diffuse = 1.0 - math.Min(m.Glossiness+m.Transparency, 1.0)
+// M sets metallicness and perceptual GGX roughness, both in [0,1].
+func (m *Material) M(metallicness float64, roughness float64) *Material {
+	m.Roughness = materialUnitInterval(roughness)
+	m.Metallicness = materialUnitInterval(metallicness)
 	return m
 }
 
-// T is transparency properties
+// T sets transmission within the dielectric portion, the boundary type, and IOR.
 func (m *Material) T(transparency float64, solidObject bool, refractionIndex float64) *Material {
-	m.Transparency = transparency
+	m.Transparency = materialUnitInterval(transparency)
 	m.SolidObject = solidObject
 	m.RefractionIndex = refractionIndex
-	m.Diffuse = 1.0 - math.Min(m.Glossiness+m.Transparency, 1.0)
 	return m
 }
 
@@ -222,6 +214,15 @@ func NewMaterialGlass(name string) *Material {
 	return NewMaterial().
 		N(name).
 		C(color.NewColor(0.90, 0.92, 0.95)).
-		M(0.270, 0.030).
-		T(0.98, true, RefractionIndex_Glass)
+		M(0, 0.030).
+		T(1, true, RefractionIndex_Glass)
+}
+
+// materialUnitInterval validates authored surface parameters. Public fields are
+// clamped again by the renderer so deserialized/directly assigned values are safe.
+func materialUnitInterval(value float64) float64 {
+	if (value < 0) || (value > 1) {
+		panic("material parameter must be finite and in [0,1]")
+	}
+	return value
 }

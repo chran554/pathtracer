@@ -10,10 +10,10 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-// TestFresnelReflectAmount checks unpolarized Fresnel reflectance on both sides
+// TestFresnelDielectric checks unpolarized Fresnel reflectance on both sides
 // of an interface, plus the renderer's artistic limits. Reference: PBRT 4e, section 9.3.5:
 // https://pbr-book.org/4ed/Reflection_Models/Specular_Reflection_and_Transmission
-func TestFresnelReflectAmount(test *testing.T) {
+func TestFresnelDielectric(test *testing.T) {
 	testCases := []struct {
 		name                string
 		incidentIndex       float64
@@ -34,23 +34,16 @@ func TestFresnelReflectAmount(test *testing.T) {
 		test.Run(testCase.name, func(test *testing.T) {
 			normal := vec3.T{0, 0, 1}
 			incomingDirection := vec3.T{math.Sqrt(1 - testCase.incidentCosine*testCase.incidentCosine), 0, -testCase.incidentCosine}
-			actualReflectance := FresnelReflectAmount(testCase.incidentIndex, testCase.transmittedIndex, &normal, &incomingDirection, 0, 1)
+			actualReflectance := FresnelDielectric(-vec3.Dot(&normal, &incomingDirection), testCase.incidentIndex, testCase.transmittedIndex)
 			if math.IsNaN(actualReflectance) || math.Abs(actualReflectance-testCase.expectedReflectance) > 1e-12 {
 				test.Fatalf("reflectance = %g, want %g", actualReflectance, testCase.expectedReflectance)
-			}
-
-			// Retain the material's artistic reflectance limits.
-			actualReflectance = FresnelReflectAmount(testCase.incidentIndex, testCase.transmittedIndex, &normal, &incomingDirection, 0.2, 0.8)
-			expectedReflectance := 0.2*(1-testCase.expectedReflectance) + 0.8*testCase.expectedReflectance
-			if math.IsNaN(actualReflectance) || math.Abs(actualReflectance-expectedReflectance) > 1e-12 {
-				test.Fatalf("adjusted reflectance = %g, want %g", actualReflectance, expectedReflectance)
 			}
 		})
 	}
 }
 
 // TestTracePathGlassFresnel checks Fresnel event frequencies, transmission radiance,
-// and alpha coverage. See TestFresnelReflectAmount and TestTracePathTransmissionRadiance
+// and alpha coverage. See TestFresnelDielectric and TestTracePathTransmissionRadiance
 // for the optical references; alpha coverage follows the renderer's material model.
 func TestTracePathGlassFresnel(test *testing.T) {
 	testCases := []struct {
@@ -122,8 +115,8 @@ func TestTracePathGlassFresnel(test *testing.T) {
 				if testCase.inside {
 					reflectedRadiance, transmittedRadiance = actualRadiance.G, actualRadiance.R
 				}
-				// Reflected-side paths (including diffuse) have unit radiance; refraction alone scales it.
-				if reflectedRadiance == 1 && transmittedRadiance == 0 {
+				// Count reflected-side events, including attenuated diffuse paths.
+				if reflectedRadiance > 0 && transmittedRadiance == 0 {
 					reflectedCount++
 				} else if reflectedRadiance != 0 || !(math.Abs(float64(transmittedRadiance)-radianceScale) < 1e-6 || (coverage < 1 && transmittedRadiance == 1)) {
 					test.Fatalf("unexpected reflected/transmitted radiance: %v", actualRadiance)
@@ -175,7 +168,6 @@ func TestTracePathAlphaHole(test *testing.T) {
 
 			glass := scene.NewMaterial().T(1, true, 1.5)
 			// Force transmission at the second interface to isolate the hole's effect.
-			glass.FresnelMaxGlossiness = 0
 			secondPlane := orientationTestPlane(glass)
 			secondPlane.Translate(&vec3.T{0, 0, -1})
 
@@ -191,7 +183,7 @@ func TestTracePathAlphaHole(test *testing.T) {
 			}
 			camera := &scene.Camera{RenderType: scene.Pathtracing, RecursionDepth: 2}
 			mediumStack := []*scene.Material{scene.NewMaterial().T(1, true, 1)}
-			actualRadiance := tracePath(&scene.Ray{Origin: &rayOrigin, Heading: &rayHeading}, camera, sceneNode, 0, mediumStack)
+			actualRadiance := traceTransmissionPath(&scene.Ray{Origin: &rayOrigin, Heading: &rayHeading}, camera, sceneNode, 0, mediumStack)
 
 			// Only the second, covered interface changes the refractive medium and radiance.
 			assertTransmissionColor(test, actualRadiance, color.NewColor(4.0/9, 4.0/9, 4.0/9))

@@ -16,61 +16,6 @@ const (
 	transmissionBounce
 )
 
-// bounceProbabilities describes the normalized material mixture after Fresnel adjustment.
-type bounceProbabilities struct {
-	diffuse, reflection, transmission float64
-}
-
-// surfaceBounceProbabilities mixes finite, nonnegative material weights without adding absorption.
-func surfaceBounceProbabilities(material *scene.Material, fresnel float64, totalInternalReflection bool) bounceProbabilities {
-	weightScale := max(material.Diffuse, material.Glossiness, material.Transparency)
-	if weightScale == 0 {
-		return bounceProbabilities{}
-	}
-	if totalInternalReflection {
-		return bounceProbabilities{reflection: 1}
-	}
-
-	// Scaling first keeps normalization finite even for very large relative weights.
-	diffuse := material.Diffuse / weightScale
-	reflection := material.Glossiness / weightScale
-	transmission := material.Transparency / weightScale
-	nonReflection := diffuse + transmission
-	if nonReflection == 0 {
-		return bounceProbabilities{reflection: 1}
-	}
-
-	baseReflection := reflection / (reflection + nonReflection)
-	reflectionProbability := (1-fresnel)*baseReflection + fresnel*material.FresnelMaxGlossiness
-	remaining := 1 - reflectionProbability
-	return bounceProbabilities{
-		diffuse:      remaining * (diffuse / nonReflection),
-		reflection:   reflectionProbability,
-		transmission: remaining * (transmission / nonReflection),
-	}
-}
-
-// sample selects a bounce for a uniform sample in [0,1), or no bounce for an empty mixture.
-func (p bounceProbabilities) sample(value float64) bounceType {
-	if p.diffuse > 0 && value < p.diffuse {
-		return diffuseBounce
-	}
-	if p.reflection > 0 && value < p.diffuse+p.reflection {
-		return reflectionBounce
-	}
-	if p.transmission > 0 {
-		return transmissionBounce
-	}
-	// Rounding at the upper boundary must still choose an enabled component.
-	if p.reflection > 0 {
-		return reflectionBounce
-	}
-	if p.diffuse > 0 {
-		return diffuseBounce
-	}
-	return noBounce
-}
-
 // boundaryRefractionIndices selects the media on either side of the geometric boundary.
 func boundaryRefractionIndices(material *scene.Material, rayContexts []*scene.Material, isIngoingRay bool) (incident, transmitted float64) {
 	incident = rayContexts[len(rayContexts)-1].RefractionIndex

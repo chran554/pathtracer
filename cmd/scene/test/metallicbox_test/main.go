@@ -38,18 +38,18 @@ func main() {
 	scale := 100.0
 	cornellBox := NewCornellBox(100.0)
 
-	footballMaterial := scene.NewMaterial().C(color.White).M(0.1, 0.6).SP(floatimage.LoadOrPanic("textures/equirectangular/football.png"), scene.TextureTypeAlbedo, &vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+	footballMaterial := scene.NewMaterial().C(color.White).M(0, 0.6).SP(floatimage.LoadOrPanic("textures/equirectangular/football.png"), scene.TextureTypeAlbedo, &vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
 	football := scene.NewSphere(&vec3.T{ballRadius + (ballRadius / 2), ballRadius, 0}, ballRadius, footballMaterial).N("football")
 
 	sphere2Material := scene.NewMaterial().C(color.NewColorGrey(0.9))
 	sphere2 := scene.NewSphere(&vec3.T{-(ballRadius + (ballRadius / 2)), ballRadius, 0}, ballRadius, sphere2Material).N("Left sphere")
 
-	mirrorSphereMaterial := scene.NewMaterial().C(color.NewColor(0.8, 0.85, 0.9)).M(0.95, 0.4)
+	mirrorSphereMaterial := scene.NewMaterial().C(color.NewColor(0.8, 0.85, 0.9)).M(1, 0.4)
 	mirrorSphere1 := scene.NewSphere(&vec3.T{0, ballRadius / 1.5, ballRadius * 1.5}, ballRadius/1.5, mirrorSphereMaterial).N("Mirror sphere on floor")
 
 	mirrorSphereRadius := scale * 0.75
 
-	wallMirrorMaterial := scene.NewMaterial().C(color.NewColor(0.85, 0.85, 0.9)).M(0.95, 0.05)
+	wallMirrorMaterial := scene.NewMaterial().C(color.NewColor(0.85, 0.85, 0.9)).M(1, 0.05)
 	mirrorSphere2 := scene.NewSphere(&vec3.T{-(scale*2 + mirrorSphereRadius*0.25), scale + mirrorSphereRadius, scale*2 + mirrorSphereRadius*0.25}, mirrorSphereRadius, wallMirrorMaterial).N("Mirror sphere on wall left")
 	mirrorSphere3 := scene.NewSphere(&vec3.T{scale*2 + mirrorSphereRadius*0.25, scale + mirrorSphereRadius, scale*2 + mirrorSphereRadius*0.25}, mirrorSphereRadius, wallMirrorMaterial).N("Mirror sphere on wall right")
 
@@ -91,11 +91,11 @@ func NewCornellBox(scale float64) *scene.FacetStructure {
 	cornellBox := wavefront.ReadFacetStructureOrPanic(cornellBoxFilenamePath)
 	cornellBox.ScaleUniform(&vec3.Zero, scale)
 
-	cornellBox.ReplaceMaterial("Right", scene.NewMaterial().N("Right").C(color.NewColor(0.9, 0.1, 0.1)).M(0.1, 0.2))
-	cornellBox.ReplaceMaterial("Left", scene.NewMaterial().N("Left").C(color.NewColor(0.1, 0.1, 0.9)).M(0.1, 0.2))
-	cornellBox.ReplaceMaterial("Back", scene.NewMaterial().N("Back").C(color.NewColorGrey(0.7)).M(0.1, 0.2))
+	cornellBox.ReplaceMaterial("Right", scene.NewMaterial().N("Right").C(color.NewColor(0.9, 0.1, 0.1)).M(0, 0.2))
+	cornellBox.ReplaceMaterial("Left", scene.NewMaterial().N("Left").C(color.NewColor(0.1, 0.1, 0.9)).M(0, 0.2))
+	cornellBox.ReplaceMaterial("Back", scene.NewMaterial().N("Back").C(color.NewColorGrey(0.7)).M(0, 0.2))
 	cornellBox.ReplaceMaterial("Ceiling", scene.NewMaterial().N("Ceiling").C(color.NewColorGrey(0.9)))
-	cornellBox.ReplaceMaterial("Floor", scene.NewMaterial().N("Floor").C(color.NewColorGrey(0.8)).M(0.3, 0.05))
+	cornellBox.ReplaceMaterial("Floor", scene.NewMaterial().N("Floor").C(color.NewColorGrey(0.8)).M(0, 0.05))
 
 	cornellBox.GetFirstObjectBySubstructureName("Floor").Material.PP(floatimage.LoadOrPanic("textures/marble/white_marble.png"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{200 * 2, 0, 0}, vec3.T{0, 0, 200 * 2})
 

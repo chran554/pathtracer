@@ -40,7 +40,7 @@ func main() {
 	sphereMaterial := scene.NewMaterial().
 		C(color.Black).
 		T(1.0, true, refractionIndex).
-		M(0.0, 0.0).
+		M(0, 0.0).
 		Attenuate(color.NewColor(1.0, 0.3, 0.3), sphereRadius*2)
 	sphere := scene.NewSphere(&sphereCenter, sphereRadius, sphereMaterial)
 
@@ -48,14 +48,14 @@ func main() {
 	topSphereMaterial := scene.NewMaterial().
 		C(color.Black).
 		T(0.0, true, refractionIndex).
-		M(0.0, 0.0)
+		M(0, 0.0)
 	topSphere := scene.NewSphere(&topSphereCenter, sphereRadius, topSphereMaterial)
 
 	bottomSphereCenter := vec3.T{sphereRadius * 2.3, 0, 0}
 	bottomSphereMaterial := scene.NewMaterial().
 		C(color.White).
 		T(0.0, true, refractionIndex).
-		M(0.0, 0.0)
+		M(0, 0.0)
 	bottomSphere := scene.NewSphere(&bottomSphereCenter, sphereRadius, bottomSphereMaterial)
 
 	skyMaterial := scene.NewMaterial().

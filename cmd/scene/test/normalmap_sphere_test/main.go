@@ -71,29 +71,22 @@ func main() {
 	if floorMaterial == nil {
 		panic("floor material is nil")
 	}
-	floorMaterial.C(color.NewColorGrey(1.0)).M(0.5, 0.5).
+	floorMaterial.C(color.NewColorGrey(1.0)).M(0, 0.5).
 		PP(textureGround, scene.TextureTypeAlbedo, &vec3.Zero, vec3.T{30, 0, 0}, vec3.T{0, 0, 30}).
 		PP(textureGroundNM, scene.TextureTypeNormalMap, &vec3.Zero, vec3.T{30, 0, 0}, vec3.T{0, 0, 30})
 	floorMaterial.Projections[len(floorMaterial.Projections)-1].Texture.Strength = 0.2
-	floorMaterial.FresnelMaxGlossiness = 0.15
 
 	wallpaperZoomFactor := 1.0
 	wallpaperSize := cornellBox.Bounds.SizeY() / wallpaperZoomFactor
 
 	leftWallMaterial := cornellBox.GetFirstMaterialByName("Left")
 	leftWallMaterial.PP(textureWall, scene.TextureTypeAlbedo, &vec3.T{0, cornellBox.Bounds.Ymin, cornellBox.Bounds.Zmin}, vec3.T{0, 0, wallpaperSize}, vec3.T{0, wallpaperSize, 0})
-	leftWallMaterial.FresnelMaxGlossiness = 0.15
 
 	rightWallMaterial := cornellBox.GetFirstMaterialByName("Right")
 	rightWallMaterial.PP(textureWall, scene.TextureTypeAlbedo, &vec3.T{0, cornellBox.Bounds.Ymin, cornellBox.Bounds.Zmin}, vec3.T{0, 0, wallpaperSize}, vec3.T{0, wallpaperSize, 0})
-	rightWallMaterial.FresnelMaxGlossiness = 0.15
 
 	backWallMaterial := cornellBox.GetFirstMaterialByName("Back")
 	backWallMaterial.PP(textureWall, scene.TextureTypeAlbedo, &vec3.T{cornellBox.Bounds.Xmin, cornellBox.Bounds.Ymin, 0}, vec3.T{wallpaperSize, 0, 0}, vec3.T{0, wallpaperSize, 0})
-	backWallMaterial.FresnelMaxGlossiness = 0.15
-
-	ceilingMaterial := cornellBox.GetFirstMaterialByName("Ceiling").C(color.NewColor(1.0, 1.0, 1.0).Multiply(0.30))
-	ceilingMaterial.FresnelMaxGlossiness = 0.15
 
 	behindWall := obj.NewSquareFacetStructure(obj.SquareTypeXYPlane, nil, true)
 	behindWall.Name = "Behind"
@@ -121,9 +114,8 @@ func main() {
 	//goldColor := color.NewColor(1.00, 0.85, 0.58).Multiply(0.9)
 	//silverColor := color.NewColor(0.85, 0.85, 0.9).Multiply(1.0)
 	sphereMaterial := scene.NewMaterial().N("sphere").
-		M(0.5, 0.5).
+		M(0, 0.5).
 		C(color.White)
-	sphereMaterial.FresnelMaxGlossiness = 0.10
 
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 

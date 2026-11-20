@@ -26,12 +26,12 @@ func NewDragon01(scale float64) *scene.FacetStructure {
 	/*	dragon.Material = scene.NewMaterial().
 		N("Dragon").
 		C(color.NewColor(0.95, 0.95, 0.97), 1.0).
-		M(0.2, 0.05).
+		M(0, 0.05).
 		T(1.0, true, scene.RefractionIndex_Glass)
 	*/
 	dragon.Material = scene.NewMaterial().N("dragon").
 		C(color.NewColor(0.7, 0.6, 0.3)).
-		M(0.4, 0.5)
+		M(1, 0.5)
 	dragon.RotateY(&vec3.Zero, math.Pi/20)
 	dragon.UpdateBounds()
 

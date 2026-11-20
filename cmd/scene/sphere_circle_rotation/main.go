@@ -70,7 +70,7 @@ func main() {
 
 		// Reflective Center Ball
 		// mirrorSphereRadius := ballRadius * 3.0
-		// mirrorMaterial := scene.NewMaterial().C(color.NewColor(0.90, 0.90, 0.90)).M(0.975, 0.0)
+		// mirrorMaterial := scene.NewMaterial().C(color.NewColor(0.90, 0.90, 0.90)).M(0, 0.0)
 		// reflectiveCenterBall := scene.NewSphere(&vec3.T{0, mirrorSphereRadius * 1, 0}, mirrorSphereRadius, mirrorMaterial).N("Mirror sphere")
 
 		// Sky Dome

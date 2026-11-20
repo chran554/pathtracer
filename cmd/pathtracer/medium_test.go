@@ -40,7 +40,7 @@ func TestCameraMediaRefraction(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			glass := scene.NewMaterial().M(0, 0).T(1, true, 1.5).Absorb(color.NewColor(0.1, 0.3, 0.7))
 			water := scene.NewMaterial().M(0, 0).T(1, true, scene.RefractionIndex_Water).Absorb(color.NewColor(0.08, 0.02, 0.01))
-			air := scene.NewMaterial()
+			air := scene.NewMaterial().T(1, true, scene.RefractionIndex_Air)
 			camera := &scene.Camera{RenderType: scene.Pathtracing, InitialMedia: []*scene.Material{glass}}
 			frame := &scene.Frame{Camera: camera, SceneNode: &scene.SceneNode{}}
 			media := []*scene.Material{glass, air}
@@ -81,7 +81,6 @@ func TestCameraMediaRefraction(t *testing.T) {
 					break
 				}
 				boundary := boundaries[segment]
-				boundary.FresnelMaxGlossiness = 0 // First check a deterministic transmitted path.
 				plane := orientationTestPlane(boundary)
 				if exiting[segment] {
 					plane.Facets[0].ChangeWindingOrder()
@@ -97,13 +96,10 @@ func TestCameraMediaRefraction(t *testing.T) {
 			ratio := media[0].RefractionIndex / media[len(media)-1].RefractionIndex
 			want := color.NewColor(ratio*ratio*math.Exp(-opticalDepth[0]), ratio*ratio*math.Exp(-opticalDepth[1]), ratio*ratio*math.Exp(-opticalDepth[2]))
 			ray := &scene.Ray{Origin: &vec3.T{0, 0, 1}, Heading: &heading}
-			assertTransmissionColor(t, traceCameraPath(ray, camera, frame.SceneNode, initial), want)
+			assertTransmissionColor(t, traceTransmissionPath(ray, camera, frame.SceneNode, 0, append([]*scene.Material(nil), initial...)), want)
 
 			// With Fresnel enabled, only paths transmitting at every boundary
 			// reach the light within this depth limit. Reflections contribute zero.
-			for _, boundary := range boundaries {
-				boundary.FresnelMaxGlossiness = 1
-			}
 			const samples = 12000
 			var total [3]float64
 			for range samples {

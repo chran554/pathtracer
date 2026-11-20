@@ -453,13 +453,6 @@ func parallelPixelRendering(renderedPixelData *floatimage.FloatImage, camera *sc
 	}
 }
 
-// FresnelReflectAmount applies material reflectivity limits to dielectric Fresnel reflectance.
-// The normal faces the incident medium; both directions must be unit vectors.
-func FresnelReflectAmount(refractionIndex1 float64, refractionIndex2 float64, normal *vec3.T, incident *vec3.T, minReflection float64, maxReflection float64) float64 {
-	reflectance := FresnelDielectric(-vec3.Dot(normal, incident), refractionIndex1, refractionIndex2)
-	return minReflection*(1-reflectance) + maxReflection*reflectance
-}
-
 // FresnelDielectric computes the Fresnel reflectance for a dielectric interface.
 // cosI: cosine of the incident angle (should be positive).
 // nI:   refractive index of incident medium.
@@ -578,6 +571,11 @@ func getRandomHemisphereVector(hemisphereHeading *vec3.T) *vec3.T {
 }
 
 func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, currentDepth int, rayContexts []*scene.Material) *color.Color {
+	return tracePathSampled(ray, camera, scn, currentDepth, rayContexts, rand.Float64)
+}
+
+// tracePathSampled carries the random stream through recursion for reproducible transport tests.
+func tracePathSampled(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, currentDepth int, rayContexts []*scene.Material, random func() float64) *color.Color {
 	outgoingRadiance := color.NewColorRGBA(0, 0, 0, 0)
 
 	if currentDepth > camera.RecursionDepth {
@@ -616,7 +614,7 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 
 	if ii.intersection {
 		if ii.material == nil {
-			ii.material = scene.NewMaterial() // Default material, if not specified, is matte diffuse white
+			ii.material = scene.NewMaterial() // Default material is rough white dielectric.
 		}
 
 		var textureAlbedoColor *color.Color // Default value if no projection is applied
@@ -660,61 +658,25 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 
 			// coverage means the probability that the surface exists at the sampled point, calculated as material alpha × texture alpha.
 			coverage := float64(ii.material.Color.A) * float64(textureAlbedoColor.A)
-			passThroughWithNoInteraction := coverage <= 0 || (coverage < 1 && rand.Float64() >= coverage)
+			passThroughWithNoInteraction := coverage <= 0 || (coverage < 1 && random() >= coverage)
 
 			if passThroughWithNoInteraction || !ii.material.RayTerminator {
 				geometricNormal, shadingNormal, isIngoingRay := orientSurfaceNormals(ii, ray.Heading)
 				newRayHeading := ray.Heading
 				bounce := noBounce
-				bounceRadianceScale := 1.0
+				bounceWeight := [3]float64{1, 1, 1}
 
 				if !passThroughWithNoInteraction {
 					outgoingRadiance.A = 1 // Rejected scattering still hit a covered surface.
 					incidentIndex, transmittedIndex := boundaryRefractionIndices(ii.material, rayContexts, isIngoingRay)
-					boundary := dielectricBoundary{normal: shadingNormal}
-					solidTransmission := ii.material.SolidObject && ii.material.Transparency > 0 && ii.material.RefractionIndex > 0
-					if solidTransmission {
-						boundary = evaluateDielectricBoundary(&geometricNormal, &shadingNormal, ray.Heading, incidentIndex, transmittedIndex)
-					} else {
-						boundary.fresnel = FresnelDielectric(-vec3.Dot(&shadingNormal, ray.Heading), incidentIndex, transmittedIndex)
-					}
-
-					probabilities := surfaceBounceProbabilities(ii.material, boundary.fresnel, boundary.totalInternalReflection)
-					bounce = probabilities.sample(rand.Float64())
-					switch bounce {
-					case diffuseBounce:
-						sample := sampleDiffuse(&geometricNormal, &shadingNormal, ray.Heading, rand.Float64(), rand.Float64())
-						newRayHeading, bounceRadianceScale = sample.heading, sample.weight
-					case reflectionBounce:
-						if boundary.totalInternalReflection {
-							newRayHeading = boundary.heading
-						} else {
-							u1, u2 := 0.0, 0.0
-							if ii.material.Roughness > 0 {
-								u1, u2 = rand.Float64(), rand.Float64()
-							}
-							sample := sampleReflection(&geometricNormal, &boundary.normal, ray.Heading, ii.material.Roughness, u1, u2)
-							newRayHeading, bounceRadianceScale = sample.heading, sample.weight
+					sample := sampleSurface(ii.material, surfaceBaseColor(ii.material, textureAlbedoColor), &geometricNormal, &shadingNormal, ray.Heading, incidentIndex, transmittedIndex, random)
+					newRayHeading, bounceWeight, bounce = sample.heading, sample.weight, sample.bounce
+					if bounce == transmissionBounce && newRayHeading != nil && ii.material.SolidObject && ii.material.RefractionIndex > 0 {
+						if isIngoingRay {
+							rayContexts = append(rayContexts, ii.material)
+						} else if len(rayContexts) > 1 {
+							rayContexts = rayContexts[:len(rayContexts)-1]
 						}
-					case transmissionBounce:
-						if solidTransmission {
-							newRayHeading = boundary.heading
-							if newRayHeading == nil {
-								break // Invalid solid transmission must not become straight-through transmission.
-							}
-							// Camera paths transport radiance: refraction contributes (n_incident / n_transmitted)^2.
-							ratio := incidentIndex / transmittedIndex
-							bounceRadianceScale = ratio * ratio
-							// Only a transmitted ray crosses the medium boundary.
-							if isIngoingRay {
-								rayContexts = append(rayContexts, ii.material)
-							} else if len(rayContexts) > 1 {
-								rayContexts = rayContexts[:len(rayContexts)-1]
-							}
-						}
-					case noBounce:
-						// No scattering components: keep the surface opaque and still evaluate emission below.
-						newRayHeading = nil
 					}
 				}
 
@@ -727,20 +689,14 @@ func tracePath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, curre
 
 					newRayOrigin := ii.intersectionPoint.Added(&rayStartOffset)
 					newRay := scene.Ray{Origin: &newRayOrigin, Heading: newRayHeading}
-					incomingRadiance := tracePath(&newRay, camera, scn, currentDepth+1, rayContexts)
+					incomingRadiance := tracePathSampled(&newRay, camera, scn, currentDepth+1, rayContexts, random)
 					outgoingRadiance = incomingRadiance.Copy()
 					if !passThroughWithNoInteraction {
 						outgoingRadiance.A = 1
-						// Apply the conditional BRDF/PDF or refractive conversion to RGB, before local emission.
-						outgoingRadiance.R *= float32(bounceRadianceScale)
-						outgoingRadiance.G *= float32(bounceRadianceScale)
-						outgoingRadiance.B *= float32(bounceRadianceScale)
-						// Selection probabilities account for mixture weights; albedo supplies color attenuation.
-						if bounce == diffuseBounce || (bounce == reflectionBounce && ii.material.ColorizeReflection) {
-							outgoingRadiance.R *= ii.material.Color.R * textureAlbedoColor.R
-							outgoingRadiance.G *= ii.material.Color.G * textureAlbedoColor.G
-							outgoingRadiance.B *= ii.material.Color.B * textureAlbedoColor.B
-						}
+						// The BSDF sample already includes RGB Fresnel, albedo, and PDF weighting.
+						outgoingRadiance.R *= float32(bounceWeight[0])
+						outgoingRadiance.G *= float32(bounceWeight[1])
+						outgoingRadiance.B *= float32(bounceWeight[2])
 					}
 				}
 			}

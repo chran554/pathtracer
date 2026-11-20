@@ -60,24 +60,21 @@ func main() {
 			yProgress := float64(yIndex) / float64(amountSpheres)
 			xProgress := float64(xIndex) / float64(amountSpheres)
 
-			refractiveIndex := scene.RefractionIndex_Air
-			glossiness := xProgress
-			roughness := 0.0
+			refractiveIndex := 1.5
+			metallicness := xProgress
+			roughness := float64(yIndex%2) * 0.3
 
 			sphereMaterial := scene.NewMaterial().
-				N(fmt.Sprintf("Sphere (glossy:%02f rough:%02f) pos:%d,%d", xProgress, yProgress, xIndex, yIndex)).
+				N(fmt.Sprintf("Sphere (metallic:%02f rough:%02f) pos:%d,%d", xProgress, yProgress, xIndex, yIndex)).
 				C(color.NewColor(0.70, 0.60, 0.40).Multiply(0.8)).
-				M(glossiness, roughness).
+				M(metallicness, roughness).
 				T(0.0, true, refractiveIndex)
 
 			sphereOrigin := &vec3.T{-sphereSpread/2.0 + float64(xIndex)*sphereCC, ballRadius, -sphereCC*2 + float64(yIndex)*sphereCC}
 
-			sphere := scene.NewSphere(sphereOrigin, ballRadius, sphereMaterial).N(fmt.Sprintf("Sphere (glossy:%02f rough:%02f)", xProgress, yProgress))
+			sphere := scene.NewSphere(sphereOrigin, ballRadius, sphereMaterial).N(fmt.Sprintf("Sphere (metallic:%02f rough:%02f)", xProgress, yProgress))
 
-			if yIndex == 1 {
-				sphereMaterial.ColorizeReflection = true
-
-			} else if yIndex == 2 || yIndex == 3 {
+			if yIndex == 2 || yIndex == 3 {
 				texturePixarBall, err := floatimage.EmptyPlaceholderImage(filepath.Join(obj.TexturesDir, "pixar_ball_02.png"))
 				if err != nil {
 					panic(err)
@@ -91,9 +88,6 @@ func main() {
 				sphere.RotateY(sphereOrigin, util.DegToRad(40))
 				sphere.RotateX(sphereOrigin, util.DegToRad(-10))
 
-				if yIndex == 3 {
-					sphereMaterial.ColorizeReflection = true
-				}
 			}
 
 			scn.S(sphere)

@@ -52,7 +52,7 @@ func main() {
 	bench.Scale(&vec3.Zero, &vec3.T{300, 1, 60})
 	bench.Material = scene.NewMaterial().N("ceiling light shade").
 		C(color.White).
-		M(0.50, 0.50).
+		M(0, 0.50).
 		PP(textureDarkWood, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(bench.Bounds.SizeX()/3), vec3.UnitZ.Scaled(bench.Bounds.SizeZ()))
 	bench.Translate(&vec3.T{-150, -80, -60})
 
@@ -175,7 +175,7 @@ func createWall(wallScale float64) *scene.FacetStructure {
 	wall.CenterOn(&vec3.Zero)
 	wall.ScaleUniform(&vec3.Zero, wallScale)
 	wall.Material = scene.NewMaterial().N("wall").
-		M(0.05, 0.8).
+		M(0, 0.8).
 		PP(textureWallBricks, scene.TextureTypeAlbedo, &vec3.Zero, vec3.UnitX.Scaled(75), vec3.UnitY.Scaled(75))
 	return wall
 }
@@ -187,7 +187,7 @@ func createPoster(posterLocation vec3.T) *scene.FacetStructure {
 	poster.UpdateBounds()
 	poster.UpdateNormals()
 	poster.Material = scene.NewMaterial().N("poster").
-		M(0.10, 0.2).
+		M(0, 0.2).
 		PP(textureCocktailPoster, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX, vec3.UnitY)
 	poster.Material.Projections[0].RepeatU = false
 	poster.Material.Projections[0].RepeatV = false

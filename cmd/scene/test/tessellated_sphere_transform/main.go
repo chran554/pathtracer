@@ -34,7 +34,7 @@ func main() {
 
 	// Sphere
 	tessellatedSphere := obj.NewTessellatedSphere(5, false)
-	tessellatedSphere.Material = scene.NewMaterial().N("tessellated sphere").M(0.1, 0.1)
+	tessellatedSphere.Material = scene.NewMaterial().N("tessellated sphere").M(0, 0.1)
 
 	objectHeight := 60.0
 	objectWidth := 30.0

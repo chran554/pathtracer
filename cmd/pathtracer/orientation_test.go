@@ -196,7 +196,6 @@ func TestTracePathRefractionOrientation(t *testing.T) {
 			// A flat map isolates orientation; TestTracePathSmoothGlass covers tilted maps.
 			glass := normalMappedTestMaterial(vec3.T{0, 0, 1}).T(1, true, 1.5)
 			// Isolate refraction direction from Fresnel roulette; TIR must still reflect.
-			glass.FresnelMaxGlossiness = 0
 			air := scene.NewMaterial().T(1, true, 1)
 			contexts := []*scene.Material{air}
 			if tt.inside {
@@ -211,7 +210,7 @@ func TestTracePathRefractionOrientation(t *testing.T) {
 				Discs:           []*scene.Disc{scene.NewDisc(&target, &vec3.T{0, 0, 1}, 0.005, scene.NewMaterial().E(color.White, 1, true))},
 			}
 			camera := &scene.Camera{RenderType: scene.Pathtracing, RecursionDepth: 1}
-			got := tracePath(&scene.Ray{Origin: &tt.origin, Heading: &tt.heading}, camera, scn, 0, contexts)
+			got := traceTransmissionPath(&scene.Ray{Origin: &tt.origin, Heading: &tt.heading}, camera, scn, 0, contexts)
 			// A transmitted hit converts radiance between media; TIR stays in the same medium.
 			wantRadiance := 4.0 / 9
 			if tt.inside {
@@ -231,10 +230,8 @@ func orientationTestMaterial(mode string, mapped bool) *scene.Material {
 	if mapped {
 		material = normalMappedTestMaterial(vec3.T{0, 0, 1})
 	}
-	material.FresnelMaxGlossiness = 0
 	if mode != "diffuse" {
 		material.M(1, 0) // Disable the diffuse component for reflection-only fixtures.
-		material.FresnelMaxGlossiness = 1
 		if mode == "rough reflection" {
 			material.Roughness = 1
 		}

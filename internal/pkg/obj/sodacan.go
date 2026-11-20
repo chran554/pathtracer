@@ -61,10 +61,10 @@ func loadSodaCan(textureFileName string, tabColor *color.Color, scale float64) *
 	sodaCanBody := sodaCan.GetFirstObjectBySubstructureName("body")
 	bodyProjectionBottomOffset := 0.065
 
-	aluminumMaterialLid := scene.NewMaterial().N("lid").M(0.3, 0.4)
-	aluminumMaterialTab := scene.NewMaterial().N("tab").C(tabColor).M(0.3, 0.4)
+	aluminumMaterialLid := scene.NewMaterial().N("lid").M(1, 0.4)
+	aluminumMaterialTab := scene.NewMaterial().N("tab").C(tabColor).M(1, 0.4)
 	aluminumMaterialBody := scene.NewMaterial().N("body").
-		M(0.2, 0.15).
+		M(0, 0.15).
 		T(0.0, false, scene.RefractionIndex_AcrylicPlastic).
 		CP(floatimage.LoadOrPanic(textureFileName), scene.TextureTypeAlbedo, &vec3.T{0, bodyProjectionBottomOffset, 0}, vec3.UnitX, vec3.T{0, sodaCanBody.Bounds.Ymax - bodyProjectionBottomOffset - 0.005, 0}, false)
 	//CP(textureFileName, &vec3.T{0, 0.065, 0}, vec3.UnitX, vec3.T{0, 0.89 - 0.065, 0}, false)

@@ -61,7 +61,7 @@ func main() {
 
 	sphereMaterial := scene.NewMaterial().
 		C(color.NewColor(0.95, 0.75, 0.70)).
-		M(0.3, 0.0).
+		M(0, 0.0).
 		T(0.0, true, scene.RefractionIndex_AcrylicPlastic)
 
 	var spheres []*scene.Sphere

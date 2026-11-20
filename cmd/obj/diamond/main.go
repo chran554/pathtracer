@@ -28,7 +28,7 @@ func createPerfectBrilliantCutDiamondObjFile(scale float64, filename string) {
 	}
 
 	m := diamondMaterial()
-	diamond := diamond.NewDiamondRoundBrilliantCut(d, scale, m)
+	diamond := d.RoundBrilliantCutFacetStructure(scale, m)
 
 	comments := fileComments(scale, d, m, diamond.Bounds)
 	objFile := writeDiamondObjFile(filename, diamond, comments)
@@ -45,12 +45,12 @@ func writeDiamondObjFile(filename string, diamond *scene.FacetStructure, comment
 	return objFile
 }
 
-func diamondMaterial() scene.Material {
+func diamondMaterial() *scene.Material {
 	c := color.NewColor(1.00, 0.99, 0.97)
-	m := scene.Material{
+	m := &scene.Material{
 		Name:            "Diamond",
 		Color:           c, // Very slight yellowish color
-		Glossiness:      0.01,
+		Metallicness:    0,
 		Roughness:       0.01,
 		RefractionIndex: 2.42, // Refraction index of diamond material
 		Transparency:    0.99,
@@ -58,7 +58,7 @@ func diamondMaterial() scene.Material {
 	return m
 }
 
-func fileComments(scale float64, d diamond.Diamond, m scene.Material, b *scene.Bounds) []string {
+func fileComments(scale float64, d diamond.Diamond, m *scene.Material, b *scene.Bounds) []string {
 	comments := []string{
 		"Brilliant cut diamond 3D OBJ-file was created using algorithm from https://github.com/chran554/pathtracer/",
 		"The following parameters were used creating these files:",

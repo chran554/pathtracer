@@ -53,15 +53,13 @@ func TestTracePathBeerVolumes(test *testing.T) {
 	} {
 		test.Run(tc.name, func(test *testing.T) {
 			outer := scene.NewMaterial().C(color.NewColor(0.2, 0.4, 0.6)).
-				T(1, true, 1.5).Absorb(color.NewColor(0.1, 0.3, 0.7))
-			outer.FresnelMaxGlossiness = 0
+				T(1, true, 1).Absorb(color.NewColor(0.1, 0.3, 0.7))
 			spheres := []*scene.Sphere{scene.NewSphere(&vec3.T{}, 2, outer)}
 			outerDistance, innerDistance := 4-epsilonDistance, 0.0
 			depth := 2
 			innerAbsorption := color.Black
 			if tc.inner {
-				inner := scene.NewMaterial().T(1, true, 1.33).Absorb(tc.innerColor)
-				inner.FresnelMaxGlossiness = 0
+				inner := scene.NewMaterial().T(1, true, 1).Absorb(tc.innerColor)
 				spheres = append(spheres, scene.NewSphere(&vec3.T{}, 1, inner))
 				outerDistance, innerDistance = 2-2*epsilonDistance, 2-epsilonDistance
 				depth = 4
@@ -71,7 +69,7 @@ func TestTracePathBeerVolumes(test *testing.T) {
 			}
 			light := color.NewColor(0.25, 0.5, 2)
 			spheres = append(spheres, scene.NewSphere(&vec3.T{}, 100, scene.NewMaterial().E(light, 1, true)))
-			actual := tracePath(&scene.Ray{Origin: &vec3.T{0, 0, tc.cameraZ}, Heading: &vec3.T{0, 0, -1}},
+			actual := traceTransmissionPath(&scene.Ray{Origin: &vec3.T{0, 0, tc.cameraZ}, Heading: &vec3.T{0, 0, -1}},
 				&scene.Camera{RenderType: scene.Pathtracing, RecursionDepth: depth}, &scene.SceneNode{Spheres: spheres},
 				0, []*scene.Material{scene.NewMaterial().T(1, true, 1)})
 			want := color.NewColor(
@@ -89,7 +87,7 @@ func TestTracePathBeerSurfaceEmission(test *testing.T) {
 	light := scene.NewMaterial().E(color.NewColor(2, 1, 0.5), 1, true).Absorb(color.NewColorGrey(100))
 	scn := &scene.SceneNode{FacetStructures: []*scene.FacetStructure{orientationTestPlane(light)}}
 	medium := scene.NewMaterial().Absorb(color.NewColor(math.Ln2, 0, 2*math.Ln2))
-	actual := tracePath(&scene.Ray{Origin: &vec3.T{0, 0, 2}, Heading: &vec3.T{0, 0, -1}},
+	actual := traceTransmissionPath(&scene.Ray{Origin: &vec3.T{0, 0, 2}, Heading: &vec3.T{0, 0, -1}},
 		&scene.Camera{RenderType: scene.Pathtracing}, scn, 0, []*scene.Material{medium})
 	assertTransmissionColor(test, actual, color.NewColor(0.5, 1, 0.03125))
 }
@@ -98,7 +96,6 @@ func TestTracePathBeerUncrossedBoundaries(test *testing.T) {
 	for _, name := range []string{"thin transmission", "alpha hole", "exterior reflection"} {
 		test.Run(name, func(test *testing.T) {
 			material := scene.NewMaterial().T(1, true, 1.5).Absorb(color.NewColorGrey(100))
-			material.FresnelMaxGlossiness = 0
 			switch name {
 			case "thin transmission":
 				material.SolidObject = false
@@ -111,7 +108,7 @@ func TestTracePathBeerUncrossedBoundaries(test *testing.T) {
 				FacetStructures: []*scene.FacetStructure{orientationTestPlane(material)},
 				Spheres:         []*scene.Sphere{scene.NewSphere(&vec3.T{}, 10, scene.NewMaterial().E(color.White, 1, true))},
 			}
-			actual := tracePath(&scene.Ray{Origin: &vec3.T{0, 0, 1}, Heading: &vec3.T{0, 0, -1}},
+			actual := traceTransmissionPath(&scene.Ray{Origin: &vec3.T{0, 0, 1}, Heading: &vec3.T{0, 0, -1}},
 				&scene.Camera{RenderType: scene.Pathtracing, RecursionDepth: 1}, scn, 0, []*scene.Material{scene.NewMaterial()})
 			assertTransmissionColor(test, actual, color.White)
 		})
@@ -138,7 +135,7 @@ func TestTracePathBeerInternalReflection(test *testing.T) {
 					scene.NewMaterial().E(color.White, 1, true))},
 			}
 			stack := []*scene.Material{scene.NewMaterial().T(1, true, 1), medium}
-			actual := tracePath(&scene.Ray{Origin: &vec3.T{0, 0, -1}, Heading: &vec3.T{math.Sqrt(0.75), 0, 0.5}},
+			actual := traceTransmissionPath(&scene.Ray{Origin: &vec3.T{0, 0, -1}, Heading: &vec3.T{math.Sqrt(0.75), 0, 0.5}},
 				&scene.Camera{RenderType: scene.Pathtracing, RecursionDepth: 1}, scn, 0, stack)
 			distance := 4 - 2*epsilonDistance
 			assertTransmissionColor(test, actual, color.NewColor(

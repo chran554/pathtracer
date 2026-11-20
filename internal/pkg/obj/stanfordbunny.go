@@ -22,7 +22,7 @@ func NewStanfordBunny(scale float64) *scene.FacetStructure {
 
 	skinMaterial := scene.NewMaterial().N("stanfordbunny").
 		C(color.NewColorHex("#A1887F")).
-		M(0.1, 0.75)
+		M(0, 0.75)
 
 	bunny.ReplaceMaterial("stanfordbunny", skinMaterial)
 

@@ -19,7 +19,7 @@ var ballRadius float64 = 30
 
 var lensRadius = 0.0 // 2.0        // 0.25
 var maxRecursionDepth = 10
-var amountSamples = 1024 * 2
+var amountSamples = 1024 * 2 * 2
 
 // 600x400, ~6144 rays per pixel -> ~7:30h
 // 1200x800, 8196 rpp, 10 bounce -> ~14:00h

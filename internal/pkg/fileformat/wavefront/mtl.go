@@ -51,6 +51,8 @@ func parseMaterialFile(lines []string, fileDir string) (map[string]*Material, er
 				Ns:    -1,  // Default value, no specular exponent value (i.e. "Phong" specular exponent) set
 				Ni:    -1.0,
 				Refl:  -1.0,
+				Pr:    -1,
+				Pm:    -1,
 			}
 			materialMap[materialName] = currentMaterial
 
@@ -141,6 +143,13 @@ func parseMaterialFile(lines []string, fileDir string) (map[string]*Material, er
 				return nil, fmt.Errorf("error parsing illumination model value at line %d: %s", lineNumber, err)
 			}
 			currentMaterial.Illum = i
+
+		case "Pm":
+			f, err := parseFloat64(tokens[1])
+			if err != nil {
+				return nil, fmt.Errorf("error parsing metallicness at line %d: %s", lineNumber, err)
+			}
+			currentMaterial.Pm = f
 
 		case "Pr":
 			f, err := parseFloat64(tokens[1])

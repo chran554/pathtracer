@@ -37,7 +37,7 @@ func main() {
 		object := obj.NewDragon02(100, true, true)
 		pillar := object.GetFirstObjectByName("pillar")
 		pillarCenter := *pillar.Bounds.Center()
-		object.ReplaceMaterial("pillar", scene.NewMaterial().N("pillar").SP("textures/marble/white_marble_double_width.png", pillarCenter, vec3.UnitX, vec3.UnitY).M(0.2, 0.7))
+		object.ReplaceMaterial("pillar", scene.NewMaterial().N("pillar").SP("textures/marble/white_marble_double_width.png", pillarCenter, vec3.UnitX, vec3.UnitY).M(0, 0.7))
 
 		object.RotateY(&vec3.Zero, -math.Pi/8)
 		object.GetBounds()

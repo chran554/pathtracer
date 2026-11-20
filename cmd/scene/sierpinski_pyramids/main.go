@@ -36,7 +36,7 @@ var maxPyramidRecursionDepth = 8
 
 var apertureSize = 3.3
 
-var pyramidMaterial = scene.NewMaterial().C(color.NewColorGrey(0.75)).M(0.60, 0.08)
+var pyramidMaterial = scene.NewMaterial().C(color.NewColorGrey(0.75)).M(1, 0.08)
 
 // Pyramid is represented by four 3D points.
 //

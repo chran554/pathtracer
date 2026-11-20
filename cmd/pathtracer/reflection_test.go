@@ -126,7 +126,7 @@ func TestRoughReflectionIntegration(test *testing.T) {
 func TestTracePathRoughReflection(test *testing.T) {
 	testCases := []struct {
 		name           string
-		glossiness     float64
+		metallicness   float64
 		tintReflection bool
 		emissive       bool
 	}{
@@ -138,9 +138,8 @@ func TestTracePathRoughReflection(test *testing.T) {
 
 	for _, testCase := range testCases {
 		test.Run(testCase.name, func(test *testing.T) {
-			material := scene.NewMaterial().M(testCase.glossiness, 1)
+			material := scene.NewMaterial().M(testCase.metallicness, 1)
 			material.RefractionIndex = 1 // Keep the selected mixture independent of Fresnel.
-			material.ColorizeReflection = testCase.tintReflection
 			if testCase.tintReflection {
 				material.C(color.NewColor(0.25, 0.5, 0.75))
 			}
@@ -165,9 +164,16 @@ func TestTracePathRoughReflection(test *testing.T) {
 			// integral_0^1 cos/(1+cos) dcos = 1-ln(2); see TestRoughReflectionBRDF.
 			integratedReflectance := 1 - math.Log(2)
 			for channelIndex, albedo := range [3]float32{material.Color.R, material.Color.G, material.Color.B} {
-				expectedMean := (1-testCase.glossiness)*float64(albedo) + testCase.glossiness*integratedReflectance
+				expectedMean := (1-testCase.metallicness)*float64(albedo) + testCase.metallicness*integratedReflectance
 				if testCase.tintReflection {
-					expectedMean = integratedReflectance * float64(albedo)
+					// Independent 1D quadrature includes Schlick Fresnel at the half-vector.
+					expectedMean = 0
+					const steps = 10000
+					for j := range steps {
+						c := (float64(j) + 0.5) / steps
+						f := float64(albedo) + (1-float64(albedo))*math.Pow(1-math.Sqrt((1+c)/2), 5)
+						expectedMean += f * c / (1 + c) / steps
+					}
 				}
 				if testCase.emissive {
 					expectedMean += [3]float64{2, 1, 0.5}[channelIndex] * float64(albedo)

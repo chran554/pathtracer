@@ -48,26 +48,19 @@ func main() {
 	cornellBox.RemoveObjectsByName("Lamp")
 
 	floorMaterial := cornellBox.GetFirstMaterialByName("Floor")
-	floorMaterial.M(0.01, 0.3).PP(textureGround, scene.TextureTypeAlbedo, &vec3.Zero, vec3.T{4, 0, 0}, vec3.T{0, 0, 4})
-	floorMaterial.FresnelMaxGlossiness = 0.15
+	floorMaterial.M(0, 0.3).PP(textureGround, scene.TextureTypeAlbedo, &vec3.Zero, vec3.T{4, 0, 0}, vec3.T{0, 0, 4})
 
 	wallpaperZoomFactor := 1.0
 	wallpaperSize := cornellBox.Bounds.SizeY() / wallpaperZoomFactor
 
 	leftWallMaterial := cornellBox.GetFirstMaterialByName("Left")
 	leftWallMaterial.PP(textureWall, scene.TextureTypeAlbedo, &vec3.T{0, cornellBox.Bounds.Ymin, cornellBox.Bounds.Zmin}, vec3.T{0, wallpaperSize, 0}, vec3.T{0, 0, wallpaperSize})
-	leftWallMaterial.FresnelMaxGlossiness = 0.15
 
 	rightWallMaterial := cornellBox.GetFirstMaterialByName("Right")
 	rightWallMaterial.PP(textureWall, scene.TextureTypeAlbedo, &vec3.T{0, cornellBox.Bounds.Ymin, cornellBox.Bounds.Zmin}, vec3.T{0, wallpaperSize, 0}, vec3.T{0, 0, wallpaperSize})
-	rightWallMaterial.FresnelMaxGlossiness = 0.15
 
 	backWallMaterial := cornellBox.GetFirstMaterialByName("Back")
 	backWallMaterial.PP(textureWall, scene.TextureTypeAlbedo, &vec3.T{cornellBox.Bounds.Xmin, cornellBox.Bounds.Ymin, 0}, vec3.T{0, wallpaperSize, 0}, vec3.T{wallpaperSize, 0, 0})
-	backWallMaterial.FresnelMaxGlossiness = 0.15
-
-	ceilingMaterial := cornellBox.GetFirstMaterialByName("Ceiling").C(color.NewColor(1.0, 1.0, 1.0).Multiply(0.90))
-	ceilingMaterial.FresnelMaxGlossiness = 0.15
 
 	//textureSphere, err := floatimage.EmptyPlaceholderImage("textures/equirectangular/earth/light.jpg")
 	textureSphere, err := floatimage.EmptyPlaceholderImage("textures/equirectangular/earth/blank 75.png")
@@ -85,19 +78,15 @@ func main() {
 	sphereMaterial := scene.NewMaterial().
 		N("sphere").
 		C(silverColor).
-		M(0.30, 0.05)
-	sphereMaterial.FresnelMaxGlossiness = 0.20
-	sphereMaterial.ColorizeReflection = true
+		M(1, 0.05)
 
 	// TODO set s1 here
 
 	greenSphereMaterial := scene.NewMaterial().C(color.NewColor(0.1, 0.75, 0.15))
-	greenSphereMaterial.FresnelMaxGlossiness = 0.30
 	sg := scene.NewSphere(&vec3.T{0, 0, 0}, sphereRadius*0.5, greenSphereMaterial)
 	sg.Translate(&vec3.T{-sphereRadius * 1.2, sphereRadius * 0.5, -sphereRadius * 1.2})
 
 	redSphereMaterial := scene.NewMaterial().C(color.NewColor(0.75, 0.1, 0.15))
-	redSphereMaterial.FresnelMaxGlossiness = 0.30
 	sr := scene.NewSphere(&vec3.T{0, 0, 0}, sphereRadius*0.5, redSphereMaterial)
 	sr.Translate(&vec3.T{sphereRadius * 1.2, sphereRadius * 0.5, -sphereRadius * 1.2})
 
