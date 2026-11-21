@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
@@ -10,7 +11,7 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "reflective_test_refractionindex_metallicness"
+var animationName = "display_grid_beer_transparancy"
 
 var ballRadius float64 = 20
 
@@ -21,19 +22,27 @@ var lensRadius float64 = 2
 var viewPlaneDistance = 4000.0
 var cameraDistanceFactor = 2.0
 
-var lampEmissionFactor = 12.0
+var lampEmissionFactor = 5.0
 
 var imageWidth = 1800
 var imageHeight = 1200
 var magnification = 0.75
 
 func main() {
-	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
+	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, true)
+
+	chessTexture, err := floatimage.EmptyPlaceholderImage("textures/floor/7451-diffuse 02 high key.png")
+	if err != nil {
+		panic(err)
+	}
+	textureScale := 10.0
+	floorMaterial := scene.NewMaterial().N("Floor").C(color.NewColorGrey(0.9)).PP(chessTexture, scene.TextureTypeAlbedo, &vec3.T{}, vec3.T{textureScale, 0, 0}, vec3.T{0, 0, textureScale})
 
 	cornellBox := obj.NewCornellBox(&vec3.T{700, 500, 700}, false, lampEmissionFactor)
-	cornellBox.ReplaceMaterial("left", scene.NewMaterial().N("left").C(color.NewColor(0.85, 0.85, 0.85)))
-	cornellBox.ReplaceMaterial("right", scene.NewMaterial().N("right").C(color.NewColor(0.85, 0.85, 0.85)))
-	cornellBox.ReplaceMaterial("back", scene.NewMaterial().N("back").C(color.NewColor(0.70, 0.70, 0.70)))
+	cornellBox.ReplaceMaterial("Left", scene.NewMaterial().N("Left").C(color.NewColor(0.85, 0.85, 0.85)))
+	cornellBox.ReplaceMaterial("Right", scene.NewMaterial().N("Right").C(color.NewColor(0.85, 0.85, 0.85)))
+	cornellBox.ReplaceMaterial("Back", scene.NewMaterial().N("Back").C(color.NewColor(0.70, 0.70, 0.70)))
+	cornellBox.ReplaceMaterial("Floor", floorMaterial)
 
 	scn := scene.NewSceneNode().FS(cornellBox)
 
@@ -46,14 +55,13 @@ func main() {
 			yProgress := float64(yIndex) / float64(amountSpheres)
 			xProgress := float64(xIndex) / float64(amountSpheres)
 
-			refractiveIndex := interpolate(xProgress, scene.RefractionIndex_Air, scene.RefractionIndex_Diamond)
-			metallicness := yProgress
-			roughness := 0.0
+			transparency := 1.0 - yProgress
 
 			sphereMaterial := scene.NewMaterial().
-				C(color.NewColor(0.80, 0.95, 0.80)).
-				M(metallicness, roughness).
-				T(0.0, true, refractiveIndex)
+				C(color.NewColor(0.85, 0.95, 0.30).Multiply(0.5)).
+				M(0.0, 0.0).
+				T(transparency, true, scene.RefractionIndex_Glass).
+				Attenuate(color.NewColor(0.01+0.99*(1.0-0.9*xProgress), 0.01+0.99*(1.0-0.6*xProgress), 1.0), ballRadius*2)
 
 			sphereOrigin := vec3.T{-sphereSpread/2.0 + float64(xIndex)*sphereCC, ballRadius, -sphereSpread/2.0 + float64(yIndex)*sphereCC}
 			sphere := scene.NewSphere(&sphereOrigin, ballRadius, sphereMaterial).N(fmt.Sprintf("Sphere (metallic:%02f rough:%02f)", xProgress, yProgress))
@@ -72,7 +80,7 @@ func main() {
 	animation.AddFrame(frame)
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := renderfile.WriteRenderFile(filename, animation)
+	err = renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}

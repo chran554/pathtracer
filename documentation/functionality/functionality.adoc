@@ -301,7 +301,7 @@ image::projection_parallel.png[Parallel projection]
 Textures defined by images that support alpha channel (most common png file format) can define transparency in the projected image. Surface parts of any object with a projected texture where alpha = 0 (transparent) will be treated as a transparent object and will be see-through, with or without any refraction depending on material setup.
 
 .Transparency through texture image alpha channel.
-image::projection_alpha.png[Projection using alpha channel for transparancy]
+image::projection_alpha.png[Projection using alpha channel for transparency]
 
 == Smooth vertex normals
 

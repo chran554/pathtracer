@@ -17,21 +17,23 @@ import (
 
 const animationName = "diamondsR4ever"
 
-const amountAnimationFrames = 180
+const amountAnimationFrames = 360
+const frameIndexOffset = 139 + 44
 
 const imageWidth = 800
 const imageHeight = 800
-const magnification = 0.25
+const magnification = 1.5
 
-const amountSamples = 1024
+const amountSamples = 1024 * 4
 
 const viewPlaneDistance = 1000.0
 const cameraDistanceFactor = 0.8
+const apertureSize = 1.0
 
 const diamondSize = 100.0
 const recursionDepth = 20
 
-const lampEmission = 2
+const lampEmission = 4
 
 func main() {
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
@@ -44,12 +46,14 @@ func main() {
 		SP(floatimage.LoadOrPanic("textures/equirectangular/6031885477_bbffaa37d7_o.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 	environmentSphere.RotateY(environmentSphere.Bounds().Center(), util.DegToRad(40))
 
-	lamp1 := scene.NewSphere(&vec3.T{roomScale * 3.0, roomScale * 1.0, 0}, roomScale*0.8, scene.NewMaterial().E(color.White, lampEmission, true)).N("Lamp1")
-	lamp2 := scene.NewSphere(&vec3.T{-roomScale * 3.0, roomScale * 1.0, 0}, roomScale*0.8, scene.NewMaterial().E(color.White, lampEmission, true)).N("Lamp2")
+	lamp1 := scene.NewSphere(&vec3.T{roomScale * 3.0, roomScale * 2.3, 0}, roomScale*0.8, scene.NewMaterial().E(color.White, lampEmission, true)).N("Lamp1")
+	lamp2 := scene.NewSphere(&vec3.T{-roomScale * 3.0, roomScale * 2.3, 0}, roomScale*0.8, scene.NewMaterial().E(color.White, lampEmission, true)).N("Lamp2")
 
 	d := dmd.NewDiamond()
-	diamondMaterial := dmd.NewMaterial().Attenuate(color.NewColor(0.995, 0.900, 0.880), diamondSize)
+	diamondMaterial := dmd.NewMaterial().Attenuate(color.NewColor(0.995, 0.900, 0.880), diamondSize).C(color.NewColor(0.995, 0.900*0.8, 0.880*0.8)).M(0.3, 0.1)
+	diamondMaterial.T(0.0, true, scene.RefractionIndex_Diamond)
 	diamond := d.RoundBrilliantCutFacetStructure(diamondSize, diamondMaterial)
+	diamond.Translate(&vec3.T{0.0, -roomScale * 0.3, 0.0})
 	diamondBounds := diamond.Bounds
 
 	// writeDiamondWavefrontFile(diamond)
@@ -62,7 +66,7 @@ func main() {
 	floor := scene.NewDisc(&vec3.T{0, diamond.Bounds.Ymin, 0}, &vec3.T{0, 1, 0}, roomScale*1.5, floorMaterial).N("Floor")
 
 	for animationFrameIndex := range amountAnimationFrames {
-		animationProgress := float64(animationFrameIndex) / float64(amountAnimationFrames)
+		animationProgress := float64(animationFrameIndex+frameIndexOffset) / float64(amountAnimationFrames)
 
 		cameraOrigin := &vec3.T{0, diamondBounds.Ymax + 50, -200}
 		cameraOrigin.Scale(cameraDistanceFactor)
@@ -77,7 +81,8 @@ func main() {
 
 		camera := scene.NewCamera(cameraOrigin, focusPoint, amountSamples, magnification).
 			V(viewPlaneDistance).
-			D(recursionDepth)
+			D(recursionDepth).
+			A(apertureSize, nil)
 
 		fi := -1
 		if amountAnimationFrames > 1 {

@@ -18,7 +18,7 @@ type projection struct {
 }
 
 var projectionTextures = []projection{
-	{filename: "textures/planets/earth_daymap.jpg"},
+	{filename: "textures/planets/earth/earth_daymap.jpg"},
 	{filename: "textures/planets/jupiter2_6k_contrast.png"},
 	{filename: "textures/planets/moonmap4k_2.png", emission: color.NewColorGrey(0.1)},
 	{filename: "textures/planets/mars.jpg"},
@@ -34,7 +34,7 @@ var projectionTextures = []projection{
 // var environmentEnvironMap = "textures/equirectangular/forest_sunny_day.jpg"
 var environmentEnvironMap = "textures/planets/environmentmap/Stellarium3.jpeg"
 
-var animationName = "sphere_circle_rotation"
+var animationName = "planets_rotation"
 
 var amountFrames = 1
 
@@ -76,7 +76,8 @@ func main() {
 		// Sky Dome
 		skyDomeRadius := 100.0 * 1000.0
 		skyDomeOrigin := &vec3.T{0, 0, 0}
-		skyDomeMaterial := scene.NewMaterial().E(color.White, 1.0, true).SP(floatimage.LoadOrPanic(environmentEnvironMap), scene.TextureTypeAlbedo, skyDomeOrigin, vec3.UnitX, vec3.UnitY)
+		skyDomeMaterial := scene.NewMaterial().E(color.White, 1.0, true).
+			SP(floatimage.LoadOrPanic(environmentEnvironMap), scene.TextureTypeAlbedo, skyDomeOrigin, vec3.UnitX, vec3.UnitY)
 		skyDome := scene.NewSphere(skyDomeOrigin, skyDomeRadius, skyDomeMaterial)
 
 		camera := getCamera(magnification, animationProgress)

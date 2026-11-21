@@ -121,7 +121,7 @@ func (m *Material) Attenuate(transmittance *color.Color, distance float64) *Mate
 		panic("attenuation requires a transmission color and a finite positive distance")
 	}
 	for _, channel := range []float32{transmittance.R, transmittance.G, transmittance.B} {
-		if !(channel > 0 && channel <= 1) {
+		if (channel <= 0) || (channel > 1) {
 			panic("attenuation transmission channels must be in (0,1]")
 		}
 	}

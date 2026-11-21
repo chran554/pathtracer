@@ -10,7 +10,7 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "reflective_test_glossy_roughness"
+var animationName = "display_grid_refractionindex_roughness"
 
 var ballRadius float64 = 20
 
@@ -21,20 +21,19 @@ var lensRadius float64 = 2
 var viewPlaneDistance = 4000.0
 var cameraDistanceFactor = 2.0
 
-var lampEmissionFactor = 3.0
+var lampEmissionFactor = 5.0
 
 var imageWidth = 1800
 var imageHeight = 1200
 var magnification = 0.75
 
 func main() {
-	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
+	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, true)
 
 	cornellBox := obj.NewCornellBox(&vec3.T{700, 500, 700}, false, lampEmissionFactor)
-	wallColor := color.NewColorGrey(0.8)
-	cornellBox.ReplaceMaterial("Left", scene.NewMaterial().N("Left").C(wallColor))
-	cornellBox.ReplaceMaterial("Right", scene.NewMaterial().N("Right").C(wallColor))
-	cornellBox.ReplaceMaterial("Back", scene.NewMaterial().N("Back").C(wallColor))
+	cornellBox.ReplaceMaterial("Left", scene.NewMaterial().N("Left").C(color.NewColor(0.85, 0.85, 0.85)))
+	cornellBox.ReplaceMaterial("Right", scene.NewMaterial().N("Right").C(color.NewColor(0.85, 0.85, 0.85)))
+	cornellBox.ReplaceMaterial("Back", scene.NewMaterial().N("Back").C(color.NewColor(0.70, 0.70, 0.70)))
 
 	scn := scene.NewSceneNode().FS(cornellBox)
 
@@ -47,12 +46,13 @@ func main() {
 			yProgress := float64(yIndex) / float64(amountSpheres)
 			xProgress := float64(xIndex) / float64(amountSpheres)
 
-			refractiveIndex := 1.5
-			metallicness := xProgress
+			refractiveIndex := interpolate(xProgress, scene.RefractionIndex_Air, scene.RefractionIndex_Diamond)
 			roughness := yProgress
+			metallicness := 0.0
 
 			sphereMaterial := scene.NewMaterial().
-				C(color.NewColor(0.80, 0.95, 0.80)).
+				// C(color.NewColor(0.80, 0.95, 0.80)).
+				C(color.NewColor(0.95, 0.1, 0.05).Multiply(0.4)).
 				M(metallicness, roughness).
 				T(0.0, true, refractiveIndex)
 
@@ -77,4 +77,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func interpolate(progress float64, a float64, b float64) float64 {
+	return progress*b + (1.0-progress)*a
 }
