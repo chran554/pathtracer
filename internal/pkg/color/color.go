@@ -31,6 +31,78 @@ func NewColorRGBA(r, g, b, a float64) *Color {
 	return &Color{R: float32(r), G: float32(g), B: float32(b), A: float32(a)}
 }
 
+// NewColorHSV create an RGB color from HSV values.
+// It returns an opaque RGB color.
+//
+// h is hue in degrees (wrapped to [0, 360)).
+// s is saturation in [0, 1].
+// v is value in [0, 1].
+//
+// The conversion follows the standard six-sector algorithm described at
+// https://en.wikipedia.org/wiki/HSL_and_HSV#HSV_to_RGB.
+func NewColorHSV(h, s, v float64) *Color {
+	h = math.Mod(h, 360)
+	if h < 0 {
+		h += 360
+	}
+	c := v * s
+	x := c * (1 - math.Abs(math.Mod(h/60, 2)-1))
+	m := v - c
+
+	var r, g, b float64
+	switch {
+	case h < 60:
+		r, g, b = c, x, 0
+	case h < 120:
+		r, g, b = x, c, 0
+	case h < 180:
+		r, g, b = 0, c, x
+	case h < 240:
+		r, g, b = 0, x, c
+	case h < 300:
+		r, g, b = x, 0, c
+	default:
+		r, g, b = c, 0, x
+	}
+	return NewColor(r+m, g+m, b+m)
+}
+
+// NewColorHSL creates an RGB from HSL values.
+// It returns an opaque RGB color.
+//
+// h is hue in degrees (wrapped to [0, 360)).
+// s is saturation in [0, 1].
+// l is lightness in [0, 1].
+//
+// The conversion follows the standard six-sector algorithm described at
+// https://en.wikipedia.org/wiki/HSL_and_HSV#HSL_to_RGB.
+func NewColorHSL(h, s, l float64) *Color {
+	h = math.Mod(h, 360)
+	if h < 0 {
+		h += 360
+	}
+	c := (1 - math.Abs(2*l-1)) * s
+	x := c * (1 - math.Abs(math.Mod(h/60, 2)-1))
+	m := l - c/2
+
+	var r, g, b float64
+	switch {
+	case h < 60:
+		r, g, b = c, x, 0
+	case h < 120:
+		r, g, b = x, c, 0
+	case h < 180:
+		r, g, b = 0, c, x
+	case h < 240:
+		r, g, b = 0, x, c
+	case h < 300:
+		r, g, b = x, 0, c
+	default:
+		r, g, b = c, 0, x
+	}
+	return NewColor(r+m, g+m, b+m)
+}
+
 func NewColorGrey(greyIntensity float64) *Color {
 	return NewColor(greyIntensity, greyIntensity, greyIntensity)
 }

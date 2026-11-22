@@ -14,20 +14,20 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "snookertable_die"
+const animationName = "snookertable_die"
 
-var amountAnimationFrames = 1
+const amountAnimationFrames = 1
 
-var imageWidth = 400
-var imageHeight = 300
-var magnification = 1.0
+const imageWidth = 400
+const imageHeight = 300
+const magnification = 2.0 // 1.0
 
-var amountSamples = 1024 * 24 / 4 // 1024 * 16
+const amountSamples = 2048 // 1024 * 24 / 4
 
-var apertureSize = 0.4
+const apertureSize = 0.0 // 0.4
 
-var ballDisplacementRadius = 0.3
-var maxRotation = (math.Pi / 180) * 15 // Max angle rotation of ball
+const ballDisplacementRadius = 0.3
+const maxRotation = (math.Pi / 180) * 15 // Max angle rotation of ball
 
 type SnookerBall string
 
@@ -97,6 +97,7 @@ func main() {
 	poolTable.Material = scene.NewMaterial().
 		C(color.White).
 		M(0, 0.9).
+		T(0.0, false, scene.RefractionIndex_Plastic).
 		PP(textureTableCloth, scene.TextureTypeAlbedo, &vec3.T{2.5, 0, 2.5}, vec3.T{5, 0, 0}, vec3.T{0, 0, 5})
 
 	var balls = [][]SnookerBall{
@@ -180,18 +181,23 @@ func NewSnookerBall(ball SnookerBall) *scene.Sphere {
 	diameter := 5.7 // Pool (Pocket Billiard) Balls (cm)
 
 	radius := diameter / 2
-	textureFilename, err := floatimage.EmptyPlaceholderImage(fmt.Sprintf("textures/snooker/wpi/%s_wpi.png", ball))
+	ballTexture, err := floatimage.EmptyPlaceholderImage(fmt.Sprintf("textures/snooker/wpi/%s_wpi.png", ball))
+	if err != nil {
+		panic(err)
+	}
+	scratchTexture, err := floatimage.EmptyPlaceholderImage(fmt.Sprintf("textures/normal maps/ScratchedPaintedMetal01_MR_4K/ScratchedPaintedMetal01_4K_Normal.png"))
 	if err != nil {
 		panic(err)
 	}
 
 	ballMaterial := scene.NewMaterial().
 		N(fmt.Sprintf("snooker ball %s", ball)).
-		M(0, 0.1).
+		M(0, 0.05).
 		T(0.0, true, scene.RefractionIndex_AcrylicPlastic).
 		//SP(textureFilename, &vec3.T{0, radius, 0}, vec3.T{0, 0, diameter}, vec3.T{0, radius, 0})
 		//PP(textureFilename, &vec3.T{-radius, 0, 0}, vec3.T{diameter, 0, 0}, vec3.T{0, diameter, 0})
-		CP(textureFilename, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitZ, vec3.T{0, diameter, 0}, false)
+		CP(ballTexture, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitZ, vec3.T{0, diameter, 0}, false).
+		SP(scratchTexture, scene.TextureTypeNormalMap, &vec3.T{0, 0, 0}, vec3.UnitX, vec3.UnitY)
 
 	return scene.NewSphere(&vec3.T{0, radius, 0}, radius, ballMaterial)
 }

@@ -102,6 +102,13 @@ func (m *Material) Absorb(absorption *color.Color) *Material {
 	return m
 }
 
+func ClampAttenuateColor(c *color.Color) *color.Color {
+	c.R = max(0.0000001, c.R)
+	c.G = max(0.0000001, c.G)
+	c.B = max(0.0000001, c.B)
+	return c
+}
+
 // Attenuate specifies the linear RGB transmission through a reference distance
 // of the homogeneous interior, excluding surface reflection and refraction.
 //

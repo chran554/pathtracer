@@ -19,25 +19,25 @@ type projection struct {
 	rayTerminator bool
 }
 
-var animationName = "sphere_rotation"
+const animationName = "sphere_rotation"
 
-var amountFrames = 180
+const amountFrames = 1
 
-var imageWidth = 1800 + 600
-var imageHeight = 1800
-var magnification = 1.0 / 6.0
+const imageWidth = 1800 + 600
+const imageHeight = 1800
+const magnification = 1.0 / 2
 
-var amountSamples = 1024 // 1024 * 16
+const amountSamples = 1024 * 24
 
-var cameraDistanceFactor = 2.0
+const cameraDistanceFactor = 2.0
 
-var lampEmissionFactor = 5.0
+const lampEmissionFactor = 5.0
 
-var circleRadius = 200.0
-var amountBalls = 12
-var ballRadius = 50.0
-var viewPlaneDistance = 4000.0
-var lensRadius = 1.0
+const circleRadius = 200.0
+const amountBalls = 12
+const ballRadius = 50.0
+const viewPlaneDistance = 4000.0
+const lensRadius = 1.0
 
 const maxRecursionDepth = 8
 
@@ -68,16 +68,19 @@ func main() {
 
 		var spheres []*scene.Sphere
 		for sphereIndex := range amountBalls {
-			sphereAngle := float64(sphereIndex) * (360 / float64(amountBalls))
+			progress := float64(sphereIndex) / float64(amountBalls)
+			sphereAngle := 360 * progress
 
 			x := circleRadius * math.Cos(util.DegToRad(sphereAngle+deltaAngle))
 			z := circleRadius * math.Sin(util.DegToRad(sphereAngle+deltaAngle))
 
+			c := scene.ClampAttenuateColor(color.NewColorHSL(360*progress, 1.0, 0.5))
+
 			sphereMaterial := scene.NewMaterial().
 				C(color.NewColorGrey(0.95)).
 				M(0.0, 0.0).
-				T(0.97, true, scene.RefractionIndex_Glass).
-				Attenuate(color.NewColor(0.4, 0.3, 1.0), ballRadius*2).
+				T(0.99, true, 1.3).
+				Attenuate(c, ballRadius*2).
 				N(fmt.Sprintf("Sphere %d", sphereIndex))
 
 			sphereOrigin := vec3.T{x, ballRadius, z}
