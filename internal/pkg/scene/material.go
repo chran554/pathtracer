@@ -191,6 +191,7 @@ func (m *Material) ProjectionColor(point *vec3.T, textureType TextureType) *colo
 
 		if projection.Texture.Type == textureType {
 			col := projection.GetColor(point)
+
 			if col != nil {
 				if c == nil {
 					c = col.Copy()

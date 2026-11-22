@@ -33,7 +33,8 @@ func (fi *FloatImage) GetInterpolatedPixel(srcX, srcY float64, interpolation Int
 	default:
 		x := clampInt(int(srcX), fi.Bounds().Min.X, fi.Bounds().Max.X-1)
 		y := clampInt(int(srcY), fi.Bounds().Min.Y, fi.Bounds().Max.Y-1)
-		return fi.GetPixel(x, y)
+		pixel := *fi.GetPixel(x, y)
+		return &pixel
 	}
 }
 

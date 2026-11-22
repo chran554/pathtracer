@@ -617,25 +617,7 @@ func tracePathSampled(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode
 			ii.material = scene.NewMaterial() // Default material is rough white dielectric.
 		}
 
-		var textureAlbedoColor *color.Color // Default value if no projection is applied
-
-		if (ii.intersectedFacet != nil) && (ii.intersectedFacetVertexWeights != nil) {
-			albedoTexture := ii.intersectedFacet.GetTextureByType(scene.TextureTypeAlbedo)
-			if albedoTexture != nil {
-				textureCoordinate := interpolateTriangleTextureCoordinate(albedoTexture, ii.intersectedFacetVertexWeights)
-				if textureCoordinate != nil {
-					textureAlbedoColor = albedoTexture.Texture.GetColorAt(textureCoordinate)
-				}
-			}
-		}
-
-		if (textureAlbedoColor == nil) && (ii.material.Projections != nil) {
-			textureAlbedoColor = ii.material.ProjectionColor(ii.intersectionPoint, scene.TextureTypeAlbedo)
-		}
-
-		if textureAlbedoColor == nil {
-			textureAlbedoColor = color.White
-		}
+		textureAlbedoColor := textureColor(ii)
 
 		if camera.RenderType == scene.Raycasting || camera.RenderType == "" {
 			incomingRayInverted := ray.Heading.Inverted()
@@ -656,27 +638,21 @@ func tracePathSampled(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode
 			// Alpha describes surface coverage; Transparency describes optical transmission.
 			// TODO: Figure out how coverage based on alpha should work with solid objects
 
-			// coverage means the probability that the surface exists at the sampled point, calculated as material alpha × texture alpha.
-			coverage := float64(ii.material.Color.A) * float64(textureAlbedoColor.A)
-			passThroughWithNoInteraction := coverage <= 0 || (coverage < 1 && random() >= coverage)
-
-			if passThroughWithNoInteraction || !ii.material.RayTerminator {
+			if !ii.material.RayTerminator {
 				geometricNormal, shadingNormal, isIngoingRay := orientSurfaceNormals(ii, ray.Heading)
 				newRayHeading := ray.Heading
 				bounce := noBounce
 				bounceWeight := [3]float64{1, 1, 1}
 
-				if !passThroughWithNoInteraction {
-					outgoingRadiance.A = 1 // Rejected scattering still hit a covered surface.
-					incidentIndex, transmittedIndex := boundaryRefractionIndices(ii.material, rayContexts, isIngoingRay)
-					sample := sampleSurface(ii.material, surfaceBaseColor(ii.material, textureAlbedoColor), &geometricNormal, &shadingNormal, ray.Heading, incidentIndex, transmittedIndex, random)
-					newRayHeading, bounceWeight, bounce = sample.heading, sample.weight, sample.bounce
-					if bounce == transmissionBounce && newRayHeading != nil && ii.material.SolidObject && ii.material.RefractionIndex > 0 {
-						if isIngoingRay {
-							rayContexts = append(rayContexts, ii.material)
-						} else if len(rayContexts) > 1 {
-							rayContexts = rayContexts[:len(rayContexts)-1]
-						}
+				outgoingRadiance.A = 1 // Rejected scattering still hit a covered surface.
+				incidentIndex, transmittedIndex := boundaryRefractionIndices(ii.material, rayContexts, isIngoingRay)
+				sample := sampleSurface(ii.material, surfaceBaseColor(ii.material, textureAlbedoColor), &geometricNormal, &shadingNormal, ray.Heading, incidentIndex, transmittedIndex, random)
+				newRayHeading, bounceWeight, bounce = sample.heading, sample.weight, sample.bounce
+				if bounce == transmissionBounce && newRayHeading != nil && ii.material.SolidObject && ii.material.RefractionIndex > 0 {
+					if isIngoingRay {
+						rayContexts = append(rayContexts, ii.material)
+					} else if len(rayContexts) > 1 {
+						rayContexts = rayContexts[:len(rayContexts)-1]
 					}
 				}
 
@@ -691,17 +667,16 @@ func tracePathSampled(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode
 					newRay := scene.Ray{Origin: &newRayOrigin, Heading: newRayHeading}
 					incomingRadiance := tracePathSampled(&newRay, camera, scn, currentDepth+1, rayContexts, random)
 					outgoingRadiance = incomingRadiance.Copy()
-					if !passThroughWithNoInteraction {
-						outgoingRadiance.A = 1
-						// The BSDF sample already includes RGB Fresnel, albedo, and PDF weighting.
-						outgoingRadiance.R *= float32(bounceWeight[0])
-						outgoingRadiance.G *= float32(bounceWeight[1])
-						outgoingRadiance.B *= float32(bounceWeight[2])
-					}
+
+					outgoingRadiance.A = 1
+					// The BSDF sample already includes RGB Fresnel, albedo, and PDF weighting.
+					outgoingRadiance.R *= float32(bounceWeight[0])
+					outgoingRadiance.G *= float32(bounceWeight[1])
+					outgoingRadiance.B *= float32(bounceWeight[2])
 				}
 			}
 
-			if coverage > 0 && ii.material.Emission != nil {
+			if ii.material.Emission != nil {
 				//projectionCol := fixTransparentColor(projectionColor)
 				//materialCol := fixTransparentColor(ii.material.Color)
 				projectionCol := textureAlbedoColor
@@ -728,6 +703,35 @@ func tracePathSampled(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode
 	}
 
 	return outgoingRadiance
+}
+
+func textureColor(ii *IntersectionInformation) *color.Color {
+	var textureAlbedoColor *color.Color // Default value if no projection is applied
+
+	// If a facet is intersected and the facet has texture coordinates assigned to the facet points.
+	// Triangulate the texture coordinate and fetch that color value.
+	if (ii.intersectedFacet != nil) && (ii.intersectedFacetVertexWeights != nil) {
+		albedoTexture := ii.intersectedFacet.GetTextureByType(scene.TextureTypeAlbedo)
+		if albedoTexture != nil {
+			textureCoordinate := interpolateTriangleTextureCoordinate(albedoTexture, ii.intersectedFacetVertexWeights)
+			if textureCoordinate != nil {
+				textureAlbedoColor = albedoTexture.Texture.GetColorAt(textureCoordinate)
+			}
+		}
+	}
+
+	// Otherwise, get the projected color for the intersection point.
+	if (textureAlbedoColor == nil) && (ii.material.Projections != nil) {
+		textureAlbedoColor = ii.material.ProjectionColor(ii.intersectionPoint, scene.TextureTypeAlbedo)
+	}
+
+	// If no texture color was found then use white as default color.
+	// White is the identity color that will not affect any color calculations further on.
+	if textureAlbedoColor == nil {
+		textureAlbedoColor = color.White
+	}
+
+	return textureAlbedoColor
 }
 
 // fixTransparentColor fixes colors where an alpha channel is 0. The color information (RGB) values
@@ -867,7 +871,9 @@ func perturbedFacetProjectionNormal(objectIntersectionPoint *vec3.T, objectNorma
 		return objectNormal
 	}
 
-	mapNormal.Mul(&vec3.T{projection.Texture.Strength, projection.Texture.Strength, 1.0})
+	if projection.Texture.Strength != 1.0 {
+		mapNormal.Mul(&vec3.T{projection.Texture.Strength, projection.Texture.Strength, 1.0}).Normalize()
+	}
 
 	// TBN base vectors (T tangent, B bitangent, N normal)
 	var T, B, N vec3.T
@@ -907,7 +913,9 @@ func perturbedSphereProjectionNormal(objectIntersectionPoint *vec3.T, objectNorm
 		return objectNormal
 	}
 
-	mapNormal.Mul(&vec3.T{projection.Texture.Strength, projection.Texture.Strength, 1.0})
+	if projection.Texture.Strength != 1.0 {
+		mapNormal.Mul(&vec3.T{projection.Texture.Strength, projection.Texture.Strength, 1.0}).Normalize()
+	}
 
 	// TBN base vectors (T tangent, B bitangent, N normal)
 	var T, B, N vec3.T

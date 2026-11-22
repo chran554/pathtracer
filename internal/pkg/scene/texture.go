@@ -1,6 +1,9 @@
 package scene
 
-import "pathtracer/internal/pkg/floatimage"
+import (
+	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
+)
 
 type TextureType string
 
@@ -54,4 +57,21 @@ func (t *Texture) S(s float64) *Texture {
 func (t *Texture) I(i floatimage.Interpolation) *Texture {
 	t.Interpolation = i
 	return t
+}
+
+// GetInterpolatedPixel gets the interpolated pixel color at (x, y).
+// x is width relative in range [0, 1).
+// y is height relative in range [0, 1).
+func (t *Texture) GetInterpolatedPixel(x float64, y float64) *color.Color {
+	textureX := x * float64(t.Image.Width)
+	textureY := y * float64(t.Image.Height)
+
+	c := t.Image.GetInterpolatedPixel(textureX, textureY, t.Interpolation)
+
+	switch t.Type {
+	case TextureTypeAlbedo:
+		c.A = c.A * float32(t.Strength)
+	}
+
+	return c
 }

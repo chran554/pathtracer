@@ -85,10 +85,7 @@ func (imageProjection *ImageProjection) GetColor(point *vec3.T) *color.Color {
 		return nil
 	}
 
-	textureX := normalizedTextureCoordinate[0] * float64(imageProjection.Texture.Image.Width)
-	textureY := normalizedTextureCoordinate[1] * float64(imageProjection.Texture.Image.Height)
-
-	return imageProjection.Texture.Image.GetInterpolatedPixel(textureX, textureY, imageProjection.Texture.Interpolation)
+	return imageProjection.Texture.GetInterpolatedPixel(normalizedTextureCoordinate[0], normalizedTextureCoordinate[1])
 }
 
 func (imageProjection *ImageProjection) GetNormal(point *vec3.T) *vec3.T {

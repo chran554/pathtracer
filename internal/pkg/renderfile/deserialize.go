@@ -218,6 +218,8 @@ func (s *serializer) initFrameCache(frameInformation *FrameInformation) error {
 				var textureImage *floatimage.FloatImage
 
 				switch scene.TextureType(t.Type) {
+				case scene.TextureTypeRoughness:
+					fallthrough
 				case scene.TextureTypeAlbedo:
 					textureImage, err = s.resourceImage(t.ImageResourceIndex, true, nil)
 					if err != nil {

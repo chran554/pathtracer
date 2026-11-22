@@ -153,6 +153,7 @@ func (c *Color) Over(src *Color) *Color {
 }
 
 // Over composites src over dst using Porter-Duff "over".
+// src is laid over dst.
 //
 // Input and output colors are encoded using straight-alpha/non-premultiplied RGBA.
 func Over(dst *Color, src *Color) *Color {

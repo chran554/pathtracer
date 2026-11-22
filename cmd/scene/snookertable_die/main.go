@@ -5,7 +5,6 @@ import (
 	"math"
 	"math/rand"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
@@ -184,8 +183,9 @@ func NewSnookerBall(ball SnookerBall) *scene.Sphere {
 
 	radius := diameter / 2
 	ballTexture := scene.NewTextureReferenceOrPanic(fmt.Sprintf("textures/snooker/wpi/%s_wpi.png", ball), scene.TextureTypeAlbedo)
-	scratchTextureImage := floatimage.ReferenceOrPanic(fmt.Sprintf("textures/normal maps/ScratchedPaintedMetal01_MR_4K/ScratchedPaintedMetal01_4K_Normal.png"))
-	scratchTexture := scene.NewTexture(scratchTextureImage, scene.TextureTypeNormalMap_DirectX)
+	scratchTexture := scene.NewTextureReferenceOrPanic("textures/normal maps/ScratchedPaintedMetal01_MR_4K/ScratchedPaintedMetal01_4K_Normal.png", scene.TextureTypeNormalMap_DirectX)
+
+	scratchTexture.S(0.15)
 
 	ballMaterial := scene.NewMaterial().
 		N(fmt.Sprintf("snooker ball %s", ball)).

@@ -47,9 +47,10 @@ func opaqueReflectionProbability(fresnel, roughness, incident, transmitted float
 	return fresnel
 }
 
-// sampleSurface mixes a conductor, an opaque dielectric, and a transmissive
-// dielectric with weights m, (1-m)*(1-t), and (1-m)*t. Physical mixture weights
-// cancel their selection probabilities; they are never normalized into albedo.
+// sampleSurface chooses one bounce and returns its direction, RGB weight, and type.
+// Metallicness sets the probability of choosing metal. Given a dielectric,
+// transparency sets the probability of choosing its transmissive component.
+// Each component's selection probability cancels its mixture weight.
 //
 // Opaque reflection evaluates exact dielectric Fresnel or RGB conductor Schlick
 // at the sampled half-vector. Diffuse uses a reciprocal single-pass coating
@@ -60,31 +61,38 @@ func opaqueReflectionProbability(fresnel, roughness, incident, transmitted float
 // refraction and macro-normal Fresnel, with GGX reflection (mirror under TIR).
 // It is not a rough dielectric BTDF. Only transmitted samples cross media.
 func sampleSurface(material *scene.Material, base [3]float64, geometric, shading, incoming *vec3.T, incident, transmitted float64, random func() float64) surfaceSample {
-	m, t := surfaceUnit(material.Metallicness), surfaceUnit(material.Transparency)
+	metallicness := surfaceUnit(material.Metallicness)
+	transparency := surfaceUnit(material.Transparency)
 	roughness := surfaceUnit(material.Roughness)
-	for i := range base {
-		base[i] = surfaceUnit(base[i])
+	for channel := range base {
+		base[channel] = surfaceUnit(base[channel])
 	}
-	// Choose conductor versus dielectric first, then opaque versus transmissive.
+
+	// A metal bounce always reflects, with base RGB as its normal-incidence reflectance.
 	choice := random()
-	if m > 0 && choice < m {
+	if metallicness > 0 && choice < metallicness {
 		sample := sampleReflection(geometric, shading, incoming, roughness, random(), random())
 		if sample.heading == nil {
 			return surfaceSample{}
 		}
+
+		// Use the actual reflection direction so Fresnel also follows a mirror fallback.
 		cosine := reflectionCosine(incoming, sample.heading)
-		// A mirror fallback may change the optical normal; the half-vector follows it.
-		f := metalFresnel(base, cosine)
-		for i := range f {
-			f[i] *= sample.weight
+		reflectionWeight := metalFresnel(base, cosine)
+		for channel := range reflectionWeight {
+			reflectionWeight[channel] *= sample.weight
 		}
-		return surfaceSample{sample.heading, f, reflectionBounce}
+		return surfaceSample{sample.heading, reflectionWeight, reflectionBounce}
 	}
-	if m == 1 {
+
+	// Remap the remaining interval to [0, 1) to reuse the draw for the dielectric.
+	if metallicness == 1 {
 		return surfaceSample{}
 	}
-	choice = (choice - m) / (1 - m)
-	if t > 0 && choice < t {
+	choice = (choice - metallicness) / (1 - metallicness)
+
+	// For a transmissive dielectric, Fresnel chooses reflection or transmission.
+	if transparency > 0 && choice < transparency {
 		boundary := dielectricBoundary{normal: *shading}
 		solid := material.SolidObject && material.RefractionIndex > 0
 		if solid {
@@ -92,38 +100,51 @@ func sampleSurface(material *scene.Material, base [3]float64, geometric, shading
 		} else {
 			boundary.fresnel = FresnelDielectric(-vec3.Dot(shading, incoming), incident, transmitted)
 		}
+
 		if random() < boundary.fresnel || boundary.totalInternalReflection {
+			// Total internal reflection uses the mirror direction from the boundary.
 			if boundary.totalInternalReflection {
 				return surfaceSample{boundary.heading, [3]float64{1, 1, 1}, reflectionBounce}
 			}
+
 			sample := sampleReflection(geometric, &boundary.normal, incoming, roughness, random(), random())
 			return surfaceSample{sample.heading, [3]float64{sample.weight, sample.weight, sample.weight}, reflectionBounce}
 		}
+
+		// Thin surfaces transmit straight through. Solids refract and scale radiance.
 		heading, weight := incoming, 1.0
 		if solid {
 			heading, weight = boundary.heading, (incident/transmitted)*(incident/transmitted)
 		}
 		return surfaceSample{heading, [3]float64{weight, weight, weight}, transmissionBounce}
 	}
-	fv := FresnelDielectric(-vec3.Dot(shading, incoming), incident, transmitted)
-	q := opaqueReflectionProbability(fv, roughness, incident, transmitted)
-	if random() < q {
+
+	// Use Fresnel at the incoming angle to choose between specular and diffuse reflection.
+	incomingFresnel := FresnelDielectric(-vec3.Dot(shading, incoming), incident, transmitted)
+	specularProbability := opaqueReflectionProbability(incomingFresnel, roughness, incident, transmitted)
+	if random() < specularProbability {
 		sample := sampleReflection(geometric, shading, incoming, roughness, random(), random())
 		if sample.heading == nil {
 			return surfaceSample{}
 		}
-		f := FresnelDielectric(reflectionCosine(incoming, sample.heading), incident, transmitted)
-		weight := sample.weight * f / q
+
+		// Weight by Fresnel at the sampled angle and compensate for choosing reflection.
+		sampledFresnel := FresnelDielectric(reflectionCosine(incoming, sample.heading), incident, transmitted)
+		weight := sample.weight * sampledFresnel / specularProbability
 		return surfaceSample{sample.heading, [3]float64{weight, weight, weight}, reflectionBounce}
 	}
+
+	// The remaining probability selects diffuse scattering.
 	sample := sampleDiffuse(geometric, shading, incoming, random(), random())
 	if sample.heading == nil {
 		return surfaceSample{}
 	}
-	fl := FresnelDielectric(vec3.Dot(shading, sample.heading), incident, transmitted)
-	weight := sample.weight * (1 - fv) * (1 - fl) / (1 - q)
-	for i := range base {
-		base[i] *= weight
+
+	// Diffuse light passes through the coating on the way in and again on the way out.
+	outgoingFresnel := FresnelDielectric(vec3.Dot(shading, sample.heading), incident, transmitted)
+	weight := sample.weight * (1 - incomingFresnel) * (1 - outgoingFresnel) / (1 - specularProbability)
+	for channel := range base {
+		base[channel] *= weight
 	}
 	return surfaceSample{sample.heading, base, diffuseBounce}
 }
@@ -135,5 +156,11 @@ func reflectionCosine(incoming, outgoing *vec3.T) float64 {
 }
 
 func surfaceBaseColor(material *scene.Material, texture *color.Color) [3]float64 {
-	return [3]float64{float64(material.Color.R * texture.R), float64(material.Color.G * texture.G), float64(material.Color.B * texture.B)}
+	if material.Color == nil {
+		return [3]float64{float64(texture.R), float64(texture.G), float64(texture.B)}
+	}
+	r := 1.0 - (1.0-texture.R)*texture.A
+	g := 1.0 - (1.0-texture.G)*texture.A
+	b := 1.0 - (1.0-texture.B)*texture.A
+	return [3]float64{float64(material.Color.R * r), float64(material.Color.G * g), float64(material.Color.B * b)}
 }

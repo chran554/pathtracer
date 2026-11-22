@@ -17,7 +17,7 @@ const (
 
 	maxRecursionDepth         = 6
 	amountSamples             = 1024 * 12
-	lensRadius        float64 = 2
+	lensRadius        float64 = 0
 
 	viewPlaneDistance    = 4000.0
 	cameraDistanceFactor = 2.0
