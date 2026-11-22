@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
@@ -12,22 +11,24 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "tessellated_sphere_transform"
+const (
+	animationName = "tessellated_sphere_transform"
 
-var environmentEnvironMap = "textures/equirectangular/sunset horizon 2800x1400.jpg"
-var environmentRadius = 500.0 * 1000.0
-var environmentEmissionFactor = 1.0
+	environmentEnvironMap     = "textures/equirectangular/sunset horizon 2800x1400.jpg"
+	environmentRadius         = 500.0 * 1000.0
+	environmentEmissionFactor = 1.0
 
-var amountFrames = 180
+	amountFrames = 180
 
-var imageWidth = 200
-var imageHeight = 250
-var magnification = 2.0
+	imageWidth    = 200
+	imageHeight   = 250
+	magnification = 2.0
 
-var amountSamples = 512 * 2 * 8
-var maxRecursion = 5
+	amountSamples = 512 * 2 * 8
+	maxRecursion  = 5
 
-var apertureSize = 1.5
+	apertureSize = 1.5
+)
 
 func main() {
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
@@ -51,11 +52,16 @@ func main() {
 	skyDomeOrigin := vec3.T{0, 0, 0}
 	skyDomeMaterial := scene.NewMaterial().
 		E(color.White, environmentEmissionFactor, true).
-		SP(floatimage.LoadOrPanic(environmentEnvironMap), scene.TextureTypeAlbedo, &skyDomeOrigin, vec3.T{-0.2, 0, -1}, vec3.T{0, 1, 0})
+		SP(scene.NewTextureReferenceOrPanic(environmentEnvironMap, scene.TextureTypeAlbedo), &skyDomeOrigin, vec3.T{-0.2, 0, -1}, vec3.T{0, 1, 0})
 	skyDome := scene.NewSphere(&skyDomeOrigin, environmentRadius, skyDomeMaterial).N("sky dome")
 
 	// Ground
-	groundMaterial := scene.NewMaterial().N("Ground material").PP(floatimage.LoadOrPanic("textures/ground/soil-cracked.png"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(150), vec3.UnitZ.Scaled(150))
+	groundMaterial := scene.NewMaterial().N("Ground material").PP(
+		scene.NewTextureReferenceOrPanic("textures/ground/soil-cracked.png", scene.TextureTypeAlbedo),
+		&vec3.T{0, 0, 0},
+		vec3.UnitX.Scaled(150),
+		vec3.UnitZ.Scaled(150),
+	)
 	ground := scene.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
 
 	// Camera

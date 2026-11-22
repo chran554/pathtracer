@@ -6,7 +6,6 @@ import (
 	dmd "pathtracer/cmd/obj/diamond/pkg/diamond"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/fileformat/wavefront"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
 	"pathtracer/internal/pkg/util"
@@ -15,25 +14,27 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-const animationName = "diamondsR4ever"
+const (
+	animationName = "diamondsR4ever"
 
-const amountAnimationFrames = 360
-const frameIndexOffset = 139 + 44
+	amountAnimationFrames = 360
+	frameIndexOffset      = 139 + 44
 
-const imageWidth = 800
-const imageHeight = 800
-const magnification = 1.5
+	imageWidth    = 800
+	imageHeight   = 800
+	magnification = 1.5
 
-const amountSamples = 1024 * 4
+	amountSamples = 1024 * 4
 
-const viewPlaneDistance = 1000.0
-const cameraDistanceFactor = 0.8
-const apertureSize = 1.0
+	viewPlaneDistance    = 1000.0
+	cameraDistanceFactor = 0.8
+	apertureSize         = 1.0
 
-const diamondSize = 100.0
-const recursionDepth = 20
+	diamondSize    = 100.0
+	recursionDepth = 20
 
-const lampEmission = 4
+	lampEmission = 4
+)
 
 func main() {
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
@@ -43,7 +44,12 @@ func main() {
 
 	environmentSphere := scene.NewSphere(&vec3.T{0, 0, 0}, 30*1000, scene.NewMaterial().
 		E(color.White, 1, true).
-		SP(floatimage.LoadOrPanic("textures/equirectangular/6031885477_bbffaa37d7_o.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+		SP(
+			scene.NewTextureReferenceOrPanic("textures/equirectangular/6031885477_bbffaa37d7_o.jpg", scene.TextureTypeAlbedo),
+			&vec3.T{0, 0, 0},
+			vec3.T{1, 0, 0},
+			vec3.T{0, 1, 0},
+		)).N("sky dome")
 	environmentSphere.RotateY(environmentSphere.Bounds().Center(), util.DegToRad(40))
 
 	lamp1 := scene.NewSphere(&vec3.T{roomScale * 3.0, roomScale * 2.3, 0}, roomScale*0.8, scene.NewMaterial().E(color.White, lampEmission, true)).N("Lamp1")
@@ -58,11 +64,11 @@ func main() {
 
 	// writeDiamondWavefrontFile(diamond)
 
-	floorTexture := floatimage.LoadOrPanic("textures/marble/white_marble.png")
+	floorTexture := scene.NewTextureReferenceOrPanic("textures/marble/white_marble.png", scene.TextureTypeAlbedo)
 	//floorTexture := floatimage.LoadOrPanic("textures/floor/7451-diffuse 02 low contrast.png")
 	floorMaterial := scene.NewMaterial().
 		M(0, 0.05).
-		PP(floorTexture, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{roomScale * 1.5 * 2, 0, 0}, vec3.T{0, 0, roomScale * 1.5 * 2})
+		PP(floorTexture, &vec3.T{0, 0, 0}, vec3.T{roomScale * 1.5 * 2, 0, 0}, vec3.T{0, 0, roomScale * 1.5 * 2})
 	floor := scene.NewDisc(&vec3.T{0, diamond.Bounds.Ymin, 0}, &vec3.T{0, 1, 0}, roomScale*1.5, floorMaterial).N("Floor")
 
 	for animationFrameIndex := range amountAnimationFrames {

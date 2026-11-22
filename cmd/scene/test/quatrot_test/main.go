@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
@@ -13,37 +12,36 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "quatrot_test"
+const (
+	animationName = "quatrot_test"
 
-var amountAnimationFrames = 180 // 72 * 2
+	amountAnimationFrames = 180 // 72 * 2
 
-var imageWidth = 400
-var imageHeight = 400
-var magnification = 0.5
+	imageWidth    = 400
+	imageHeight   = 400
+	magnification = 0.5
 
-var amountSamples = 512 * 2
-var maxRecursionDepth = 4
+	amountSamples     = 512 * 2
+	maxRecursionDepth = 4
 
-var cameraAperture = 0.0
-var cameraZoom = 1.0
+	cameraAperture = 0.0
+	cameraZoom     = 1.0
 
-var lampIntensity = 10.0
-var lightIntensityFactor = 0.25
-var sphereRadius = 1.0
-var tesselationLevel = 2
-var useVertexNormals = false
+	lampIntensity        = 10.0
+	lightIntensityFactor = 0.25
+	sphereRadius         = 1.0
+	tesselationLevel     = 2
+	useVertexNormals     = false
+)
 
 func main() {
-	textureGround, err := floatimage.EmptyPlaceholderImage("textures/floor/7451-diffuse 02 low contrast.png")
-	if err != nil {
-		panic(err)
-	}
+	textureGround := scene.NewTextureReferenceOrPanic("textures/floor/7451-diffuse 02 low contrast.png", scene.TextureTypeAlbedo)
 
 	// Cornell box
 	roomScale := 2.0
 	cornellBox := obj.NewWhiteCornellBox(&vec3.T{4 * roomScale, sphereRadius * 4, 4 * roomScale}, true, lightIntensityFactor) // cm, as units. I.e. a 5x3x5m room
 	floorMaterial := cornellBox.GetFirstMaterialByName("Floor")
-	floorMaterial.M(0, 0.3).PP(textureGround, scene.TextureTypeAlbedo, &vec3.Zero, vec3.T{1, 0, 0}, vec3.T{0, 0, 1})
+	floorMaterial.M(0, 0.3).PP(textureGround, &vec3.Zero, vec3.T{1, 0, 0}, vec3.T{0, 0, 1})
 
 	lamp := scene.NewSphere(&vec3.T{-1.5, sphereRadius * 3, -2}, 0.5, scene.NewMaterial().
 		N("lamp").
@@ -92,7 +90,7 @@ func main() {
 	}
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err = renderfile.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}

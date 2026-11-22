@@ -5,7 +5,6 @@ import (
 	"math"
 	"math/rand"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
@@ -14,20 +13,22 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "snookertable"
+const (
+	animationName = "snookertable"
 
-var amountAnimationFrames = 1
+	amountAnimationFrames = 1
 
-var imageWidth = 1400
-var imageHeight = 480
-var magnification = 1.3
+	imageWidth    = 1400
+	imageHeight   = 480
+	magnification = 1.3
 
-var amountSamples = 1024 * 8 // * 24 // 1024 * 16
+	amountSamples = 1024 * 8 // * 24 // 1024 * 16
 
-var apertureSize = 0.1
+	apertureSize = 0.1
 
-var ballDisplacementRadius = 0.3
-var maxRotation = (math.Pi / 180) * 15 // Max angle rotation of ball
+	ballDisplacementRadius = 0.3
+	maxRotation            = (math.Pi / 180) * 15 // Max angle rotation of ball
+)
 
 type SnookerBall string
 
@@ -56,11 +57,11 @@ const (
 func main() {
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
-	textureEnvironment := floatimage.LoadOrPanic("textures/equirectangular/las-vegas-hotell-lobby.png")
+	textureEnvironment := scene.NewTextureReferenceOrPanic("textures/equirectangular/las-vegas-hotell-lobby.png", scene.TextureTypeAlbedo)
 	environmentSphere := scene.NewSphere(&vec3.T{0, 0, 0}, 3*100, scene.NewMaterial().
 		E(color.White, 2, true).
 		//C(color.NewColorGrey(0.2))).
-		SP(textureEnvironment, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+		SP(textureEnvironment, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 
 	// Generally speaking, hanging billiard lights about 32"-36" above the bed of the table is about right.
 	//
@@ -93,8 +94,8 @@ func main() {
 	poolTable := obj.NewSquareFacetStructure(obj.SquareTypeXZPlane, nil, false)
 	poolTable.CenterOn(&vec3.Zero)
 	poolTable.Scale(&vec3.Zero, &vec3.T{356.9, 1, 177.8})
-	textureTableCloth := floatimage.LoadOrPanic("textures/snooker/cloth02.png")
-	poolTable.Material = scene.NewMaterial().C(color.White).M(0, 0.9).PP(textureTableCloth, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{5, 0, 0}, vec3.T{0, 0, 5})
+	textureTableCloth := scene.NewTextureReferenceOrPanic("textures/snooker/cloth02.png", scene.TextureTypeAlbedo)
+	poolTable.Material = scene.NewMaterial().C(color.White).M(0, 0.9).PP(textureTableCloth, &vec3.T{0, 0, 0}, vec3.T{5, 0, 0}, vec3.T{0, 0, 5})
 
 	var balls = [][]SnookerBall{
 		{SnookerBall01, SnookerBall02, SnookerBall03, SnookerBall04, SnookerBall05, SnookerBall06, SnookerBall07, SnookerBall08},
@@ -170,10 +171,7 @@ func NewSnookerBall(ball SnookerBall) *scene.Sphere {
 	diameter := 5.7 // Pool (Pocket Billiard) Balls (cm)
 
 	radius := diameter / 2
-	textureFilename, err := floatimage.EmptyPlaceholderImage(fmt.Sprintf("textures/snooker/wpi/%s_wpi.png", ball))
-	if err != nil {
-		panic(err)
-	}
+	textureFilename := scene.NewTextureReferenceOrPanic(fmt.Sprintf("textures/snooker/wpi/%s_wpi.png", ball), scene.TextureTypeAlbedo)
 
 	ballMaterial := scene.NewMaterial().
 		N(fmt.Sprintf("snooker ball %s", ball)).
@@ -181,7 +179,7 @@ func NewSnookerBall(ball SnookerBall) *scene.Sphere {
 		T(0.0, true, scene.RefractionIndex_AcrylicPlastic).
 		//SP(textureFilename, &vec3.T{0, radius, 0}, vec3.T{0, 0, diameter}, vec3.T{0, radius, 0})
 		//PP(textureFilename, &vec3.T{-radius, 0, 0}, vec3.T{diameter, 0, 0}, vec3.T{0, diameter, 0})
-		CP(textureFilename, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitZ, vec3.T{0, diameter, 0}, false)
+		CP(textureFilename, &vec3.T{0, 0, 0}, vec3.UnitZ, vec3.T{0, diameter, 0}, false)
 
 	return scene.NewSphere(&vec3.T{0, radius, 0}, radius, ballMaterial)
 }

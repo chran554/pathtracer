@@ -12,15 +12,17 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "texture_serialization_test"
+const (
+	animationName = "texture_serialization_test"
 
-var amountFrames = 1
+	amountFrames = 1
 
-var amountSamples = 256 * 4 * 4 // * 2 * 6
+	amountSamples = 256 * 4 * 4 // * 2 * 6
 
-var imageWidth = 800
-var imageHeight = 600
-var magnification = 1.0
+	imageWidth    = 800
+	imageHeight   = 600
+	magnification = 1.0
+)
 
 func main() {
 	// Object
@@ -28,10 +30,7 @@ func main() {
 	//object.RotateY(&vec3.Zero, math.Pi*7.0/8.0)
 
 	//texture, err := floatimage.EmptyPlaceholderImage("textures/test/interpolation_nearest.png")
-	texture, err := floatimage.EmptyPlaceholderImage("textures/tapeter/Alfred_Image_Flatshot_Item_7413.jpg")
-	if err != nil {
-		panic(err)
-	}
+	texture := floatimage.ReferenceOrPanic("textures/tapeter/Alfred_Image_Flatshot_Item_7413.jpg")
 
 	structure1 := obj.NewSquareFacetStructure(obj.SquareTypeXYPlane, texture, true)
 	structure2 := obj.NewSquareFacetStructure(obj.SquareTypeXYPlane, texture, true)
@@ -66,7 +65,7 @@ func main() {
 	}
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err = renderfile.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}

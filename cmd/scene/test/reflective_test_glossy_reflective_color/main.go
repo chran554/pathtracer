@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
@@ -13,22 +12,24 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "reflective_test_glossy_reflective_color"
+const (
+	animationName = "reflective_test_glossy_reflective_color"
 
-var ballRadius float64 = 20
+	ballRadius float64 = 20
 
-var maxRecursionDepth = 6
-var amountSamples = 1024 * 24
-var lensRadius float64 = 2
+	maxRecursionDepth         = 6
+	amountSamples             = 1024 * 24
+	lensRadius        float64 = 2
 
-var viewPlaneDistance = 4000.0
-var cameraDistanceFactor = 2.0
+	viewPlaneDistance    = 4000.0
+	cameraDistanceFactor = 2.0
 
-var lampEmissionFactor = 8.0
+	lampEmissionFactor = 8.0
 
-var imageWidth = 1800
-var imageHeight = 900
-var magnification = 1.0 // 0.75
+	imageWidth    = 1800
+	imageHeight   = 900
+	magnification = 1.0 // 0.75
+)
 
 func main() {
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, true)
@@ -40,14 +41,11 @@ func main() {
 	cornellBox.RemoveObjectsBySubstructureName("Right")
 	cornellBox.RemoveObjectsBySubstructureName("Ceiling")
 
-	textureEnvironment, err := floatimage.EmptyPlaceholderImage("textures/equirectangular/6031885477_bbffaa37d7_o.jpg")
-	if err != nil {
-		panic(err)
-	}
+	textureEnvironment := scene.NewTextureReferenceOrPanic("textures/equirectangular/6031885477_bbffaa37d7_o.jpg", scene.TextureTypeAlbedo)
 	environmentSphere := scene.NewSphere(&vec3.T{0, 0, 0}, 1700, scene.NewMaterial().
 		E(color.White, 1, true).
 		//C(color.NewColorGrey(0.2))).
-		SP(textureEnvironment, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+		SP(textureEnvironment, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 
 	scn := scene.NewSceneNode().FS(cornellBox).S(environmentSphere)
 
@@ -75,15 +73,12 @@ func main() {
 			sphere := scene.NewSphere(sphereOrigin, ballRadius, sphereMaterial).N(fmt.Sprintf("Sphere (metallic:%02f rough:%02f)", xProgress, yProgress))
 
 			if yIndex == 2 || yIndex == 3 {
-				texturePixarBall, err := floatimage.EmptyPlaceholderImage(filepath.Join(obj.TexturesDir, "pixar_ball_02.png"))
-				if err != nil {
-					panic(err)
-				}
+				texturePixarBall := scene.NewTextureReferenceOrPanic(filepath.Join(obj.TexturesDir, "pixar_ball_02.png"), scene.TextureTypeAlbedo)
 
 				textureOrigin := sphereOrigin.Added(&vec3.T{-ballRadius, -ballRadius, 0})
 				sphereMaterial.
 					C(color.NewColorGrey(0.8)).
-					PP(texturePixarBall, scene.TextureTypeAlbedo, &textureOrigin, vec3.UnitX.Scaled(ballRadius*2), vec3.UnitY.Scaled(ballRadius*2))
+					PP(texturePixarBall, &textureOrigin, vec3.UnitX.Scaled(ballRadius*2), vec3.UnitY.Scaled(ballRadius*2))
 
 				sphere.RotateY(sphereOrigin, util.DegToRad(40))
 				sphere.RotateX(sphereOrigin, util.DegToRad(-10))
@@ -104,7 +99,7 @@ func main() {
 	animation.AddFrame(frame)
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err = renderfile.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}

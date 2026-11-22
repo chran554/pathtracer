@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
@@ -12,22 +11,24 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "pokemon_tangela"
+const (
+	animationName = "pokemon_tangela"
 
-var amountFrames = 1
+	amountFrames = 1
 
-var amountSamples = 1024 * 3 * 3 * 2
+	amountSamples = 1024 * 3 * 3 * 2
 
-var imageWidth = 800
-var imageHeight = 600
-var magnification = 1.0
+	imageWidth    = 800
+	imageHeight   = 600
+	magnification = 1.0
+)
 
 func main() {
 	// Ground
-	groundTexture := floatimage.LoadOrPanic("textures/floor/Calacatta-Vena-French-Pattern-Architextures.jpg")
+	groundTexture := scene.NewTextureReferenceOrPanic("textures/floor/Calacatta-Vena-French-Pattern-Architextures.jpg", scene.TextureTypeAlbedo)
 	groundMaterial := scene.NewMaterial().
 		C(color.White.Copy().Multiply(0.2)).
-		PP(groundTexture, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(150), vec3.UnitZ.Scaled(150))
+		PP(groundTexture, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(150), vec3.UnitZ.Scaled(150))
 	ground := &scene.Disc{Name: "ground", Origin: &vec3.T{0, 0, 0}, Normal: &vec3.UnitY, Radius: 5000.0, Material: groundMaterial}
 
 	// Object

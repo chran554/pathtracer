@@ -14,18 +14,20 @@ import (
 // The left sphere has reflections through Fresnel (using refraction index).
 // The right sphere uses a glass IOR; the left uses water. Both are dielectrics.
 
-var animationName = "fresnel"
+const (
+	animationName = "fresnel"
 
-var ballRadius float64 = 20
+	ballRadius float64 = 20
 
-var maxRecursionDepth = 8
-var amountSamples = 1024 * 16
+	maxRecursionDepth = 8
+	amountSamples     = 1024 * 16
 
-var viewPlaneDistance = 1500.0
+	viewPlaneDistance = 1500.0
 
-var imageWidth = 800
-var imageHeight = 400
-var magnification = 1.0
+	imageWidth    = 800
+	imageHeight   = 400
+	magnification = 1.0
+)
 
 func main() {
 	cornellBoxUnit := ballRadius * 3.0

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
@@ -15,31 +14,31 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "aoc_2022_d12"
+const (
+	animationName = "aoc_2022_d12"
 
-var environmentRadius = 500.0 * 1000.0
-var environmentEmissionFactor = 0.8
+	environmentRadius         = 500.0 * 1000.0
+	environmentEmissionFactor = 0.8
 
-var amountFrames = 1
+	imageWidth    = 1000
+	imageHeight   = 1000
+	magnification = 0.25
 
-var imageWidth = 1000
-var imageHeight = 1000
-var magnification = 0.25
+	// var renderType = scene.Raycasting
+	amountSamples = 200 // 200 * 4 * 3 // 2000 * 2 * 4
 
-// var renderType = scene.Raycasting
-var amountSamples = 200 // 200 * 4 * 3 // 2000 * 2 * 4
-
-var apertureSize = 2.0
+	apertureSize = 2.0
+)
 
 func main() {
-	environmentEnvironMap := floatimage.LoadOrPanic("textures/equirectangular/sunset horizon 2800x1400.jpg")
+	environmentEnvironMap := scene.NewTextureReferenceOrPanic("textures/equirectangular/sunset horizon 2800x1400.jpg", scene.TextureTypeAlbedo)
 
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
 
 	skyDomeOrigin := &vec3.T{0, 0, 0}
 	skyDomeMaterial := scene.NewMaterial().
 		E(color.White, environmentEmissionFactor, true).
-		SP(environmentEnvironMap, scene.TextureTypeAlbedo, skyDomeOrigin, vec3.T{-0.55, 0, -0.45}, vec3.T{0, 1, 0})
+		SP(environmentEnvironMap, skyDomeOrigin, vec3.T{-0.55, 0, -0.45}, vec3.T{0, 1, 0})
 	skyDome := scene.NewSphere(skyDomeOrigin, environmentRadius, skyDomeMaterial).N("sky dome")
 
 	//moonColor := color.NewColor(0.9, 0.9, 1.0)
@@ -51,7 +50,12 @@ func main() {
 	//sun := scene.NewSphere(&vec3.T{3000, 600, 1600}, 400, sunMaterial).N("sun")
 
 	// Ground
-	groundMaterial := scene.NewMaterial().N("Ground material").PP(floatimage.LoadOrPanic("textures/ground/soil-cracked.png"), scene.TextureTypeAlbedo, &vec3.Zero, vec3.UnitX.Scaled(150*3), vec3.UnitZ.Scaled(150*3))
+	groundMaterial := scene.NewMaterial().N("Ground material").PP(
+		scene.NewTextureReferenceOrPanic("textures/ground/soil-cracked.png", scene.TextureTypeAlbedo),
+		&vec3.Zero,
+		vec3.UnitX.Scaled(150*3),
+		vec3.UnitZ.Scaled(150*3),
+	)
 	ground := scene.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
 
 	mapTextLines, _ := readLines("cmd/scene/aoc_2022_d12/resources/map.txt")
@@ -76,7 +80,12 @@ func main() {
 		C(color.White).
 		E(color.White, 1.5, false).
 		M(0, 0.3).
-		SP(floatimage.LoadOrPanic("textures/planets/sun.jpg"), scene.TextureTypeAlbedo, &vec3.T{1540 / 2, -1540 / 2, 820 / 2}, vec3.UnitX.Scaled(-100), vec3.UnitZ.Scaled(100))
+		SP(
+			scene.NewTextureReferenceOrPanic("textures/planets/sun.jpg", scene.TextureTypeAlbedo),
+			&vec3.T{1540 / 2, -1540 / 2, 820 / 2},
+			vec3.UnitX.Scaled(-100),
+			vec3.UnitZ.Scaled(100),
+		)
 
 	pathMaterial := scene.NewMaterial().
 		C(pathColor).
@@ -146,7 +155,7 @@ func main() {
 	pathEndPoint := &vec3.T{float64(endPosition.x) * boxUnit, float64(karta.GetPositionHeight(endPosition.x, endPosition.y)) * boxUnit, float64(endPosition.y) * boxUnit}
 
 	// Actual animation
-	amountFrames = len(pathPositions) * 4
+	amountFrames := len(pathPositions) * 4
 	//headingSamples := 10
 	//amountPositionSamples := len(pathPositions)
 	for frameIndex := 0; frameIndex < amountFrames; frameIndex++ {

@@ -12,28 +12,30 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "kerosene_lamp"
+const (
+	animationName = "kerosene_lamp"
 
-var imageWidth = 600
-var imageHeight = 800
-var magnification = 1.0
+	imageWidth    = 600
+	imageHeight   = 800
+	magnification = 1.0
 
-var amountSamples = 1024 * 12 // 32 // 12samp x 1.5mag --> 4h
-var maxRayDepth = 15
-var apertureSize = 0.5
+	amountSamples = 1024 * 12 // 32 // 12samp x 1.5mag --> 4h
+	maxRayDepth   = 15
+	apertureSize  = 0.5
 
-var keroseneLampEmission = 35.0
-var sootness = 1.0
-var skyDomeEmission = 0.9
+	keroseneLampEmission = 35.0
+	sootness             = 1.0
+	skyDomeEmission      = 0.9
+)
 
 func main() {
 	// skyTexture := floatimage.LoadOrPanic("textures/equirectangular/331_PDM_BG1.jpg")
 	// skyTexture := floatimage.LoadOrPanic("textures/equirectangular/6031885477_bbffaa37d7_o.jpg")
-	skyTexture := floatimage.LoadOrPanic("textures/equirectangular/52764896286_fe987865cf_o.jpg")
+	skyTexture := scene.NewTextureReferenceOrPanic("textures/equirectangular/52764896286_fe987865cf_o.jpg", scene.TextureTypeAlbedo)
 
 	skyMaterial := scene.NewMaterial().N("sky dome").
 		E(color.White, skyDomeEmission, true).
-		SP(skyTexture, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+		SP(skyTexture, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
 	skyDome := scene.NewSphere(&vec3.T{0, 0, 0}, 200*100, skyMaterial)
 	skyDome.RotateY(&vec3.Zero, util.DegToRad(180))
 
@@ -42,18 +44,21 @@ func main() {
 	tableBoard.Translate(&vec3.T{0, -tableBoard.Bounds.Ymax + 80, 0})
 	tableBoard.Material = scene.NewMaterial().
 		C(color.NewColorGrey(1.0)).
-		PP(floatimage.LoadOrPanic("textures/wallpaper/Blossom2_Image_Tile_Item_9471w.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{60, 0, 0}, vec3.T{0, 0, 40})
+		PP(
+			scene.NewTextureReferenceOrPanic("textures/wallpaper/Blossom2_Image_Tile_Item_9471w.jpg", scene.TextureTypeAlbedo),
+			&vec3.T{0, 0, 0},
+			vec3.T{60, 0, 0},
+			vec3.T{0, 0, 40},
+		)
 
 	keroseneLamp := obj.NewKeroseneLamp2(40, keroseneLampEmission, sootness)
 	keroseneLamp.RotateY(&vec3.Zero, util.DegToRad(-90))
 	keroseneLamp.Translate(&vec3.T{20, tableBoard.Bounds.Ymax, -20})
 
-	scratchesNormalTexture, err := floatimage.EmptyPlaceholderImage("textures/normal maps/ScratchedPaintedMetal01_MR_4K/ScratchedPaintedMetal01_4K_Normal.png")
-	if err != nil {
-		panic(err)
-	}
+	scratchesNormalTextureImage := floatimage.ReferenceOrPanic("textures/normal maps/ScratchedPaintedMetal01_MR_4K/ScratchedPaintedMetal01_4K_Normal.png")
+	scratchesNormalTexture := scene.NewTexture(scratchesNormalTextureImage, scene.TextureTypeNormalMap)
 	keroseneBase := keroseneLamp.GetFirstObjectByName("base")
-	keroseneBase.Material.SP(scratchesNormalTexture, scene.TextureTypeNormalMap, keroseneBase.Bounds.Center(), vec3.UnitX, vec3.UnitY)
+	keroseneBase.Material.SP(scratchesNormalTexture, keroseneBase.Bounds.Center(), vec3.UnitX, vec3.UnitY)
 	keroseneBase.Material.ProjectionsOfType(scene.TextureTypeNormalMap)[0].Texture.Strength = 0.5
 	keroseneBase.Material.ProjectionsOfType(scene.TextureTypeNormalMap)[0].Texture.Interpolation = floatimage.InterpolationBicubic
 
@@ -75,7 +80,7 @@ func main() {
 	animation.AddFrame(frame)
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err = renderfile.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}

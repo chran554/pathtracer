@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
 
@@ -15,33 +14,35 @@ import (
 // var environmentEnvironMap = "textures/equirectangular/open_grassfield_sunny_day.jpg"
 
 // var environmentEnvironMap = "textures/equirectangular/canyon 3200x1600.jpeg"
-var environmentRadius = 100.0 * 100.0 // 100m (if 1 unit is 1 cm)
-var environmentEmissionFactor = 1.7
+const (
+	environmentRadius         = 100.0 * 100.0 // 100m (if 1 unit is 1 cm)
+	environmentEmissionFactor = 1.7
 
-//var environmentEnvironMap = "textures/planets/environmentmap/Stellarium3.jpeg"
-//var environmentRadius = 100.0 * 80.0 // 80m (if 1 unit is 1 cm)
+	//var environmentEnvironMap = "textures/planets/environmentmap/Stellarium3.jpeg"
+	//var environmentRadius = 100.0 * 80.0 // 80m (if 1 unit is 1 cm)
 
-var animationName = "gordian_knot"
+	animationName = "gordian_knot"
 
-var amountFrames = 36 * 10
+	amountFrames = 36 * 10
 
-var imageWidth = 1280
-var imageHeight = 1024
-var magnification = 0.5
+	imageWidth    = 1280
+	imageHeight   = 1024
+	magnification = 0.5
 
-var renderType = scene.Pathtracing
-var amountSamples = 256
-var maxRecursion = 3
+	renderType    = scene.Pathtracing
+	amountSamples = 256
+	maxRecursion  = 3
 
-var cameraDistanceFactor = 2.8
+	cameraDistanceFactor = 2.8
 
-var viewPlaneDistance = 800.0
-var lensRadius = 0.0
+	viewPlaneDistance = 800.0
+	lensRadius        = 0.0
 
-var pipeLength = 0.83333
-var pipeRadius = 40.0
-var amountBalls = 75
-var scale = 100.0
+	pipeLength  = 0.83333
+	pipeRadius  = 40.0
+	amountBalls = 75
+	scale       = 100.0
+)
 
 func main() {
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
@@ -56,7 +57,7 @@ func main() {
 		environmentOrigin := &vec3.T{0, 0, 0}
 		environmentMaterial := scene.NewMaterial().
 			E(color.White, environmentEmissionFactor, true).
-			SP(floatimage.LoadOrPanic("textures/equirectangular/forest_sunny_day.jpg"), scene.TextureTypeAlbedo, environmentOrigin, vec3.UnitZ, vec3.UnitY)
+			SP(scene.NewTextureReferenceOrPanic("textures/equirectangular/forest_sunny_day.jpg", scene.TextureTypeAlbedo), environmentOrigin, vec3.UnitZ, vec3.UnitY)
 		environmentSphere := scene.NewSphere(environmentOrigin, environmentRadius, environmentMaterial).N("Environment mapping")
 
 		scn := scene.NewSceneNode().S(spheres...).S(environmentSphere)

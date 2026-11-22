@@ -10,20 +10,22 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "cornellbox"
+const (
+	animationName = "cornellbox"
 
-var ballRadius float64 = 20
+	ballRadius float64 = 20
 
-var lightIntensityFactor = 1.5
+	lightIntensityFactor = 1.5
 
-var amountSamples = 1024 * 32
-var maxRayDepth = 6
+	amountSamples = 1024 * 32
+	maxRayDepth   = 6
 
-var imageWidth = 800
-var imageHeight = 400
-var magnification = 1.0
+	imageWidth    = 800
+	imageHeight   = 400
+	magnification = 1.0
 
-var viewPlaneDistance = 1500.0
+	viewPlaneDistance = 1500.0
+)
 
 func main() {
 	cornellBoxUnit := ballRadius * 3

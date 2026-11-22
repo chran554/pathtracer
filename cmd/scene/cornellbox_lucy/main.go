@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
@@ -11,31 +10,27 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "cornellbox_lucy"
+const (
+	animationName = "cornellbox_lucy"
 
-var cornellBoxUnit float64 = 60
+	cornellBoxUnit float64 = 60
 
-var amountSamples = 1024 * 4 // 1024 * 8 // 1024 * 32
-var maxRayDepth = 3          // 4      // 6 // max ray recursion depth
-var apertureSize = 0.8
+	amountSamples = 1024 * 4 // 1024 * 8 // 1024 * 32
+	maxRayDepth   = 3        // 4      // 6 // max ray recursion depth
+	apertureSize  = 0.8
 
-var imageWidth = 480
-var imageHeight = 480
-var magnification = 3.0
+	imageWidth    = 480
+	imageHeight   = 480
+	magnification = 3.0
 
-var viewPlaneDistance = 1500.0
+	viewPlaneDistance = 1500.0
 
-var lampIntensity = 5.0
+	lampIntensity = 5.0
+)
 
 func main() {
-	textureStatue, err := floatimage.EmptyPlaceholderImage("textures/marble/white_marble_double_width.png")
-	if err != nil {
-		panic(err)
-	}
-	textureSky, err := floatimage.EmptyPlaceholderImage("textures/sky/pink clouds.jpg")
-	if err != nil {
-		panic(err)
-	}
+	textureStatue := scene.NewTextureReferenceOrPanic("textures/marble/white_marble_double_width.png", scene.TextureTypeAlbedo)
+	textureSky := scene.NewTextureReferenceOrPanic("textures/sky/pink clouds.jpg", scene.TextureTypeAlbedo)
 
 	cornellBox := obj.NewCornellBox(&vec3.T{cornellBoxUnit, cornellBoxUnit, 3 * cornellBoxUnit}, true, lampIntensity)
 
@@ -45,23 +40,23 @@ func main() {
 
 	floor := cornellBox.GetFirstObjectByMaterialName("Floor")
 	floor.Material = scene.NewMaterial().N("Floor").E(color.White, 1.0, true)
-	floor.Material.PP(textureSky, scene.TextureTypeAlbedo, &vec3.Zero, vec3.T{cornellBoxUnit * 2, 0, 0}, vec3.T{0, 0, cornellBoxUnit})
+	floor.Material.PP(textureSky, &vec3.Zero, vec3.T{cornellBoxUnit * 2, 0, 0}, vec3.T{0, 0, cornellBoxUnit})
 
 	roof := cornellBox.GetFirstObjectByMaterialName("Ceiling")
 	roof.Material = scene.NewMaterial().N("Ceiling").E(color.White, 1.0, true)
-	roof.Material.PP(textureSky, scene.TextureTypeAlbedo, &vec3.Zero, vec3.T{cornellBoxUnit * 2, 0, 0}, vec3.T{0, 0, cornellBoxUnit})
+	roof.Material.PP(textureSky, &vec3.Zero, vec3.T{cornellBoxUnit * 2, 0, 0}, vec3.T{0, 0, cornellBoxUnit})
 
 	backWall := cornellBox.GetFirstObjectByMaterialName("Back")
 	backWall.Material = scene.NewMaterial().N("Back").E(color.White, 1.0, true)
-	backWall.Material.PP(textureSky, scene.TextureTypeAlbedo, &vec3.T{-cornellBoxUnit / 2, 0, 0}, vec3.T{cornellBoxUnit * 2, 0, 0}, vec3.T{0, cornellBoxUnit, 0})
+	backWall.Material.PP(textureSky, &vec3.T{-cornellBoxUnit / 2, 0, 0}, vec3.T{cornellBoxUnit * 2, 0, 0}, vec3.T{0, cornellBoxUnit, 0})
 
 	leftWall := cornellBox.GetFirstObjectByMaterialName("Left")
 	leftWall.Material = scene.NewMaterial().N("Left").E(color.White, 1.0, true)
-	leftWall.Material.PP(textureSky, scene.TextureTypeAlbedo, &vec3.T{0, 0, -cornellBoxUnit * 3 / 2}, vec3.T{0, 0, cornellBoxUnit * 2}, vec3.T{0, cornellBoxUnit, 0})
+	leftWall.Material.PP(textureSky, &vec3.T{0, 0, -cornellBoxUnit * 3 / 2}, vec3.T{0, 0, cornellBoxUnit * 2}, vec3.T{0, cornellBoxUnit, 0})
 
 	rightWall := cornellBox.GetFirstObjectByMaterialName("Right")
 	rightWall.Material = scene.NewMaterial().N("Right").E(color.White, 1.0, true)
-	rightWall.Material.PP(textureSky, scene.TextureTypeAlbedo, &vec3.T{0, 0, -cornellBoxUnit * 3 / 2}, vec3.T{0, 0, cornellBoxUnit * 2}, vec3.T{0, cornellBoxUnit, 0})
+	rightWall.Material.PP(textureSky, &vec3.T{0, 0, -cornellBoxUnit * 3 / 2}, vec3.T{0, 0, cornellBoxUnit * 2}, vec3.T{0, cornellBoxUnit, 0})
 
 	lucy := obj.NewLucy(cornellBoxUnit * 0.8)
 
@@ -74,7 +69,7 @@ func main() {
 	u := vec3.T{1, 0, 0}
 	lucy.Material = scene.NewMaterial().N("lucy").
 		C(color.NewColorGrey(0.90)).
-		CP(textureStatue, scene.TextureTypeAlbedo, &vec3.Zero, u, v, true)
+		CP(textureStatue, &vec3.Zero, u, v, true)
 
 	scn := scene.NewSceneNode().FS(lucy).FS(cornellBox)
 
@@ -90,7 +85,7 @@ func main() {
 	animation.AddFrame(frame)
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err = renderfile.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}

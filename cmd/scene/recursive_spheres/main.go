@@ -4,38 +4,39 @@ import (
 	"fmt"
 	"math"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "recursive_spheres"
+const (
+	animationName = "recursive_spheres"
 
-// var environmentEnvironMap = "textures/equirectangular/sunset horizon 2800x1400.jpg"
-var skyDomeRadius = 100.0 * 1000.0
+	// var environmentEnvironMap = "textures/equirectangular/sunset horizon 2800x1400.jpg"
+	skyDomeRadius = 100.0 * 1000.0
 
-//var environmentEnvironMap = "textures/equirectangular/nightsky.png"
+	//var environmentEnvironMap = "textures/equirectangular/nightsky.png"
 
-var skyDomeEmissionFactor = 1.0
-var amountFrames = 1
+	skyDomeEmissionFactor = 1.0
+	amountFrames          = 1
 
-var imageWidth = 1280
+	imageWidth = 1280
 
-var imageHeight = 1024
-var magnification = 1.0
-var amountSamples = 1024 * 3
+	imageHeight   = 1024
+	magnification = 1.0
+	amountSamples = 1024 * 3
 
-var startSphereRadius = 150.0
+	startSphereRadius = 150.0
 
-var maxSphereRecursionDepth = 6
-var apertureSize = 3.0
+	maxSphereRecursionDepth = 6
+	apertureSize            = 3.0
+)
 
 var sphereMaterial = scene.NewMaterial().C(color.NewColorGrey(0.8)).M(1, 0.07)
 
 func main() {
-	environmentEnvironMap := floatimage.LoadOrPanic("textures/equirectangular/open_grassfield_sunny_day.jpg")
+	environmentEnvironMap := scene.NewTextureReferenceOrPanic("textures/equirectangular/open_grassfield_sunny_day.jpg", scene.TextureTypeAlbedo)
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
 	for frameIndex := range amountFrames {
@@ -57,7 +58,7 @@ func main() {
 		skyDomeOrigin := vec3.T{0, 0, 0}
 		skyDomeMaterial := scene.NewMaterial().
 			E(color.White, skyDomeEmissionFactor, true).
-			SP(environmentEnvironMap, scene.TextureTypeAlbedo, &skyDomeOrigin, vec3.T{-0.75, 0, -0.25}, vec3.T{0, 1, 0})
+			SP(environmentEnvironMap, &skyDomeOrigin, vec3.T{-0.75, 0, -0.25}, vec3.T{0, 1, 0})
 		skyDome := scene.NewSphere(&skyDomeOrigin, skyDomeRadius, skyDomeMaterial).N("Environment mapping")
 
 		cameraOrigin := ballsBounds.Center().Add(&vec3.T{0, ballsBounds.SizeY() * 1.5 / 10.0, -800})

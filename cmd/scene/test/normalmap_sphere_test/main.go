@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
@@ -13,43 +12,36 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "normalmap_sphere_test"
+const (
+	animationName = "normalmap_sphere_test"
 
-var amountAnimationFrames = 120 // 72 * 2
+	amountAnimationFrames = 120 // 72 * 2
 
-var imageWidth = 640
-var imageHeight = 480
-var magnification = 0.5
+	imageWidth    = 640
+	imageHeight   = 480
+	magnification = 0.5
 
-var amountSamples = 512 * 2 // * 8 //  8 * 12 // * 2 * 15 // * 8 // * 15
-var maxRecursionDepth = 4
+	amountSamples     = 512 * 2 // * 8 //  8 * 12 // * 2 * 15 // * 8 // * 15
+	maxRecursionDepth = 4
 
-var cameraAperture = 0.0
-var cameraZoom = 1.0
+	cameraAperture = 0.0
+	cameraZoom     = 1.0
 
-var lampIntensity = 13.0
-var lightIntensityFactor = 0.2
-var sphereRadius = 1.5
+	lampIntensity        = 13.0
+	lightIntensityFactor = 0.2
+	sphereRadius         = 1.5
+)
 
 func main() {
 	//textureGround, err := floatimage.EmptyPlaceholderImage("textures/floor/7451-diffuse 02 low contrast.png")
 	//textureGround, err := floatimage.EmptyPlaceholderImage("textures/floor/7451-diffuse 02.png")
-	textureGround, err := floatimage.EmptyPlaceholderImage("textures/floortiles/dirty-tiles_02/Dirty_tile_Diffuse.jpg")
-	if err != nil {
-		panic(err)
-	}
-	textureGroundNM, err := floatimage.EmptyPlaceholderImage("textures/floortiles/dirty-tiles_02/Dirty_tile_Normal.jpg")
-	if err != nil {
-		panic(err)
-	}
+	textureGround := scene.NewTextureReferenceOrPanic("textures/floortiles/dirty-tiles_02/Dirty_tile_Diffuse.jpg", scene.TextureTypeAlbedo)
+	textureGroundNM := scene.NewTextureReferenceOrPanic("textures/floortiles/dirty-tiles_02/Dirty_tile_Normal.jpg", scene.TextureTypeNormalMap)
 
 	//textureWall, err := floatimage.EmptyPlaceholderImage("textures/tapeter/Camille_Image_Flatshot_Item_7209.jpg")
 	//textureWall, err := floatimage.EmptyPlaceholderImage("textures/wallpaper/Borosanpapper2021_Image_Flatshot_Item_8620.jpg")
 
-	textureWall, err := floatimage.EmptyPlaceholderImage("textures/wallpaper/sapphirebirds_image_tile_item_2279.jpg")
-	if err != nil {
-		panic(err)
-	}
+	textureWall := scene.NewTextureReferenceOrPanic("textures/wallpaper/sapphirebirds_image_tile_item_2279.jpg", scene.TextureTypeAlbedo)
 
 	// Cornell box
 	cornellBox := obj.NewWhiteCornellBox(&vec3.T{16, 6, 16}, true, lightIntensityFactor) // cm, as units. I.e. a 5x3x5m room
@@ -72,21 +64,21 @@ func main() {
 		panic("floor material is nil")
 	}
 	floorMaterial.C(color.NewColorGrey(1.0)).M(0, 0.5).
-		PP(textureGround, scene.TextureTypeAlbedo, &vec3.Zero, vec3.T{30, 0, 0}, vec3.T{0, 0, 30}).
-		PP(textureGroundNM, scene.TextureTypeNormalMap, &vec3.Zero, vec3.T{30, 0, 0}, vec3.T{0, 0, 30})
+		PP(textureGround, &vec3.Zero, vec3.T{30, 0, 0}, vec3.T{0, 0, 30}).
+		PP(textureGroundNM, &vec3.Zero, vec3.T{30, 0, 0}, vec3.T{0, 0, 30})
 	floorMaterial.Projections[len(floorMaterial.Projections)-1].Texture.Strength = 0.2
 
 	wallpaperZoomFactor := 1.0
 	wallpaperSize := cornellBox.Bounds.SizeY() / wallpaperZoomFactor
 
 	leftWallMaterial := cornellBox.GetFirstMaterialByName("Left")
-	leftWallMaterial.PP(textureWall, scene.TextureTypeAlbedo, &vec3.T{0, cornellBox.Bounds.Ymin, cornellBox.Bounds.Zmin}, vec3.T{0, 0, wallpaperSize}, vec3.T{0, wallpaperSize, 0})
+	leftWallMaterial.PP(textureWall, &vec3.T{0, cornellBox.Bounds.Ymin, cornellBox.Bounds.Zmin}, vec3.T{0, 0, wallpaperSize}, vec3.T{0, wallpaperSize, 0})
 
 	rightWallMaterial := cornellBox.GetFirstMaterialByName("Right")
-	rightWallMaterial.PP(textureWall, scene.TextureTypeAlbedo, &vec3.T{0, cornellBox.Bounds.Ymin, cornellBox.Bounds.Zmin}, vec3.T{0, 0, wallpaperSize}, vec3.T{0, wallpaperSize, 0})
+	rightWallMaterial.PP(textureWall, &vec3.T{0, cornellBox.Bounds.Ymin, cornellBox.Bounds.Zmin}, vec3.T{0, 0, wallpaperSize}, vec3.T{0, wallpaperSize, 0})
 
 	backWallMaterial := cornellBox.GetFirstMaterialByName("Back")
-	backWallMaterial.PP(textureWall, scene.TextureTypeAlbedo, &vec3.T{cornellBox.Bounds.Xmin, cornellBox.Bounds.Ymin, 0}, vec3.T{wallpaperSize, 0, 0}, vec3.T{0, wallpaperSize, 0})
+	backWallMaterial.PP(textureWall, &vec3.T{cornellBox.Bounds.Xmin, cornellBox.Bounds.Ymin, 0}, vec3.T{wallpaperSize, 0, 0}, vec3.T{0, wallpaperSize, 0})
 
 	behindWall := obj.NewSquareFacetStructure(obj.SquareTypeXYPlane, nil, true)
 	behindWall.Name = "Behind"
@@ -100,16 +92,10 @@ func main() {
 	//textureSphere, err := floatimage.EmptyPlaceholderImage("textures/planets/earth/earth_grey_50.png")
 	//textureSphere, err := floatimage.EmptyPlaceholderImage("textures/planets/earth/earth_daymap_dark.jpg")
 	//textureSphere, err := floatimage.EmptyPlaceholderImage("textures/football/football-diffuse-512_02.png")
-	textureSphere, err := floatimage.EmptyPlaceholderImage("textures/concrete/concrete_flat_lightgray.png")
-	if err != nil {
-		panic(err)
-	}
+	textureSphere := scene.NewTextureReferenceOrPanic("textures/concrete/concrete_flat_lightgray.png", scene.TextureTypeAlbedo)
 
 	//textureNormals, err := floatimage.EmptyPlaceholderImage("textures/football/football-normals-512.png")
-	textureNormals, err := floatimage.EmptyPlaceholderImage("textures/normal maps/golfball.jpg")
-	if err != nil {
-		panic(err)
-	}
+	textureNormals := scene.NewTextureReferenceOrPanic("textures/normal maps/golfball.jpg", scene.TextureTypeNormalMap)
 
 	//goldColor := color.NewColor(1.00, 0.85, 0.58).Multiply(0.9)
 	//silverColor := color.NewColor(0.85, 0.85, 0.9).Multiply(1.0)
@@ -123,8 +109,8 @@ func main() {
 		animationProgress := float64(frameIndex) / float64(amountAnimationFrames)
 
 		sphereMat := sphereMaterial.Copy()
-		sphereMat.SP(textureSphere, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
-		sphereMat.SP(textureNormals, scene.TextureTypeNormalMap, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+		sphereMat.SP(textureSphere, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+		sphereMat.SP(textureNormals, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
 		sphereMat.Projections[len(sphereMat.Projections)-1].Texture.Strength = 1.0
 		sphere := scene.NewSphere(&vec3.T{0, 0, 0}, sphereRadius, sphereMat)
 
@@ -169,7 +155,7 @@ func main() {
 	}
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err = renderfile.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}

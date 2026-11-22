@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
@@ -12,24 +11,26 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "lamp_post"
+const (
+	animationName = "lamp_post"
 
-var environmentRadius = 500.0 * 1000.0
-var environmentEmissionFactor = 1.0
+	environmentRadius         = 500.0 * 1000.0
+	environmentEmissionFactor = 1.0
 
-var lampPostLightEmission = 3.0
-var keroseneLampEmission = 20.0
+	lampPostLightEmission = 3.0
+	keroseneLampEmission  = 20.0
 
-var amountFrames = 1
+	amountFrames = 1
 
-var imageWidth = 1280
-var imageHeight = 1024
-var magnification = 1.0
+	imageWidth    = 1280
+	imageHeight   = 1024
+	magnification = 1.0
 
-var amountSamples = 1024 * 8 * 4
-var maxRecursion = 6
+	amountSamples = 1024 * 8 * 4
+	maxRecursion  = 6
 
-var apertureSize = 2.0
+	apertureSize = 2.0
+)
 
 func main() {
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
@@ -41,12 +42,22 @@ func main() {
 		environmentSphereOrigin := &vec3.T{0, 0, 0}
 		environmentSphereMaterial := scene.NewMaterial().
 			E(color.White, environmentEmissionFactor, true).
-			SP(floatimage.LoadOrPanic("textures/equirectangular/sunset horizon 2800x1400.jpg"), scene.TextureTypeAlbedo, environmentSphereOrigin, vec3.T{-0.2, 0, -1}, vec3.T{0, 1, 0})
+			SP(
+				scene.NewTextureReferenceOrPanic("textures/equirectangular/sunset horizon 2800x1400.jpg", scene.TextureTypeAlbedo),
+				environmentSphereOrigin,
+				vec3.T{-0.2, 0, -1},
+				vec3.T{0, 1, 0},
+			)
 		environmentSphere := scene.NewSphere(environmentSphereOrigin, environmentRadius, environmentSphereMaterial).N("Environment mapping")
 
 		// Ground
 		groundMaterial := scene.NewMaterial().N("Ground material").
-			PP(floatimage.LoadOrPanic("textures/ground/soil-cracked.png"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(150), vec3.UnitZ.Scaled(150))
+			PP(
+				scene.NewTextureReferenceOrPanic("textures/ground/soil-cracked.png", scene.TextureTypeAlbedo),
+				&vec3.T{0, 0, 0},
+				vec3.UnitX.Scaled(150),
+				vec3.UnitZ.Scaled(150),
+			)
 		ground := scene.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
 
 		// Gopher

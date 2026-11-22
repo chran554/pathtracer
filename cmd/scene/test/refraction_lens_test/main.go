@@ -12,33 +12,38 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "refraction_lens_test"
-var amountFrames = 180
-var startFrameIndex = 0
+const (
+	animationName   = "refraction_lens_test"
+	amountFrames    = 180
+	startFrameIndex = 0
 
-var maxRecursionDepth = 5
-var amountSamples = 1024 * 4 // * 4
+	maxRecursionDepth = 5
+	amountSamples     = 1024 * 4 // * 4
 
-var imageWidth = 400
-var imageHeight = 500
-var magnification = 1.0
+	imageWidth    = 400
+	imageHeight   = 500
+	magnification = 1.0
+)
 
 var texture = floatimage.LoadOrPanic("textures/test/christian.png")
-var textureEmisssion = 6.0
-var textureBaseSize = 300.0
-var textureDistance = 400.0
 
-var lensRadius = 50.0
-var lensMinDistance = 0.0 // 0.0
-var lensMaxDistance = 80.0
+const (
+	textureEmisssion = 6.0
+	textureBaseSize  = 300.0
+	textureDistance  = 400.0
+
+	lensRadius      = 50.0
+	lensMinDistance = 0.0 // 0.0
+	lensMaxDistance = 80.0
+)
 
 func main() {
 	lensDistance := lensMinDistance
 
-	textureSkyDome := floatimage.LoadOrPanic("textures/equirectangular/331_PDM_BG1.jpg")
+	textureSkyDome := scene.NewTextureReferenceOrPanic("textures/equirectangular/331_PDM_BG1.jpg", scene.TextureTypeAlbedo)
 	skyDome := scene.NewSphere(&vec3.T{0, 0, 0}, 2000, scene.NewMaterial().
 		E(color.White, 0.8, true).
-		SP(textureSkyDome, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+		SP(textureSkyDome, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 	skyDome.RotateY(&vec3.Zero, util.DegToRad(-20))
 
 	backplane := &scene.FacetStructure{

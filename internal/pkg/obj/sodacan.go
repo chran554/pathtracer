@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/fileformat/wavefront"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
@@ -66,7 +65,13 @@ func loadSodaCan(textureFileName string, tabColor *color.Color, scale float64) *
 	aluminumMaterialBody := scene.NewMaterial().N("body").
 		M(0, 0.15).
 		T(0.0, false, scene.RefractionIndex_AcrylicPlastic).
-		CP(floatimage.LoadOrPanic(textureFileName), scene.TextureTypeAlbedo, &vec3.T{0, bodyProjectionBottomOffset, 0}, vec3.UnitX, vec3.T{0, sodaCanBody.Bounds.Ymax - bodyProjectionBottomOffset - 0.005, 0}, false)
+		CP(
+			scene.NewTextureReferenceOrPanic(textureFileName, scene.TextureTypeAlbedo),
+			&vec3.T{0, bodyProjectionBottomOffset, 0},
+			vec3.UnitX,
+			vec3.T{0, sodaCanBody.Bounds.Ymax - bodyProjectionBottomOffset - 0.005, 0},
+			false,
+		)
 	//CP(textureFileName, &vec3.T{0, 0.065, 0}, vec3.UnitX, vec3.T{0, 0.89 - 0.065, 0}, false)
 
 	sodaCan.ReplaceMaterial("lid", aluminumMaterialLid)

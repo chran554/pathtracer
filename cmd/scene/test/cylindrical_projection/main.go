@@ -2,17 +2,18 @@ package main
 
 import (
 	"fmt"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var ballRadius float64 = 30
+const (
+	ballRadius float64 = 30
 
-var amountSamples = 5
-var viewPlaneDistance = 1600.0
+	amountSamples     = 5
+	viewPlaneDistance = 1600.0
+)
 
 func main() {
 	animation := scene.NewAnimation("cylindrical_projection", 800, 600, 1.0, false, false)
@@ -24,9 +25,9 @@ func main() {
 	projectionU := vec3.T{0, 0, ballRadius}
 	projectionV := vec3.T{0, 2 * ballRadius, 0}
 
-	projection := scene.NewCylindricalImageProjection(floatimage.LoadOrPanic("textures/planets/earth_daymap.jpg"), scene.TextureTypeAlbedo, &projectionOrigin, projectionU, projectionV)
+	projection := scene.NewCylindricalImageProjection(scene.NewTextureReferenceOrPanic("textures/planets/earth_daymap.jpg", scene.TextureTypeAlbedo), &projectionOrigin, projectionU, projectionV)
 
-	sphere1 := scene.NewSphere(&sphereOrigin, ballRadius, scene.NewMaterial().P(&projection)).N("Textured sphere")
+	sphere1 := scene.NewSphere(&sphereOrigin, ballRadius, scene.NewMaterial().P(projection)).N("Textured sphere")
 
 	scn := scene.NewSceneNode().S(sphere1)
 

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
@@ -12,16 +11,18 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "statue_test"
+const (
+	animationName = "statue_test"
 
-var amountSamples = 1024 * 8
-var apertureSize = 1.0
+	amountSamples = 1024 * 8
+	apertureSize  = 1.0
 
-var cameraDistanceFactor = 1.0
+	cameraDistanceFactor = 1.0
 
-var imageWidth = 1024
-var imageHeight = 600
-var magnification = 1.25
+	imageWidth    = 1024
+	imageHeight   = 600
+	magnification = 1.25
+)
 
 func main() {
 	porcelainMaterial := scene.NewMaterial().
@@ -90,7 +91,12 @@ func createPillar(pillarWidth float64, pillarHeight float64) *scene.FacetStructu
 	pillar1.Material = scene.NewMaterial().
 		C(color.NewColorGrey(0.9)).
 		M(0, 0.2).
-		PP(floatimage.LoadOrPanic("textures/concrete/Polished-Concrete-Architextures.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, (&vec3.UnitX).Scaled(pillarWidth), (&vec3.UnitZ).Add(&vec3.T{0, 0.5, 0}).Scaled(pillarWidth))
+		PP(
+			scene.NewTextureReferenceOrPanic("textures/concrete/Polished-Concrete-Architextures.jpg", scene.TextureTypeAlbedo),
+			&vec3.T{0, 0, 0},
+			(&vec3.UnitX).Scaled(pillarWidth),
+			(&vec3.UnitZ).Add(&vec3.T{0, 0.5, 0}).Scaled(pillarWidth),
+		)
 	pillar1.Translate(&vec3.T{-0.5, 0, -0.5})
 
 	pillar1.Scale(&vec3.Zero, &vec3.T{pillarWidth, pillarHeight, pillarWidth})
@@ -100,15 +106,30 @@ func createPillar(pillarWidth float64, pillarHeight float64) *scene.FacetStructu
 func setCornellBoxMaterial(cornellBox *scene.FacetStructure) {
 	scale := cornellBox.Bounds.SizeY()
 
-	backWallMaterial := scene.NewMaterial().N("back").PP(floatimage.LoadOrPanic("textures/wallpaper/anemone-rose-flower-eucalyptus-leaves-pampas-grass.png"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(1.66*scale), vec3.UnitY.Scaled(scale))
+	backWallMaterial := scene.NewMaterial().N("back").PP(
+		scene.NewTextureReferenceOrPanic("textures/wallpaper/anemone-rose-flower-eucalyptus-leaves-pampas-grass.png", scene.TextureTypeAlbedo),
+		&vec3.T{0, 0, 0},
+		vec3.UnitX.Scaled(1.66*scale),
+		vec3.UnitY.Scaled(scale),
+	)
 	// backWallMaterial := scene.NewMaterial().N("back").PP("textures/wallpaper/VintagePalms_Image_Tile_Item_9454w.jpg", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(1.66*scale), vec3.UnitY.Scaled(scale))
 	cornellBox.GetFirstObjectBySubstructureName("Back").Material = backWallMaterial
 
-	sideWallMaterial := scene.NewMaterial().N("wall").PP(floatimage.LoadOrPanic("textures/wallpaper/anemone-rose-flower-eucalyptus-leaves-pampas-grass.png"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(1.66*scale), vec3.UnitY.Scaled(scale))
+	sideWallMaterial := scene.NewMaterial().N("wall").PP(
+		scene.NewTextureReferenceOrPanic("textures/wallpaper/anemone-rose-flower-eucalyptus-leaves-pampas-grass.png", scene.TextureTypeAlbedo),
+		&vec3.T{0, 0, 0},
+		vec3.UnitZ.Scaled(1.66*scale),
+		vec3.UnitY.Scaled(scale),
+	)
 	// sideWallMaterial := scene.NewMaterial().N("wall").PP("textures/wallpaper/VintagePalms_Image_Tile_Item_9454w.jpg", &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(1.66*scale), vec3.UnitY.Scaled(scale))
 	cornellBox.GetFirstObjectBySubstructureName("Left").Material = sideWallMaterial
 	cornellBox.GetFirstObjectBySubstructureName("Right").Material = sideWallMaterial
 
-	floorMaterial := scene.NewMaterial().N("floor").M(0, 0.1).PP(floatimage.LoadOrPanic("textures/marble/marble white tiles 1000x1000.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale/4), vec3.UnitZ.Scaled(scale/4))
+	floorMaterial := scene.NewMaterial().N("floor").M(0, 0.1).PP(
+		scene.NewTextureReferenceOrPanic("textures/marble/marble white tiles 1000x1000.jpg", scene.TextureTypeAlbedo),
+		&vec3.T{0, 0, 0},
+		vec3.UnitX.Scaled(scale/4),
+		vec3.UnitZ.Scaled(scale/4),
+	)
 	cornellBox.GetFirstObjectBySubstructureName("Floor").Material = floorMaterial
 }

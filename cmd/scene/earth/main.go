@@ -12,20 +12,22 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "earth"
+const (
+	animationName = "earth"
 
-var amountAnimationFrames = 32 // 72 * 2 // TODO set to 1
-var startFrameIndex = 6
+	amountAnimationFrames = 32 // 72 * 2 // TODO set to 1
+	startFrameIndex       = 6
 
-var imageWidth = 640 * 1
-var imageHeight = 480 * 1
-var magnification = 2.0
+	imageWidth    = 640 * 1
+	imageHeight   = 480 * 1
+	magnification = 2.0
 
-var amountSamples = 512 * 2 * 4 //* 12 // * 12
-var maxRecursionDepth = 16
+	amountSamples     = 512 * 2 * 4 //* 12 // * 12
+	maxRecursionDepth = 16
 
-var cameraAperture = 0.0
-var cameraZoom = 1.0
+	cameraAperture = 0.0
+	cameraZoom     = 1.0
+)
 
 const (
 	kkilometer        = 1.0 // Use kilo-kilometer (kkm or mega-meter Mm) as unit for measures
@@ -38,21 +40,15 @@ const (
 )
 
 func main() {
-	textureMoon, err := floatimage.EmptyPlaceholderImage("textures/planets/moonmap4k.jpg")
-	if err != nil {
-		panic(err)
-	}
+	textureMoon := scene.NewTextureReferenceOrPanic("textures/planets/moonmap4k.jpg", scene.TextureTypeAlbedo)
 
 	//textureSpace, err := floatimage.EmptyPlaceholderImage("textures/planets/environmentmap/Stellarium3.jpeg")
-	textureSpace, err := floatimage.EmptyPlaceholderImage("textures/planets/environmentmap/starmap_2020_16k.png")
-	if err != nil {
-		panic(err)
-	}
+	textureSpace := scene.NewTextureReferenceOrPanic("textures/planets/environmentmap/starmap_2020_16k.png", scene.TextureTypeAlbedo)
 
 	solarSystemOrigin := &vec3.T{0, 0, 0}
 
 	spaceMaterial := scene.NewMaterial().N("space")
-	spaceMaterial.SP(textureSpace, scene.TextureTypeAlbedo, copy(solarSystemOrigin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+	spaceMaterial.SP(textureSpace, copy(solarSystemOrigin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
 	spaceMaterial.Projections[0].Texture.Interpolation = floatimage.InterpolationBicubic
 	spaceMaterial.E(color.White, 1.0, true)
 	spaceEnvironment := scene.NewSphere(copy(solarSystemOrigin), spaceRadius, spaceMaterial)
@@ -67,7 +63,7 @@ func main() {
 	earth := createEarth(earthRadius, earthPosition)
 
 	moonMaterial := scene.NewMaterial().N("moon")
-	moonMaterial.SP(textureMoon, scene.TextureTypeAlbedo, copy(solarSystemOrigin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+	moonMaterial.SP(textureMoon, copy(solarSystemOrigin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
 	//moonMaterial.E(color.White, 1.0, true)
 	moon := scene.NewSphere(copy(solarSystemOrigin), moonRadius*3, moonMaterial)
 	moon.Translate(&vec3.T{sunEarthDistance + moonEarthDistance, 0, 0})
@@ -109,7 +105,7 @@ func main() {
 	}
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err = renderfile.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}
@@ -118,30 +114,15 @@ func main() {
 func createEarth(radius float64, position *vec3.T) *scene.SceneNode {
 	// textureEarthDay, err := floatimage.EmptyPlaceholderImage("textures/planets/earth/earth_daymap.jpg")
 	// textureEarthDay, err := floatimage.EmptyPlaceholderImage("textures/planets/earth/earth_daymap_dark.jpg")
-	textureEarthDay, err := floatimage.EmptyPlaceholderImage("textures/planets/earth/earth_grey_18.png")
-	if err != nil {
-		panic(err)
-	}
+	textureEarthDay := scene.NewTextureReferenceOrPanic("textures/planets/earth/earth_grey_18.png", scene.TextureTypeAlbedo)
 
-	textureEarthNormalMap, err := floatimage.EmptyPlaceholderImage("textures/planets/earth/earth_normal_map.png")
-	if err != nil {
-		panic(err)
-	}
+	textureEarthNormalMap := scene.NewTextureReferenceOrPanic("textures/planets/earth/earth_normal_map.png", scene.TextureTypeNormalMap)
 
-	textureEarthCloud, err := floatimage.EmptyPlaceholderImage("textures/planets/earth/earth_clouds_alpha.png")
-	if err != nil {
-		panic(err)
-	}
+	textureEarthCloud := scene.NewTextureReferenceOrPanic("textures/planets/earth/earth_clouds_alpha.png", scene.TextureTypeAlbedo)
 
-	textureEarthSpec, err := floatimage.EmptyPlaceholderImage("textures/planets/earth/earth_daymap_specular_alpha.png")
-	if err != nil {
-		panic(err)
-	}
+	textureEarthSpec := scene.NewTextureReferenceOrPanic("textures/planets/earth/earth_daymap_specular_alpha.png", scene.TextureTypeAlbedo)
 
-	textureEarthLights, err := floatimage.EmptyPlaceholderImage("textures/planets/earth/earth_nightmap_alpha.png")
-	if err != nil {
-		panic(err)
-	}
+	textureEarthLights := scene.NewTextureReferenceOrPanic("textures/planets/earth/earth_nightmap_alpha.png", scene.TextureTypeAlbedo)
 
 	origin := &vec3.Zero
 
@@ -149,18 +130,18 @@ func createEarth(radius float64, position *vec3.T) *scene.SceneNode {
 	earthMantleMaterial.M(0, 0.3)
 
 	// Earth day texture
-	earthMantleMaterial.SP(textureEarthDay, scene.TextureTypeAlbedo, copy(origin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+	earthMantleMaterial.SP(textureEarthDay, copy(origin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
 	earthMantleMaterial.Projections[0].Texture.Interpolation = floatimage.InterpolationBicubic
 
 	// Earth normal map texture
-	earthMantleMaterial.SP(textureEarthNormalMap, scene.TextureTypeNormalMap, copy(origin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+	earthMantleMaterial.SP(textureEarthNormalMap, copy(origin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
 	earthMantleMaterial.Projections[1].Texture.Interpolation = floatimage.InterpolationBicubic
 
 	earthMantle := scene.NewSphere(copy(origin), radius, earthMantleMaterial)
 	earthMantle.Translate(position)
 
 	earthCloudMaterial := scene.NewMaterial().N("earth clouds").C(color.NewColor(1.0, 1.0, 1.0))
-	earthCloudMaterial.SP(textureEarthCloud, scene.TextureTypeAlbedo, copy(origin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+	earthCloudMaterial.SP(textureEarthCloud, copy(origin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
 	earthCloudMaterial.Projections[0].Texture.Interpolation = floatimage.InterpolationBicubic
 
 	earthCloud := scene.NewSphere(copy(origin), radius+0.01, earthCloudMaterial)
@@ -168,14 +149,14 @@ func createEarth(radius float64, position *vec3.T) *scene.SceneNode {
 
 	earthSpecMaterial := scene.NewMaterial().N("earth specular").C(color.NewColor(1.0, 1.0, 1.0))
 	earthSpecMaterial.M(0, 0.4)
-	earthSpecMaterial.SP(textureEarthSpec, scene.TextureTypeAlbedo, copy(origin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+	earthSpecMaterial.SP(textureEarthSpec, copy(origin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
 
 	earthSpec := scene.NewSphere(copy(origin), radius+0.001, earthSpecMaterial)
 	earthSpec.Translate(position)
 
 	earthLightsMaterial := scene.NewMaterial().N("earth lights").C(color.NewColor(1.0, 1.0, 1.0))
 	earthLightsMaterial.E(color.White, 1.5, false)
-	earthLightsMaterial.SP(textureEarthLights, scene.TextureTypeAlbedo, copy(origin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+	earthLightsMaterial.SP(textureEarthLights, copy(origin), vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
 	earthLightsMaterial.Projections[0].Texture.Interpolation = floatimage.InterpolationBicubic
 
 	earthLights := scene.NewSphere(copy(origin), radius+0.05, earthLightsMaterial)

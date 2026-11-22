@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
@@ -13,25 +12,27 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "castle_test"
+const (
+	animationName = "castle_test"
 
-var amountAnimationFrames = 180
-var animationStartIndex = 0
+	amountAnimationFrames = 180
+	animationStartIndex   = 0
 
-var environmentRadius = 500.0 * 1000.0
-var environmentEmissionFactor = 1.0
+	environmentRadius         = 500.0 * 1000.0
+	environmentEmissionFactor = 1.0
 
-var imageWidth = 1024
-var imageHeight = 768
-var magnification = 0.5 // 0.4
+	imageWidth    = 1024
+	imageHeight   = 768
+	magnification = 0.5 // 0.4
 
-var amountSamples = 1400 // 1024 * 6
-var maxRecursion = 5
+	amountSamples = 1400 // 1024 * 6
+	maxRecursion  = 5
 
-var apertureSize = 0.25
+	apertureSize = 0.25
 
-var cameraDistance = 100.0
-var cameraHeight = 25.0
+	cameraDistance = 100.0
+	cameraHeight   = 25.0
+)
 
 func main() {
 	castle := obj.NewCastle(80, color.NewColorKelvin(2500), 10)
@@ -44,8 +45,8 @@ func main() {
 	// environmentSphere := addEnvironmentMapping("textures/equirectangular/nightsky.png")
 
 	// Ground
-	groundProjection := scene.NewParallelImageProjection(floatimage.LoadOrPanic("textures/ground/grass_short.png"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(80/2), vec3.UnitZ.Scaled(50/2))
-	groundMaterial := scene.NewMaterial().N("Ground material").P(&groundProjection)
+	groundProjection := scene.NewParallelImageProjection(scene.NewTextureReferenceOrPanic("textures/ground/grass_short.png", scene.TextureTypeAlbedo), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(80/2), vec3.UnitZ.Scaled(50/2))
+	groundMaterial := scene.NewMaterial().N("Ground material").P(groundProjection)
 	ground := scene.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
 
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
@@ -95,7 +96,12 @@ func addEnvironmentMapping(filename string) *scene.Sphere {
 	origin := vec3.T{0, 0, 0}
 	u := vec3.T{-0.2, 0, -1}
 	v := vec3.T{0, 1, 0}
-	material := scene.NewMaterial().E(color.White, environmentEmissionFactor, true).SP(floatimage.LoadOrPanic(filename), scene.TextureTypeAlbedo, &origin, u, v)
+	material := scene.NewMaterial().E(color.White, environmentEmissionFactor, true).SP(
+		scene.NewTextureReferenceOrPanic(filename, scene.TextureTypeAlbedo),
+		&origin,
+		u,
+		v,
+	)
 	sphere := scene.NewSphere(&origin, environmentRadius, material).N("Environment mapping")
 
 	return sphere

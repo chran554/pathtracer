@@ -197,7 +197,7 @@ func fresnelTestAlbedo(material *scene.Material, textureAlpha float64) {
 	texture := floatimage.NewFloatImage("test coverage", 1, 1)
 	texture.Fill(color.NewColorRGBA(1, 1, 1, textureAlpha))
 
-	projection := scene.NewParallelImageProjection(texture, scene.TextureTypeAlbedo, &vec3.T{}, vec3.UnitX, vec3.UnitY)
+	projection := scene.NewParallelImageProjection(scene.NewTexture(texture, scene.TextureTypeAlbedo), &vec3.T{}, vec3.UnitX, vec3.UnitY)
 	projection.Initialize()
-	material.P(&projection)
+	material.P(projection)
 }

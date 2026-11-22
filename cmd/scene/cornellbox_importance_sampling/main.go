@@ -11,18 +11,20 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "cornellbox"
+const (
+	animationName = "cornellbox"
 
-var ballRadius float64 = 20
+	ballRadius float64 = 20
 
-// var amountSamples = 1024 * 64
-var maxRecursionDepth = 4
+	// var amountSamples = 1024 * 64
+	maxRecursionDepth = 4
 
-var imageWidth = 800
-var imageHeight = 400
-var magnification = 0.5
+	imageWidth    = 800
+	imageHeight   = 400
+	magnification = 0.5
 
-var viewPlaneDistance = 1500.0
+	viewPlaneDistance = 1500.0
+)
 
 func main() {
 	// TODO Set lamp size of cornell single light to: 		lampPercentageOfCeiling := 0.20

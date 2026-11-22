@@ -82,7 +82,7 @@ func convertToFacetStructure(wavefront *Wavefront, filename string) (*scene.Face
 		var texture *scene.Texture
 		if face.Material != nil && face.Material.MapKd != "" {
 			textureFilename := filepath.Join(face.Material.MapBasePath, face.Material.MapKd)
-			textureImage, err := floatimage.EmptyPlaceholderImage(textureFilename)
+			textureImage, err := floatimage.Reference(textureFilename)
 			if err != nil {
 				return nil, err
 			}

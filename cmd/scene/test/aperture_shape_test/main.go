@@ -15,30 +15,32 @@ import (
 
 // "Lonesome Gopher in love" scene
 
-var environmentEnvironMap = "textures/equirectangular/sunset horizon 2800x1400.jpg"
-var environmentRadius = 100.0 * 1000.0
-var environmentEmissionFactor = 0.15
+const (
+	environmentEnvironMap     = "textures/equirectangular/sunset horizon 2800x1400.jpg"
+	environmentRadius         = 100.0 * 1000.0
+	environmentEmissionFactor = 0.15
 
-var animationName = "aperture_shape_test"
-var amountFrames = 1
+	animationName = "aperture_shape_test"
+	amountFrames  = 1
 
-var imageWidth = 1280
-var imageHeight = 1024
-var magnification = 1.0
+	imageWidth    = 1280
+	imageHeight   = 1024
+	magnification = 1.0
 
-var amountSamples = 512 * 2 * 10
+	amountSamples = 512 * 2 * 10
 
-var gopherLightEmissionFactor = 0.0 // 75.0
+	gopherLightEmissionFactor = 0.0 // 75.0
 
-var lampEmissionFactor = 1.5
+	lampEmissionFactor = 1.5
 
-var amountSpheres = 1000
-var sphereRadius = 250.0
+	amountSpheres = 1000
+	sphereRadius  = 250.0
 
-var sphereMinDistance = -1500.0
-var sphereMaxDistance = environmentRadius * 0.3
+	sphereMinDistance = -1500.0
+	sphereMaxDistance = environmentRadius * 0.3
 
-var apertureSize = 20.0 //500.0
+	apertureSize = 20.0 //500.0
+)
 
 func main() {
 	// Environment sphere
@@ -46,7 +48,7 @@ func main() {
 	skyDomeOrigin := vec3.T{0, 0, 0}
 	skyDomeMaterial := scene.NewMaterial().
 		E(color.White, environmentEmissionFactor, true).
-		SP(floatimage.LoadOrPanic(environmentEnvironMap), scene.TextureTypeAlbedo, &skyDomeOrigin, vec3.T{0, 0, 1}, vec3.T{0, 1, 0})
+		SP(scene.NewTextureReferenceOrPanic(environmentEnvironMap, scene.TextureTypeAlbedo), &skyDomeOrigin, vec3.T{0, 0, 1}, vec3.T{0, 1, 0})
 	skyDome := scene.NewSphere(&skyDomeOrigin, environmentRadius, skyDomeMaterial).N("sky dome")
 
 	// Gopher
@@ -63,8 +65,8 @@ func main() {
 
 	// Ground
 
-	groundProjection := scene.NewParallelImageProjection(floatimage.LoadOrPanic("textures/ground/soil-cracked.png"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(gopher.Bounds.SizeY()*2), vec3.UnitZ.Scaled(gopher.Bounds.SizeY()*2))
-	groundMaterial := scene.NewMaterial().N("Ground material").P(&groundProjection)
+	groundProjection := scene.NewParallelImageProjection(scene.NewTextureReferenceOrPanic("textures/ground/soil-cracked.png", scene.TextureTypeAlbedo), &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(gopher.Bounds.SizeY()*2), vec3.UnitZ.Scaled(gopher.Bounds.SizeY()*2))
+	groundMaterial := scene.NewMaterial().N("Ground material").P(groundProjection)
 	ground := scene.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
 
 	// Spheres
@@ -99,7 +101,7 @@ func main() {
 		cameraOrigin := vec3.T{xPos, yPos, -600}
 
 		camera := scene.NewCamera(&cameraOrigin, &focusPoint, amountSamples, magnification).
-			A(apertureSize, floatimage.LoadOrPanic("textures/aperture/heart.png")).
+			A(apertureSize, floatimage.ReferenceOrPanic("textures/aperture/heart.png")).
 			V(600)
 
 		frame := scene.NewFrame(animationName, frameIndex, camera, scn)

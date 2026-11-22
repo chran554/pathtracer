@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
@@ -13,24 +12,26 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "light_bounce_test"
+const (
+	animationName = "light_bounce_test"
 
-var environmentRadius = 50000.0
-var environmentEmissionFactor = 1.0 / 255.0
+	environmentRadius         = 50000.0
+	environmentEmissionFactor = 1.0 / 255.0
 
-var amountFrames = 180
+	amountFrames = 180
 
-var imageWidth = 600
-var imageHeight = 800
-var magnification = 2.0
+	imageWidth    = 600
+	imageHeight   = 800
+	magnification = 2.0
 
-var amountSamples = 1024 * 8
-var maxRecursion = 60
+	amountSamples = 1024 * 8
+	maxRecursion  = 60
 
-var lampScale = 15.0
+	lampScale = 15.0
+)
 
 func main() {
-	var textureEnvironment = floatimage.LoadOrPanic("textures/equirectangular/sunset horizon 2800x1400.jpg")
+	var textureEnvironment = scene.NewTextureReferenceOrPanic("textures/equirectangular/sunset horizon 2800x1400.jpg", scene.TextureTypeAlbedo)
 	//var textureSoilCracked = floatimage.LoadOrPanic("textures/ground/soil-cracked.png")
 	// var textureLightBox = floatimage.LoadOrPanic("textures/lights/lightboxtexture_2.0.png")
 
@@ -40,7 +41,7 @@ func main() {
 	skyDomeOrigin := vec3.T{0, 0, 0}
 	skyDomeMaterial := scene.NewMaterial().
 		E(color.White, environmentEmissionFactor, true).
-		SP(textureEnvironment, scene.TextureTypeAlbedo, &skyDomeOrigin, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+		SP(textureEnvironment, &skyDomeOrigin, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
 	skyDome := scene.NewSphere(&skyDomeOrigin, environmentRadius, skyDomeMaterial).N("sky dome")
 	skyDome.RotateY(&vec3.Zero, util.DegToRad(0))
 

@@ -10,18 +10,20 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "erik_test"
+const (
+	animationName = "erik_test"
 
-var maxRecursionDepth = 8
-var amountSamples = 1024 * 12
-var lensRadius = 5.0
+	maxRecursionDepth = 8
+	amountSamples     = 1024 * 12
+	lensRadius        = 5.0
 
-var viewPlaneDistance = 600.0
-var cameraDistanceFactor = 1.0
+	viewPlaneDistance    = 600.0
+	cameraDistanceFactor = 1.0
 
-var imageWidth = 450
-var imageHeight = 300
-var magnification = 2.0
+	imageWidth    = 450
+	imageHeight   = 300
+	magnification = 2.0
+)
 
 func main() {
 	roomHeight := 40.0

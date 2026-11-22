@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
 
@@ -32,25 +31,31 @@ var projectionTextures = []projection{
 // var environmentEnvironMap = "textures/planets/environmentmap/space_fake_02_flip.png"
 // var environmentEnvironMap = "textures/equirectangular/open_grassfield_sunny_day.jpg"
 // var environmentEnvironMap = "textures/equirectangular/forest_sunny_day.jpg"
-var environmentEnvironMap = "textures/planets/environmentmap/Stellarium3.jpeg"
+const (
+	environmentEnvironMap = "textures/planets/environmentmap/Stellarium3.jpeg"
 
-var animationName = "planets_rotation"
+	animationName = "planets_rotation"
 
-var amountFrames = 1
+	amountFrames = 1
 
-var imageWidth = 800
-var imageHeight = 600
-var magnification = 2.0
+	imageWidth    = 800
+	imageHeight   = 600
+	magnification = 2.0
 
-var amountSamples = 1024 * 16
+	amountSamples = 1024 * 16
 
-var cameraDistanceFactor = 2.5
+	cameraDistanceFactor = 2.5
 
-var circleRadius = 200.0
+	circleRadius = 200.0
+)
+
 var amountBalls = len(projectionTextures) * 2
-var ballRadius = 40.0
-var viewPlaneDistance = 600.0
-var lensRadius = 0.05
+
+const (
+	ballRadius        = 40.0
+	viewPlaneDistance = 600.0
+	lensRadius        = 0.05
+)
 
 var amountBallsToRotateBeforeMovieLoop = len(projectionTextures)
 
@@ -77,7 +82,7 @@ func main() {
 		skyDomeRadius := 100.0 * 1000.0
 		skyDomeOrigin := &vec3.T{0, 0, 0}
 		skyDomeMaterial := scene.NewMaterial().E(color.White, 1.0, true).
-			SP(floatimage.LoadOrPanic(environmentEnvironMap), scene.TextureTypeAlbedo, skyDomeOrigin, vec3.UnitX, vec3.UnitY)
+			SP(scene.NewTextureReferenceOrPanic(environmentEnvironMap, scene.TextureTypeAlbedo), skyDomeOrigin, vec3.UnitX, vec3.UnitY)
 		skyDome := scene.NewSphere(skyDomeOrigin, skyDomeRadius, skyDomeMaterial)
 
 		camera := getCamera(magnification, animationProgress)
@@ -123,7 +128,12 @@ func addBallsToScene(deltaBallAngle float64, projectionAngle float64, projection
 
 		material := scene.NewMaterial().
 			E(projectionData[projectionTextureIndex].emission, 1.0, projectionData[projectionTextureIndex].rayTerminator).
-			SP(floatimage.LoadOrPanic(projectionData[projectionTextureIndex].filename), scene.TextureTypeAlbedo, &ballOrigin, vec3.T{projectionU, 0, projectionV}, vec3.T{0, 1, 0})
+			SP(
+				scene.NewTextureReferenceOrPanic(projectionData[projectionTextureIndex].filename, scene.TextureTypeAlbedo),
+				&ballOrigin,
+				vec3.T{projectionU, 0, projectionV},
+				vec3.T{0, 1, 0},
+			)
 
 		sphere := scene.NewSphere(&ballOrigin, ballRadius, material)
 

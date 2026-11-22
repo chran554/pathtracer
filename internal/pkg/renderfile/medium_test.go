@@ -161,8 +161,8 @@ func TestInitialMediaSerializationErrors(t *testing.T) {
 	for _, world := range []bool{false, true} {
 		frame := mediumArchiveTestFrame()
 		image := floatimage.NewFloatImage(filepath.Join(t.TempDir(), "missing.png"), 1, 1)
-		projection := scene.NewParallelImageProjection(image, scene.TextureTypeAlbedo, &vec3.T{}, vec3.UnitX, vec3.UnitY)
-		medium := scene.NewMaterial().P(&projection)
+		projection := scene.NewParallelImageProjection(scene.NewTexture(image, scene.TextureTypeAlbedo), &vec3.T{}, vec3.UnitX, vec3.UnitY)
+		medium := scene.NewMaterial().P(projection)
 		context := "camera initial medium 0"
 		if world {
 			frame.WorldMedium = medium

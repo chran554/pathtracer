@@ -46,8 +46,8 @@ func TestAnimationSerialization(t *testing.T) {
 
 	// Create a material with a projection and texture
 	mat := scene.NewMaterial().N("TestMaterial").C(color.NewColor(1, 0, 0))
-	proj := scene.NewParallelImageProjection(nil, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
-	mat.P(&proj)
+	proj := scene.NewParallelImageProjection(scene.NewTexture(nil, scene.TextureTypeAlbedo), &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+	mat.P(proj)
 
 	sphere := &scene.Sphere{
 		Name:     "TestSphere",

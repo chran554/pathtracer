@@ -14,20 +14,22 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-const animationName = "snookertable_die"
+const (
+	animationName = "snookertable_die"
 
-const amountAnimationFrames = 1
+	amountAnimationFrames = 1
 
-const imageWidth = 400
-const imageHeight = 300
-const magnification = 2.0 // 1.0
+	imageWidth    = 400
+	imageHeight   = 300
+	magnification = 2.0 // 1.0
 
-const amountSamples = 2048 // 1024 * 24 / 4
+	amountSamples = 2048 // 1024 * 24 / 4
 
-const apertureSize = 0.0 // 0.4
+	apertureSize = 0.0 // 0.4
 
-const ballDisplacementRadius = 0.3
-const maxRotation = (math.Pi / 180) * 15 // Max angle rotation of ball
+	ballDisplacementRadius = 0.3
+	maxRotation            = (math.Pi / 180) * 15 // Max angle rotation of ball
+)
 
 type SnookerBall string
 
@@ -56,11 +58,11 @@ const (
 func main() {
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, true)
 
-	textureEnvironment := floatimage.LoadOrPanic("textures/equirectangular/las-vegas-hotell-lobby.png")
+	textureEnvironment := scene.NewTextureReferenceOrPanic("textures/equirectangular/las-vegas-hotell-lobby.png", scene.TextureTypeAlbedo)
 	environmentSphere := scene.NewSphere(&vec3.T{0, 0, 0}, 3*100, scene.NewMaterial().
 		E(color.White, 2, true).
 		//C(color.NewColorGrey(0.2))).
-		SP(textureEnvironment, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+		SP(textureEnvironment, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
 
 	// Generally speaking, hanging billiard lights about 32"-36" above the bed of the table is about right.
 	//
@@ -93,12 +95,12 @@ func main() {
 	poolTable := obj.NewSquareFacetStructure(obj.SquareTypeXZPlane, nil, false)
 	poolTable.CenterOn(&vec3.Zero)
 	poolTable.Scale(&vec3.Zero, &vec3.T{356.9, 1, 177.8})
-	textureTableCloth := floatimage.LoadOrPanic("textures/snooker/cloth02.png")
+	textureTableCloth := scene.NewTextureReferenceOrPanic("textures/snooker/cloth02.png", scene.TextureTypeAlbedo)
 	poolTable.Material = scene.NewMaterial().
 		C(color.White).
 		M(0, 0.9).
 		T(0.0, false, scene.RefractionIndex_Plastic).
-		PP(textureTableCloth, scene.TextureTypeAlbedo, &vec3.T{2.5, 0, 2.5}, vec3.T{5, 0, 0}, vec3.T{0, 0, 5})
+		PP(textureTableCloth, &vec3.T{2.5, 0, 2.5}, vec3.T{5, 0, 0}, vec3.T{0, 0, 5})
 
 	var balls = [][]SnookerBall{
 		{SnookerBall01, SnookerBall02, SnookerBall03, SnookerBall04, SnookerBall05, SnookerBall06, SnookerBall07, SnookerBall08},
@@ -181,14 +183,9 @@ func NewSnookerBall(ball SnookerBall) *scene.Sphere {
 	diameter := 5.7 // Pool (Pocket Billiard) Balls (cm)
 
 	radius := diameter / 2
-	ballTexture, err := floatimage.EmptyPlaceholderImage(fmt.Sprintf("textures/snooker/wpi/%s_wpi.png", ball))
-	if err != nil {
-		panic(err)
-	}
-	scratchTexture, err := floatimage.EmptyPlaceholderImage(fmt.Sprintf("textures/normal maps/ScratchedPaintedMetal01_MR_4K/ScratchedPaintedMetal01_4K_Normal.png"))
-	if err != nil {
-		panic(err)
-	}
+	ballTexture := scene.NewTextureReferenceOrPanic(fmt.Sprintf("textures/snooker/wpi/%s_wpi.png", ball), scene.TextureTypeAlbedo)
+	scratchTextureImage := floatimage.ReferenceOrPanic(fmt.Sprintf("textures/normal maps/ScratchedPaintedMetal01_MR_4K/ScratchedPaintedMetal01_4K_Normal.png"))
+	scratchTexture := scene.NewTexture(scratchTextureImage, scene.TextureTypeNormalMap_DirectX)
 
 	ballMaterial := scene.NewMaterial().
 		N(fmt.Sprintf("snooker ball %s", ball)).
@@ -196,8 +193,8 @@ func NewSnookerBall(ball SnookerBall) *scene.Sphere {
 		T(0.0, true, scene.RefractionIndex_AcrylicPlastic).
 		//SP(textureFilename, &vec3.T{0, radius, 0}, vec3.T{0, 0, diameter}, vec3.T{0, radius, 0})
 		//PP(textureFilename, &vec3.T{-radius, 0, 0}, vec3.T{diameter, 0, 0}, vec3.T{0, diameter, 0})
-		CP(ballTexture, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitZ, vec3.T{0, diameter, 0}, false).
-		SP(scratchTexture, scene.TextureTypeNormalMap, &vec3.T{0, 0, 0}, vec3.UnitX, vec3.UnitY)
+		CP(ballTexture, &vec3.T{0, 0, 0}, vec3.UnitZ, vec3.T{0, diameter, 0}, false).
+		SP(scratchTexture, &vec3.T{0, 0, 0}, vec3.UnitX, vec3.UnitY)
 
 	return scene.NewSphere(&vec3.T{0, radius, 0}, radius, ballMaterial)
 }

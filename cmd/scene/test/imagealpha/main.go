@@ -11,15 +11,17 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "imagealpha"
+const (
+	animationName = "imagealpha"
 
-var amountFrames = 1
+	amountFrames = 1
 
-var amountSamples = 1024 * 6 * 2
+	amountSamples = 1024 * 6 * 2
 
-var imageWidth = 800
-var imageHeight = 600
-var magnification = 1.0
+	imageWidth    = 800
+	imageHeight   = 600
+	magnification = 1.0
+)
 
 func main() {
 	// Object

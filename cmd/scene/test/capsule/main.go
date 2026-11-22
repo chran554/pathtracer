@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
@@ -13,24 +12,31 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "capsule"
+const (
+	animationName = "capsule"
 
-var imageWidth = 800
-var imageHeight = 600
-var magnification = 0.5
+	imageWidth    = 800
+	imageHeight   = 600
+	magnification = 0.5
 
-var amountSamples = 128 * 4
+	amountSamples = 128 * 4
 
-var apertureSize = 0.2
+	apertureSize = 0.2
 
-var skyDomeEmission = 1.5
+	skyDomeEmission = 1.5
 
-var maxRayDepth = 4
+	maxRayDepth = 4
+)
 
 func main() {
 	skyDome := scene.NewSphere(&vec3.T{0, 0, 0}, 200*100, scene.NewMaterial().
 		E(color.White, skyDomeEmission, true).
-		SP(floatimage.LoadOrPanic("textures/equirectangular/336_PDM_BG7.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+		SP(
+			scene.NewTextureReferenceOrPanic("textures/equirectangular/336_PDM_BG7.jpg", scene.TextureTypeAlbedo),
+			&vec3.T{0, 0, 0},
+			vec3.T{1, 0, 0},
+			vec3.T{0, 1, 0},
+		)).N("sky dome")
 	skyDome.RotateY(&vec3.Zero, util.DegToRad(-20))
 
 	lightMaterial := scene.NewMaterial().N("light").E(color.KelvinTemperatureColor2(5000), 10, true)

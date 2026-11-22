@@ -125,10 +125,10 @@ func (fi *FloatImage) Fill(color *color.Color) {
 	fi._hash = ""
 }
 
-// EmptyPlaceholderImage returns a new FloatImage with the given filename as the name.
+// Reference returns a new FloatImage with the given filename as the name.
 // The image is empty and of no size (w=0, h=0).
 // This is useful for images that are referenced during scene creation where the image is not but rather the filename.
-func EmptyPlaceholderImage(filename string) (*FloatImage, error) {
+func Reference(filename string) (*FloatImage, error) {
 	info, err := os.Stat(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -148,6 +148,16 @@ func EmptyPlaceholderImage(filename string) (*FloatImage, error) {
 	}
 
 	return NewFloatImage(filename, 0, 0), nil
+}
+
+// ReferenceOrPanic returns an image reference or panics if it cannot be found/located.
+func ReferenceOrPanic(filename string) *FloatImage {
+	reference, err := Reference(filename)
+	if err != nil {
+		message := fmt.Sprintf("image file \"%s\" could not be located: %s", filename, err.Error())
+		panic(message)
+	}
+	return reference
 }
 
 func Load(filename string) (*FloatImage, error) {

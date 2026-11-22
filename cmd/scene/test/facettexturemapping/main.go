@@ -13,25 +13,27 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "facettexturemapping"
+const (
+	animationName = "facettexturemapping"
 
-var imageWidth = 600
-var imageHeight = 400
-var magnification = 1.0 // 0.5
+	imageWidth    = 600
+	imageHeight   = 400
+	magnification = 1.0 // 0.5
 
-var amountSamples = 128 * 4
+	amountSamples = 128 * 4
 
-var skyDomeEmission = 1.0
+	skyDomeEmission = 1.0
 
-var maxRayDepth = 3
+	maxRayDepth = 3
+)
 
 func main() {
 	//environmentTexture := floatimage.LoadOrPanic("textures/equirectangular/dimples.png")
-	environmentTexture := floatimage.LoadOrPanic("textures/equirectangular/wirebox 6192x3098.png")
+	environmentTexture := scene.NewTextureReferenceOrPanic("textures/equirectangular/wirebox 6192x3098.png", scene.TextureTypeAlbedo)
 
 	environmentDome := scene.NewSphere(&vec3.T{0, 0, 0}, 200*100, scene.NewMaterial().N("environment dome").
 		E(color.NewColorGrey(1.0), skyDomeEmission, true).
-		SP(environmentTexture, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("environment dome")
+		SP(environmentTexture, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("environment dome")
 	environmentDome.RotateY(&vec3.Zero, util.DegToRad(-20))
 
 	// transparencyImage := floatimage.LoadOrPanic("textures/test/test_alpha_transparency.png")

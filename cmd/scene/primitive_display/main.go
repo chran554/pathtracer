@@ -11,22 +11,27 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "primitive_display"
+const (
+	animationName = "primitive_display"
 
-var amountAnimationFrames = 1 // 72 * 2
+	amountAnimationFrames = 1 // 72 * 2
 
-var imageWidth = 800
-var imageHeight = 200
-var magnification = 1.0
+	imageWidth    = 800
+	imageHeight   = 200
+	magnification = 1.0
 
-var amountSamples = 256 * 2
+	amountSamples = 256 * 2
+)
 
 var cameraOrigin = vec3.T{0, 150, -800}
-var cameraDistanceFactor = 0.8
-var viewPlaneDistance = 600.0
-var cameraAperture = 15.0
 
-var lightIntensityFactor = 7.0
+const (
+	cameraDistanceFactor = 0.8
+	viewPlaneDistance    = 600.0
+	cameraAperture       = 15.0
+
+	lightIntensityFactor = 7.0
+)
 
 func main() {
 	// Cornell box

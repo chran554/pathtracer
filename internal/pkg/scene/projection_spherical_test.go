@@ -3,6 +3,7 @@ package scene
 import (
 	"fmt"
 	"math"
+	"pathtracer/internal/pkg/floatimage"
 	"testing"
 
 	"github.com/ungerik/go3d/float64/vec2"
@@ -62,7 +63,8 @@ func Test_SphericalProjection(t *testing.T) {
 			}
 
 			for _, testSetup := range testSetups {
-				projection := NewSphericalImageProjection(nil, TextureTypeAlbedo, &projectionSetup.origin, projectionSetup.u, projectionSetup.v)
+				img := floatimage.NewFloatImage("", 0, 0)
+				projection := NewSphericalImageProjection(NewTexture(img, TextureTypeAlbedo), &projectionSetup.origin, projectionSetup.u, projectionSetup.v)
 				projection.Initialize()
 
 				fmt.Println(testSetup.name)
@@ -133,7 +135,8 @@ func Test_SphericalProjection2(t *testing.T) {
 			})
 
 			for _, testSetup := range testSetups {
-				projection := NewSphericalImageProjection(nil, TextureTypeAlbedo, &projectionSetup.origin, projectionSetup.u, projectionSetup.v)
+				img := floatimage.NewFloatImage("", 0, 0)
+				projection := NewSphericalImageProjection(NewTexture(img, TextureTypeAlbedo), &projectionSetup.origin, projectionSetup.u, projectionSetup.v)
 				projection.Initialize()
 
 				fmt.Println(testSetup.name)

@@ -15,19 +15,21 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "mapletree"
+const (
+	animationName = "mapletree"
 
-var imageWidth = 800
-var imageHeight = 800
-var magnification = 1.0 // 0.5
+	imageWidth    = 800
+	imageHeight   = 800
+	magnification = 1.0 // 0.5
 
-var amountSamples = 512 // 1024 // 512
+	amountSamples = 512 // 1024 // 512
 
-var skyDomeEmission = 1.0
+	skyDomeEmission = 1.0
 
-var maxRayDepth = 10
+	maxRayDepth = 10
 
-var leafScale = 1.15
+	leafScale = 1.15
+)
 
 var rnd *rand.Rand
 
@@ -38,22 +40,10 @@ func init() {
 func main() {
 	skyDomeRadius := 150.0
 
-	textureGround, err := floatimage.EmptyPlaceholderImage("textures/ground/dry-grass-ground-2048x2048.png")
-	if err != nil {
-		panic(err)
-	}
-	textureEnv, err := floatimage.EmptyPlaceholderImage("textures/equirectangular/336_PDM_BG7.jpg")
-	if err != nil {
-		panic(err)
-	}
-	textureLeaf, err := floatimage.EmptyPlaceholderImage("textures/tree/Leaves0120_35_S_02.png")
-	if err != nil {
-		panic(err)
-	}
-	textureBark, err := floatimage.EmptyPlaceholderImage("textures/tree/BarkDecidious0143_5_S.jpg")
-	if err != nil {
-		panic(err)
-	}
+	textureGround := scene.NewTextureReferenceOrPanic("textures/ground/dry-grass-ground-2048x2048.png", scene.TextureTypeAlbedo)
+	textureEnv := scene.NewTextureReferenceOrPanic("textures/equirectangular/336_PDM_BG7.jpg", scene.TextureTypeAlbedo)
+	textureLeaf := floatimage.ReferenceOrPanic("textures/tree/Leaves0120_35_S_02.png")
+	textureBark := scene.NewTextureReferenceOrPanic("textures/tree/BarkDecidious0143_5_S.jpg", scene.TextureTypeAlbedo)
 
 	leafMaterial := scene.NewMaterial().
 		C(color.NewColorRGBA(1.0, 1.0, 1.0, 1.0)).
@@ -62,7 +52,7 @@ func main() {
 
 	skydomeMaterial := scene.NewMaterial().
 		E(color.White, skyDomeEmission, true).
-		SP(textureEnv, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+		SP(textureEnv, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
 
 	skyDome := scene.NewSphere(&vec3.T{0, 0, 0}, skyDomeRadius, skydomeMaterial).N("sky dome")
 	skyDome.RotateY(&vec3.Zero, util.DegToRad(-20))
@@ -72,7 +62,7 @@ func main() {
 	ground.ScaleUniform(&vec3.T{0, 0, 0}, skyDomeRadius*2)
 	groundMaterial := scene.NewMaterial().
 		N("ground").
-		PP(textureGround, scene.TextureTypeAlbedo, &vec3.Zero, vec3.T{5, 0, 0}, vec3.T{0, 0, 5})
+		PP(textureGround, &vec3.Zero, vec3.T{5, 0, 0}, vec3.T{0, 0, 5})
 
 	ground.Material = groundMaterial
 
@@ -111,13 +101,13 @@ func main() {
 	animation.AddFrame(frame)
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err = renderfile.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func createTree(rndSeed int64, textureBark *floatimage.FloatImage, textureLeaf *floatimage.FloatImage, leafMaterial *scene.Material, treeParams Params) *scene.FacetStructure {
+func createTree(rndSeed int64, textureBark *scene.Texture, textureLeaf *floatimage.FloatImage, leafMaterial *scene.Material, treeParams Params) *scene.FacetStructure {
 	branchConfigurations := GenerateTreeLines(rndSeed, vec3.Zero, treeParams)
 
 	var branches []*scene.FacetStructure
@@ -208,7 +198,7 @@ func birchTreeParams() Params {
 	}
 }
 
-func NewBranch(conf Line, texture *floatimage.FloatImage, textureLeaf *floatimage.FloatImage, leafMaterial *scene.Material, extraLeaves int) *scene.FacetStructure {
+func NewBranch(conf Line, texture *scene.Texture, textureLeaf *floatimage.FloatImage, leafMaterial *scene.Material, extraLeaves int) *scene.FacetStructure {
 	branch := &scene.FacetStructure{Name: fmt.Sprintf("branch %d", conf.Level)}
 
 	branch.Material = scene.NewMaterial().N("branch")
@@ -265,7 +255,7 @@ func NewBranch(conf Line, texture *floatimage.FloatImage, textureLeaf *floatimag
 		leaves = append(leaves, leaf)
 	}
 
-	branch.Material.CP(texture, scene.TextureTypeAlbedo, &vec3.T{}, *lowPoints[0], branchVector, true)
+	branch.Material.CP(texture, &vec3.T{}, *lowPoints[0], branchVector, true)
 	branch.UpdateVertexNormals(false)
 	branch.FacetStructures = append(branch.FacetStructures, leaves...) // Add leaves to branch
 	branch.Translate(&conf.Start)                                      // Move branch (and leaves) into position in the tree

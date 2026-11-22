@@ -87,7 +87,7 @@ func extractFacets(elements []*Element, vertices []*vec3.T, vertexNormals []*vec
 	var texture *scene.Texture
 
 	if textureFilename != "" {
-		textureImage, err := floatimage.EmptyPlaceholderImage(textureFilename)
+		textureImage, err := floatimage.Reference(textureFilename)
 		if err != nil {
 			return nil, err
 		}

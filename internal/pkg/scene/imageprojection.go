@@ -5,7 +5,6 @@ import (
 	"math"
 	"os"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 
 	"github.com/ungerik/go3d/float64/mat3"
 	"github.com/ungerik/go3d/float64/vec2"
@@ -41,15 +40,8 @@ type ImageProjection struct {
 	_invertedCoordinateSystemMatrix *mat3.T
 }
 
-func NewImageProjection(projectionType ProjectionType, image *floatimage.FloatImage, imageType TextureType, origin *vec3.T, u vec3.T, v vec3.T, repeatU bool, repeatV bool, flipU bool, flipV bool) ImageProjection {
-	texture := &Texture{
-		Type:          imageType,
-		Strength:      1.0,
-		Interpolation: floatimage.InterpolationNearestNeighbor,
-		Image:         image,
-	}
-
-	return ImageProjection{
+func NewImageProjection(projectionType ProjectionType, texture *Texture, origin *vec3.T, u vec3.T, v vec3.T, repeatU bool, repeatV bool, flipU bool, flipV bool) *ImageProjection {
+	return &ImageProjection{
 		Type:    projectionType,
 		Texture: texture,
 		Origin:  origin,
@@ -62,16 +54,16 @@ func NewImageProjection(projectionType ProjectionType, image *floatimage.FloatIm
 	}
 }
 
-func NewParallelImageProjection(texture *floatimage.FloatImage, textureType TextureType, origin *vec3.T, u vec3.T, v vec3.T) ImageProjection {
-	return NewImageProjection(ProjectionTypeParallel, texture, textureType, origin, u, v, true, true, false, false)
+func NewParallelImageProjection(texture *Texture, origin *vec3.T, u vec3.T, v vec3.T) *ImageProjection {
+	return NewImageProjection(ProjectionTypeParallel, texture, origin, u, v, true, true, false, false)
 }
 
-func NewCylindricalImageProjection(texture *floatimage.FloatImage, textureType TextureType, origin *vec3.T, u vec3.T, v vec3.T) ImageProjection {
-	return NewImageProjection(ProjectionTypeCylindrical, texture, textureType, origin, u, v, false, true, false, false)
+func NewCylindricalImageProjection(texture *Texture, origin *vec3.T, u vec3.T, v vec3.T) *ImageProjection {
+	return NewImageProjection(ProjectionTypeCylindrical, texture, origin, u, v, false, true, false, false)
 }
 
-func NewSphericalImageProjection(texture *floatimage.FloatImage, textureType TextureType, origin *vec3.T, u vec3.T, v vec3.T) ImageProjection {
-	return NewImageProjection(ProjectionTypeSpherical, texture, textureType, origin, u, v, false, true, false, false)
+func NewSphericalImageProjection(texture *Texture, origin *vec3.T, u vec3.T, v vec3.T) *ImageProjection {
+	return NewImageProjection(ProjectionTypeSpherical, texture, origin, u, v, false, true, false, false)
 }
 
 func (imageProjection *ImageProjection) GetColor(point *vec3.T) *color.Color {

@@ -5,7 +5,6 @@ import (
 	"math"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/fileformat/wavefront"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
 
@@ -14,68 +13,56 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "facetobj_test"
+const (
+	animationName = "facetobj_test"
 
-var amountImages = 180
+	amountImages = 180
 
-var imageWidth = 1024 / 2
-var imageHeight = 800 / 2
-var magnification = 1.0 / 2
+	imageWidth    = 1024 / 2
+	imageHeight   = 800 / 2
+	magnification = 1.0 / 2
 
-var amountSamples = 100
+	amountSamples = 100
 
-var objectFilename = "cube_smooth.obj"
-var objectScale = 2.5
-var objectStartAngle = 0.0
+	// objectFilename = "lamppost.obj.3ds.obj"
+	// objectFilename = "Diamond.obj"
+	// objectFilename = "go_gopher_color.obj"
+	// objectFilename = "cube_smooth.obj"
+	// objectFilename = "cube.obj"
+	// objectFilename = "facet.obj"
+	// objectFilename = "triangle.obj"
+	// objectFilename = "go_gopher_high.obj"
+	objectFilename   = "cube_smooth.obj"
+	objectPath       = "/Users/christian/projects/code/go/pathtracer/objects/"
+	objectScale      = 2.5
+	objectStartAngle = 0.0
 
-//var objectFilename = "human skull.obj"
-//var objectScale = 10000.0 * 1.5
-//var objectStartAngle = math.Pi // 180 degrees
+	environmentRadius         = 100.0 * 20.0 // 20m (if 1 unit is 1 cm)
+	environmentEmissionFactor = 1.0
 
-//var environmentEnvironMap = "textures/equirectangular/canyon 3200x1600.jpeg"
-//var environmentRadius = 100.0 * 10.0 // 10m (if 1 unit is 1 cm)
-//var environmentEmissionFactor = float32(2.0)
+	useLights = true
 
-var environmentRadius = 100.0 * 20.0 // 20m (if 1 unit is 1 cm)
-var environmentEmissionFactor = 1.0
+	lightRadius         = environmentRadius / 14
+	lightEmissionFactor = 2.0
 
-//var environmentEnvironMap = "textures/equirectangular/spruit_sunrise_2400x1200.jpeg"
-//var environmentRadius = 100.0 * 400.0 // 200m (if 1 unit is 1 cm)
-//var environmentEmissionFactor = float32(3.0)
+	cameraDistance = 400.0
 
-var useLights = true
-var lightColor = color.NewColor(1.0, 0.97, 0.95)
-var lightOrigin = vec3.T{environmentRadius / 8, environmentRadius / 4, -environmentRadius / 1.5}
-var lightRadius = environmentRadius / 14
-var lightEmissionFactor = 2.0
-
-var cameraDistance = 400.0
-var cameraOrigin = vec3.T{cameraDistance / 1.0, cameraDistance * 4 / 5, -cameraDistance}
-var viewPlaneDistance = 500.0
+	viewPlaneDistance = 500.0
+)
 
 func main() {
-	objectPath := "/Users/christian/projects/code/go/pathtracer/objects/"
-
-	// objectFilename = "objects/lamppost.obj.3ds.obj"
-	// objectFilename = "objects/Diamond.obj"
-	// objectFilename = objectPath + "go_gopher_color.obj"
-	objectFilename = objectPath + objectFilename
-	// objectFilename = objectPath + "cube_smooth.obj"
-	// objectFilename = objectPath + "cube.obj"
-	// objectFilename = objectPath + "facet.obj"
-	// objectFilename = objectPath + "triangle.obj"
-	// objectFilename = "objects/go_gopher_high.obj"
+	objectFilepath := objectPath + objectFilename
 
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, false)
 
 	for imageIndex := range amountImages {
 		fmt.Printf("\n\nCostructing frame %d\n", imageIndex)
-		fmt.Printf("Reading file: %s\n", objectFilename)
+		fmt.Printf("Reading file: %s\n", objectFilepath)
 
-		facetStructure := wavefront.ReadFacetStructureOrPanic(objectFilename)
+		facetStructure := wavefront.ReadFacetStructureOrPanic(objectFilepath)
 
 		facetStructure.UpdateBounds()
-		fmt.Printf("Object in file \"%s\" has bounds %+v.\n", objectFilename, facetStructure.Bounds)
+		fmt.Printf("Object in file \"%s\" has bounds %+v.\n", objectFilepath, facetStructure.Bounds)
 
 		facetStructure.ScaleUniform(&vec3.Zero, objectScale)
 		facetStructure.RotateY(&vec3.Zero, objectStartAngle)
@@ -83,6 +70,11 @@ func main() {
 		scn := scene.NewSceneNode().FS(facetStructure)
 		scn.UpdateBounds()
 		scn.Bounds = nil
+
+		var lightColor = color.NewColor(1.0, 0.97, 0.95)
+		var lightOrigin = vec3.T{environmentRadius / 8, environmentRadius / 4, -environmentRadius / 1.5}
+
+		var cameraOrigin = vec3.T{cameraDistance / 1.0, cameraDistance * 4 / 5, -cameraDistance}
 
 		if useLights {
 			lampMaterial := scene.NewMaterial().C(lightColor).E(lightColor, lightEmissionFactor, true)
@@ -93,7 +85,7 @@ func main() {
 		skyDomeOrigin := vec3.T{0, 0, 0}
 		skyDomeMaterial := scene.NewMaterial().
 			E(color.White, environmentEmissionFactor, true).
-			SP(floatimage.LoadOrPanic("textures/equirectangular/white room 01 1836x918.png"), scene.TextureTypeAlbedo, &skyDomeOrigin, vec3.UnitZ, vec3.UnitY)
+			SP(scene.NewTextureReferenceOrPanic("textures/equirectangular/white room 01 1836x918.png", scene.TextureTypeAlbedo), &skyDomeOrigin, vec3.UnitZ, vec3.UnitY)
 		skyDome := scene.NewSphere(&skyDomeOrigin, environmentRadius, skyDomeMaterial).N("sky dome")
 		scn.S(skyDome)
 

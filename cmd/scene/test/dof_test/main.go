@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
@@ -13,47 +12,43 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "dof_test"
+const (
+	animationName = "dof_test"
 
-var amountFrames = 4 * 24
+	amountFrames = 4 * 24
 
-var ballRadius float64 = 30
+	ballRadius float64 = 30
 
-var amountSamples = 1024 * 4 // 128 * 8 * 8 * 3
-var maxLensRadius = 48.0     // 12.0
+	amountSamples = 1024 * 4 // 128 * 8 * 8 * 3
+	maxLensRadius = 48.0     // 12.0
 
-var viewPlaneDistance = 2000.0
-var cameraDistanceFactor = 1.0
+	viewPlaneDistance    = 2000.0
+	cameraDistanceFactor = 1.0
 
-var imageWidth = 1200
-var imageHeight = 600
-var magnification = 0.5
+	imageWidth    = 1200
+	imageHeight   = 600
+	magnification = 0.5
+)
 
 func main() {
-	wallTexture, err := floatimage.EmptyPlaceholderImage("textures/wallpaper/anemone-rose-flower-eucalyptus-leaves-pampas-grass.png")
-	if err != nil {
-		panic(err)
-	}
+	wallTexture := scene.NewTextureReferenceOrPanic("textures/wallpaper/anemone-rose-flower-eucalyptus-leaves-pampas-grass.png", scene.TextureTypeAlbedo)
 
-	floorTexture, err := floatimage.EmptyPlaceholderImage("textures/floor/tilesf4.jpeg")
-	if err != nil {
-		panic(err)
-	}
+	floorTexture := scene.NewTextureReferenceOrPanic("textures/floor/tilesf4.jpeg", scene.TextureTypeAlbedo)
 
 	cornellBox := obj.NewCornellBox(&vec3.T{600, 300, 600}, false, 4.0) // cm, as units. I.e., a 5x3x5m room
 	cornellBoxUnit := cornellBox.Bounds.SizeY() / 2
 
 	leftWall := cornellBox.GetFirstObjectByMaterialName("Left")
-	leftWall.Material = scene.NewMaterial().N("Left").PP(wallTexture, scene.TextureTypeAlbedo, &vec3.T{leftWall.Bounds.Xmin, leftWall.Bounds.Ymin, leftWall.Bounds.Zmin}, vec3.UnitZ.Scaled(cornellBoxUnit), vec3.UnitY.Scaled(cornellBoxUnit))
+	leftWall.Material = scene.NewMaterial().N("Left").PP(wallTexture, &vec3.T{leftWall.Bounds.Xmin, leftWall.Bounds.Ymin, leftWall.Bounds.Zmin}, vec3.UnitZ.Scaled(cornellBoxUnit), vec3.UnitY.Scaled(cornellBoxUnit))
 
 	rightWall := cornellBox.GetFirstObjectByMaterialName("Right")
-	rightWall.Material = scene.NewMaterial().N("Right").PP(wallTexture, scene.TextureTypeAlbedo, &vec3.T{rightWall.Bounds.Xmax, rightWall.Bounds.Ymin, rightWall.Bounds.Zmax}, vec3.UnitZ.Scaled(-cornellBoxUnit), vec3.UnitY.Scaled(cornellBoxUnit))
+	rightWall.Material = scene.NewMaterial().N("Right").PP(wallTexture, &vec3.T{rightWall.Bounds.Xmax, rightWall.Bounds.Ymin, rightWall.Bounds.Zmax}, vec3.UnitZ.Scaled(-cornellBoxUnit), vec3.UnitY.Scaled(cornellBoxUnit))
 
 	backWall := cornellBox.GetFirstObjectByMaterialName("Back")
-	backWall.Material = scene.NewMaterial().N("Back").PP(wallTexture, scene.TextureTypeAlbedo, &vec3.T{backWall.Bounds.Xmin, backWall.Bounds.Ymin, backWall.Bounds.Zmax}, vec3.UnitX.Scaled(cornellBoxUnit), vec3.UnitY.Scaled(cornellBoxUnit))
+	backWall.Material = scene.NewMaterial().N("Back").PP(wallTexture, &vec3.T{backWall.Bounds.Xmin, backWall.Bounds.Ymin, backWall.Bounds.Zmax}, vec3.UnitX.Scaled(cornellBoxUnit), vec3.UnitY.Scaled(cornellBoxUnit))
 
 	floor := cornellBox.GetFirstObjectByMaterialName("Floor")
-	floor.Material = scene.NewMaterial().N("Floor").PP(floorTexture, scene.TextureTypeAlbedo, &vec3.T{floor.Bounds.Xmin, floor.Bounds.Ymin, floor.Bounds.Zmin}, vec3.UnitX.Scaled(cornellBoxUnit/2), vec3.UnitZ.Scaled(cornellBoxUnit/2))
+	floor.Material = scene.NewMaterial().N("Floor").PP(floorTexture, &vec3.T{floor.Bounds.Xmin, floor.Bounds.Ymin, floor.Bounds.Zmin}, vec3.UnitX.Scaled(cornellBoxUnit/2), vec3.UnitZ.Scaled(cornellBoxUnit/2))
 
 	amountSpheres := 7
 	sphereSpread := ballRadius * 2.0 * (float64(amountSpheres) + 1)
@@ -103,7 +98,7 @@ func main() {
 	}
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err = renderfile.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}

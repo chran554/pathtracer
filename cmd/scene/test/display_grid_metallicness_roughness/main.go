@@ -10,22 +10,24 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "display_grid_metallicness_roughness"
+const (
+	animationName = "display_grid_metallicness_roughness"
 
-var ballRadius float64 = 20
+	ballRadius float64 = 20
 
-var maxRecursionDepth = 6
-var amountSamples = 1024 * 12
-var lensRadius float64 = 2
+	maxRecursionDepth         = 6
+	amountSamples             = 1024 * 12
+	lensRadius        float64 = 2
 
-var viewPlaneDistance = 4000.0
-var cameraDistanceFactor = 2.0
+	viewPlaneDistance    = 4000.0
+	cameraDistanceFactor = 2.0
 
-var lampEmissionFactor = 5.0
+	lampEmissionFactor = 5.0
 
-var imageWidth = 1800
-var imageHeight = 1200
-var magnification = 0.75
+	imageWidth    = 1800
+	imageHeight   = 1200
+	magnification = 0.75
+)
 
 func main() {
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, true)

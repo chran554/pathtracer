@@ -4,23 +4,24 @@ import (
 	"fmt"
 	"math"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var amountFrames = 128
-var amountBalls = 16
-var ballRadius = 20.0
-var circleRadius = 100.0
+const (
+	amountFrames = 128
+	amountBalls  = 16
+	ballRadius   = 20.0
+	circleRadius = 100.0
 
-var amountSamples = 512
-var lensRadius = 15.0
+	amountSamples = 512
+	lensRadius    = 15.0
 
-var nominalViewPlaneDistance = 800.0
-var magnification = 1.0
+	nominalViewPlaneDistance = 800.0
+	magnification            = 1.0
+)
 
 var cameraOrigin = vec3.T{0, 200, -200}
 
@@ -30,7 +31,7 @@ func main() {
 	groundOrigin := &vec3.T{0, 0, 0}
 	groundMaterial := scene.NewMaterial().
 		C(color.NewColor(0.5, 0.5, 0.5)).
-		PP(floatimage.LoadOrPanic("textures/white_marble.png"), scene.TextureTypeAlbedo, groundOrigin, vec3.UnitX.Scaled(50), vec3.UnitZ.Scaled(50))
+		PP(scene.NewTextureReferenceOrPanic("textures/white_marble.png", scene.TextureTypeAlbedo), groundOrigin, vec3.UnitX.Scaled(50), vec3.UnitZ.Scaled(50))
 	ground := scene.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, 600, groundMaterial)
 
 	nominalFocusDistance := cameraOrigin.Length()

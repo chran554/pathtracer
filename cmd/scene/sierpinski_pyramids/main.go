@@ -4,37 +4,38 @@ import (
 	"fmt"
 	"math"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "sierpinski_pyramids"
+const (
+	animationName = "sierpinski_pyramids"
 
-// var environmentEnvironMap = "textures/equirectangular/open_grassfield_sunny_day.jpg"
-// var environmentEnvironMap = "textures/equirectangular/5792766093_8153225334_o.jpg"
-//var environmentEnvironMap = "textures/equirectangular/white room 02 612x612.jpg"
+	// var environmentEnvironMap = "textures/equirectangular/open_grassfield_sunny_day.jpg"
+	// var environmentEnvironMap = "textures/equirectangular/5792766093_8153225334_o.jpg"
+	//var environmentEnvironMap = "textures/equirectangular/white room 02 612x612.jpg"
 
-// var environmentEnvironMap = "textures/equirectangular/nightsky.png"
-var environmentEnvironMap = "textures/equirectangular/sunset horizon 2800x1400.jpg"
+	// var environmentEnvironMap = "textures/equirectangular/nightsky.png"
+	environmentEnvironMap = "textures/equirectangular/sunset horizon 2800x1400.jpg"
 
-var skyDomeRadius = 200.0 * 100.0 // radius
-var skyDomeEmissionFactor = 1.0
+	skyDomeRadius         = 200.0 * 100.0 // radius
+	skyDomeEmissionFactor = 1.0
 
-var amountFrames = 360 * 2
+	amountFrames = 360 * 2
 
-var imageWidth = 1280
-var imageHeight = 1024
-var magnification = 0.5
+	imageWidth    = 1280
+	imageHeight   = 1024
+	magnification = 0.5
 
-var amountSamples = 256 // 1024 * 3
+	amountSamples = 256 // 1024 * 3
 
-var pyramidSize = 4.5 * 100.0
-var maxPyramidRecursionDepth = 8
+	pyramidSize              = 4.5 * 100.0
+	maxPyramidRecursionDepth = 8
 
-var apertureSize = 3.3
+	apertureSize = 3.3
+)
 
 var pyramidMaterial = scene.NewMaterial().C(color.NewColorGrey(0.75)).M(1, 0.08)
 
@@ -112,7 +113,7 @@ func main() {
 		skyDomeOrigin := vec3.T{0, 0, 0}
 		skyDomeMaterial := scene.NewMaterial().
 			E(color.White, skyDomeEmissionFactor, true).
-			SP(floatimage.LoadOrPanic(environmentEnvironMap), scene.TextureTypeAlbedo, &skyDomeOrigin, vec3.T{1, 0, -1}, vec3.T{0, 1, 0})
+			SP(scene.NewTextureReferenceOrPanic(environmentEnvironMap, scene.TextureTypeAlbedo), &skyDomeOrigin, vec3.T{1, 0, -1}, vec3.T{0, 1, 0})
 		skyDome := scene.NewSphere(&skyDomeOrigin, skyDomeRadius, skyDomeMaterial).N("Environment mapping")
 
 		cameraOrigin := pyramidsBounds.Center().Add(&vec3.T{0, 150, -700})

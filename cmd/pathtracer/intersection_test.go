@@ -93,9 +93,9 @@ func normalMappedTestMaterial(normal vec3.T) *scene.Material {
 	image := floatimage.NewFloatImage("test normal map", 1, 1)
 	// GetNormal expects vectors already decoded from image colors.
 	image.Fill(color.NewColor(normal[0], normal[1], normal[2]))
-	projection := scene.NewParallelImageProjection(image, scene.TextureTypeNormalMap, &vec3.T{}, vec3.UnitX, vec3.UnitY)
+	projection := scene.NewParallelImageProjection(scene.NewTexture(image, scene.TextureTypeNormalMap), &vec3.T{}, vec3.UnitX, vec3.UnitY)
 	projection.Initialize()
-	return scene.NewMaterial().P(&projection)
+	return scene.NewMaterial().P(projection)
 }
 
 // intersectTestShape places a surface at z on the test ray, with its normal facing -Z.

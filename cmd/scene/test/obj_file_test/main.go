@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/fileformat/wavefront"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
@@ -14,16 +13,18 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "obj_file_test"
+const (
+	animationName = "obj_file_test"
 
-var amountSamples = 1024 // * 4 * 4
-var lensRadius = 2.0
+	amountSamples = 1024 // * 4 * 4
+	lensRadius    = 2.0
 
-var cameraDistanceFactor = 1.0
+	cameraDistanceFactor = 1.0
 
-var imageWidth = 400
-var imageHeight = 400
-var magnification = 1.0 // 2.0 / 3.0
+	imageWidth    = 400
+	imageHeight   = 400
+	magnification = 1.0 // 2.0 / 3.0
+)
 
 func main() {
 	cornellBox := obj.NewWhiteCornellBox(&vec3.T{150, 150, 200}, true, 3.0) // cm, as units. I.e. a 5x3x5m room
@@ -36,7 +37,12 @@ func main() {
 	pillar.Material = scene.NewMaterial().
 		C(color.NewColorGrey(0.95)).
 		M(0, 0.5).
-		PP(floatimage.LoadOrPanic("textures/concrete/Polished-Concrete-Architextures.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, (&vec3.UnitX).Scaled(pillarWidth), (&vec3.UnitZ).Add(&vec3.T{0, 0.5, 0}).Scaled(pillarWidth))
+		PP(
+			scene.NewTextureReferenceOrPanic("textures/concrete/Polished-Concrete-Architextures.jpg", scene.TextureTypeAlbedo),
+			&vec3.T{0, 0, 0},
+			(&vec3.UnitX).Scaled(pillarWidth),
+			(&vec3.UnitZ).Add(&vec3.T{0, 0.5, 0}).Scaled(pillarWidth),
+		)
 	pillar.Translate(&vec3.T{-0.5, 0, -0.5})
 	pillar.Scale(&vec3.Zero, &vec3.T{pillarWidth, pillarHeight, pillarWidth})
 
@@ -81,13 +87,33 @@ func setCornellBoxMaterial(cornellBox *scene.FacetStructure) {
 	scale := cornellBox.Bounds.SizeX() / 2
 
 	backWallMaterial := cornellBox.GetFirstObjectByMaterialName("Back").Material
-	backWallMaterial.PP(floatimage.LoadOrPanic("textures/wallpaper/geometric-yellow.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale), vec3.UnitY.Scaled(scale*0.66))
+	backWallMaterial.PP(
+		scene.NewTextureReferenceOrPanic("textures/wallpaper/geometric-yellow.jpg", scene.TextureTypeAlbedo),
+		&vec3.T{0, 0, 0},
+		vec3.UnitX.Scaled(scale),
+		vec3.UnitY.Scaled(scale*0.66),
+	)
 
 	leftWallMaterial := cornellBox.GetFirstObjectByMaterialName("Left").Material
 	rightWallMaterial := cornellBox.GetFirstObjectByMaterialName("Right").Material
-	leftWallMaterial.PP(floatimage.LoadOrPanic("textures/wallpaper/geometric-yellow.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(scale), vec3.UnitY.Scaled(scale*0.66))
-	rightWallMaterial.PP(floatimage.LoadOrPanic("textures/wallpaper/geometric-yellow.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(scale), vec3.UnitY.Scaled(scale*0.66))
+	leftWallMaterial.PP(
+		scene.NewTextureReferenceOrPanic("textures/wallpaper/geometric-yellow.jpg", scene.TextureTypeAlbedo),
+		&vec3.T{0, 0, 0},
+		vec3.UnitZ.Scaled(scale),
+		vec3.UnitY.Scaled(scale*0.66),
+	)
+	rightWallMaterial.PP(
+		scene.NewTextureReferenceOrPanic("textures/wallpaper/geometric-yellow.jpg", scene.TextureTypeAlbedo),
+		&vec3.T{0, 0, 0},
+		vec3.UnitZ.Scaled(scale),
+		vec3.UnitY.Scaled(scale*0.66),
+	)
 
 	floorMaterial := cornellBox.GetFirstObjectByMaterialName("Floor").Material
-	floorMaterial.M(0, 0.2).PP(floatimage.LoadOrPanic("textures/floor/Calacatta-Vena-French-Pattern-Architextures.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale/2), vec3.UnitZ.Scaled(scale/2))
+	floorMaterial.M(0, 0.2).PP(
+		scene.NewTextureReferenceOrPanic("textures/floor/Calacatta-Vena-French-Pattern-Architextures.jpg", scene.TextureTypeAlbedo),
+		&vec3.T{0, 0, 0},
+		vec3.UnitX.Scaled(scale/2),
+		vec3.UnitZ.Scaled(scale/2),
+	)
 }

@@ -217,17 +217,30 @@ func (s *serializer) initFrameCache(frameInformation *FrameInformation) error {
 			for _, t := range textures {
 				var textureImage *floatimage.FloatImage
 
-				if t.Type == string(scene.TextureTypeAlbedo) {
+				switch scene.TextureType(t.Type) {
+				case scene.TextureTypeAlbedo:
 					textureImage, err = s.resourceImage(t.ImageResourceIndex, true, nil)
 					if err != nil {
 						return fmt.Errorf("could not read resource albedo image %s: %w", file.Name, err)
 					}
-				} else if t.Type == string(scene.TextureTypeNormalMap) {
-					textureImage, err = s.resourceImage(t.ImageResourceIndex, false, convertFloatImageToNormalMap)
+
+				case scene.TextureTypeNormalMap:
+					fallthrough
+				case scene.TextureTypeNormalMap_OpenGL:
+					textureImage, err = s.resourceImage(t.ImageResourceIndex, false, convertFloatImageToNormalMapOpenGL)
 					if err != nil {
 						return fmt.Errorf("could not read resource normal map image %s: %w", file.Name, err)
 					}
-				} else {
+					t.Type = scene.TextureTypeNormalMap.String()
+
+				case scene.TextureTypeNormalMap_DirectX:
+					textureImage, err = s.resourceImage(t.ImageResourceIndex, false, convertFloatImageToNormalMapDirectX)
+					if err != nil {
+						return fmt.Errorf("could not read resource normal map image %s: %w", file.Name, err)
+					}
+					t.Type = scene.TextureTypeNormalMap.String()
+
+				default:
 					textureImage, err = s.resourceImage(t.ImageResourceIndex, false, nil)
 					if err != nil {
 						return fmt.Errorf("could not read resource image %s: %w", file.Name, err)
@@ -292,7 +305,7 @@ func (s *serializer) initFrameCache(frameInformation *FrameInformation) error {
 	return nil
 }
 
-func convertFloatImageToNormalMap(image *floatimage.FloatImage) {
+func convertFloatImageToNormalMapOpenGL(image *floatimage.FloatImage) {
 	// Convert normal map r,g,b to vector x,y,z values
 	if image != nil {
 		for y := 0; y < image.Height; y++ {
@@ -303,6 +316,21 @@ func convertFloatImageToNormalMap(image *floatimage.FloatImage) {
 				c.R = float32(normal[0])
 				c.G = float32(normal[1])
 				c.B = float32(normal[2])
+			}
+		}
+	}
+}
+
+func convertFloatImageToNormalMapDirectX(image *floatimage.FloatImage) {
+	// Convert normal map r,g,b to vector x,y,z values
+	convertFloatImageToNormalMapOpenGL(image)
+
+	// mirror/negate the y-value (the same as invert "green" channel value [0, 255] -> [255, 0])
+	if image != nil {
+		for y := 0; y < image.Height; y++ {
+			for x := 0; x < image.Width; x++ {
+				c := image.GetPixel(x, y)
+				c.G = -c.G
 			}
 		}
 	}

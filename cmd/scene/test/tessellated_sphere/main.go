@@ -12,29 +12,31 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "tessellated_sphere"
+const (
+	animationName = "tessellated_sphere"
 
-var environmentRadius = 500.0 * 1000.0
-var environmentEmissionFactor = 1.0
+	environmentRadius         = 500.0 * 1000.0
+	environmentEmissionFactor = 1.0
 
-var amountFrames = 180
+	amountFrames = 180
 
-var tesselationLevel = 0
-var useVertexNormals = false
+	tesselationLevel = 0
+	useVertexNormals = false
 
-var imageWidth = 300
-var imageHeight = 300
-var magnification = 1.0
+	imageWidth    = 300
+	imageHeight   = 300
+	magnification = 1.0
 
-var amountSamples = 512 * 4
-var maxRecursion = 3
+	amountSamples = 512 * 4
+	maxRecursion  = 3
 
-var apertureSize = 1.5
+	apertureSize = 1.5
+)
 
 func main() {
-	var imageEnvironment = floatimage.LoadOrPanic("textures/equirectangular/sunset horizon 2800x1400.jpg")
-	var imageSphere = floatimage.LoadOrPanic("textures/equirectangular/world_map_latlonlines_equirectangular.jpeg")
-	var imageSoilCracked = floatimage.LoadOrPanic("textures/ground/soil-cracked.png")
+	var imageEnvironment = scene.NewTextureReferenceOrPanic("textures/equirectangular/sunset horizon 2800x1400.jpg", scene.TextureTypeAlbedo)
+	var imageSphere = scene.NewTextureReferenceOrPanic("textures/equirectangular/world_map_latlonlines_equirectangular.jpeg", scene.TextureTypeAlbedo)
+	var imageSoilCracked = scene.NewTextureReferenceOrPanic("textures/ground/soil-cracked.png", scene.TextureTypeAlbedo)
 	var imageLightBox = floatimage.LoadOrPanic("textures/lights/lightboxtexture_2.0.png")
 
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, false)
@@ -46,17 +48,17 @@ func main() {
 	tessellatedSphere.ScaleUniform(&vec3.Zero, sphereRadius)
 	tessellatedSphere.Translate(&vec3.T{0, -tessellatedSphere.Bounds.Ymin, 0})
 	tessellatedSphereBounds := tessellatedSphere.Bounds
-	tessellatedSphere.Material = scene.NewMaterial().N("tessellated sphere").C(color.White).SP(imageSphere, scene.TextureTypeAlbedo, &vec3.T{0, tessellatedSphereBounds.SizeY() / 2, 0}, vec3.UnitX, vec3.UnitY)
+	tessellatedSphere.Material = scene.NewMaterial().N("tessellated sphere").C(color.White).SP(imageSphere, &vec3.T{0, tessellatedSphereBounds.SizeY() / 2, 0}, vec3.UnitX, vec3.UnitY)
 
 	// Sky dome
 	skyDomeOrigin := vec3.T{0, 0, 0}
 	skyDomeMaterial := scene.NewMaterial().
 		E(color.White, environmentEmissionFactor, true).
-		SP(imageEnvironment, scene.TextureTypeAlbedo, &skyDomeOrigin, vec3.T{-0.2, 0, -1}, vec3.T{0, 1, 0})
+		SP(imageEnvironment, &skyDomeOrigin, vec3.T{-0.2, 0, -1}, vec3.T{0, 1, 0})
 	skyDome := scene.NewSphere(&skyDomeOrigin, environmentRadius, skyDomeMaterial).N("sky dome")
 
 	// Ground
-	groundMaterial := scene.NewMaterial().N("Ground material").PP(imageSoilCracked, scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(150), vec3.UnitZ.Scaled(150))
+	groundMaterial := scene.NewMaterial().N("Ground material").PP(imageSoilCracked, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(150), vec3.UnitZ.Scaled(150))
 	ground := scene.NewDisc(&vec3.T{0, 0, 0}, &vec3.UnitY, environmentRadius, groundMaterial).N("Ground")
 
 	// Camera

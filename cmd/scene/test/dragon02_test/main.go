@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
@@ -12,18 +11,20 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "dragon02_test"
+const (
+	animationName = "dragon02_test"
 
-var amountSamples = 1024 * 3 * 8 // * 5
-var apertureSize = 0.1
+	amountSamples = 1024 * 3 * 8 // * 5
+	apertureSize  = 0.1
 
-var cameraDistanceFactor = 1.0
+	cameraDistanceFactor = 1.0
 
-var imageWidth = 600
-var imageHeight = 400
-var magnification = 2.0
+	imageWidth    = 600
+	imageHeight   = 400
+	magnification = 2.0
 
-var lightIntensityFactor = 12.0
+	lightIntensityFactor = 12.0
+)
 
 func main() {
 	cornellBox := obj.NewWhiteCornellBox(&vec3.T{300, 300, 300}, true, lightIntensityFactor) // cm, as units. I.e. a 5x3x5m room
@@ -73,7 +74,12 @@ func createPillar(pillarWidth float64, pillarHeight float64) *scene.FacetStructu
 	pillar1.Material = scene.NewMaterial().
 		C(color.NewColorGrey(0.9)).
 		M(0, 0.15).
-		PP(floatimage.LoadOrPanic("textures/concrete/Polished-Concrete-Architextures.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, (&vec3.UnitX).Scaled(pillarWidth), (&vec3.UnitZ).Add(&vec3.T{0, 0.5, 0}).Scaled(pillarWidth))
+		PP(
+			scene.NewTextureReferenceOrPanic("textures/concrete/Polished-Concrete-Architextures.jpg", scene.TextureTypeAlbedo),
+			&vec3.T{0, 0, 0},
+			(&vec3.UnitX).Scaled(pillarWidth),
+			(&vec3.UnitZ).Add(&vec3.T{0, 0.5, 0}).Scaled(pillarWidth),
+		)
 	pillar1.Translate(&vec3.T{-0.5, 0, -0.5})
 
 	pillar1.Scale(&vec3.Zero, &vec3.T{pillarWidth * 1.5, pillarHeight, pillarWidth})
@@ -83,12 +89,22 @@ func createPillar(pillarWidth float64, pillarHeight float64) *scene.FacetStructu
 func setCornellBoxMaterial(cornellBox *scene.FacetStructure) {
 	scale := cornellBox.Bounds.SizeY() / 3
 
-	backWallMaterial := scene.NewMaterial().N("back").PP(floatimage.LoadOrPanic("textures/wallpaper/chinese_dragon.png"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale), vec3.UnitY.Scaled(scale))
+	backWallMaterial := scene.NewMaterial().N("back").PP(
+		scene.NewTextureReferenceOrPanic("textures/wallpaper/chinese_dragon.png", scene.TextureTypeAlbedo),
+		&vec3.T{0, 0, 0},
+		vec3.UnitX.Scaled(scale),
+		vec3.UnitY.Scaled(scale),
+	)
 	//backWallMaterial := scene.NewMaterial().N("back").PP("textures/wallpaper/anemone-rose-flower-eucalyptus-leaves-pampas-grass.png", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(1.66*scale), vec3.UnitY.Scaled(scale))
 	// backWallMaterial := scene.NewMaterial().N("back").PP("textures/wallpaper/VintagePalms_Image_Tile_Item_9454w.jpg", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(1.66*scale), vec3.UnitY.Scaled(scale))
 	cornellBox.GetFirstObjectBySubstructureName("Back").Material = backWallMaterial
 
-	sideWallMaterial := scene.NewMaterial().N("wall").PP(floatimage.LoadOrPanic("textures/wallpaper/chinese_dragon.png"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(scale), vec3.UnitY.Scaled(scale))
+	sideWallMaterial := scene.NewMaterial().N("wall").PP(
+		scene.NewTextureReferenceOrPanic("textures/wallpaper/chinese_dragon.png", scene.TextureTypeAlbedo),
+		&vec3.T{0, 0, 0},
+		vec3.UnitZ.Scaled(scale),
+		vec3.UnitY.Scaled(scale),
+	)
 	//sideWallMaterial := scene.NewMaterial().N("wall").PP("textures/wallpaper/anemone-rose-flower-eucalyptus-leaves-pampas-grass.png", &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(1.66*scale), vec3.UnitY.Scaled(scale))
 	// sideWallMaterial := scene.NewMaterial().N("wall").PP("textures/wallpaper/VintagePalms_Image_Tile_Item_9454w.jpg", &vec3.T{0, 0, 0}, vec3.UnitZ.Scaled(1.66*scale), vec3.UnitY.Scaled(scale))
 	cornellBox.GetFirstObjectBySubstructureName("Left").Material = sideWallMaterial
@@ -97,7 +113,12 @@ func setCornellBoxMaterial(cornellBox *scene.FacetStructure) {
 	//floorMaterial := scene.NewMaterial().N("floor").M(0, 0.1).PP("textures/marble/marble white tiles 1000x1000.jpg", &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale/4), vec3.UnitZ.Scaled(scale/4))
 	floorMaterial := scene.NewMaterial().N("floor").
 		C(color.NewColorGrey(0.4)).M(0, 0.2).
-		PP(floatimage.LoadOrPanic("textures/floor/floor_boards.png"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(scale), vec3.UnitZ.Scaled(scale))
+		PP(
+			scene.NewTextureReferenceOrPanic("textures/floor/floor_boards.png", scene.TextureTypeAlbedo),
+			&vec3.T{0, 0, 0},
+			vec3.UnitX.Scaled(scale),
+			vec3.UnitZ.Scaled(scale),
+		)
 	cornellBox.GetFirstObjectBySubstructureName("Floor").Material = floorMaterial
 
 	cornellBox.GetFirstMaterialByName("Lamp").C(color.NewColorKelvin(4000))

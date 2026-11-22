@@ -13,26 +13,28 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "aperture_shape_test2"
+const (
+	animationName = "aperture_shape_test2"
 
-var amountFrames = 120
+	amountFrames = 120
 
-var amountSamples = 200 // 200
-var apertureRadius = 60.0
+	amountSamples  = 200 // 200
+	apertureRadius = 60.0
 
-var viewPlaneDistance = 600.0
+	viewPlaneDistance = 600.0
 
-var imageWidth = 600
-var imageHeight = 400
-var magnification = 1.0
+	imageWidth    = 600
+	imageHeight   = 400
+	magnification = 1.0
 
-var lampEmissionFactor = 0.25
-var sphereEmissionFactor = 3.0
-var amountSpheres = 9
-var sphereRadius = 8.0
-var distanceFactor = 20.0
+	lampEmissionFactor   = 0.25
+	sphereEmissionFactor = 3.0
+	amountSpheres        = 9
+	sphereRadius         = 8.0
+	distanceFactor       = 20.0
 
-var sphereSpread = 80.0
+	sphereSpread = 80.0
+)
 
 func main() {
 	cornellBox := GetCornellBox(&vec3.T{500, 300, 500}, lampEmissionFactor) // cm, as units. I.e. a 5x3x5m room
@@ -106,10 +108,10 @@ func GetCornellBox(scale *vec3.T, lightIntensityFactor float64) *scene.FacetStru
 	cornellBox.GetFirstObjectBySubstructureName("Lamp_4_-_right_close").Material = lampMaterial
 
 	projectionZoom := 0.33
-	floorProjection := scene.NewParallelImageProjection(floatimage.LoadOrPanic("textures/floor/7451-diffuse 02 low contrast.png"), scene.TextureTypeAlbedo, &vec3.T{-scale[0] * projectionZoom / 8, 0, -scale[0] * projectionZoom / 8}, vec3.UnitX.Scaled(scale[0]*projectionZoom), vec3.UnitZ.Scaled(scale[0]*projectionZoom))
+	floorProjection := scene.NewParallelImageProjection(scene.NewTextureReferenceOrPanic("textures/floor/7451-diffuse 02 low contrast.png", scene.TextureTypeAlbedo), &vec3.T{-scale[0] * projectionZoom / 8, 0, -scale[0] * projectionZoom / 8}, vec3.UnitX.Scaled(scale[0]*projectionZoom), vec3.UnitZ.Scaled(scale[0]*projectionZoom))
 	floorMaterial := *cornellBox.Material
 	floorMaterial.M(0, 1.0)
-	floorMaterial.P(&floorProjection)
+	floorMaterial.P(floorProjection)
 	cornellBox.GetFirstObjectBySubstructureName("Floor").Material = &floorMaterial
 
 	return cornellBox

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
@@ -11,13 +10,19 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-const refractionIndex = scene.RefractionIndex_Glass
+const (
+	refractionIndex = scene.RefractionIndex_Glass
+)
 
-var amountSamples = 1024 * 12 * 2 // 12
+const (
+	amountSamples = 1024 * 12 * 2 // 12
+)
 
-const imageWidth = 1200
-const imageHeight = 500
-const imageMagnification = 1.5
+const (
+	imageWidth         = 1200
+	imageHeight        = 500
+	imageMagnification = 1.5
+)
 
 func main() {
 	ribbonRadius := 3 * 100.0 // 300 cm
@@ -31,7 +36,7 @@ func main() {
 	ribbon := obj.NewCylinder(obj.CylinderYPositive, ribbonRadius, ribbonRadius/2.2)
 	ribbon.Material = scene.NewMaterial().
 		E(color.White, 1.0, true).
-		CP(floatimage.LoadOrPanic("textures/floor/checkered.jpg"), scene.TextureTypeAlbedo, projectionOrigin, projectionU, projectionV, false)
+		CP(scene.NewTextureReferenceOrPanic("textures/floor/checkered.jpg", scene.TextureTypeAlbedo), projectionOrigin, projectionU, projectionV, false)
 	ribbon.Translate(&vec3.T{0, -ribbon.Bounds.SizeY() / 2, 0})
 
 	sphereRadius := 0.25 * ribbonRadius
@@ -60,7 +65,12 @@ func main() {
 
 	skyMaterial := scene.NewMaterial().
 		E(color.White, 1, true).
-		SP(floatimage.LoadOrPanic("textures/equirectangular/leaf_trees_by_lake.jpg"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})
+		SP(
+			scene.NewTextureReferenceOrPanic("textures/equirectangular/leaf_trees_by_lake.jpg", scene.TextureTypeAlbedo),
+			&vec3.T{0, 0, 0},
+			vec3.T{1, 0, 0},
+			vec3.T{0, 1, 0},
+		)
 	skyDome := scene.NewSphere(&vec3.T{0, 0, 0}, 10*100, skyMaterial).N("sky dome")
 
 	scn := scene.NewSceneNode().

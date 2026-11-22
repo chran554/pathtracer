@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
@@ -13,14 +12,16 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var amountAnimationFrames = 300
-var amountSamples = 256
+const (
+	amountAnimationFrames = 300
+	amountSamples         = 256
 
-var apertureSize = 1.5
+	apertureSize = 1.5
 
-var width = 800
-var height = 600
-var magnification = 0.25
+	width         = 800
+	height        = 600
+	magnification = 0.25
+)
 
 func main() {
 	size := 800.0 // 100 cm
@@ -29,7 +30,12 @@ func main() {
 
 	landscapeMaterial := scene.NewMaterial().N("Ground material").
 		T(0.0, false, scene.RefractionIndex_Quartz).
-		PP(floatimage.LoadOrPanic("textures/ground/soil-cracked-bright.png"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.UnitX.Scaled(75), vec3.UnitZ.Scaled(75))
+		PP(
+			scene.NewTextureReferenceOrPanic("textures/ground/soil-cracked-bright.png", scene.TextureTypeAlbedo),
+			&vec3.T{0, 0, 0},
+			vec3.UnitX.Scaled(75),
+			vec3.UnitZ.Scaled(75),
+		)
 	landscape := obj.NewHeightMap("textures/height maps/test_heightmap.png", vec3.T{size, size / 7, size})
 	landscape.UpdateVertexNormalsWithThreshold(false, 0)
 	//landscape.UpdateVertexNormalsWithThreshold(false, 75)
@@ -40,7 +46,12 @@ func main() {
 	skyDomeOrigin := &vec3.T{0, 0, 0}
 	skyDomeMaterial := scene.NewMaterial().
 		E(color.White, 3, true).
-		SP(floatimage.LoadOrPanic("textures/equirectangular/sunset horizon 2800x1400.jpg"), scene.TextureTypeAlbedo, skyDomeOrigin, vec3.T{-0.2, 0, -1}, vec3.T{0, 1, 0})
+		SP(
+			scene.NewTextureReferenceOrPanic("textures/equirectangular/sunset horizon 2800x1400.jpg", scene.TextureTypeAlbedo),
+			skyDomeOrigin,
+			vec3.T{-0.2, 0, -1},
+			vec3.T{0, 1, 0},
+		)
 	skyDome := scene.NewSphere(skyDomeOrigin, 10*1000, skyDomeMaterial).N("Sky dome")
 
 	animationStartIndex := 0

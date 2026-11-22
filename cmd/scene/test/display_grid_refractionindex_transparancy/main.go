@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
@@ -11,32 +10,31 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "display_grid_refractionindex_transparancy"
+const (
+	animationName = "display_grid_refractionindex_transparancy"
 
-var ballRadius float64 = 20
+	ballRadius float64 = 20
 
-var maxRecursionDepth = 6
-var amountSamples = 1024 * 12
-var lensRadius float64 = 2
+	maxRecursionDepth         = 6
+	amountSamples             = 1024 * 12
+	lensRadius        float64 = 2
 
-var viewPlaneDistance = 4000.0
-var cameraDistanceFactor = 2.0
+	viewPlaneDistance    = 4000.0
+	cameraDistanceFactor = 2.0
 
-var lampEmissionFactor = 5.0
+	lampEmissionFactor = 5.0
 
-var imageWidth = 1800
-var imageHeight = 1200
-var magnification = 0.75
+	imageWidth    = 1800
+	imageHeight   = 1200
+	magnification = 0.75
+)
 
 func main() {
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, false, true)
 
-	chessTexture, err := floatimage.EmptyPlaceholderImage("textures/floor/7451-diffuse 02 high key.png")
-	if err != nil {
-		panic(err)
-	}
+	chessTexture := scene.NewTextureReferenceOrPanic("textures/floor/7451-diffuse 02 high key.png", scene.TextureTypeAlbedo)
 	textureScale := 10.0
-	floorMaterial := scene.NewMaterial().N("Floor").C(color.NewColorGrey(0.9)).PP(chessTexture, scene.TextureTypeAlbedo, &vec3.T{}, vec3.T{textureScale, 0, 0}, vec3.T{0, 0, textureScale})
+	floorMaterial := scene.NewMaterial().N("Floor").C(color.NewColorGrey(0.9)).PP(chessTexture, &vec3.T{}, vec3.T{textureScale, 0, 0}, vec3.T{0, 0, textureScale})
 
 	cornellBox := obj.NewCornellBox(&vec3.T{700, 500, 700}, false, lampEmissionFactor)
 	cornellBox.ReplaceMaterial("Left", scene.NewMaterial().N("Left").C(color.NewColor(0.85, 0.85, 0.85)))
@@ -81,7 +79,7 @@ func main() {
 	animation.AddFrame(frame)
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err = renderfile.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}

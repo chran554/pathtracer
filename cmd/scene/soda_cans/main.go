@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
@@ -13,17 +12,19 @@ import (
 )
 
 // 3 soda cans: Test, Coca Cola, and Pepsi
-var animationName = "soda_cans"
+const (
+	animationName = "soda_cans"
 
-var amountAnimationFrames = 1
+	amountAnimationFrames = 1
 
-var imageWidth = 1024
-var imageHeight = 576
-var magnification = 1.0
+	imageWidth    = 1024
+	imageHeight   = 576
+	magnification = 1.0
 
-var amountSamples = 1024 * 24 // 1024 * 12
+	amountSamples = 1024 * 24 // 1024 * 12
 
-var apertureSize = 0.2
+	apertureSize = 0.2
+)
 
 func main() {
 	dx := 1.4
@@ -34,7 +35,12 @@ func main() {
 	skyDome := scene.NewSphere(&vec3.T{0, 0, 0}, 4*100, scene.NewMaterial().
 		E(color.White, 1, true).
 		//C(color.NewColorGrey(0.2))).
-		SP(floatimage.LoadOrPanic("textures/equirectangular/las-vegas-hotell-lobby.png"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("sky dome")
+		SP(
+			scene.NewTextureReferenceOrPanic("textures/equirectangular/las-vegas-hotell-lobby.png", scene.TextureTypeAlbedo),
+			&vec3.T{0, 0, 0},
+			vec3.T{1, 0, 0},
+			vec3.T{0, 1, 0},
+		)).N("sky dome")
 	skyDome.RotateY(&vec3.Zero, math.Pi+(math.Pi*6/8))
 
 	lamp1 := scene.NewSphere(&vec3.T{-50, 150 + dy, -75}, 60, scene.NewMaterial().E(color.NewColorKelvin(4000), 12, true)).N("lamp")
@@ -46,7 +52,7 @@ func main() {
 	tableBoard.Material = scene.NewMaterial().
 		C(color.NewColorGrey(1.0)).
 		M(0, 0.3).
-		PP(floatimage.LoadOrPanic("textures/wood/darkwood.png"), scene.TextureTypeAlbedo, &vec3.T{0, 0, 0}, vec3.T{30, 0, 0}, vec3.T{0, 0, 20})
+		PP(scene.NewTextureReferenceOrPanic("textures/wood/darkwood.png", scene.TextureTypeAlbedo), &vec3.T{0, 0, 0}, vec3.T{30, 0, 0}, vec3.T{0, 0, 20})
 
 	sodaCanHeight := 11.6
 

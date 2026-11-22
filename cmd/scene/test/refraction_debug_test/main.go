@@ -12,21 +12,23 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "refraction_debug_test"
-var animationFrameCount = 1
-var startFrameIndex = 0
-var refractionIndexStart = scene.RefractionIndex_Glass
-var refractionIndexEnd = scene.RefractionIndex_Diamond
+const (
+	animationName        = "refraction_debug_test"
+	animationFrameCount  = 1
+	startFrameIndex      = 0
+	refractionIndexStart = scene.RefractionIndex_Glass
+	refractionIndexEnd   = scene.RefractionIndex_Diamond
 
-var ballRadius float64 = 35
+	ballRadius float64 = 35
 
-var maxRecursionDepth = 8
-var amountSamples = 512 * 1 // * 2 // * 5 // * 4
-var lensRadius = 0.0        // 2.0        // 0.25
+	maxRecursionDepth = 8
+	amountSamples     = 512 * 1 // * 2 // * 5 // * 4
+	lensRadius        = 0.0     // 2.0        // 0.25
 
-var imageWidth = 500
-var imageHeight = 240
-var magnification = 0.75
+	imageWidth    = 500
+	imageHeight   = 240
+	magnification = 0.75
+)
 
 func main() {
 	//textureBackplane := floatimage.LoadOrPanic("textures/floor/7451-diffuse 02.png")

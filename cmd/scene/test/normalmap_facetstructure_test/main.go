@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
@@ -13,27 +12,26 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-var animationName = "normalmap_facetstructure_test"
+const (
+	animationName = "normalmap_facetstructure_test"
 
-var amountAnimationFrames = 120
+	amountAnimationFrames = 120
 
-var imageWidth = 640
-var imageHeight = 640
-var magnification = 0.5
+	imageWidth    = 640
+	imageHeight   = 640
+	magnification = 0.5
 
-var amountSamples = 512 // * 2 * 4 // * 2 * 15 // * 8 // * 15
-var maxRecursionDepth = 2
+	amountSamples     = 512 // * 2 * 4 // * 2 * 15 // * 8 // * 15
+	maxRecursionDepth = 2
 
-var cameraAperture = 0.0
-var cameraZoom = 1.0
+	cameraAperture = 0.0
+	cameraZoom     = 1.0
 
-var lampIntensity = 18.0
+	lampIntensity = 18.0
+)
 
 func main() {
-	normalMapTexture, err := floatimage.EmptyPlaceholderImage("textures/normal maps/normal_map_example.png")
-	if err != nil {
-		panic(err)
-	}
+	normalMapTexture := scene.NewTextureReferenceOrPanic("textures/normal maps/normal_map_example.png", scene.TextureTypeNormalMap)
 
 	lamp := scene.NewSphere(&vec3.T{}, 1.0, scene.NewMaterial().
 		N("lamp").
@@ -68,7 +66,7 @@ func main() {
 
 		wall = createWall()
 		wb := wall.Bounds
-		wall.Material.PP(normalMapTexture, scene.TextureTypeNormalMap, &vec3.T{wb.Xmin, wb.Ymin, 0}, vec3.T{wb.SizeX(), 0, 0}, vec3.T{0, wb.SizeY(), 0})
+		wall.Material.PP(normalMapTexture, &vec3.T{wb.Xmin, wb.Ymin, 0}, vec3.T{wb.SizeX(), 0, 0}, vec3.T{0, wb.SizeY(), 0})
 		wall.RotateZ(&vec3.Zero, util.DegToRad(135))
 		wall.RotateX(&vec3.Zero, util.DegToRad(35))
 		wall.RotateY(&vec3.Zero, util.DegToRad(360*animationProgress))
@@ -85,7 +83,7 @@ func main() {
 	}
 
 	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err = renderfile.WriteRenderFile(filename, animation)
+	err := renderfile.WriteRenderFile(filename, animation)
 	if err != nil {
 		panic(err)
 	}

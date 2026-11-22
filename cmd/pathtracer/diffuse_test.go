@@ -41,9 +41,9 @@ func TestTracePathDiffuseNormals(test *testing.T) {
 				material.C(color.NewColor(0.5, 0.25, 0.75))
 				texture := floatimage.NewFloatImage("diffuse test albedo", 1, 1)
 				texture.Fill(color.NewColor(0.5, 0.5, 0.25))
-				projection := scene.NewParallelImageProjection(texture, scene.TextureTypeAlbedo, &vec3.T{}, vec3.UnitX, vec3.UnitY)
+				projection := scene.NewParallelImageProjection(scene.NewTexture(texture, scene.TextureTypeAlbedo), &vec3.T{}, vec3.UnitX, vec3.UnitY)
 				projection.Initialize()
-				material.P(&projection)
+				material.P(projection)
 				channelAlbedo = [3]float64{0.25, 0.125, 0.1875}
 			}
 			if testCase.emissive {

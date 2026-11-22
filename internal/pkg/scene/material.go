@@ -3,7 +3,6 @@ package scene
 import (
 	"math"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
@@ -149,9 +148,8 @@ func (m *Material) P(projection *ImageProjection) *Material {
 }
 
 // PP is a parallel projection property
-func (m *Material) PP(texture *floatimage.FloatImage, textureType TextureType, origin *vec3.T, u vec3.T, v vec3.T) *Material {
-	parallelImageProjection := NewParallelImageProjection(texture, textureType, origin, u, v)
-	m.Projections = append(m.Projections, &parallelImageProjection)
+func (m *Material) PP(texture *Texture, origin *vec3.T, u vec3.T, v vec3.T) *Material {
+	m.Projections = append(m.Projections, NewParallelImageProjection(texture, origin, u, v))
 	return m
 }
 
@@ -165,17 +163,16 @@ func (m *Material) PP(texture *floatimage.FloatImage, textureType TextureType, o
 //
 // v vector is the "up" vector of the projection.
 // The intersection point on the sphere (of the v vector) corresponds to the pixel row at the top of the texture.
-func (m *Material) SP(texture *floatimage.FloatImage, textureType TextureType, origin *vec3.T, u vec3.T, v vec3.T) *Material {
-	sphericalImageProjection := NewSphericalImageProjection(texture, textureType, origin, u, v)
-	m.Projections = append(m.Projections, &sphericalImageProjection)
+func (m *Material) SP(texture *Texture, origin *vec3.T, u vec3.T, v vec3.T) *Material {
+	m.Projections = append(m.Projections, NewSphericalImageProjection(texture, origin, u, v))
 	return m
 }
 
 // CP is a cylindrical projection property
-func (m *Material) CP(texture *floatimage.FloatImage, textureType TextureType, origin *vec3.T, u vec3.T, v vec3.T, repeat bool) *Material {
-	sphericalImageProjection := NewCylindricalImageProjection(texture, textureType, origin, u, v)
+func (m *Material) CP(texture *Texture, origin *vec3.T, u vec3.T, v vec3.T, repeat bool) *Material {
+	sphericalImageProjection := NewCylindricalImageProjection(texture, origin, u, v)
 	sphericalImageProjection.RepeatV = repeat
-	m.Projections = append(m.Projections, &sphericalImageProjection)
+	m.Projections = append(m.Projections, sphericalImageProjection)
 	return m
 }
 
@@ -228,7 +225,7 @@ func NewMaterialGlass(name string) *Material {
 // materialUnitInterval validates authored surface parameters. Public fields are
 // clamped again by the renderer so deserialized/directly assigned values are safe.
 func materialUnitInterval(value float64) float64 {
-	if (value < 0) || (value > 1) {
+	if !(value >= 0 && value <= 1) {
 		panic("material parameter must be finite and in [0,1]")
 	}
 	return value

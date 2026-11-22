@@ -146,21 +146,21 @@ func TestEmptyPlaceholderImage(t *testing.T) {
 	require.NoError(t, err)
 	tmpFile.Close()
 
-	fi, err := EmptyPlaceholderImage(tmpFile.Name())
+	fi, err := Reference(tmpFile.Name())
 	assert.NoError(t, err)
 	assert.Equal(t, tmpFile.Name(), fi.Name())
 	assert.Equal(t, 0, fi.Width)
 	assert.False(t, fi.ContainImageData())
 
 	// Test non-existent file
-	_, err = EmptyPlaceholderImage("non_existent_file")
+	_, err = Reference("non_existent_file")
 	assert.Error(t, err)
 
 	// Test directory
 	dir, err := os.MkdirTemp("", "test_dir")
 	require.NoError(t, err)
 	defer os.RemoveAll(dir)
-	_, err = EmptyPlaceholderImage(dir)
+	_, err = Reference(dir)
 	assert.Error(t, err)
 }
 
