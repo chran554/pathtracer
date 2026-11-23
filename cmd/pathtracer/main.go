@@ -624,9 +624,9 @@ func tracePathSampled(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode
 			cosineIncomingRayAndNormal := util.Cosine(ii.normalAtIntersection, &incomingRayInverted)
 
 			outgoingRadiance = &color.Color{
-				R: ii.material.Color.R * float32(cosineIncomingRayAndNormal) * albedo.R,
-				G: ii.material.Color.G * float32(cosineIncomingRayAndNormal) * albedo.G,
-				B: ii.material.Color.B * float32(cosineIncomingRayAndNormal) * albedo.B,
+				R: albedo.R * float32(cosineIncomingRayAndNormal),
+				G: albedo.G * float32(cosineIncomingRayAndNormal),
+				B: albedo.B * float32(cosineIncomingRayAndNormal),
 				A: 1.0,
 			}
 
@@ -680,18 +680,11 @@ func tracePathSampled(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode
 				}
 			}
 
-			if ii.material.Emission != nil {
-				//projectionCol := fixTransparentColor(projectionColor)
-				//materialCol := fixTransparentColor(ii.material.Color)
-				projectionCol := albedo
-				materialCol := ii.material.Color
-
-				//projectionCol = projectionCol.Fade(color.White, 1-projectionCol.A)
-				//materialCol = materialCol.Fade(color.White, 1-materialCol.A)
-
-				outgoingRadiance.R += (ii.material.Emission.R * ii.material.Emission.A) * (materialCol.R * materialCol.A) * (projectionCol.R * projectionCol.A) // * (1.0 - float32(ii.material.Transparency))
-				outgoingRadiance.G += (ii.material.Emission.G * ii.material.Emission.A) * (materialCol.G * materialCol.A) * (projectionCol.G * projectionCol.A) // * (1.0 - float32(ii.material.Transparency))
-				outgoingRadiance.B += (ii.material.Emission.B * ii.material.Emission.A) * (materialCol.B * materialCol.A) * (projectionCol.B * projectionCol.A) // * (1.0 - float32(ii.material.Transparency))
+			if emission := ii.material.Emission; emission != nil {
+				coverage := emission.A * albedo.A
+				outgoingRadiance.R += emission.R * albedo.R * coverage
+				outgoingRadiance.G += emission.G * albedo.G * coverage
+				outgoingRadiance.B += emission.B * albedo.B * coverage
 				outgoingRadiance.A = 1.0
 			}
 
@@ -744,7 +737,7 @@ func roughnessValue(ii *IntersectionInformation) float64 {
 }
 
 func albedoColor(ii *IntersectionInformation) *color.Color {
-	var c *color.Color // Default value if no projection is applied
+	var textureColor *color.Color
 
 	// If a facet is intersected and the facet has texture coordinates assigned to the facet points.
 	// Triangulate the texture coordinate and fetch that color value.
@@ -753,32 +746,32 @@ func albedoColor(ii *IntersectionInformation) *color.Color {
 		if albedoTexture != nil {
 			textureCoordinate := interpolateTriangleTextureCoordinate(albedoTexture, ii.intersectedFacetVertexWeights)
 			if textureCoordinate != nil {
-				c = albedoTexture.Texture.GetColorAt(textureCoordinate)
+				textureColor = albedoTexture.Texture.GetColorAt(textureCoordinate)
 			}
 		}
 	}
 
 	// Otherwise, get the projected color for the intersection point.
-	if (c == nil) && (ii.material.Projections != nil) {
-		c = ii.material.ProjectionColor(ii.intersectionPoint, scene.TextureTypeAlbedo)
+	if (textureColor == nil) && (ii.material.Projections != nil) {
+		textureColor = ii.material.ProjectionColor(ii.intersectionPoint, scene.TextureTypeAlbedo)
 	}
 
-	// If no texture color was found then use white as default color.
-	// White is the identity color that will not affect any color calculations further on.
-	if c == nil {
-		return color.White
+	baseColor := ii.material.Color
+	if baseColor == nil {
+		baseColor = color.White
 	}
 
-	c.R = 1.0 - (1.0-c.R)*c.A
-	c.G = 1.0 - (1.0-c.G)*c.A
-	c.B = 1.0 - (1.0-c.B)*c.A
+	if textureColor == nil {
+		return baseColor
+	}
 
-	c.R = ii.material.Color.R * c.R
-	c.G = ii.material.Color.G * c.G
-	c.B = ii.material.Color.B * c.B
-	c.A = 1.0
-
-	return c
+	// Texture alpha blends the tint from white, preserving the material's coverage.
+	return &color.Color{
+		R: baseColor.R * (1 - (1-textureColor.R)*textureColor.A),
+		G: baseColor.G * (1 - (1-textureColor.G)*textureColor.A),
+		B: baseColor.B * (1 - (1-textureColor.B)*textureColor.A),
+		A: baseColor.A,
+	}
 }
 
 func processFacetStructureIntersection(ray *scene.Ray, facetStructure *scene.FacetStructure, ii *IntersectionInformation) {

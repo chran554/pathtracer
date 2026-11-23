@@ -28,7 +28,7 @@ func TestMetalFresnel(t *testing.T) {
 		rng := rand.New(rand.NewPCG(1, 2))
 		incoming := vec3.T{math.Sqrt(0.75), 0, -0.5}
 		for range 1000 {
-			s := sampleSurface(material, base, &vec3.UnitZ, &vec3.UnitZ, &incoming, 1.5, 1, rng.Float64)
+			s := sampleSurface(material, material.Roughness, material.Metallicness, base, &vec3.UnitZ, &vec3.UnitZ, &incoming, 1.5, 1, rng.Float64)
 			if s.heading != nil && s.bounce != reflectionBounce {
 				t.Fatalf("metal emitted nonreflection: %+v", s)
 			}
@@ -56,7 +56,7 @@ func TestSurfaceSamplingIntegral(t *testing.T) {
 			const count = 150000
 			var sum, squares [3]float64
 			for range count {
-				s := sampleSurface(material, base, &vec3.UnitZ, &vec3.UnitZ, &incoming, 1, 1.5, rng.Float64)
+				s := sampleSurface(material, material.Roughness, material.Metallicness, base, &vec3.UnitZ, &vec3.UnitZ, &incoming, 1, 1.5, rng.Float64)
 				if s.heading == nil {
 					continue
 				}
@@ -163,7 +163,7 @@ func TestSurfaceMirrorColor(t *testing.T) {
 	// its selection probability; metal RGB reflectance remains in throughput.
 	for _, metallic := range []float64{0, 1} {
 		material := scene.NewMaterial().M(metallic, 0)
-		s := sampleSurface(material, base, &vec3.UnitZ, &vec3.UnitZ, &incoming, 1, 1.5, func() float64 { return 0 })
+		s := sampleSurface(material, material.Roughness, material.Metallicness, base, &vec3.UnitZ, &vec3.UnitZ, &incoming, 1, 1.5, func() float64 { return 0 })
 		want := [3]float64{1, 1, 1}
 		if metallic == 1 {
 			want = base
