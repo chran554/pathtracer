@@ -617,16 +617,16 @@ func tracePathSampled(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode
 			ii.material = scene.NewMaterial() // Default material is rough white dielectric.
 		}
 
-		textureAlbedoColor := textureColor(ii)
+		albedo := albedoColor(ii)
 
 		if camera.RenderType == scene.Raycasting || camera.RenderType == "" {
 			incomingRayInverted := ray.Heading.Inverted()
 			cosineIncomingRayAndNormal := util.Cosine(ii.normalAtIntersection, &incomingRayInverted)
 
 			outgoingRadiance = &color.Color{
-				R: ii.material.Color.R * float32(cosineIncomingRayAndNormal) * textureAlbedoColor.R,
-				G: ii.material.Color.G * float32(cosineIncomingRayAndNormal) * textureAlbedoColor.G,
-				B: ii.material.Color.B * float32(cosineIncomingRayAndNormal) * textureAlbedoColor.B,
+				R: ii.material.Color.R * float32(cosineIncomingRayAndNormal) * albedo.R,
+				G: ii.material.Color.G * float32(cosineIncomingRayAndNormal) * albedo.G,
+				B: ii.material.Color.B * float32(cosineIncomingRayAndNormal) * albedo.B,
 				A: 1.0,
 			}
 
@@ -644,9 +644,13 @@ func tracePathSampled(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode
 				bounce := noBounce
 				bounceWeight := [3]float64{1, 1, 1}
 
+				roughness := roughnessValue(ii)
+				metallicness := metallicnessValue(ii)
+
 				outgoingRadiance.A = 1 // Rejected scattering still hit a covered surface.
 				incidentIndex, transmittedIndex := boundaryRefractionIndices(ii.material, rayContexts, isIngoingRay)
-				sample := sampleSurface(ii.material, surfaceBaseColor(ii.material, textureAlbedoColor), &geometricNormal, &shadingNormal, ray.Heading, incidentIndex, transmittedIndex, random)
+				sample := sampleSurface(ii.material, roughness, metallicness, surfaceBaseColor(albedo), &geometricNormal, &shadingNormal, ray.Heading, incidentIndex, transmittedIndex, random)
+
 				newRayHeading, bounceWeight, bounce = sample.heading, sample.weight, sample.bounce
 				if bounce == transmissionBounce && newRayHeading != nil && ii.material.SolidObject && ii.material.RefractionIndex > 0 {
 					if isIngoingRay {
@@ -679,7 +683,7 @@ func tracePathSampled(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode
 			if ii.material.Emission != nil {
 				//projectionCol := fixTransparentColor(projectionColor)
 				//materialCol := fixTransparentColor(ii.material.Color)
-				projectionCol := textureAlbedoColor
+				projectionCol := albedo
 				materialCol := ii.material.Color
 
 				//projectionCol = projectionCol.Fade(color.White, 1-projectionCol.A)
@@ -705,8 +709,42 @@ func tracePathSampled(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode
 	return outgoingRadiance
 }
 
-func textureColor(ii *IntersectionInformation) *color.Color {
-	var textureAlbedoColor *color.Color // Default value if no projection is applied
+func metallicnessValue(ii *IntersectionInformation) float64 {
+	m := -1.0
+
+	if ii.material.Projections != nil {
+		metallicnessColor := ii.material.ProjectionColor(ii.intersectionPoint, scene.TextureTypeMetallicness)
+		if metallicnessColor != nil {
+			m = metallicnessColor.ChannelAverage()
+		}
+	}
+
+	if m == -1 {
+		return ii.material.Metallicness
+	}
+
+	return ii.material.Metallicness * m
+}
+
+func roughnessValue(ii *IntersectionInformation) float64 {
+	r := -1.0
+
+	if ii.material.Projections != nil {
+		roughnessColor := ii.material.ProjectionColor(ii.intersectionPoint, scene.TextureTypeRoughness)
+		if roughnessColor != nil {
+			r = roughnessColor.ChannelAverage()
+		}
+	}
+
+	if r == -1 {
+		return ii.material.Roughness
+	}
+
+	return ii.material.Roughness * r
+}
+
+func albedoColor(ii *IntersectionInformation) *color.Color {
+	var c *color.Color // Default value if no projection is applied
 
 	// If a facet is intersected and the facet has texture coordinates assigned to the facet points.
 	// Triangulate the texture coordinate and fetch that color value.
@@ -715,34 +753,31 @@ func textureColor(ii *IntersectionInformation) *color.Color {
 		if albedoTexture != nil {
 			textureCoordinate := interpolateTriangleTextureCoordinate(albedoTexture, ii.intersectedFacetVertexWeights)
 			if textureCoordinate != nil {
-				textureAlbedoColor = albedoTexture.Texture.GetColorAt(textureCoordinate)
+				c = albedoTexture.Texture.GetColorAt(textureCoordinate)
 			}
 		}
 	}
 
 	// Otherwise, get the projected color for the intersection point.
-	if (textureAlbedoColor == nil) && (ii.material.Projections != nil) {
-		textureAlbedoColor = ii.material.ProjectionColor(ii.intersectionPoint, scene.TextureTypeAlbedo)
+	if (c == nil) && (ii.material.Projections != nil) {
+		c = ii.material.ProjectionColor(ii.intersectionPoint, scene.TextureTypeAlbedo)
 	}
 
 	// If no texture color was found then use white as default color.
 	// White is the identity color that will not affect any color calculations further on.
-	if textureAlbedoColor == nil {
-		textureAlbedoColor = color.White
+	if c == nil {
+		return color.White
 	}
 
-	return textureAlbedoColor
-}
+	c.R = 1.0 - (1.0-c.R)*c.A
+	c.G = 1.0 - (1.0-c.G)*c.A
+	c.B = 1.0 - (1.0-c.B)*c.A
 
-// fixTransparentColor fixes colors where an alpha channel is 0. The color information (RGB) values
-// cannot be used in calculations as they can have any value.
-// This normalizes "black transparency" often used in pixel-based images into "white transparency" which
-//
-//	keeps light calculations when using multiplication.
-func fixTransparentColor(c *color.Color) *color.Color {
-	if *c == *color.BlackTransparent {
-		return color.WhiteTransparent
-	}
+	c.R = ii.material.Color.R * c.R
+	c.G = ii.material.Color.G * c.G
+	c.B = ii.material.Color.B * c.B
+	c.A = 1.0
+
 	return c
 }
 

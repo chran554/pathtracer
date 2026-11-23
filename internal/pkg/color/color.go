@@ -188,6 +188,10 @@ func (c *Color) ChannelMultiply(color *Color) *Color {
 	return c
 }
 
+func (c *Color) ChannelAverage() float64 {
+	return float64(c.R+c.G+c.B) / 3
+}
+
 func (c *Color) Divide(divider float32) *Color {
 	c.R /= divider
 	c.G /= divider

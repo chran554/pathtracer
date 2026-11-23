@@ -51,74 +51,83 @@ func opaqueReflectionProbability(fresnel, roughness, incident, transmitted float
 // Metallicness sets the probability of choosing metal. Given a dielectric,
 // transparency sets the probability of choosing its transmissive component.
 // Each component's selection probability cancels its mixture weight.
-//
-// Opaque reflection evaluates exact dielectric Fresnel or RGB conductor Schlick
-// at the sampled half-vector. Diffuse uses a reciprocal single-pass coating
-// approximation: (1-F(view))*(1-F(light))*base/pi. Internal diffuse returns and
-// GGX multiple scattering are omitted, so rough surfaces may lose energy.
-//
-// The transmissive branch intentionally retains the legacy hybrid: smooth
-// refraction and macro-normal Fresnel, with GGX reflection (mirror under TIR).
-// It is not a rough dielectric BTDF. Only transmitted samples cross media.
-func sampleSurface(material *scene.Material, base [3]float64, geometric, shading, incoming *vec3.T, incident, transmitted float64, random func() float64) surfaceSample {
-	metallicness := surfaceUnit(material.Metallicness)
+func sampleSurface(material *scene.Material, roughness float64, metallicness float64, base [3]float64, geometric, shading, incoming *vec3.T, incident, transmitted float64, random func() float64) surfaceSample {
+	metallicness = surfaceUnit(metallicness)
 	transparency := surfaceUnit(material.Transparency)
-	roughness := surfaceUnit(material.Roughness)
+	roughness = surfaceUnit(roughness)
+
 	for channel := range base {
 		base[channel] = surfaceUnit(base[channel])
 	}
 
-	// A metal bounce always reflects, with base RGB as its normal-incidence reflectance.
 	choice := random()
-	if metallicness > 0 && choice < metallicness {
-		sample := sampleReflection(geometric, shading, incoming, roughness, random(), random())
-		if sample.heading == nil {
-			return surfaceSample{}
-		}
-
-		// Use the actual reflection direction so Fresnel also follows a mirror fallback.
-		cosine := reflectionCosine(incoming, sample.heading)
-		reflectionWeight := metalFresnel(base, cosine)
-		for channel := range reflectionWeight {
-			reflectionWeight[channel] *= sample.weight
-		}
-		return surfaceSample{sample.heading, reflectionWeight, reflectionBounce}
+	if (metallicness > 0) && (choice < metallicness) {
+		return sampleMetal(roughness, base, geometric, shading, incoming, random)
 	}
 
 	// Remap the remaining interval to [0, 1) to reuse the draw for the dielectric.
 	if metallicness == 1 {
 		return surfaceSample{}
 	}
+
 	choice = (choice - metallicness) / (1 - metallicness)
-
-	// For a transmissive dielectric, Fresnel chooses reflection or transmission.
-	if transparency > 0 && choice < transparency {
-		boundary := dielectricBoundary{normal: *shading}
-		solid := material.SolidObject && material.RefractionIndex > 0
-		if solid {
-			boundary = evaluateDielectricBoundary(geometric, shading, incoming, incident, transmitted)
-		} else {
-			boundary.fresnel = FresnelDielectric(-vec3.Dot(shading, incoming), incident, transmitted)
-		}
-
-		if random() < boundary.fresnel || boundary.totalInternalReflection {
-			// Total internal reflection uses the mirror direction from the boundary.
-			if boundary.totalInternalReflection {
-				return surfaceSample{boundary.heading, [3]float64{1, 1, 1}, reflectionBounce}
-			}
-
-			sample := sampleReflection(geometric, &boundary.normal, incoming, roughness, random(), random())
-			return surfaceSample{sample.heading, [3]float64{sample.weight, sample.weight, sample.weight}, reflectionBounce}
-		}
-
-		// Thin surfaces transmit straight through. Solids refract and scale radiance.
-		heading, weight := incoming, 1.0
-		if solid {
-			heading, weight = boundary.heading, (incident/transmitted)*(incident/transmitted)
-		}
-		return surfaceSample{heading, [3]float64{weight, weight, weight}, transmissionBounce}
+	if (transparency > 0) && (choice < transparency) {
+		return sampleTransmissiveDielectric(material, roughness, geometric, shading, incoming, incident, transmitted, random)
 	}
 
+	return sampleOpaqueDielectric(roughness, base, geometric, shading, incoming, incident, transmitted, random)
+}
+
+// sampleMetal uses base RGB as the normal-incidence reflectance for Schlick's
+// approximation at the sampled half-vector.
+func sampleMetal(roughness float64, base [3]float64, geometric, shading, incoming *vec3.T, random func() float64) surfaceSample {
+	sample := sampleReflection(geometric, shading, incoming, roughness, random(), random())
+	if sample.heading == nil {
+		return surfaceSample{}
+	}
+
+	// Use the actual reflection direction so Fresnel also follows a mirror fallback.
+	cosine := reflectionCosine(incoming, sample.heading)
+	reflectionWeight := metalFresnel(base, cosine)
+	for channel := range reflectionWeight {
+		reflectionWeight[channel] *= sample.weight
+	}
+	return surfaceSample{sample.heading, reflectionWeight, reflectionBounce}
+}
+
+// sampleTransmissiveDielectric uses macro-normal Fresnel to choose between
+// smooth transmission and GGX reflection. Total internal reflection uses a mirror bounce.
+func sampleTransmissiveDielectric(material *scene.Material, roughness float64, geometric, shading, incoming *vec3.T, incident, transmitted float64, random func() float64) surfaceSample {
+	boundary := dielectricBoundary{normal: *shading}
+	solid := material.SolidObject && material.RefractionIndex > 0
+	if solid {
+		boundary = evaluateDielectricBoundary(geometric, shading, incoming, incident, transmitted)
+	} else {
+		boundary.fresnel = FresnelDielectric(-vec3.Dot(shading, incoming), incident, transmitted)
+	}
+
+	if random() < boundary.fresnel || boundary.totalInternalReflection {
+		// Total internal reflection uses the mirror direction from the boundary.
+		if boundary.totalInternalReflection {
+			return surfaceSample{boundary.heading, [3]float64{1, 1, 1}, reflectionBounce}
+		}
+
+		sample := sampleReflection(geometric, &boundary.normal, incoming, roughness, random(), random())
+		return surfaceSample{sample.heading, [3]float64{sample.weight, sample.weight, sample.weight}, reflectionBounce}
+	}
+
+	// Thin surfaces transmit straight through. Solids refract and scale radiance.
+	heading, weight := incoming, 1.0
+	if solid {
+		heading, weight = boundary.heading, (incident/transmitted)*(incident/transmitted)
+	}
+	return surfaceSample{heading, [3]float64{weight, weight, weight}, transmissionBounce}
+}
+
+// sampleOpaqueDielectric mixes specular reflection with diffuse scattering under
+// a single-pass coating. Internal diffuse returns and GGX multiple scattering
+// are omitted, so rough surfaces may lose energy.
+func sampleOpaqueDielectric(roughness float64, base [3]float64, geometric, shading, incoming *vec3.T, incident, transmitted float64, random func() float64) surfaceSample {
 	// Use Fresnel at the incoming angle to choose between specular and diffuse reflection.
 	incomingFresnel := FresnelDielectric(-vec3.Dot(shading, incoming), incident, transmitted)
 	specularProbability := opaqueReflectionProbability(incomingFresnel, roughness, incident, transmitted)
@@ -155,12 +164,6 @@ func reflectionCosine(incoming, outgoing *vec3.T) float64 {
 	return surfaceUnit(-vec3.Dot(incoming, &half))
 }
 
-func surfaceBaseColor(material *scene.Material, texture *color.Color) [3]float64 {
-	if material.Color == nil {
-		return [3]float64{float64(texture.R), float64(texture.G), float64(texture.B)}
-	}
-	r := 1.0 - (1.0-texture.R)*texture.A
-	g := 1.0 - (1.0-texture.G)*texture.A
-	b := 1.0 - (1.0-texture.B)*texture.A
-	return [3]float64{float64(material.Color.R * r), float64(material.Color.G * g), float64(material.Color.B * b)}
+func surfaceBaseColor(c *color.Color) [3]float64 {
+	return [3]float64{float64(c.R), float64(c.G), float64(c.B)}
 }

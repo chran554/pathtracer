@@ -218,12 +218,20 @@ func (s *serializer) initFrameCache(frameInformation *FrameInformation) error {
 				var textureImage *floatimage.FloatImage
 
 				switch scene.TextureType(t.Type) {
-				case scene.TextureTypeRoughness:
-					fallthrough
+
 				case scene.TextureTypeAlbedo:
 					textureImage, err = s.resourceImage(t.ImageResourceIndex, true, nil)
 					if err != nil {
 						return fmt.Errorf("could not read resource albedo image %s: %w", file.Name, err)
+					}
+
+				case scene.TextureTypeMetallicness:
+					fallthrough
+
+				case scene.TextureTypeRoughness:
+					textureImage, err = s.resourceImage(t.ImageResourceIndex, false, nil)
+					if err != nil {
+						return fmt.Errorf("could not read resource image %s: %w", file.Name, err)
 					}
 
 				case scene.TextureTypeNormalMap:

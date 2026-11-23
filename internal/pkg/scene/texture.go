@@ -71,6 +71,12 @@ func (t *Texture) GetInterpolatedPixel(x float64, y float64) *color.Color {
 	switch t.Type {
 	case TextureTypeAlbedo:
 		c.A = c.A * float32(t.Strength)
+
+	case TextureTypeRoughness:
+		c.Multiply(float32(t.Strength))
+
+	case TextureTypeMetallicness:
+		c.Multiply(float32(t.Strength))
 	}
 
 	return c
