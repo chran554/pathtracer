@@ -194,7 +194,7 @@ func TestTracePathRefractionOrientation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// A flat map isolates orientation; TestTracePathSmoothGlass covers tilted maps.
-			glass := normalMappedTestMaterial(vec3.T{0, 0, 1}).T(1, true, 1.5)
+			glass := normalMappedTestMaterial(vec3.T{0, 0, 1}).M(0, 0).T(1, true, 1.5)
 			// Isolate refraction direction from Fresnel roulette; TIR must still reflect.
 			air := scene.NewMaterial().T(1, true, 1)
 			contexts := []*scene.Material{air}

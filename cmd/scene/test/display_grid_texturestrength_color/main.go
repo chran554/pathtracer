@@ -17,7 +17,7 @@ const (
 	ballRadius float64 = 20
 
 	maxRecursionDepth         = 6
-	amountSamples             = 1024 * 12
+	amountSamples             = 1024 //* 12
 	lensRadius        float64 = 0
 
 	viewPlaneDistance    = 4000.0

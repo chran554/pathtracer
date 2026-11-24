@@ -49,13 +49,36 @@ func sampleReflection(geometricNormal, shadingNormal, incomingDirection *vec3.T,
 		return scatteringSample{}
 	}
 
+	microfacetNormal := sampleVisibleGGXNormal(shadingNormal, &viewDirection, reflectionAlpha(roughness), radialSample, azimuthSample)
+	heading := getReflectionVector(&microfacetNormal, incomingDirection)
+	heading.Normalize()
+	if !validSurfaceHeading(geometricNormal, heading) {
+		return scatteringSample{}
+	}
+
+	brdf, pdf := evaluateRoughReflection(geometricNormal, shadingNormal, &viewDirection, heading, roughness)
+	if !(pdf > 0 && brdf > 0) {
+		// Rejected directions retain zero contribution; retries would condition and bias the PDF.
+		return scatteringSample{}
+	}
+
+	// BRDF*cosine/PDF is the path weight for visible-normal sampling (Heitz, eq. 18).
+	return scatteringSample{heading, brdf * vec3.Dot(shadingNormal, heading) / pdf}
+}
+
+// sampleVisibleGGXNormal returns a world-space unit facet normal visible from
+// viewDirection on a GGX surface with unit shadingNormal and positive alpha
+// microfacetWidth. Both input directions are in world space. Inside a microsurface
+// the unit viewDirection can lie below the shading horizon. radialSample and
+// azimuthSample are independent uniform draws in [0,1).
+// Heitz (2018), listing 1: https://jcgt.org/published/0007/04/01/paper.pdf
+func sampleVisibleGGXNormal(shadingNormal, viewDirection *vec3.T, microfacetWidth, radialSample, azimuthSample float64) vec3.T {
 	// Heitz 3.2: stretch the view in the shading frame to reduce the ellipsoid to a hemisphere.
 	tangent, bitangent := shadingBasis(shadingNormal)
-	microfacetWidth := reflectionAlpha(roughness)
 	stretchedView := vec3.T{
-		microfacetWidth * vec3.Dot(&viewDirection, &tangent),
-		microfacetWidth * vec3.Dot(&viewDirection, &bitangent),
-		vec3.Dot(&viewDirection, shadingNormal),
+		microfacetWidth * vec3.Dot(viewDirection, &tangent),
+		microfacetWidth * vec3.Dot(viewDirection, &bitangent),
+		vec3.Dot(viewDirection, shadingNormal),
 	}
 	stretchedView.Normalize()
 
@@ -82,26 +105,13 @@ func sampleReflection(geometricNormal, shadingNormal, incomingDirection *vec3.T,
 	}
 	localMicrofacetNormal.Normalize()
 
-	// Reflect about the sampled microfacet in world space (Heitz, appendix B).
+	// Transform the sampled microfacet normal back to world space.
 	microfacetNormal := vec3.T{}
 	for axis := range microfacetNormal {
 		microfacetNormal[axis] = localMicrofacetNormal[0]*tangent[axis] +
 			localMicrofacetNormal[1]*bitangent[axis] + localMicrofacetNormal[2]*shadingNormal[axis]
 	}
-	heading := getReflectionVector(&microfacetNormal, incomingDirection)
-	heading.Normalize()
-	if !validSurfaceHeading(geometricNormal, heading) {
-		return scatteringSample{}
-	}
-
-	brdf, pdf := evaluateRoughReflection(geometricNormal, shadingNormal, &viewDirection, heading, roughness)
-	if !(pdf > 0 && brdf > 0) {
-		// Rejected directions retain zero contribution; retries would condition and bias the PDF.
-		return scatteringSample{}
-	}
-
-	// BRDF*cosine/PDF is the path weight for visible-normal sampling (Heitz, eq. 18).
-	return scatteringSample{heading, brdf * vec3.Dot(shadingNormal, heading) / pdf}
+	return microfacetNormal
 }
 
 // evaluateRoughReflection returns the unit-Fresnel GGX BRDF and visible-normal

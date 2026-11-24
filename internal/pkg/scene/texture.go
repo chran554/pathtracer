@@ -20,8 +20,9 @@ const (
 func (t TextureType) String() string { return string(t) }
 
 type Texture struct {
-	Image         *floatimage.FloatImage
-	Type          TextureType
+	Image *floatimage.FloatImage
+	Type  TextureType
+	// operator      CompositionOperator
 	Strength      float64
 	Interpolation floatimage.Interpolation
 }
@@ -37,13 +38,7 @@ func NewTexture(image *floatimage.FloatImage, textureType TextureType) *Texture 
 
 func NewTextureReferenceOrPanic(imagePath string, textureType TextureType) *Texture {
 	image := floatimage.ReferenceOrPanic(imagePath)
-
-	return &Texture{
-		Image:         image,
-		Type:          textureType,
-		Strength:      1.0,
-		Interpolation: floatimage.InterpolationNearestNeighbor,
-	}
+	return NewTexture(image, textureType)
 }
 
 // S set the strength of the texture.

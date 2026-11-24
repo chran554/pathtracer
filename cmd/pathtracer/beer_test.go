@@ -93,14 +93,12 @@ func TestTracePathBeerSurfaceEmission(test *testing.T) {
 }
 
 func TestTracePathBeerUncrossedBoundaries(test *testing.T) {
-	for _, name := range []string{"thin transmission", "alpha hole", "exterior reflection"} {
+	for _, name := range []string{"thin transmission", "exterior reflection"} {
 		test.Run(name, func(test *testing.T) {
 			material := scene.NewMaterial().T(1, true, 1.5).Absorb(color.NewColorGrey(100))
 			switch name {
 			case "thin transmission":
 				material.SolidObject = false
-			case "alpha hole":
-				material.C(color.WhiteTransparent)
 			case "exterior reflection":
 				material.T(0, true, 1.5).M(1, 0)
 			}
@@ -122,7 +120,7 @@ func TestTracePathBeerInternalReflection(test *testing.T) {
 			name = "total internal reflection"
 		}
 		test.Run(name, func(test *testing.T) {
-			medium := scene.NewMaterial().T(1, true, 1.5).Absorb(color.NewColor(0.1, 0.2, 0.3))
+			medium := scene.NewMaterial().M(0, 0).T(1, true, 1.5).Absorb(color.NewColor(0.1, 0.2, 0.3))
 			boundary := medium
 			if !tir {
 				boundary = scene.NewMaterial().M(1, 0)

@@ -140,17 +140,11 @@ func surfaceReferenceIntegral(base [3]float64, m, r, tr, viewCos, ior float64) [
 	return result
 }
 
-func TestTraceMetalBaseColorAndCoverage(t *testing.T) {
-	for _, coverage := range []float64{0, 1} {
-		material := scene.NewMaterial().M(1, 0).T(1, true, 1.5).C(color.NewColorRGBA(0.8, 0.4, 0.2, coverage))
-		fresnelTestAlbedo(material, 1)
-		material.Projections[0].Texture.Image.Fill(color.NewColor(0.5, 0.25, 1))
-		want := color.NewColor(0.4, 0.1, 0.2)
-		if coverage == 0 {
-			want = color.White
-		}
-		assertTransmissionColor(t, bounceTestTrace(bounceTestScene(material)), want)
-	}
+func TestTraceSurfaceBaseColor(t *testing.T) {
+	metal := scene.NewMaterial().M(1, 0).T(1, true, 1.5).C(color.NewColor(0.8, 0.4, 0.2))
+	setTestAlbedoTexture(metal, color.NewColor(0.5, 0.25, 1))
+	assertTransmissionColor(t, bounceTestTrace(bounceTestScene(metal)), color.NewColor(0.4, 0.1, 0.2))
+
 	// A zero-albedo, index-matched dielectric absorbs while preserving emission.
 	material := scene.NewMaterial().C(color.Black).T(0, false, 1)
 	assertTransmissionColor(t, bounceTestTrace(bounceTestScene(material)), color.Black)

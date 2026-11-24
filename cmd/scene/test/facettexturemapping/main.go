@@ -36,11 +36,9 @@ func main() {
 		SP(environmentTexture, &vec3.T{0, 0, 0}, vec3.T{1, 0, 0}, vec3.T{0, 1, 0})).N("environment dome")
 	environmentDome.RotateY(&vec3.Zero, util.DegToRad(-20))
 
-	// transparencyImage := floatimage.LoadOrPanic("textures/test/test_alpha_transparency.png")
 	// leafImage := floatimage.LoadOrPanic("textures/tree/Leaves0120_35_S_02.png")
 	// keroseneFlameImage := floatimage.LoadOrPanic("textures/misc/kerosenelamp/kerosenelamp_flame_wave.png")
 
-	// testSquareFacets := obj.NewSquare(obj.SquareTypeXYPlane, transparencyImage)
 	// leafSquareFacets := obj.NewSquare(obj.SquareTypeXYPlane, leafImage)
 	// flameSquareFacets := obj.NewSquare(obj.SquareTypeXYPlane, keroseneFlameImage)
 

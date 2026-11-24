@@ -9,14 +9,14 @@ import (
 
 type Material struct {
 	Name            string
-	Color           *color.Color // Linear RGB base color: diffuse albedo for dielectrics, reflection F0 for metals. Alpha is coverage.
-	Emission        *color.Color
-	Metallicness    float64 // [0,1]: dielectric (0) to conductor (1).
-	Roughness       float64 // Roughness is the reflection roughness in [0,1]. A value where zero is a perfect mirror. This is the control for single-scattering GGX with width Roughness squared.
+	Color           *color.Color // Linear RGB base color for dielectric diffuse albedo and metal reflection F0. Alpha scales emission.
+	Emission        *color.Color // Emitted RGB is tinted by the surface albedo and scaled by Emission.A * Color.A.
+	Metallicness    float64      // [0,1]: dielectric (0) to conductor (1).
+	Roughness       float64      // Perceptual GGX roughness in [0,1] for reflection and solid refraction. Zero gives a smooth interface.
 	Projections     []*ImageProjection
 	RefractionIndex float64
 	SolidObject     bool         // SolidObject is if the material denotes a solid object with volume, not a hollow or open object or object nor an object with plane-thin walls. Solid transparent objects can refract light, hollow objects don't.
-	Transparency    float64      // [0,1]: transmission fraction of the dielectric portion. Alpha controls coverage.
+	Transparency    float64      // Transmission fraction of the dielectric portion in [0,1].
 	Absorption      *color.Color // Homogeneous interior RGB absorption coefficients in inverse scene units (sigma_a >= 0, not limited to 1). Nil means no absorption; alpha is ignored. Used while this material is the active medium, independently of surface Color.
 	RayTerminator   bool         // RayTerminator decide if the ray should terminate after hit with the object. Example can be an environment sphere or environment cube where a hit to the wall is the same as "no hit, continue in infinity". Extremely bright lights can also be ray terminators, their appearance will not notably be affected by further tracing.
 }
@@ -52,13 +52,14 @@ func (m *Material) N(name string) *Material {
 	return m
 }
 
-// C is color properties
+// C sets the base color. Its RGB is tinted by the albedo texture and its alpha scales emission.
 func (m *Material) C(c *color.Color) *Material {
 	m.Color = c
 	return m
 }
 
-// E is emission properties
+// E sets the emission color and scales its RGB by scale. At a hit, emission alpha
+// and base color alpha both scale the emitted light. rayTerminator ends the path at the hit.
 func (m *Material) E(emission *color.Color, scale float64, rayTerminator bool) *Material {
 	m.Emission = emission
 	if scale != 1.0 && emission != nil {

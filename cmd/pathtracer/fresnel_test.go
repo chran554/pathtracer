@@ -3,7 +3,6 @@ package main
 import (
 	"math"
 	"pathtracer/internal/pkg/color"
-	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/scene"
 	"testing"
 
@@ -42,9 +41,8 @@ func TestFresnelDielectric(test *testing.T) {
 	}
 }
 
-// TestTracePathGlassFresnel checks Fresnel event frequencies, transmission radiance,
-// and alpha coverage. See TestFresnelDielectric and TestTracePathTransmissionRadiance
-// for the optical references; alpha coverage follows the renderer's material model.
+// TestTracePathGlassFresnel checks reflected-side event frequencies and transmitted
+// radiance for rays entering and leaving smooth glass.
 func TestTracePathGlassFresnel(test *testing.T) {
 	testCases := []struct {
 		name                      string
@@ -52,30 +50,21 @@ func TestTracePathGlassFresnel(test *testing.T) {
 		incidentCosine            float64
 		outsideIndex              float64
 		transparency              float64
-		materialCoverage          float64
-		textureCoverage           float64
 		expectedReflectedFraction float64
 	}{
-		{"enter", false, 1, 1, 1, 1, 1, 0.04},
-		{"exit", true, 1, 1, 1, 1, 1, 0.04},
-		{"enter oblique", false, 0.5, 1, 1, 1, 1, 0.08918671280221276},
-		{"exit oblique", true, math.Sqrt(0.75), 1, 1, 1, 1, 0.05519016729537589},
-		{"exit nested medium", true, 1, 1.33, 1, 1, 1, math.Pow((1.5-1.33)/(1.5+1.33), 2)},
-		{"material coverage", false, 1, 1, 1, 0.5, 1, 0.02},
-		{"texture coverage", false, 1, 1, 1, 1, 0.5, 0.02},
-		{"combined coverage", false, 1, 1, 1, 0.5, 0.5, 0.01},
+		{"enter", false, 1, 1, 1, 0.04},
+		{"exit", true, 1, 1, 1, 0.04},
+		{"enter oblique", false, 0.5, 1, 1, 0.08918671280221276},
+		{"exit oblique", true, math.Sqrt(0.75), 1, 1, 0.05519016729537589},
+		{"exit nested medium", true, 1, 1.33, 1, math.Pow((1.5-1.33)/(1.5+1.33), 2)},
 		// Half transmission leaves half of the non-Fresnel light for diffuse scattering.
-		{"partial transmission", false, 1, 1, 0.5, 1, 1, 0.52},
-		{"partial transmission and coverage", false, 1, 1, 0.5, 0.5, 0.5, 0.13},
-		{"total internal reflection", true, 0.5, 1, 1, 1, 1, 1},
-		{"total internal reflection and holes", true, 0.5, 1, 1, 0.5, 0.5, 0.25},
+		{"partial transmission", false, 1, 1, 0.5, 0.52},
+		{"total internal reflection", true, 0.5, 1, 1, 1},
 	}
 
 	for _, testCase := range testCases {
 		test.Run(testCase.name, func(test *testing.T) {
 			glass := scene.NewMaterial().M(0, 0).T(testCase.transparency, true, 1.5)
-			glass.C(color.NewColorRGBA(1, 1, 1, testCase.materialCoverage))
-			fresnelTestAlbedo(glass, testCase.textureCoverage)
 
 			// Initialize the medium stack before choosing entry or exit.
 			air := scene.NewMaterial().T(1, true, 1)
@@ -100,7 +89,6 @@ func TestTracePathGlassFresnel(test *testing.T) {
 			camera := &scene.Camera{RenderType: scene.Pathtracing, RecursionDepth: 1}
 
 			const sampleCount = 50000
-			coverage := testCase.materialCoverage * testCase.textureCoverage
 
 			// Radiance conversion (PBRT 9.5.2; see TestTracePathTransmissionRadiance).
 			radianceScale := math.Pow(testCase.outsideIndex/1.5, 2)
@@ -118,7 +106,7 @@ func TestTracePathGlassFresnel(test *testing.T) {
 				// Count reflected-side events, including attenuated diffuse paths.
 				if reflectedRadiance > 0 && transmittedRadiance == 0 {
 					reflectedCount++
-				} else if reflectedRadiance != 0 || !(math.Abs(float64(transmittedRadiance)-radianceScale) < 1e-6 || (coverage < 1 && transmittedRadiance == 1)) {
+				} else if reflectedRadiance != 0 || !(math.Abs(float64(transmittedRadiance)-radianceScale) < 1e-6) {
 					test.Fatalf("unexpected reflected/transmitted radiance: %v", actualRadiance)
 				}
 				if actualRadiance.B != 0 || actualRadiance.A != 1 {
@@ -134,70 +122,14 @@ func TestTracePathGlassFresnel(test *testing.T) {
 				test.Fatalf("reflected-side fraction = %g, want %g ± %g", actualReflectedFraction, testCase.expectedReflectedFraction, tolerance)
 			}
 
-			// Count holes separately so the index factor cannot accidentally scale alpha coverage.
-			transmissionProbability := coverage - testCase.expectedReflectedFraction
-			expectedRadiance := 1 - coverage + transmissionProbability*radianceScale
-			variance := max(0, 1-coverage+transmissionProbability*radianceScale*radianceScale-expectedRadiance*expectedRadiance)
+			// A transmitted ray carries the index conversion factor in the transmitted-side channel.
+			transmissionProbability := 1 - testCase.expectedReflectedFraction
+			expectedRadiance := transmissionProbability * radianceScale
+			variance := transmissionProbability * testCase.expectedReflectedFraction * radianceScale * radianceScale
 			tolerance = 8*math.Sqrt(variance/sampleCount) + 1e-6
 			if actualRadiance := transmittedRadianceSum / sampleCount; math.Abs(actualRadiance-expectedRadiance) > tolerance {
 				test.Fatalf("mean transmitted radiance = %g, want %g ± %g", actualRadiance, expectedRadiance, tolerance)
 			}
 		})
 	}
-}
-
-// TestTracePathAlphaHole checks that uncovered glass preserves direction and the
-// medium stack. Its emitter position uses Snell's law (see dielectricTestReference).
-func TestTracePathAlphaHole(test *testing.T) {
-	testCases := []struct {
-		name             string
-		materialCoverage float64
-		textureCoverage  float64
-		terminator       bool
-	}{
-		{"material", 0, 1, false},
-		{"texture", 1, 0, false},
-		{"terminator", 0, 1, true},
-	}
-
-	for _, testCase := range testCases {
-		test.Run(testCase.name, func(test *testing.T) {
-			holeMaterial := scene.NewMaterial().T(1, true, 1.5).C(color.NewColorRGBA(1, 1, 1, testCase.materialCoverage))
-			holeMaterial.RayTerminator = testCase.terminator
-			fresnelTestAlbedo(holeMaterial, testCase.textureCoverage)
-
-			glass := scene.NewMaterial().T(1, true, 1.5)
-			// Force transmission at the second interface to isolate the hole's effect.
-			secondPlane := orientationTestPlane(glass)
-			secondPlane.Translate(&vec3.T{0, 0, -1})
-
-			rayOrigin, rayHeading := vec3.T{0, 0, 1}, vec3.T{0.5, 0, -math.Sqrt(0.75)}
-
-			// Snell's law: travel two Z units in air, then one in glass with sin(thetaT)=1/3.
-			lightPosition := vec3.T{2*0.5/math.Sqrt(0.75) + (1.0/3)/math.Sqrt(8.0/9), 0, -2}
-
-			sceneNode := &scene.SceneNode{
-				FacetStructures: []*scene.FacetStructure{orientationTestPlane(holeMaterial), secondPlane},
-				Discs: []*scene.Disc{scene.NewDisc(&lightPosition, &vec3.UnitZ, 0.005,
-					scene.NewMaterial().E(color.White, 1, true))},
-			}
-			camera := &scene.Camera{RenderType: scene.Pathtracing, RecursionDepth: 2}
-			mediumStack := []*scene.Material{scene.NewMaterial().T(1, true, 1)}
-			actualRadiance := traceTransmissionPath(&scene.Ray{Origin: &rayOrigin, Heading: &rayHeading}, camera, sceneNode, 0, mediumStack)
-
-			// Only the second, covered interface changes the refractive medium and radiance.
-			assertTransmissionColor(test, actualRadiance, color.NewColor(4.0/9, 4.0/9, 4.0/9))
-		})
-	}
-}
-
-// fresnelTestAlbedo appends an initialized, constant white albedo texture to
-// material. textureAlpha is its coverage in [0,1].
-func fresnelTestAlbedo(material *scene.Material, textureAlpha float64) {
-	texture := floatimage.NewFloatImage("test coverage", 1, 1)
-	texture.Fill(color.NewColorRGBA(1, 1, 1, textureAlpha))
-
-	projection := scene.NewParallelImageProjection(scene.NewTexture(texture, scene.TextureTypeAlbedo), &vec3.T{}, vec3.UnitX, vec3.UnitY)
-	projection.Initialize()
-	material.P(projection)
 }

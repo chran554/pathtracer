@@ -95,12 +95,14 @@ func sampleMetal(roughness float64, base [3]float64, geometric, shading, incomin
 	return surfaceSample{sample.heading, reflectionWeight, reflectionBounce}
 }
 
-// sampleTransmissiveDielectric uses macro-normal Fresnel to choose between
-// smooth transmission and GGX reflection. Total internal reflection uses a mirror bounce.
+// sampleTransmissiveDielectric selects the solid or thin interface model.
 func sampleTransmissiveDielectric(material *scene.Material, roughness float64, geometric, shading, incoming *vec3.T, incident, transmitted float64, random func() float64) surfaceSample {
 	boundary := dielectricBoundary{normal: *shading}
 	solid := material.SolidObject && material.RefractionIndex > 0
 	if solid {
+		if roughness > 0 && incident != transmitted {
+			return sampleRoughDielectric(geometric, shading, incoming, roughness, incident, transmitted, random)
+		}
 		boundary = evaluateDielectricBoundary(geometric, shading, incoming, incident, transmitted)
 	} else {
 		boundary.fresnel = FresnelDielectric(-vec3.Dot(shading, incoming), incident, transmitted)

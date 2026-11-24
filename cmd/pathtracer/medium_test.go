@@ -117,7 +117,7 @@ func TestCameraMediaRefraction(t *testing.T) {
 }
 
 func TestCameraMediaTotalInternalReflection(t *testing.T) {
-	glass := scene.NewMaterial().T(1, true, 1.5).Absorb(color.NewColorGrey(0.2))
+	glass := scene.NewMaterial().M(0, 0).T(1, true, 1.5).Absorb(color.NewColorGrey(0.2))
 	frame := &scene.Frame{
 		Camera: &scene.Camera{RenderType: scene.Pathtracing, RecursionDepth: 1, InitialMedia: []*scene.Material{glass}},
 		SceneNode: &scene.SceneNode{

@@ -296,9 +296,12 @@ Parallel projection can be used from any image that is plainly/straight projecte
 .Parallel projection. A circular disc and three spheres, all with parallel projection. One sphere share the exact same projection as the disc. The second has a checker pattern and the third has a tree rings pattern projected on them from different angles.
 image::projection_parallel.png[Parallel projection]
 
-== Image projection - Alpha channel transparency
+[#albedo-texture-alpha]
+== Albedo texture alpha
 
-Textures defined by images that support alpha channel (most common png file format) can define transparency in the projected image. Surface parts of any object with a projected texture where alpha = 0 (transparent) will be treated as a transparent object and will be see-through, with or without any refraction depending on material setup.
+Albedo texture alpha controls how strongly a texel tints the surface. For example, a red texel on a white material gives white at alpha 0, pink at alpha 0.5, and red at alpha 1. The same tint applies to an emissive surface. The base color alpha and emission color alpha multiply together to scale its emitted light.
+
+Use the material's `Transparency` setting to control optical transmission.
 
 .Transparency through texture image alpha channel.
 image::projection_alpha.png[Projection using alpha channel for transparency]

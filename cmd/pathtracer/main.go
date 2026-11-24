@@ -635,9 +635,6 @@ func tracePathSampled(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode
 			// The hit material describes the boundary, not necessarily this segment.
 			incidentMedium := rayContexts[len(rayContexts)-1]
 
-			// Alpha describes surface coverage; Transparency describes optical transmission.
-			// TODO: Figure out how coverage based on alpha should work with solid objects
-
 			if !ii.material.RayTerminator {
 				geometricNormal, shadingNormal, isIngoingRay := orientSurfaceNormals(ii, ray.Heading)
 				newRayHeading := ray.Heading
@@ -647,7 +644,7 @@ func tracePathSampled(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode
 				roughness := roughnessValue(ii)
 				metallicness := metallicnessValue(ii)
 
-				outgoingRadiance.A = 1 // Rejected scattering still hit a covered surface.
+				outgoingRadiance.A = 1 // Record the hit even if the scattering sample is rejected.
 				incidentIndex, transmittedIndex := boundaryRefractionIndices(ii.material, rayContexts, isIngoingRay)
 				sample := sampleSurface(ii.material, roughness, metallicness, surfaceBaseColor(albedo), &geometricNormal, &shadingNormal, ray.Heading, incidentIndex, transmittedIndex, random)
 
@@ -681,10 +678,10 @@ func tracePathSampled(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode
 			}
 
 			if emission := ii.material.Emission; emission != nil {
-				coverage := emission.A * albedo.A
-				outgoingRadiance.R += emission.R * albedo.R * coverage
-				outgoingRadiance.G += emission.G * albedo.G * coverage
-				outgoingRadiance.B += emission.B * albedo.B * coverage
+				emissionStrength := emission.A * albedo.A
+				outgoingRadiance.R += emission.R * albedo.R * emissionStrength
+				outgoingRadiance.G += emission.G * albedo.G * emissionStrength
+				outgoingRadiance.B += emission.B * albedo.B * emissionStrength
 				outgoingRadiance.A = 1.0
 			}
 
@@ -765,7 +762,8 @@ func albedoColor(ii *IntersectionInformation) *color.Color {
 		return baseColor
 	}
 
-	// Texture alpha blends the tint from white, preserving the material's coverage.
+	// Texture alpha blends the RGB multiplier from white to the texture color.
+	// Carry the material's base alpha through for emission.
 	return &color.Color{
 		R: baseColor.R * (1 - (1-textureColor.R)*textureColor.A),
 		G: baseColor.G * (1 - (1-textureColor.G)*textureColor.A),

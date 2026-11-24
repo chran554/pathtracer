@@ -11,7 +11,8 @@ L_at_origin_rgb = T_rgb(d) * L_at_hit_rgb
 Here `d` is world-space distance in scene units and `sigma_a` is the RGB
 absorption coefficient in inverse scene units. It is nonnegative, has no upper
 bound of one, and is independent of refractive index and surface transparency.
-Alpha remains surface coverage; it is not changed by absorption.
+Beer attenuation scales RGB radiance along the segment. Surface tint and
+emission are evaluated at the hit as described in the [material guide](metallic-roughness.md).
 
 This is a physical law, not just a visual trick. Using three RGB coefficients
 instead of wavelength-dependent spectra is a practical approximation suitable
@@ -84,7 +85,7 @@ attenuated using its incident medium, including segments ending at emissive or
 opaque surfaces and segments before/after reflection or total internal reflection.
 The stack changes only on accepted transmission through a solid boundary.
 Nested solids replace the enclosing medium locally; their coefficients are not
-added together. Thin surfaces and alpha holes do not enter a medium.
+added together. Thin surfaces keep the current medium.
 
 Attenuation is applied after gathering the hit's emission and scattered radiance,
 without changing alpha. The existing small ray-origin offset slightly shortens

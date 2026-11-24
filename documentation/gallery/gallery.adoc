@@ -131,16 +131,16 @@ Frame render time:      10h20m
 
 This is a tribute to the blockbuster https://www.imdb.com/title/tt0094889/[Cocktail (1988)]. Some 80's nostalgia... (https://www.youtube.com/watch?v=78pGiQ2oC6k&ab_channel=TrailerChan[movie trailer])
 
-Really produced to show off the xref:../functionality/functionality.adoc#image-projection-alpha-channel-transparency[transparency in texture with alpha channel].
+This render is a neon sign and window blinds. The renderer uses xref:../functionality/functionality.adoc#albedo-texture-alpha[albedo texture alpha for tint strength].
 
 Do pay attention to the neon sign. It is located 7 cm off the brick wall and leave a nice soft colored illumination to the wall. The light from the neon tubes is a little dim or weak to the ambient lighting as I could not help myself to add more lights like the morning sun through window blinds and soft (warm) spotlights along the top of the wall.
 Remember they did not have led strips that gave a continuous light along the wall in those days but had to use a trail of low voltage tungsten light bulbs.
 
-The neon sign is actually three layers of transparent images stacked closely together (inter distance 3mm, thus "neon tube" is 6 mm thick). The middle layer is the light "halo" and layers in front and back of the halo are "core" light textures. They all emit light but the core is somewhat brighter than the halo. (See image at xref:../functionality/functionality.adoc#image-projection-alpha-channel-transparency[transparency in texture with alpha channel])
+The neon sign uses three images stacked 3 mm apart, giving the tube a depth of 6 mm. The middle layer provides the halo. The front and back layers emit the brighter core light.
 
 The huge amount of samples per pixels is really needed to avoid light noise as the "sun" shining through the window blinds is a very small but bright light source at the end of a pretty long light shaping box.
 
-The "blinds" are actually like a "cut-out" shape from a cardboard at the front of a light shaping box. Well, of course it is not cardboard but a texture image at the front of the light shaping box. It can be any desired shape or form defined by a png-image with alpha channel transparency. Nifty and simple way of faking a window with blinds in wall with morning sunlight outside. (See image at xref:../functionality/functionality.adoc#image-projection-alpha-channel-transparency[transparency in texture with alpha channel])
+In this render, a patterned image at the front of the light box shaped the morning sunlight into stripes.
 
 .80's nostalgia with blockbuster Cocktail
 image::cocktail.png[Soda cans]
