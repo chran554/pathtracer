@@ -53,7 +53,9 @@ func main() {
 			roughness := yProgress
 
 			sphereMaterial := scene.NewMaterial().
-				C(color.NewColor(0.80, 0.95, 0.80)).
+				//C(color.White).
+				//C(color.NewColor(0.70, 0.95, 0.70)).
+				C(color.NewColor(0.80, 0.95, 0.80)). // Minty light green
 				M(metallicness, roughness)
 
 			sphereOrigin := vec3.T{-sphereSpread/2.0 + float64(xIndex)*sphereCC, ballRadius, -sphereSpread/2.0 + float64(yIndex)*sphereCC}

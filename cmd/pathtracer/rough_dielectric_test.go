@@ -13,11 +13,12 @@ import (
 
 // TestRoughGlassSecondFacet follows a reflection that points back into the
 // microsurface, then transmits through a second facet at normal incidence.
+// t reports incorrect exit directions and transmission weights.
 func TestRoughGlassSecondFacet(t *testing.T) {
 	incoming := vec3.UnitZ.Inverted()
 	// The first normal tilts 60 degrees toward +X. The reflected ray travels
 	// downward, where the second visible normal is exactly opposite that ray.
-	random := glassTestDraws(t,
+	random := scriptedScatterDraws(t,
 		0.5, 0.75, 0.25, 0,
 		0.5, 1.0/9, 0.75, 0.99,
 		0.999,
@@ -37,6 +38,7 @@ func TestRoughGlassSecondFacet(t *testing.T) {
 
 // TestRoughGlassWhiteFurnace checks a clear sphere in uniform unit radiance.
 // Both crossings and all internal reflections are sampled by the scene tracer.
+// t records the measured RGB radiance.
 func TestRoughGlassWhiteFurnace(t *testing.T) {
 	for _, roughness := range []float64{0.25, 0.6, 1} {
 		glass := scene.NewMaterial().M(0, roughness).T(1, true, 1.5)
@@ -46,7 +48,7 @@ func TestRoughGlassWhiteFurnace(t *testing.T) {
 
 		for _, offset := range []float64{0, 0.9} {
 			ray := &scene.Ray{Origin: &vec3.T{offset, 0, 2}, Heading: &vec3.T{0, 0, -1}}
-			mean := meanGlassTestRadiance(ray, testScene, media, 96, 20000)
+			mean := meanTestPathRadiance(ray, testScene, media, 96, 20000)
 			t.Logf("roughness %.2f, ray offset %.1f: linear radiance %.5f", roughness, offset, mean[0])
 			for _, channel := range mean {
 				if !(math.Abs(channel-1) < 0.006) {
@@ -59,6 +61,7 @@ func TestRoughGlassWhiteFurnace(t *testing.T) {
 
 // TestRoughGlassTwoSidedLighting measures reflection and transmission separately
 // using red light on the air side and blue light on the glass side of one boundary.
+// t records differences from the independent reference.
 func TestRoughGlassTwoSidedLighting(t *testing.T) {
 	glass := scene.NewMaterial().M(0, 1).T(1, true, 1.5)
 	air := scene.NewMaterial().T(1, true, 1)
@@ -98,7 +101,7 @@ func TestRoughGlassTwoSidedLighting(t *testing.T) {
 			origin := direction.Inverted() // All rays meet the plane at the origin.
 			ray := &scene.Ray{Origin: &origin, Heading: &direction}
 			const samples = 60000
-			mean := meanGlassTestRadiance(ray, testScene, media, 1, samples)
+			mean := meanTestPathRadiance(ray, testScene, media, 1, samples)
 			reflected, transmitted := mean[0], mean[2]
 			if testCase.fromGlass {
 				reflected, transmitted = mean[2], mean[0]
@@ -116,9 +119,14 @@ func TestRoughGlassTwoSidedLighting(t *testing.T) {
 	}
 }
 
-// meanGlassTestRadiance returns the mean linear RGB for count deterministic paths
-// along ray in testScene, starting in media and allowing depth scene bounces.
-func meanGlassTestRadiance(ray *scene.Ray, testScene *scene.SceneNode, media []*scene.Material, depth, count int) [3]float64 {
+// meanTestPathRadiance traces a reproducible set of paths through a test scene.
+// ray is the primary camera ray.
+// testScene contains the surfaces and lights.
+// media lists the initial enclosing media.
+// depth limits the number of scene bounces.
+// count is the number of independent paths.
+// The result is the mean linear RGB radiance.
+func meanTestPathRadiance(ray *scene.Ray, testScene *scene.SceneNode, media []*scene.Material, depth, count int) [3]float64 {
 	camera := &scene.Camera{RenderType: scene.Pathtracing, RecursionDepth: depth}
 	random := rand.New(rand.NewPCG(42, 17))
 	var sum [3]float64
@@ -135,9 +143,11 @@ func meanGlassTestRadiance(ray *scene.Ray, testScene *scene.SceneNode, media []*
 	return sum
 }
 
-// glassTestDraws returns the given uniform draws in order. It fails t if the
-// tested path consumes a different number of draws than the scripted walk.
-func glassTestDraws(t *testing.T, draws ...float64) func() float64 {
+// scriptedScatterDraws supplies a fixed sequence of random inputs to the sampler.
+// t reports missing or excess draws.
+// draws lists the uniform samples in consumption order.
+// The result returns the next draw each time it is called.
+func scriptedScatterDraws(t *testing.T, draws ...float64) func() float64 {
 	t.Helper()
 	t.Cleanup(func() {
 		if len(draws) > 0 {

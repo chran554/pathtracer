@@ -12,10 +12,10 @@ type Material struct {
 	Color           *color.Color // Linear RGB base color for dielectric diffuse albedo and metal reflection F0. Alpha scales emission.
 	Emission        *color.Color // Emitted RGB is tinted by the surface albedo and scaled by Emission.A * Color.A.
 	Metallicness    float64      // [0,1]: dielectric (0) to conductor (1).
-	Roughness       float64      // Perceptual GGX roughness in [0,1] for reflection and solid refraction. Zero gives a smooth interface.
+	Roughness       float64      // Perceptual GGX roughness in [0,1] for specular reflection and transmission through solids or thin walls. Zero gives a smooth interface.
 	Projections     []*ImageProjection
 	RefractionIndex float64
-	SolidObject     bool         // SolidObject is if the material denotes a solid object with volume, not a hollow or open object or object nor an object with plane-thin walls. Solid transparent objects can refract light, hollow objects don't.
+	SolidObject     bool         // Solid transmission crosses a volume boundary. Non-solid transmission models two faces of a thin wall within the same scene medium.
 	Transparency    float64      // Transmission fraction of the dielectric portion in [0,1].
 	Absorption      *color.Color // Homogeneous interior RGB absorption coefficients in inverse scene units (sigma_a >= 0, not limited to 1). Nil means no absorption; alpha is ignored. Used while this material is the active medium, independently of surface Color.
 	RayTerminator   bool         // RayTerminator decide if the ray should terminate after hit with the object. Example can be an environment sphere or environment cube where a hit to the wall is the same as "no hit, continue in infinity". Extremely bright lights can also be ray terminators, their appearance will not notably be affected by further tracing.
@@ -216,7 +216,7 @@ func (m *Material) ProjectionsOfType(textureType TextureType) []*ImageProjection
 	return projections
 }
 
-func NewMaterialGlass(name string) *Material {
+func NewMaterialSolidGlass(name string) *Material {
 	return NewMaterial().
 		N(name).
 		C(color.NewColor(0.90, 0.92, 0.95)).

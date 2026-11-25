@@ -404,6 +404,7 @@ func TestTracePathSmoothGlassNestedMedia(test *testing.T) {
 
 // TestTracePathShadingFresnel checks reflection probabilities from shading
 // normals and geometric fallback, against the Fresnel equations in dielectricTestReference.
+// test records deviations from the expected reflection frequency.
 func TestTracePathShadingFresnel(test *testing.T) {
 	testCases := []struct {
 		name                       string
@@ -441,6 +442,10 @@ func TestTracePathShadingFresnel(test *testing.T) {
 			}
 
 			_, expectedReflectance := dielectricTestReference(0, testCase.expectedNormalAngleDegrees, incidentIndex, transmittedIndex)
+			if testCase.thin {
+				expectedReflectance = 2 * expectedReflectance / (1 + expectedReflectance)
+			}
+
 			const sampleCount = 30000
 			reflectedCount := 0.
 			for range sampleCount {

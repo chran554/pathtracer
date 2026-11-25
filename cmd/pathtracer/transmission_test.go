@@ -10,6 +10,7 @@ import (
 )
 
 // TestRoughDielectricBoundary checks immediate escape against analytic Snell and Fresnel values.
+// t reports incorrect directions, Fresnel branching, and weights.
 func TestRoughDielectricBoundary(t *testing.T) {
 	incoming := vec3.UnitZ.Inverted()
 	// At normal incidence a GGX disk sample u has slope alpha*sqrt(u/(1-u)).
@@ -33,7 +34,7 @@ func TestRoughDielectricBoundary(t *testing.T) {
 
 			// Probe both sides of the analytic microfacet Fresnel threshold.
 			for _, roulette := range []float64{fresnel - 1e-6, min(fresnel+1e-6, math.Nextafter(1, 0))} {
-				random := glassTestDraws(t, 0.5, u, 0.25, roulette, math.Nextafter(1, 0))
+				random := scriptedScatterDraws(t, 0.5, u, 0.25, roulette, math.Nextafter(1, 0))
 				glass := scene.NewMaterial().M(0, roughness).T(1, true, 1.5)
 				sample := sampleTransmissiveDielectric(glass, roughness, &vec3.UnitZ, &vec3.UnitZ, &incoming, tc.incident, tc.transmitted, random)
 				want, bounce := refracted, transmissionBounce
@@ -58,6 +59,7 @@ func TestRoughDielectricBoundary(t *testing.T) {
 }
 
 // TestTraceRoughGlassSphere verifies independent entry and exit samples along a known ray.
+// t reports incorrect radiance through the sphere.
 func TestTraceRoughGlassSphere(t *testing.T) {
 	// Send a central ray through a flat entry microfacet. At the opposite pole,
 	// choose a 30-degree facet on exit. Only the predicted exit ray hits the lamp.
@@ -70,7 +72,7 @@ func TestTraceRoughGlassSphere(t *testing.T) {
 	}
 
 	// Each hit chooses glass, samples a height, scatters at a facet, then escapes.
-	random := glassTestDraws(t,
+	random := scriptedScatterDraws(t,
 		0, 0.5, 0, 0, 0.99, 0.99,
 		0, 0.5, 0.25, 0.25, 0.99, 0.99,
 	)

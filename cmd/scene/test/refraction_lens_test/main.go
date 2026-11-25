@@ -78,7 +78,7 @@ func main() {
 		progress := float64(frameIndex) / float64(amountFrames)
 
 		lensDistance = lensMinDistance + progress*(lensMaxDistance-lensMinDistance)
-		lens := scene.NewSphere(&vec3.T{0, 0, -(lensDistance + lensRadius)}, lensRadius, scene.NewMaterialGlass("glass lens"))
+		lens := scene.NewSphere(&vec3.T{0, 0, -(lensDistance + lensRadius)}, lensRadius, scene.NewMaterialSolidGlass("glass lens"))
 
 		scn := scene.NewSceneNode().FS(lightPlane).FS(backplane).S(lens).S(skyDome)
 

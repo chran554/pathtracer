@@ -16,7 +16,7 @@ const (
 	sphereRadius float64 = 20
 
 	maxRecursionDepth         = 6
-	amountSamples             = 1024 * 24
+	amountSamples             = 1024 * 12
 	lensRadius        float64 = 0
 
 	viewPlaneDistance    = 4000.0

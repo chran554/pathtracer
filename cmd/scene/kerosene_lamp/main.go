@@ -19,11 +19,11 @@ const (
 	imageHeight   = 800
 	magnification = 1.0
 
-	amountSamples = 1024 * 12 // 32 // 12samp x 1.5mag --> 4h
+	amountSamples = 1024 // 1024 * 12 // 32 // 12samp x 1.5mag --> 4h
 	maxRayDepth   = 15
 	apertureSize  = 0.5
 
-	keroseneLampEmission = 35.0
+	keroseneLampEmission = 20.0
 	sootness             = 1.0
 	skyDomeEmission      = 0.9
 )
@@ -52,15 +52,15 @@ func main() {
 		)
 
 	keroseneLamp := obj.NewKeroseneLamp2(40, keroseneLampEmission, sootness)
+	//keroseneLamp.RemoveObjectsByName("soot")
 	keroseneLamp.RotateY(&vec3.Zero, util.DegToRad(-90))
 	keroseneLamp.Translate(&vec3.T{20, tableBoard.Bounds.Ymax, -20})
 
-	scratchesNormalTextureImage := floatimage.ReferenceOrPanic("textures/normal maps/ScratchedPaintedMetal01_MR_4K/ScratchedPaintedMetal01_4K_Normal.png")
-	scratchesNormalTexture := scene.NewTexture(scratchesNormalTextureImage, scene.TextureTypeNormalMap)
+	scratchesNormalTexture := scene.NewTextureReferenceOrPanic("textures/pbr/ScratchedPaintedMetal01_MR_4K/ScratchedPaintedMetal01_4K_Normal.png", scene.TextureTypeNormalMap_DirectX)
+	scratchesNormalTexture.S(0.4).I(floatimage.InterpolationBicubic)
+
 	keroseneBase := keroseneLamp.GetFirstObjectByName("base")
 	keroseneBase.Material.SP(scratchesNormalTexture, keroseneBase.Bounds.Center(), vec3.UnitX, vec3.UnitY)
-	keroseneBase.Material.ProjectionsOfType(scene.TextureTypeNormalMap)[0].Texture.Strength = 0.5
-	keroseneBase.Material.ProjectionsOfType(scene.TextureTypeNormalMap)[0].Texture.Interpolation = floatimage.InterpolationBicubic
 
 	scn := scene.NewSceneNode().S(skyDome).FS(tableBoard).FS(keroseneLamp)
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"math"
+	"math/rand/v2"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/scene"
 	"testing"
@@ -9,75 +10,28 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
-// TestRoughReflectionBRDF checks analytic GGX values, reciprocity, and hemisphere
-// support. See evaluateRoughReflection for the GGX/Smith model references.
-func TestRoughReflectionBRDF(test *testing.T) {
-	normal := vec3.T{0, 0, 1}
-	for _, outgoingCosine := range []float64{1, 0.5, 0.01} {
-		outgoingDirection := vec3.T{math.Sqrt(1 - outgoingCosine*outgoingCosine), 0, outgoingCosine}
-		brdf, pdf := evaluateRoughReflection(&normal, &normal, &normal, &outgoingDirection, 1)
-		// GGX with correlated Smith G2 simplifies at alpha=1 and normal incidence
-		// to f=1/(2*pi*(1+cos)) and p=1/(4*pi); see evaluateRoughReflection.
-		expectedBRDF, expectedPDF := 1/(2*math.Pi*(1+outgoingCosine)), 1/(4*math.Pi)
-		if math.Abs(brdf-expectedBRDF) > 1e-12 || math.Abs(pdf-expectedPDF) > 1e-12 {
-			test.Fatalf("cosine %g: f/pdf = %g/%g, want %g/%g", outgoingCosine, brdf, pdf, expectedBRDF, expectedPDF)
-		}
-	}
-
-	// Reciprocity must hold when the view and outgoing directions are exchanged.
-	viewDirection, outgoingDirection := vec3.T{0.6, 0, 0.8}, vec3.T{0.3, 0.4, math.Sqrt(0.75)}
-	forwardBRDF, _ := evaluateRoughReflection(&normal, &normal, &viewDirection, &outgoingDirection, 0.7)
-	reverseBRDF, _ := evaluateRoughReflection(&normal, &normal, &outgoingDirection, &viewDirection, 0.7)
-	if !(math.Abs(forwardBRDF-reverseBRDF) < 1e-12) {
-		test.Fatalf("nonreciprocal BRDF: %g versus %g", forwardBRDF, reverseBRDF)
-	}
-
-	shadingNormal := vec3.T{0.8, 0, 0.6}
-	for _, direction := range []vec3.T{{0.8, 0, -0.6}, {-0.8, 0, 0.6}, {1, 0, 0}} {
-		// Either the geometric or shading hemisphere excludes these directions.
-		brdf, pdf := evaluateRoughReflection(&normal, &shadingNormal, &normal, &direction, 0.7)
-		if brdf != 0 || pdf != 0 {
-			test.Fatalf("unsupported direction %v has f/pdf %g/%g", direction, brdf, pdf)
-		}
-	}
-}
-
-// TestRoughReflectionSamples checks Heitz visible-normal samples for finite
-// weights and rejection without retries. See sampleReflection for the source.
+// TestRoughReflectionSamples checks hemisphere support down to grazing incidence.
+// test reports invalid weights and escape directions.
 func TestRoughReflectionSamples(test *testing.T) {
-	normal, incomingDirection := vec3.T{0, 0, 1}, vec3.T{0, 0, -1}
-	sample := sampleReflection(&normal, &normal, &incomingDirection, 1, 0.25, 0.37)
-	if sample.heading == nil || math.Abs((*sample.heading)[2]-0.5) > 1e-12 || math.Abs(sample.weight-2.0/3) > 1e-12 {
-		test.Fatalf("analytic GGX sample = %v, want cosine 0.5 and weight 2/3", sample)
-	}
-
-	// This microfacet reflects below the surface; it must not be replaced by another sample.
-	rejectedSample := sampleReflection(&normal, &normal, &incomingDirection, 1, 0.75, 0.37)
-	if rejectedSample.heading != nil || rejectedSample.weight != 0 {
-		test.Fatalf("rejected sample acquired a contribution: %v", rejectedSample)
-	}
-
-	// Probe narrow lobes and grazing incidence with deterministic disk samples.
+	random := rand.New(rand.NewPCG(12, 24))
 	for _, roughness := range []float64{1e-8, 0.1, 0.5, 1} {
-		for _, incidentCosine := range []float64{1, 0.5, 1e-8, 1e-200} {
-			grazingIncomingDirection := vec3.T{-math.Sqrt(1 - incidentCosine*incidentCosine), 0, -incidentCosine}
-
-			// Fractional inverse-golden-ratio multiples spread the sample azimuths.
-			for sampleIndex := range 1024 {
-				reflectionSample := sampleReflection(&normal, &normal, &grazingIncomingDirection, roughness, (float64(sampleIndex)+0.5)/1024, math.Mod(float64(sampleIndex)*0.6180339887498949, 1))
-				if !(reflectionSample.weight >= 0 && reflectionSample.weight <= 1+1e-12) {
-					test.Fatalf("roughness %g, cosine %g: invalid weight %g", roughness, incidentCosine, reflectionSample.weight)
+		for _, cosine := range []float64{1, 0.5, 1e-8, 1e-200} {
+			incoming := vec3.T{-math.Sqrt(1 - cosine*cosine), 0, -cosine}
+			for range 1024 {
+				sample := sampleMetal(roughness, [3]float64{1, 1, 1}, &vec3.UnitZ, &vec3.UnitZ, &incoming, random.Float64)
+				if !(sample.weight[0] >= 0 && !math.IsInf(sample.weight[0], 0)) {
+					test.Fatalf("roughness %g, cosine %g: invalid weight %v", roughness, cosine, sample.weight)
 				}
-				if reflectionSample.heading != nil && !validSurfaceHeading(&normal, reflectionSample.heading) {
-					test.Fatalf("invalid reflected direction: %v", reflectionSample.heading)
+				if sample.heading != nil && !validSurfaceHeading(&vec3.UnitZ, sample.heading) {
+					test.Fatalf("invalid reflected direction %v", sample.heading)
 				}
 			}
 		}
 	}
 }
 
-// TestRoughReflectionIntegration compares Heitz visible-normal sampling with
-// independent GGX/Smith quadrature in reflectionReferenceIntegral.
+// TestRoughReflectionIntegration checks the one-facet contribution against GGX/Smith quadrature.
+// test reports differences between the sampled and integrated radiance.
 func TestRoughReflectionIntegration(test *testing.T) {
 	testCases := []struct {
 		name          string
@@ -94,96 +48,67 @@ func TestRoughReflectionIntegration(test *testing.T) {
 
 	for _, testCase := range testCases {
 		test.Run(testCase.name, func(test *testing.T) {
-			expectedRadiance, expectedAcceptanceProbability := reflectionReferenceIntegral(&testCase.shadingNormal, &testCase.viewDirection, testCase.roughness)
-			geometricNormal, incomingDirection := vec3.T{0, 0, 1}, testCase.viewDirection.Inverted()
+			expectedRadiance := reflectionReferenceIntegral(&testCase.shadingNormal, &testCase.viewDirection, testCase.roughness)
+			incoming := testCase.viewDirection.Inverted()
+			random := rand.New(rand.NewPCG(32, 91))
 
-			// Sample-space midpoint grids keep this integration check reproducible.
-			const samplesPerAxis = 512
-			var meanRadiance, acceptanceProbability float64
-			for radialIndex := range samplesPerAxis {
-				for azimuthIndex := range samplesPerAxis {
-					sample := sampleReflection(&geometricNormal, &testCase.shadingNormal, &incomingDirection, testCase.roughness, (float64(radialIndex)+0.5)/samplesPerAxis, (float64(azimuthIndex)+0.5)/samplesPerAxis)
-					if sample.heading == nil {
-						continue
-					}
-					acceptanceProbability++
-					meanRadiance += sample.weight * reflectionTestIllumination(sample.heading)
+			// The full walk must reproduce the analytic GGX term for paths escaping after one hit.
+			const samples = 150000
+			var sum float64
+			for range samples {
+				encounters := 0
+				reflectance := func(float64) [3]float64 {
+					encounters++
+					return [3]float64{1, 1, 1}
+				}
+				sample := sampleGlossyReflection(&vec3.UnitZ, &testCase.shadingNormal, &incoming, testCase.roughness, reflectance, random.Float64)
+				if encounters == 1 && sample.heading != nil {
+					sum += sample.weight[0] * reflectionTestIllumination(sample.heading)
 				}
 			}
-
-			// Normalize by all trials, including rejected samples with zero contribution.
-			meanRadiance /= samplesPerAxis * samplesPerAxis
-			acceptanceProbability /= samplesPerAxis * samplesPerAxis
-			if math.Abs(meanRadiance-expectedRadiance) > 0.003 || math.Abs(acceptanceProbability-expectedAcceptanceProbability) > 0.003 {
-				test.Fatalf("radiance/accepted = %g/%g, want %g/%g", meanRadiance, acceptanceProbability, expectedRadiance, expectedAcceptanceProbability)
+			if mean := sum / samples; !(math.Abs(mean-expectedRadiance) < 0.004) {
+				test.Fatalf("one-facet radiance %g, want %g", mean, expectedRadiance)
 			}
 		})
 	}
 }
 
-// TestTracePathRoughReflection checks GGX/Smith weighting, mixture selection, tint,
-// and local emission. See evaluateRoughReflection for the model references.
+// TestTracePathRoughReflection follows a two-facet reflection through the scene tracer.
+// test reports incorrect Fresnel products, emission, opacity, or mixture weighting.
 func TestTracePathRoughReflection(test *testing.T) {
-	testCases := []struct {
-		name           string
-		metallicness   float64
-		tintReflection bool
-		emissive       bool
-	}{
-		{"reflection", 1, false, false},
-		{"tinted reflection", 1, true, false},
-		{"local emission", 1, true, true},
-		{"diffuse mixture", 0.5, false, false},
+	base := [3]float64{0.25, 0.5, 0.75}
+	material := scene.NewMaterial().M(0.4, 1).C(color.NewColor(base[0], base[1], base[2]))
+	material.E(color.NewColor(2, 1, 0.5), 1, false)
+	media := []*scene.Material{scene.NewMaterial().T(1, true, 1)}
+	ray := &scene.Ray{Origin: &vec3.UnitZ, Heading: &vec3.T{0, 0, -1}}
+	camera := &scene.Camera{RenderType: scene.Pathtracing, RecursionDepth: 1}
+
+	// Choose metal, reflect down at 60 degrees, and return at normal facet incidence.
+	draw := scriptedScatterDraws(test, 0.2, 0.5, 0.75, 0.25, 0.5, 1.0/9, 0.75, 0.999)
+	got := tracePathSampled(ray, camera, bounceTestScene(material), 0, media, draw)
+	var expected [3]float64
+	for channel, albedo := range base {
+		firstFresnel := albedo + (1-albedo)*math.Pow(0.5, 5)
+		expected[channel] = albedo * (firstFresnel + [3]float64{2, 1, 0.5}[channel])
 	}
+	assertTransmissionColor(test, got, color.NewColor(expected[0], expected[1], expected[2]))
+}
 
-	for _, testCase := range testCases {
-		test.Run(testCase.name, func(test *testing.T) {
-			material := scene.NewMaterial().M(testCase.metallicness, 1)
-			material.RefractionIndex = 1 // Keep the selected mixture independent of Fresnel.
-			if testCase.tintReflection {
-				material.C(color.NewColor(0.25, 0.5, 0.75))
-			}
-			if testCase.emissive {
-				material.E(color.NewColor(2, 1, 0.5), 1, false)
-			}
-
-			sceneNode := bounceTestScene(material)
-			const sampleCount = 30000
-			var radianceSum [3]float64
-			for range sampleCount {
-				actualRadiance := bounceTestTrace(sceneNode)
-				if actualRadiance.A != 1 {
-					test.Fatalf("reflection changed opacity: %v", actualRadiance)
-				}
-				for channelIndex, channelRadiance := range [3]float32{actualRadiance.R, actualRadiance.G, actualRadiance.B} {
-					radianceSum[channelIndex] += float64(channelRadiance)
-				}
-			}
-
-			// At alpha=1 and normal incidence, GGX/Smith reflectance is
-			// integral_0^1 cos/(1+cos) dcos = 1-ln(2); see TestRoughReflectionBRDF.
-			integratedReflectance := 1 - math.Log(2)
-			for channelIndex, albedo := range [3]float32{material.Color.R, material.Color.G, material.Color.B} {
-				expectedMean := (1-testCase.metallicness)*float64(albedo) + testCase.metallicness*integratedReflectance
-				if testCase.tintReflection {
-					// Independent 1D quadrature includes Schlick Fresnel at the half-vector.
-					expectedMean = 0
-					const steps = 10000
-					for j := range steps {
-						c := (float64(j) + 0.5) / steps
-						f := float64(albedo) + (1-float64(albedo))*math.Pow(1-math.Sqrt((1+c)/2), 5)
-						expectedMean += f * c / (1 + c) / steps
-					}
-				}
-				if testCase.emissive {
-					expectedMean += [3]float64{2, 1, 0.5}[channelIndex] * float64(albedo)
-				}
-				// The random scattering term lies in [0,1]; eight standard errors use variance <= 1/4.
-				if actualMean := radianceSum[channelIndex] / sampleCount; !(math.Abs(actualMean-expectedMean) < 4/math.Sqrt(sampleCount)) {
-					test.Fatalf("channel %d: radiance = %g, want %g", channelIndex, actualMean, expectedMean)
-				}
-			}
-		})
+// TestExteriorDielectricReflection checks the two Fresnel factors for a glossy coating.
+// test reports an incorrect escape direction or selection weight.
+func TestExteriorDielectricReflection(test *testing.T) {
+	incoming := vec3.UnitZ.Inverted()
+	draw := scriptedScatterDraws(test, 0, 0.5, 0.75, 0.25, 0.5, 1.0/9, 0.75, 0.999)
+	sample := sampleOpaqueDielectric(1, [3]float64{1, 1, 1}, &vec3.UnitZ, &vec3.UnitZ, &incoming, 1, 1.5, draw)
+	direction := vec3.T{-math.Sqrt(0.75), 0, 0.5}
+	if sample.heading == nil || sample.bounce != reflectionBounce || vec3.Distance(sample.heading, &direction) > 1e-12 {
+		test.Fatalf("two-facet escape %v, want %v", sample.heading, direction)
+	}
+	weight := surfaceReferenceFresnel(0.5, 1.5) * surfaceReferenceFresnel(1, 1.5) / 0.05
+	for _, actual := range sample.weight {
+		if !(math.Abs(actual-weight) < 1e-12) {
+			test.Fatalf("weight %g, want %g", actual, weight)
+		}
 	}
 }
 
@@ -193,17 +118,13 @@ func reflectionTestIllumination(outgoingDirection *vec3.T) float64 {
 	return 0.2 + 0.5*(*outgoingDirection)[2] + 0.3*(*outgoingDirection)[0]*(*outgoingDirection)[0]
 }
 
-// reflectionReferenceIntegral returns numerically integrated unit-Fresnel GGX
-// radiance under reflectionTestIllumination and acceptedProbability, the sampling
-// PDF mass in the +Z hemisphere. shadingNormal is a unit normal in the +Z hemisphere;
-// viewDirection is a unit direction away from the surface, inside both the +Z and
-// shadingNormal hemispheres. roughness is in [0.01,1], where the production
-// microfacet-width floor is inactive.
-//
-// Midpoint quadrature uses cos(theta)/azimuth cells from PBRT 4e, section A.5.2:
-// https://pbr-book.org/4ed/Sampling_Algorithms/Sampling_Multidimensional_Functions
-// GGX/Smith and visible-normal PDF sources are documented in evaluateRoughReflection.
-func reflectionReferenceIntegral(shadingNormal, viewDirection *vec3.T, roughness float64) (radiance, acceptedProbability float64) {
+// reflectionReferenceIntegral integrates the single-reflection Smith GGX term in solid angle.
+// shadingNormal is the unit shading normal in the upper geometric hemisphere.
+// viewDirection is the unit direction toward the observer.
+// roughness is the positive perceptual roughness.
+// The result is the radiance under reflectionTestIllumination.
+func reflectionReferenceIntegral(shadingNormal, viewDirection *vec3.T, roughness float64) float64 {
+	var radiance float64
 	const cosineSteps, azimuthSteps = 256, 512
 	microfacetWidthSquared := math.Pow(roughness, 4)
 	viewCosine := vec3.Dot(shadingNormal, viewDirection)
@@ -231,14 +152,12 @@ func reflectionReferenceIntegral(shadingNormal, viewDirection *vec3.T, roughness
 			normalDensity := microfacetWidthSquared / (math.Pi * math.Pow(1+(microfacetWidthSquared-1)*halfCosine*halfCosine, 2))
 			outgoingRoot := math.Sqrt(outgoingCosine*outgoingCosine + microfacetWidthSquared*(1-outgoingCosine*outgoingCosine))
 
-			// GGX/Smith f*cos and Heitz's reflection PDF, evaluated without production helpers
-			// (PBRT 9.6 and Heitz eq. 17; see evaluateRoughReflection).
+			// Integrate GGX/Smith BRDF times cosine independently of the sampler.
 			weightedBRDF := normalDensity * outgoingCosine / (2 * (outgoingCosine*viewRoot + viewCosine*outgoingRoot))
 			radiance += weightedBRDF * reflectionTestIllumination(&outgoingDirection)
-			acceptedProbability += normalDensity / (2 * (viewCosine + viewRoot))
 		}
 	}
 
 	cellSolidAngle := 2 * math.Pi / (cosineSteps * azimuthSteps)
-	return radiance * cellSolidAngle, acceptedProbability * cellSolidAngle
+	return radiance * cellSolidAngle
 }

@@ -78,8 +78,9 @@ func NewKeroseneLamp2(scale float64, emission float64, sootness float64) *scene.
 	glassCenterBounds := glass.Bounds.Center()
 
 	brassMaterial := scene.NewMaterial().N("brass").
-		C(color.NewColor(0.8, 0.60, 0.25)).
-		M(1, 0.15)
+		C(color.NewColor(0.8, 0.60, 0.25).Multiply(0.7)).
+		M(1, 0.25).
+		T(0.0, false, scene.RefractionIndex_Silver)
 
 	flameMaterial := scene.NewMaterial().N("flame").
 		C(color.White).
@@ -89,12 +90,12 @@ func NewKeroseneLamp2(scale float64, emission float64, sootness float64) *scene.
 
 	glassMaterial := scene.NewMaterial().N("glass").
 		//C(color.NewColor(0.93, 0.94, 0.95)).
-		T(0.97, true, scene.RefractionIndex_Glass).
-		M(0, 0.10).
+		T(0.99, true, scene.RefractionIndex_Glass).
+		M(0, 0.01).
 		Attenuate(color.NewColor(0.85, 0.87, 0.90), scale*(4.0/30.0))
 
 	smudgedGlassMaterial := scene.NewMaterial().N("smudged_glass").
-		C(color.White).
+		C(color.WhiteTransparent).
 		T(1.0-sootness, false, scene.RefractionIndex_Air).
 		M(0, 1.0).
 		CP(sootSmudgeTexture, &vec3.T{glassCenterBounds[0], glass.Bounds.Ymin, glassCenterBounds[2]}, vec3.UnitX, (vec3.UnitY).Scaled(glass.Bounds.SizeY()), false)
