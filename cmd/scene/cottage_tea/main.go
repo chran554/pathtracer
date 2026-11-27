@@ -30,6 +30,7 @@ const (
 
 	keroseneLampEmission = 80.0
 	skyDomeEmission      = 1.1
+	kitchenEmission      = 0.125
 )
 
 func main() {
@@ -48,16 +49,17 @@ func main() {
 	skyDome.RotateY(&vec3.Zero, util.DegToRad(-20))
 
 	tableBoard := obj.NewBox(obj.BoxCentered)
-	tableBoard.Scale(&vec3.Zero, &vec3.T{110 / 2, 3 / 2, 150 / 2})
+	tableBoard.Scale(&vec3.Zero, (&vec3.T{110, 3, 150}).Scale(0.5))
 	tableBoard.Translate(&vec3.T{0, -tableBoard.Bounds.Ymax + 80, 0})
+
+	clothTexture := scene.NewTextureReferenceOrPanic("textures/wallpaper/Blossom2_Image_Tile_Item_9471w.jpg", scene.TextureTypeAlbedo)
+	clothWrinkleTexture := scene.NewTextureReferenceOrPanic("textures/normal maps/waves_normal.jpg", scene.TextureTypeNormalMap_DirectX).S(0.3)
+	// clothWrinkleTexture := scene.NewTextureReferenceOrPanic("textures/PBR/Fabric_Seersucker_001_SD/Fabric_Seersucker_001_normal.png", scene.TextureTypeNormalMap)
 	tableBoard.Material = scene.NewMaterial().
 		C(color.NewColorGrey(1.0)).
-		PP(
-			scene.NewTextureReferenceOrPanic("textures/wallpaper/Blossom2_Image_Tile_Item_9471w.jpg", scene.TextureTypeAlbedo),
-			&vec3.T{0, 0, 0},
-			vec3.T{60, 0, 0},
-			vec3.T{0, 0, 40},
-		)
+		PP(clothTexture, &vec3.T{0, 0, 0}, vec3.T{60, 0, 0}, vec3.T{0, 0, 40}).
+		PP(clothWrinkleTexture, &vec3.T{0, 0, 0}, vec3.T{40, 0, 0}, vec3.T{40, 0, 80})
+	//PP(, &vec3.T{0, 0, 0}, vec3.T{300, 0, 0}, vec3.T{0, 0, 300})
 
 	wallZ := tableBoard.Bounds.Zmax + 2.0
 
@@ -75,16 +77,11 @@ func main() {
 
 	wall := createWindowWall(wallWidth, wallHeight, windowXPos, windowYPos, windowWidth, windowHeight)
 	wall.Translate(&vec3.T{-wallWidth / 2, 0, wallZ})
-	wall.Material = scene.NewMaterial().PP(
-		scene.NewTextureReferenceOrPanic("textures/wallpaper/Slottsteatern_Image_Flatshot_Item_4507.jpg", scene.TextureTypeAlbedo),
-		&vec3.T{0, 0, 0},
-		vec3.T{52, 0, 0},
-		vec3.T{0, 52, 0},
-	)
+	wall.Material = scene.NewMaterial().PP(scene.NewTextureReferenceOrPanic("textures/wallpaper/Slottsteatern_Image_Flatshot_Item_4507.jpg", scene.TextureTypeAlbedo), &vec3.T{0, 0, 0}, vec3.T{52, 0, 0}, vec3.T{0, 52, 0})
 	//wall.Material = scene.NewMaterial().PP("textures/wallpaper/Ester_Image_Flatshot_Item_7659.jpg", &vec3.T{0, 0, 0}, vec3.T{100, 0, 0}, vec3.T{0, 100, 0})
 	//wall.Material = scene.NewMaterial().PP("textures/wallpaper/RoseGarden_Image_Tile_Item_7464.jpg", &vec3.T{0, 0, 0}, vec3.T{100, 0, 0}, vec3.T{0, 50, 0})
 
-	keroseneLamp := obj.NewKeroseneLamp(40, keroseneLampEmission, 1.0)
+	keroseneLamp := obj.NewKeroseneLamp2(40, keroseneLampEmission, 1.0)
 	keroseneLamp.RotateY(&vec3.Zero, util.DegToRad(-90))
 	keroseneLamp.Translate(&vec3.T{20, tableBoard.Bounds.Ymax, -20})
 
@@ -123,18 +120,21 @@ func main() {
 	kitchenDome.RotateY(&vec3.Zero, util.DegToRad(-90))
 	kitchenDome.Translate(&vec3.T{0, wallHeight / 2, -100})
 	kitchenDome.Material = scene.NewMaterial().
-		E(color.NewColorKelvin(2000), 0.125, true).
+		E(color.NewColorKelvin(2000), kitchenEmission, true).
 		SP(textureKitchen, kitchenDome.Bounds.Center(), vec3.UnitX.Scaled(-1), vec3.UnitY)
 
+	// debugLamp := scene.NewSphere(&vec3.T{0, wallHeight / 2, -150}, 60, scene.NewMaterial().E(color.White, 4, true))
+
 	scn := scene.NewSceneNode().
+		//S(debugLamp).
 		S(skyDome).
 		FS(kitchenDome).
 		FS(wall).
 		FS(window).
 		FS(teapot).
 		FS(teacup, spoon).
-		FS(tableBoard).
-		FS(keroseneLamp)
+		FS(keroseneLamp).
+		FS(tableBoard)
 
 	//cameraOrigin := &vec3.T{-20, 110, -50}
 	//focusPoint := &vec3.T{20, tableBoard.Bounds.Ymax + 20, -20}

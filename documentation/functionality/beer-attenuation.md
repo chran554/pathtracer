@@ -47,6 +47,7 @@ Nil or zero means no volume absorption, preserving existing scenes. Set it using
 ```go
 glass := scene.NewMaterial().
     N("green tinted glass").
+    C(color.WhiteTransparent).
     T(1, true, scene.RefractionIndex_Glass).
     Attenuate(color.NewColor(0.45, 0.90, 0.55), 10)
 ```
@@ -58,10 +59,12 @@ RGB transmission values in `(0,1]` and a finite positive reference distance.
 For nearly complete absorption, use a small positive transmission value.
 The helpers reject invalid inputs with a panic at scene construction time.
 
-`Color` still controls surface albedo and tinted reflections. `Transparency`
-still selects optical transmission at a boundary; it is not a per-unit-distance
-transmission factor. Setting absorption alone does not make an opaque material
-transparent. `SolidObject` must be true to enter/exit a filled object's medium.
+The RGB channels of `Color` control surface albedo and tinted reflections.
+At each boundary, `(1 - albedoTexel.A) * (1 - Color.A) * Transparency * transparencyMapValue` selects the
+fraction of the dielectric surface that uses the transmission model. A missing
+albedo texel contributes zero alpha and a missing transparency sample contributes
+a multiplier of 1. Absorption applies along the path inside
+a solid. Set `SolidObject` to true for a filled object's boundary.
 Use closed surfaces with outward-facing geometric normals. A hollow glass shell
 needs inner and outer boundaries (or an explicitly modeled clear interior).
 
@@ -111,9 +114,11 @@ camera inside glass inside a bounded water volume uses:
 
 ```go
 water := scene.NewMaterial().
+    C(color.WhiteTransparent).
     T(1, true, scene.RefractionIndex_Water).
     Attenuate(color.NewColor(0.8, 0.95, 0.98), 100)
 glass := scene.NewMaterial().
+    C(color.WhiteTransparent).
     T(1, true, scene.RefractionIndex_Glass).
     Attenuate(color.NewColor(0.45, 0.90, 0.55), 10)
 

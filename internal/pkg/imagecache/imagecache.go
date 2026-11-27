@@ -33,36 +33,29 @@ func GetCachedImage(filename string) *floatimage.FloatImage {
 	return floatImage
 }
 
-func GetOrReadCachedImage(imageName string, r io.Reader, gammaDecode bool, postProcessFn func(*floatimage.FloatImage)) (*floatimage.FloatImage, error) {
+func GetOrReadCachedImage(cacheKey, imageName string, r io.Reader, decode func(*floatimage.FloatImage)) (*floatimage.FloatImage, error) {
 	globalImageCacheLock.Lock()
 	defer globalImageCacheLock.Unlock()
 
-	img, exist := globalImageCache[imageName]
-
-	if exist {
+	if img, ok := globalImageCache[cacheKey]; ok {
 		return img, nil
 	}
-
-	if strings.TrimSpace(imageName) != "" {
-		fmt.Println("Image cache reading file:", imageName)
-		fimg, err := floatimage.Read(imageName, r)
-		if err != nil {
-			return nil, err
-		}
-
-		if gammaDecode {
-			fimg.GammaDecode()
-		}
-
-		if postProcessFn != nil {
-			postProcessFn(fimg)
-		}
-
-		fmt.Println("Image cache reading file:", imageName, "... done", fimg.String())
-		globalImageCache[imageName] = fimg
+	if strings.TrimSpace(imageName) == "" {
+		return nil, nil
 	}
 
-	img = globalImageCache[imageName]
+	fmt.Println("Image cache reading file:", imageName)
+	img, err := floatimage.Read(imageName, r)
+	if err != nil {
+		return nil, err
+	}
+	if decode != nil {
+		decode(img)
+	}
+
+	fmt.Println("Image cache reading file:", imageName, "... done", img.String())
+
+	globalImageCache[cacheKey] = img
 
 	return img, nil
 }

@@ -9,14 +9,14 @@ import (
 
 type Material struct {
 	Name            string
-	Color           *color.Color // Linear RGB base color for dielectric diffuse albedo and metal reflection F0. Alpha scales emission.
+	Color           *color.Color // Linear RGB base color for dielectric diffuse albedo and metal reflection F0. Alpha sets opacity and scales emission.
 	Emission        *color.Color // Emitted RGB is tinted by the surface albedo and scaled by Emission.A * Color.A.
 	Metallicness    float64      // [0,1]: dielectric (0) to conductor (1).
 	Roughness       float64      // Perceptual GGX roughness in [0,1] for specular reflection and transmission through solids or thin walls. Zero gives a smooth interface.
 	Projections     []*ImageProjection
 	RefractionIndex float64
 	SolidObject     bool         // Solid transmission crosses a volume boundary. Non-solid transmission models two faces of a thin wall within the same scene medium.
-	Transparency    float64      // Transmission fraction of the dielectric portion in [0,1].
+	Transparency    float64      // Material contribution to dielectric transmission. See T for how it combines with alpha and texture inputs.
 	Absorption      *color.Color // Homogeneous interior RGB absorption coefficients in inverse scene units (sigma_a >= 0, not limited to 1). Nil means no absorption; alpha is ignored. Used while this material is the active medium, independently of surface Color.
 	RayTerminator   bool         // RayTerminator decide if the ray should terminate after hit with the object. Example can be an environment sphere or environment cube where a hit to the wall is the same as "no hit, continue in infinity". Extremely bright lights can also be ray terminators, their appearance will not notably be affected by further tracing.
 }
@@ -52,7 +52,7 @@ func (m *Material) N(name string) *Material {
 	return m
 }
 
-// C sets the base color. Its RGB is tinted by the albedo texture and its alpha scales emission.
+// C sets the base color. Albedo textures tint its RGB. Its alpha controls dielectric transmission and scales emission.
 func (m *Material) C(c *color.Color) *Material {
 	m.Color = c
 	return m
@@ -76,7 +76,11 @@ func (m *Material) M(metallicness float64, roughness float64) *Material {
 	return m
 }
 
-// T sets transmission within the dielectric portion, the boundary type, and IOR.
+// T sets the material's contribution to dielectric transmission, the boundary type, and IOR.
+// Each source of transparency reduces the remaining opacity. The combined transmission
+// fraction is 1 - (1 - transparency) * baseAlpha * albedoTexelAlpha * (1 - mask).
+// A missing base color or albedo texel contributes alpha 1. A missing transparency map
+// contributes 0. Otherwise, mask is the mean sampled RGB after applying texture strength, clamped to [0, 1].
 func (m *Material) T(transparency float64, solidObject bool, refractionIndex float64) *Material {
 	m.Transparency = materialUnitInterval(transparency)
 	m.SolidObject = solidObject
@@ -220,8 +224,8 @@ func NewMaterialSolidGlass(name string) *Material {
 	return NewMaterial().
 		N(name).
 		C(color.NewColor(0.90, 0.92, 0.95)).
-		M(0, 0.030).
-		T(1, true, RefractionIndex_Glass)
+		M(0.0, 0.02).
+		T(0.99, true, RefractionIndex_Glass)
 }
 
 // materialUnitInterval validates authored surface parameters. Public fields are

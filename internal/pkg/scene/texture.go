@@ -58,19 +58,15 @@ func (t *Texture) I(i floatimage.Interpolation) *Texture {
 // x is width relative in range [0, 1).
 // y is height relative in range [0, 1).
 func (t *Texture) GetInterpolatedPixel(x float64, y float64) *color.Color {
-	textureX := x * float64(t.Image.Width)
-	textureY := y * float64(t.Image.Height)
-
-	c := t.Image.GetInterpolatedPixel(textureX, textureY, t.Interpolation)
+	c := t.Image.GetInterpolatedPixelByNormalizedCoordinates(x, y, t.Interpolation)
 
 	switch t.Type {
 	case TextureTypeAlbedo:
 		c.A = c.A * float32(t.Strength)
 
-	case TextureTypeRoughness:
-		c.Multiply(float32(t.Strength))
-
-	case TextureTypeMetallicness:
+	case TextureTypeRoughness,
+		TextureTypeMetallicness,
+		TextureTypeTransparency:
 		c.Multiply(float32(t.Strength))
 	}
 

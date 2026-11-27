@@ -78,7 +78,7 @@ func TestRoughThinWallInMedium(t *testing.T) {
 	surrounding := scene.NewMaterial().T(1, true, 1.33).Absorb(color.NewColor(math.Ln2, 0, 0))
 	incoming := vec3.UnitZ.Inverted()
 	for _, index := range []float64{1.33, 1.5} {
-		glass := scene.NewMaterial().M(0, 1).T(1, false, index).Absorb(color.NewColorGrey(100))
+		glass := scene.NewMaterial().C(color.WhiteTransparent).M(0, 1).T(1, false, index).Absorb(color.NewColorGrey(100))
 		emitter := scene.NewMaterial().E(color.White, 1, true)
 		world := &scene.SceneNode{Discs: []*scene.Disc{
 			scene.NewDisc(&vec3.T{}, &vec3.UnitZ, 5, glass),
@@ -102,8 +102,8 @@ func TestRoughThinWallInMedium(t *testing.T) {
 // t reports the direction-dependent lighting and white-furnace energy from each side.
 func TestRoughThinWallAgainstSlab(t *testing.T) {
 	const roughness = 0.8
-	thin := scene.NewMaterial().M(0, roughness).T(1, false, 1.5)
-	solid := scene.NewMaterial().M(0, roughness).T(1, true, 1.5)
+	thin := scene.NewMaterial().C(color.WhiteTransparent).M(0, roughness).T(1, false, 1.5)
+	solid := scene.NewMaterial().C(color.WhiteTransparent).M(0, roughness).T(1, true, 1.5)
 	backNormal := vec3.UnitZ.Inverted()
 	wall := &scene.SceneNode{Discs: []*scene.Disc{scene.NewDisc(&vec3.T{}, &vec3.UnitZ, 1e9, thin)}}
 	slab := &scene.SceneNode{Discs: []*scene.Disc{
@@ -147,7 +147,7 @@ func TestTexturedThinWallRoughness(t *testing.T) {
 		image.Fill(color.NewColorGrey(textureValue))
 		projection := scene.NewParallelImageProjection(scene.NewTexture(image, scene.TextureTypeRoughness), &vec3.T{}, vec3.UnitX, vec3.UnitY)
 		projection.Initialize()
-		wall := scene.NewMaterial().M(0, 1).T(1, false, 1.5).P(projection)
+		wall := scene.NewMaterial().C(color.WhiteTransparent).M(0, 1).T(1, false, 1.5).P(projection)
 
 		// Aim a small lamp along the analytically predicted exit direction.
 		target := vec3.T{0, 0, -1}

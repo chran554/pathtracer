@@ -2,7 +2,6 @@ package scene
 
 import (
 	"fmt"
-	"pathtracer/internal/pkg/color"
 
 	"github.com/ungerik/go3d/float64/mat3"
 	"github.com/ungerik/go3d/float64/quaternion"
@@ -23,13 +22,6 @@ type Facet struct {
 
 	Normal *vec3.T // Calculated attribute. See UpdateNormal(). Derived from the first three vertices of the triangle.
 	Bounds *Bounds // Calculated attribute. See GetBounds(). Derived from all vertices in the facet.
-}
-
-func (t *Texture) GetColorAt(coordinate *vec2.T) *color.Color {
-	return t.Image.GetInterpolatedPixelByNormalizedCoordinates(coordinate[0], coordinate[1], t.Interpolation)
-	//textureX := util.ClampInt(0, t.Image.Width-1, int(coordinate[0]*float64(t.Image.Width)))
-	//textureY := util.ClampInt(0, t.Image.Height-1, int((1.0-coordinate[1])*float64(t.Image.Height)))
-	//return t.Image.GetPixel(textureX, textureY)
 }
 
 // SplitMultiPointFacet maps a multipoint (> 3 points) facet into a list of triangles.

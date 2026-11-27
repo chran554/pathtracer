@@ -25,11 +25,11 @@ func TestMetalFresnel(t *testing.T) {
 	}
 	// Pure metals ignore transmission and dielectric IOR, including dielectric TIR.
 	for _, roughness := range []float64{0, 0.3, 1} {
-		material := scene.NewMaterial().M(1, roughness).T(1, true, 1)
+		material := scene.NewMaterial().C(color.WhiteTransparent).M(1, roughness).T(1, true, 1)
 		rng := rand.New(rand.NewPCG(1, 2))
 		incoming := vec3.T{math.Sqrt(0.75), 0, -0.5}
 		for range 1000 {
-			s := sampleSurface(material, material.Roughness, material.Metallicness, base, &vec3.UnitZ, &vec3.UnitZ, &incoming, 1.5, 1, rng.Float64)
+			s := sampleSurface(material, material.Roughness, material.Metallicness, material.Transparency, base, &vec3.UnitZ, &vec3.UnitZ, &incoming, 1.5, 1, rng.Float64)
 			if s.heading != nil && s.bounce != reflectionBounce {
 				t.Fatalf("metal emitted nonreflection: %+v", s)
 			}
@@ -56,11 +56,11 @@ func TestSurfaceSamplingIntegral(t *testing.T) {
 		{1, 0, metallicness}, {0, 0, (1 - metallicness) * (1 - transparency)},
 		{0, 1, (1 - metallicness) * transparency}, {metallicness, transparency, 1},
 	} {
-		material := scene.NewMaterial().M(component.metal, roughness).T(component.transparent, false, 1.5)
+		material := scene.NewMaterial().C(color.WhiteTransparent).M(component.metal, roughness).T(component.transparent, false, 1.5)
 		random := rand.New(rand.NewPCG(37, 99))
 		var sum [3]float64
 		for range samples {
-			sample := sampleSurface(material, roughness, component.metal, inputColor, &vec3.UnitZ, &vec3.UnitZ, &incoming, 1, 1.5, random.Float64)
+			sample := sampleSurface(material, roughness, component.metal, component.transparent, inputColor, &vec3.UnitZ, &vec3.UnitZ, &incoming, 1, 1.5, random.Float64)
 			if sample.heading != nil {
 				lighting := 0.55 + 0.45*sample.heading[2]
 				for channel, weight := range sample.weight {
@@ -94,7 +94,7 @@ func TestSurfaceEnergyBounds(t *testing.T) {
 					random := rand.New(rand.NewPCG(32, 45))
 					var sum, squares float64
 					for range samples {
-						sample := sampleSurface(material, roughness, metal, [3]float64{1, 1, 1}, &vec3.UnitZ, &vec3.UnitZ, &incoming, 1, index, random.Float64)
+						sample := sampleSurface(material, roughness, metal, 0, [3]float64{1, 1, 1}, &vec3.UnitZ, &vec3.UnitZ, &incoming, 1, index, random.Float64)
 						weight := sample.weight[0]
 						sum += weight
 						squares += weight * weight
@@ -143,8 +143,8 @@ func surfaceReferenceFresnel(cos, ior float64) float64 {
 }
 
 func TestTraceSurfaceBaseColor(t *testing.T) {
-	metal := scene.NewMaterial().M(1, 0).T(1, true, 1.5).C(color.NewColor(0.8, 0.4, 0.2))
-	setTestAlbedoTexture(metal, color.NewColor(0.5, 0.25, 1))
+	metal := scene.NewMaterial().M(1, 0).T(1, true, 1.5).C(color.NewColorRGBA(0.8, 0.4, 0.2, 0))
+	addTestProjection(metal, scene.TextureTypeAlbedo, color.NewColor(0.5, 0.25, 1))
 	assertTransmissionColor(t, bounceTestTrace(bounceTestScene(metal)), color.NewColor(0.4, 0.1, 0.2))
 
 	// A zero-albedo, index-matched dielectric absorbs while preserving emission.
@@ -159,7 +159,7 @@ func TestSurfaceMirrorColor(t *testing.T) {
 	// its selection probability; metal RGB reflectance remains in throughput.
 	for _, metallic := range []float64{0, 1} {
 		material := scene.NewMaterial().M(metallic, 0)
-		s := sampleSurface(material, material.Roughness, material.Metallicness, base, &vec3.UnitZ, &vec3.UnitZ, &incoming, 1, 1.5, func() float64 { return 0 })
+		s := sampleSurface(material, material.Roughness, material.Metallicness, material.Transparency, base, &vec3.UnitZ, &vec3.UnitZ, &incoming, 1, 1.5, func() float64 { return 0 })
 		want := [3]float64{1, 1, 1}
 		if metallic == 1 {
 			want = base

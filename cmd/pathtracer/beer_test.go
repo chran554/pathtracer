@@ -52,14 +52,14 @@ func TestTracePathBeerVolumes(test *testing.T) {
 		{name: "clear bubble", cameraZ: 3, inner: true},
 	} {
 		test.Run(tc.name, func(test *testing.T) {
-			outer := scene.NewMaterial().C(color.NewColor(0.2, 0.4, 0.6)).
+			outer := scene.NewMaterial().C(color.NewColorRGBA(0.2, 0.4, 0.6, 0)).
 				T(1, true, 1).Absorb(color.NewColor(0.1, 0.3, 0.7))
 			spheres := []*scene.Sphere{scene.NewSphere(&vec3.T{}, 2, outer)}
 			outerDistance, innerDistance := 4-epsilonDistance, 0.0
 			depth := 2
 			innerAbsorption := color.Black
 			if tc.inner {
-				inner := scene.NewMaterial().T(1, true, 1).Absorb(tc.innerColor)
+				inner := scene.NewMaterial().C(color.WhiteTransparent).T(1, true, 1).Absorb(tc.innerColor)
 				spheres = append(spheres, scene.NewSphere(&vec3.T{}, 1, inner))
 				outerDistance, innerDistance = 2-2*epsilonDistance, 2-epsilonDistance
 				depth = 4
@@ -95,7 +95,7 @@ func TestTracePathBeerSurfaceEmission(test *testing.T) {
 func TestTracePathBeerUncrossedBoundaries(test *testing.T) {
 	for _, name := range []string{"thin transmission", "exterior reflection"} {
 		test.Run(name, func(test *testing.T) {
-			material := scene.NewMaterial().T(1, true, 1.5).Absorb(color.NewColorGrey(100))
+			material := scene.NewMaterial().C(color.WhiteTransparent).T(1, true, 1.5).Absorb(color.NewColorGrey(100))
 			switch name {
 			case "thin transmission":
 				material.SolidObject = false
@@ -120,7 +120,7 @@ func TestTracePathBeerInternalReflection(test *testing.T) {
 			name = "total internal reflection"
 		}
 		test.Run(name, func(test *testing.T) {
-			medium := scene.NewMaterial().M(0, 0).T(1, true, 1.5).Absorb(color.NewColor(0.1, 0.2, 0.3))
+			medium := scene.NewMaterial().C(color.WhiteTransparent).M(0, 0).T(1, true, 1.5).Absorb(color.NewColor(0.1, 0.2, 0.3))
 			boundary := medium
 			if !tir {
 				boundary = scene.NewMaterial().M(1, 0)

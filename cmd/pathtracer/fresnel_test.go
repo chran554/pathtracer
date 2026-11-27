@@ -64,7 +64,7 @@ func TestTracePathGlassFresnel(test *testing.T) {
 
 	for _, testCase := range testCases {
 		test.Run(testCase.name, func(test *testing.T) {
-			glass := scene.NewMaterial().M(0, 0).T(testCase.transparency, true, 1.5)
+			glass := scene.NewMaterial().C(color.White).M(0, 0).T(testCase.transparency, true, 1.5)
 
 			// Initialize the medium stack before choosing entry or exit.
 			air := scene.NewMaterial().T(1, true, 1)

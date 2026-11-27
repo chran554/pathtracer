@@ -41,7 +41,7 @@ func TestMetallicMaterialParameters(t *testing.T) {
 
 	glass := NewMaterialSolidGlass("glass")
 	assert.Zero(t, glass.Metallicness)
-	assert.Equal(t, 1.0, glass.Transparency)
+	assert.Equal(t, 0.99, glass.Transparency)
 	assert.True(t, glass.SolidObject)
 
 	for _, value := range []float64{-1, 1.1, math.NaN(), math.Inf(1)} {

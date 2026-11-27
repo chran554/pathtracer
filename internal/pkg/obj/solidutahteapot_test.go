@@ -16,10 +16,10 @@ func Test_SolidUtahTeapot_teapot(t *testing.T) {
 		filename := "utah_teapot_solid"
 
 		require.NotNil(t, obj)
-		assertFacetStructure(t, obj, filename, "", "", 0, 1)
+		assertFacetStructure(t, obj, filename, "", "Porcelain", 0, 1)
 
-		teapot := getSubstructure(t, obj, "teapot", "", "teapot")
-		assertFacetStructure(t, teapot, "teapot", "", "teapot", -1, 0)
+		teapot := getSubstructure(t, obj, "teapot", "", "")
+		assertFacetStructure(t, teapot, "teapot", "", "", -1, 0)
 	})
 }
 
@@ -32,10 +32,10 @@ func Test_SolidUtahTeapot_lid(t *testing.T) {
 		filename := "utah_teapot_solid"
 
 		require.NotNil(t, obj)
-		assertFacetStructure(t, obj, filename, "", "", 0, 1)
+		assertFacetStructure(t, obj, filename, "", "Porcelain", 0, 1)
 
-		lid := getSubstructure(t, obj, "lid", "", "lid")
-		assertFacetStructure(t, lid, "lid", "", "lid", -1, 0)
+		lid := getSubstructure(t, obj, "lid", "", "")
+		assertFacetStructure(t, lid, "lid", "", "", -1, 0)
 	})
 }
 
@@ -48,13 +48,13 @@ func Test_SolidUtahTeapot_teapot_and_lid(t *testing.T) {
 		filename := "utah_teapot_solid"
 
 		require.NotNil(t, obj)
-		assertFacetStructure(t, obj, filename, "", "", 0, 2)
+		assertFacetStructure(t, obj, filename, "", "Porcelain", 0, 2)
 
-		teapot := getSubstructure(t, obj, "teapot", "", "teapot")
-		assertFacetStructure(t, teapot, "teapot", "", "teapot", -1, 0)
+		teapot := getSubstructure(t, obj, "teapot", "", "")
+		assertFacetStructure(t, teapot, "teapot", "", "", -1, 0)
 
-		lid := getSubstructure(t, obj, "lid", "", "lid")
-		assertFacetStructure(t, lid, "lid", "", "lid", -1, 0)
+		lid := getSubstructure(t, obj, "lid", "", "")
+		assertFacetStructure(t, lid, "lid", "", "", -1, 0)
 	})
 }
 
@@ -67,10 +67,10 @@ func Test_SolidUtahTeapot_teacup(t *testing.T) {
 		filename := "teacup"
 
 		require.NotNil(t, obj)
-		assertFacetStructure(t, obj, filename, "", "", 0, 1)
+		assertFacetStructure(t, obj, filename, "", "Porcelain", 0, 1)
 
-		teacup := getSubstructure(t, obj, "teacup", "", "teacup")
-		assertFacetStructure(t, teacup, "teacup", "", "teacup", -1, 0)
+		teacup := getSubstructure(t, obj, "teacup", "", "")
+		assertFacetStructure(t, teacup, "teacup", "", "", -1, 0)
 	})
 }
 
@@ -83,10 +83,10 @@ func Test_SolidUtahTeapot_saucer(t *testing.T) {
 		filename := "teacup"
 
 		require.NotNil(t, obj)
-		assertFacetStructure(t, obj, filename, "", "", 0, 1)
+		assertFacetStructure(t, obj, filename, "", "Porcelain", 0, 1)
 
-		saucer := getSubstructure(t, obj, "saucer", "", "saucer")
-		assertFacetStructure(t, saucer, "saucer", "", "saucer", -1, 0)
+		saucer := getSubstructure(t, obj, "saucer", "", "")
+		assertFacetStructure(t, saucer, "saucer", "", "", -1, 0)
 	})
 }
 
@@ -99,10 +99,10 @@ func Test_SolidUtahTeapot_spoon(t *testing.T) {
 		filename := "teacup"
 
 		require.NotNil(t, obj)
-		assertFacetStructure(t, obj, filename, "", "", 0, 1)
+		assertFacetStructure(t, obj, filename, "", "Porcelain", 0, 1)
 
-		spoon := getSubstructure(t, obj, "spoon", "", "spoon")
-		assertFacetStructure(t, spoon, "spoon", "", "spoon", -1, 0)
+		spoon := getSubstructure(t, obj, "spoon", "", "")
+		assertFacetStructure(t, spoon, "spoon", "", "", -1, 0)
 	})
 }
 
@@ -115,15 +115,15 @@ func Test_SolidUtahTeapot_cup_and_saucer_and_spoon(t *testing.T) {
 		filename := "teacup"
 
 		require.NotNil(t, obj)
-		assertFacetStructure(t, obj, filename, "", "", 0, 3)
+		assertFacetStructure(t, obj, filename, "", "Porcelain", 0, 3)
 
-		teacup := getSubstructure(t, obj, "teacup", "", "teacup")
-		assertFacetStructure(t, teacup, "teacup", "", "teacup", -1, 0)
+		teacup := getSubstructure(t, obj, "teacup", "", "")
+		assertFacetStructure(t, teacup, "teacup", "", "", -1, 0)
 
-		saucer := getSubstructure(t, obj, "saucer", "", "saucer")
-		assertFacetStructure(t, saucer, "saucer", "", "saucer", -1, 0)
+		saucer := getSubstructure(t, obj, "saucer", "", "")
+		assertFacetStructure(t, saucer, "saucer", "", "", -1, 0)
 
-		spoon := getSubstructure(t, obj, "spoon", "", "spoon")
-		assertFacetStructure(t, spoon, "spoon", "", "spoon", -1, 0)
+		spoon := getSubstructure(t, obj, "spoon", "", "")
+		assertFacetStructure(t, spoon, "spoon", "", "", -1, 0)
 	})
 }

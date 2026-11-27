@@ -1,106 +1,64 @@
 package main
 
 import (
-	"fmt"
 	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
-	"pathtracer/internal/pkg/util"
 
 	"github.com/ungerik/go3d/float64/vec3"
 )
 
 const (
 	animationName = "alpha_transparency_test"
-
-	amountAnimationFrames = 1
-
-	imageWidth    = 150
+	imageWidth    = 300
 	imageHeight   = 150
-	magnification = 4.0 // 1.0
-
-	amountSamples = 2048 // * 16 // 1024 * 24 / 4
-
-	apertureSize = 0.0
-
-	lampEmission = 4
-	radius       = 5.0
+	magnification = 4.0
+	amountSamples = 1048
+	radius        = 5.0
 )
 
 func main() {
 	animation := scene.NewAnimation(animationName, imageWidth, imageHeight, magnification, true, true)
 
-	origin := &vec3.T{0, 0, 0}
-
-	textureEnvironment := scene.NewTextureReferenceOrPanic("textures/equirectangular/las-vegas-hotell-lobby.png", scene.TextureTypeAlbedo) // Pool hall
-	//textureEnvironment := scene.NewTextureReferenceOrPanic("textures/equirectangular/6031885477_bbffaa37d7_o.jpg", scene.TextureTypeAlbedo) // Arcade
-	// textureEnvironment := scene.NewTextureReferenceOrPanic("textures/equirectangular/52750393381_973073d1a5_o.jpg", scene.TextureTypeAlbedo) // Forest in autumn
-	environmentSphere := scene.NewSphere(origin, 5*100, scene.NewMaterial().
+	environmentTexture := scene.NewTextureReferenceOrPanic("textures/equirectangular/6031885477_bbffaa37d7_o.jpg", scene.TextureTypeAlbedo)
+	// environmentTexture := scene.NewTextureReferenceOrPanic("textures/equirectangular/las-vegas-hotell-lobby.png", scene.TextureTypeAlbedo)
+	environment := scene.NewSphere(&vec3.Zero, 500, scene.NewMaterial().
 		E(color.White, 1, true).
-		SP(textureEnvironment, origin, vec3.UnitZ.Inverted(), vec3.UnitY)).N("sky dome")
+		SP(environmentTexture, &vec3.Zero, vec3.UnitZ.Inverted(), vec3.UnitY)).N("sky dome")
 
 	lamp := obj.NewSquareFacetStructure(obj.SquareTypeXZPlane, nil, false)
 	lamp.CenterOn(&vec3.Zero)
 	lamp.Scale(&vec3.Zero, &vec3.T{100, 1, 40})
-	lamp.Translate(&vec3.T{0, 33 * 2.54, -10}) // Raise the lamp 33 inches above the table cloth (and a little bit in front of the balls)
-	lamp.Material = scene.NewMaterial().N("lamp").
-		E(color.KelvinTemperatureColor2(4500), lampEmission, true)
+	lamp.Translate(&vec3.T{0, 33 * 2.54, -10})
+	lamp.Material = scene.NewMaterial().N("lamp").E(color.KelvinTemperatureColor2(4500), 4, true)
 
-	diffuseTexture := scene.NewTextureReferenceOrPanic("textures/test/test_alpha_transparency.png", scene.TextureTypeAlbedo)
-	//normalMapTexture := scene.NewTextureReferenceOrPanic("textures/normal maps/Metal053B_4K-PNG/Metal053B_4K-PNG_NormalGL.png", scene.TextureTypeNormalMap_OpenGL)
-	//roughnessMapTexture := scene.NewTextureReferenceOrPanic("textures/normal maps/Metal053B_4K-PNG/Metal053B_4K-PNG_Roughness.png", scene.TextureTypeRoughness)
-	//metalnessMapTexture := scene.NewTextureReferenceOrPanic("textures/normal maps/Metal053B_4K-PNG/Metal053B_4K-PNG_Metalness.png", scene.TextureTypeMetallicness)
+	albedo := scene.NewTextureReferenceOrPanic("textures/test/test_alpha_transparency.png", scene.TextureTypeAlbedo)
+	mask := scene.NewTextureReferenceOrPanic("textures/test/checkered dark gray.png", scene.TextureTypeTransparency)
 
-	//normalMapTexture.S(1.0)    // Strength of normal texture
-	//roughnessMapTexture.S(1.0) // Strength of roughness texture
-	//metalnessMapTexture.S(1.0) // Strength of metalness texture
+	materialFor := func(name string, center *vec3.T, solid bool) *scene.Material {
+		// Project each image once across the diameter so the pattern aligns on both objects.
+		corner := center.Subed(&vec3.T{radius, radius, 0})
+		u, v := vec3.UnitX.Scaled(2*radius), vec3.UnitY.Scaled(2*radius)
 
-	sphereOrigin := origin
-
-	sphereMaterial := scene.NewMaterial().
-		C(color.NewColorRGBA(0.9, 0.8, 0.5, 0.3)).
-		N("sphere").
-		M(0.0, 1.0).
-		T(0.0, false, scene.RefractionIndex_Air).
-		SP(diffuseTexture, sphereOrigin, vec3.UnitZ, vec3.UnitY)
-	//SP(normalMapTexture, sphereOrigin, vec3.UnitZ, vec3.UnitY).
-	//SP(roughnessMapTexture, sphereOrigin, vec3.UnitZ, vec3.UnitY).
-	//SP(metalnessMapTexture, sphereOrigin, vec3.UnitZ, vec3.UnitY)
-
-	sphere := scene.NewSphere(sphereOrigin, radius, sphereMaterial)
-	sphere.RotateX(sphere.Bounds().Center(), util.DegToRad(10)) // Tilt the sphere "side" slightly downwards (CCW)
-
-	snookerBallsNode := scene.NewSceneNode().S(sphere)
-
-	scn := scene.NewSceneNode().
-		S(environmentSphere).
-		SN(snookerBallsNode).
-		FS(lamp)
-
-	//animationStep := 1.0 / float64(amountAnimationFrames)
-	for animationFrameIndex := range amountAnimationFrames {
-		// animationProgress := float64(animationFrameIndex) * animationStep
-
-		cameraOrigin := sphereOrigin.Added(&vec3.T{0, 0, -80})
-		focusPoint := sphereOrigin
-		camera := scene.NewCamera(&cameraOrigin, focusPoint, amountSamples, magnification).
-			V(1200).
-			A(apertureSize, nil).
-			D(6)
-
-		fi := -1
-		if fi > 1 {
-			fi = animationFrameIndex
-		}
-
-		frame := scene.NewFrame(animation.AnimationName, fi, camera, scn)
-		animation.AddFrame(frame)
+		return scene.NewMaterial().N(name).
+			C(color.NewColorRGBA(0.9, 0.8, 0.7, 1.0)).
+			M(0, 0.0).
+			T(0.0, solid, scene.RefractionIndex_Glass).
+			PP(albedo, &corner, u, v).
+			PP(mask, &corner, u, v)
 	}
 
-	filename := fmt.Sprintf("scene/%s.render.zip", animation.AnimationName)
-	err := renderfile.WriteRenderFile(filename, animation)
-	if err != nil {
+	left, right := vec3.T{-5.75, 0, 0}, vec3.T{5.75, 0, 0}
+	front := vec3.UnitZ.Inverted()
+
+	disc := scene.NewDisc(&left, &front, radius, materialFor("thin glass", &left, false)).N("thin disc")
+	sphere := scene.NewSphere(&right, radius, materialFor("solid glass", &right, true)).N("solid sphere")
+	scn := scene.NewSceneNode().D(disc).S(sphere, environment).FS(lamp)
+
+	camera := scene.NewCamera(&vec3.T{0, 0, -70}, &vec3.Zero, amountSamples, magnification).V(800).D(6)
+	animation.AddFrame(scene.NewFrame(animationName, -1, camera, scn))
+	if err := renderfile.WriteRenderFile("scene/"+animationName+".render.zip", animation); err != nil {
 		panic(err)
 	}
 }

@@ -148,7 +148,7 @@ type Material struct {
 	Roughness       float64      `msgpack:"roughness,omitempty"` // Perceptual GGX roughness; zero is mirror sharp.
 	RefractionIndex float64      `msgpack:"refraction-index,omitempty"`
 	SolidObject     bool         `msgpack:"solid-object,omitempty"`   // SolidObject is if the material denotes a solid object with volume, not a hollow or open object or object nor an object with plane-thin walls. Solid transparent objects can refract light, hollow objects don't.
-	Transparency    float64      `msgpack:"transparency,omitempty"`   // Transmission fraction [0,1] within the dielectric portion.
+	Transparency    float64      `msgpack:"transparency,omitempty"`   // Maximum dielectric transmission fraction [0,1] before albedo alpha and transparency-map modulation.
 	RayTerminator   bool         `msgpack:"ray-terminator,omitempty"` // RayTerminator decide if the ray should terminate after hit with object. Example can be an environment sphere or environment cube where a hit to the wall is the same as "no hit, continue in infinity". Extremely bright lights can also be ray terminators, their appearance will not notably be affected by further tracing.
 	Projection      []Projection `msgpack:"projection,omitempty"`
 }

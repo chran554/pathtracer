@@ -41,7 +41,7 @@ func TestRoughGlassSecondFacet(t *testing.T) {
 // t records the measured RGB radiance.
 func TestRoughGlassWhiteFurnace(t *testing.T) {
 	for _, roughness := range []float64{0.25, 0.6, 1} {
-		glass := scene.NewMaterial().M(0, roughness).T(1, true, 1.5)
+		glass := scene.NewMaterial().C(color.WhiteTransparent).M(0, roughness).T(1, true, 1.5)
 		environment := scene.NewMaterial().E(color.White, 1, true)
 		testScene := scene.NewSceneNode().S(scene.NewSphere(&vec3.T{}, 1, glass), scene.NewSphere(&vec3.T{}, 100, environment))
 		media := []*scene.Material{scene.NewMaterial().T(1, true, 1)}
@@ -63,7 +63,7 @@ func TestRoughGlassWhiteFurnace(t *testing.T) {
 // using red light on the air side and blue light on the glass side of one boundary.
 // t records differences from the independent reference.
 func TestRoughGlassTwoSidedLighting(t *testing.T) {
-	glass := scene.NewMaterial().M(0, 1).T(1, true, 1.5)
+	glass := scene.NewMaterial().C(color.WhiteTransparent).M(0, 1).T(1, true, 1.5)
 	air := scene.NewMaterial().T(1, true, 1)
 	testScene := &scene.SceneNode{
 		FacetStructures: []*scene.FacetStructure{orientationTestPlane(glass)},

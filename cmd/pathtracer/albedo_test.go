@@ -22,7 +22,7 @@ func TestSphereAlbedo(t *testing.T) {
 			// Matching the surrounding IOR isolates diffuse reflection under unit white light.
 			material := scene.NewMaterial().C(color.NewColor(0.8, 0.28, 0.14)).T(0, false, 1)
 			if tc.texture != nil {
-				setTestAlbedoTexture(material, tc.texture)
+				addTestProjection(material, scene.TextureTypeAlbedo, tc.texture)
 			}
 			sphere := scene.NewSphere(&vec3.T{0, 0, -1}, 1, material)
 			light := scene.NewSphere(&vec3.T{}, 100, scene.NewMaterial().E(color.White, 1, true))
@@ -41,12 +41,12 @@ func TestSphereAlbedo(t *testing.T) {
 	}
 }
 
-// setTestAlbedoTexture attaches a constant albedo texture of the given tint to material.
-func setTestAlbedoTexture(material *scene.Material, tint *color.Color) {
-	image := floatimage.NewFloatImage("test albedo", 1, 1)
-	image.Fill(tint)
+func addTestProjection(material *scene.Material, kind scene.TextureType, texel *color.Color) *scene.ImageProjection {
+	image := floatimage.NewFloatImage(kind.String(), 1, 1)
+	image.Fill(texel)
 
-	projection := scene.NewParallelImageProjection(scene.NewTexture(image, scene.TextureTypeAlbedo), &vec3.T{}, vec3.UnitX, vec3.UnitY)
+	projection := scene.NewParallelImageProjection(scene.NewTexture(image, kind), &vec3.T{}, vec3.UnitX, vec3.UnitY)
 	projection.Initialize()
 	material.P(projection)
+	return projection
 }

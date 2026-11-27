@@ -19,7 +19,7 @@ const (
 	imageHeight   = 800
 	magnification = 1.0
 
-	amountSamples = 1024 // 1024 * 12 // 32 // 12samp x 1.5mag --> 4h
+	amountSamples = 1024 * 12 // 32 // 12samp x 1.5mag --> 4h
 	maxRayDepth   = 15
 	apertureSize  = 0.5
 

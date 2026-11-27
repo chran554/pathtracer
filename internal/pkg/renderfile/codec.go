@@ -362,9 +362,23 @@ func (s *serializer) sceneTexture(index TextureIndex) *scene.Texture {
 	return s.st[index-1]
 }
 
-func (s *serializer) resourceImage(resourceIndex ResourceIndex, gammaDecode bool, postProcessFn func(*floatimage.FloatImage)) (*floatimage.FloatImage, error) {
+func (s *serializer) resourceImage(resourceIndex ResourceIndex, kind scene.TextureType) (*floatimage.FloatImage, error) {
 	if resourceIndex == 0 {
 		return nil, nil
+	}
+
+	var decode func(*floatimage.FloatImage)
+	switch kind {
+	case scene.TextureTypeAlbedo:
+		decode = (*floatimage.FloatImage).GammaDecode
+	case scene.TextureTypeNormalMap,
+		scene.TextureTypeNormalMap_OpenGL:
+		kind = scene.TextureTypeNormalMap_OpenGL
+		decode = convertFloatImageToNormalMapOpenGL
+	case scene.TextureTypeNormalMap_DirectX:
+		decode = convertFloatImageToNormalMapDirectX
+	default:
+		kind = "" // All scalar maps share the raw image.
 	}
 
 	for _, file := range s.zipReader.File {
@@ -377,7 +391,9 @@ func (s *serializer) resourceImage(resourceIndex ResourceIndex, gammaDecode bool
 			}
 			defer fileReader.Close()
 
-			floatImage, err := imagecache.GetOrReadCachedImage(filename, fileReader, gammaDecode, postProcessFn)
+			// One archive resource can be used as both a color texture and a linear data map.
+			cacheKey := fmt.Sprintf("%s:%s:%08x", kind, filename, file.CRC32)
+			floatImage, err := imagecache.GetOrReadCachedImage(cacheKey, filename, fileReader, decode)
 			if err != nil {
 				return nil, fmt.Errorf("could not decode resource image file %s: %w", filename, err)
 			}

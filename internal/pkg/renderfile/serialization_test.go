@@ -2,9 +2,12 @@ package renderfile
 
 import (
 	"archive/zip"
+	"image"
+	"image/png"
 	"os"
 	"path/filepath"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/scene"
 	"testing"
 
@@ -13,6 +16,33 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 	"github.com/vmihailenco/msgpack/v5"
 )
+
+func TestSharedAlbedoAndTransparencyImage(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "shared-gray.png")
+	file, err := os.Create(path)
+	require.NoError(t, err)
+	pixels := image.NewGray(image.Rect(0, 0, 1, 1))
+	pixels.Pix[0] = 128
+	require.NoError(t, png.Encode(file, pixels))
+	require.NoError(t, file.Close())
+
+	source := floatimage.ReferenceOrPanic(path)
+	material := scene.NewMaterial().C(color.WhiteTransparent).T(1, true, 1)
+	for _, kind := range []scene.TextureType{scene.TextureTypeAlbedo, scene.TextureTypeTransparency} {
+		material.PP(scene.NewTexture(source, kind), &vec3.Zero, vec3.UnitX, vec3.UnitY)
+	}
+	node := scene.NewSceneNode().S(scene.NewSphere(&vec3.Zero, 1, material))
+	camera := scene.NewCamera(&vec3.UnitZ, &vec3.Zero, 1, 1)
+	animation := scene.NewAnimation("shared texture", 2, 2, 1, false, false).AddFrame(scene.NewFrame("frame", 0, camera, node))
+	archive := filepath.Join(dir, "scene.zip")
+	require.NoError(t, WriteRenderFile(archive, animation))
+	restored, err := ReadRenderFile(archive)
+	require.NoError(t, err)
+	projections := restored.Frames[0].SceneNode.Spheres[0].Material.Projections
+	assert.InDelta(t, 0.21586, projections[0].Texture.Image.GetPixel(0, 0).ChannelAverage(), 1e-5)
+	assert.InDelta(t, 128.0/255, projections[1].Texture.Image.GetPixel(0, 0).ChannelAverage(), 1e-6)
+}
 
 func TestAbsorptionSerialization(t *testing.T) {
 	for _, tc := range []struct {

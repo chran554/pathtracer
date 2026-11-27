@@ -16,7 +16,7 @@ const (
 func (fi *FloatImage) GetInterpolatedPixelByNormalizedCoordinates(srcX, srcY float64, interpolation Interpolation) *color.Color {
 	imageBounds := fi.Bounds()
 	pixelX := srcX*float64((imageBounds.Max.X-1)-imageBounds.Min.X) + float64(imageBounds.Min.X)
-	pixelY := (1-srcY)*float64((imageBounds.Max.Y-1)-imageBounds.Min.Y) + float64(imageBounds.Min.Y)
+	pixelY := srcY*float64((imageBounds.Max.Y-1)-imageBounds.Min.Y) + float64(imageBounds.Min.Y)
 	return fi.GetInterpolatedPixel(pixelX, pixelY, interpolation)
 }
 

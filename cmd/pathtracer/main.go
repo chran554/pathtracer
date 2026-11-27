@@ -617,7 +617,7 @@ func tracePathSampled(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode
 			ii.material = scene.NewMaterial() // Default material is rough white dielectric.
 		}
 
-		albedo := albedoColor(ii)
+		albedo, transparency := albedoAndTransparency(ii)
 
 		if camera.RenderType == scene.Raycasting || camera.RenderType == "" {
 			incomingRayInverted := ray.Heading.Inverted()
@@ -646,7 +646,7 @@ func tracePathSampled(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode
 
 				outgoingRadiance.A = 1 // Record the hit even if the scattering sample is rejected.
 				incidentIndex, transmittedIndex := boundaryRefractionIndices(ii.material, rayContexts, isIngoingRay)
-				sample := sampleSurface(ii.material, roughness, metallicness, surfaceBaseColor(albedo), &geometricNormal, &shadingNormal, ray.Heading, incidentIndex, transmittedIndex, random)
+				sample := sampleSurface(ii.material, roughness, metallicness, transparency, surfaceBaseColor(albedo), &geometricNormal, &shadingNormal, ray.Heading, incidentIndex, transmittedIndex, random)
 
 				newRayHeading, bounceWeight, bounce = sample.heading, sample.weight, sample.bounce
 				if bounce == transmissionBounce && newRayHeading != nil && ii.material.SolidObject && ii.material.RefractionIndex > 0 {
@@ -733,43 +733,65 @@ func roughnessValue(ii *IntersectionInformation) float64 {
 	return ii.material.Roughness * r
 }
 
-func albedoColor(ii *IntersectionInformation) *color.Color {
-	var textureColor *color.Color
-
-	// If a facet is intersected and the facet has texture coordinates assigned to the facet points.
-	// Triangulate the texture coordinate and fetch that color value.
-	if (ii.intersectedFacet != nil) && (ii.intersectedFacetVertexWeights != nil) {
-		albedoTexture := ii.intersectedFacet.GetTextureByType(scene.TextureTypeAlbedo)
-		if albedoTexture != nil {
-			textureCoordinate := interpolateTriangleTextureCoordinate(albedoTexture, ii.intersectedFacetVertexWeights)
-			if textureCoordinate != nil {
-				textureColor = albedoTexture.Texture.GetColorAt(textureCoordinate)
+// textureColorAtHit prefers facet UVs and falls back to the material's projections of the same type.
+func textureColorAtHit(ii *IntersectionInformation, kind scene.TextureType) *color.Color {
+	if ii.intersectedFacet != nil && ii.intersectedFacetVertexWeights != nil {
+		texture := ii.intersectedFacet.GetTextureByType(kind)
+		if texture != nil && texture.Texture.Image != nil {
+			if uv := interpolateTriangleTextureCoordinate(texture, ii.intersectedFacetVertexWeights); uv != nil {
+				return texture.Texture.GetInterpolatedPixel(uv[0], uv[1])
 			}
 		}
 	}
 
-	// Otherwise, get the projected color for the intersection point.
-	if (textureColor == nil) && (ii.material.Projections != nil) {
-		textureColor = ii.material.ProjectionColor(ii.intersectionPoint, scene.TextureTypeAlbedo)
-	}
+	return ii.material.ProjectionColor(ii.intersectionPoint, kind)
+}
 
+func albedoAndTransparency(ii *IntersectionInformation) (*color.Color, float64) {
 	baseColor := ii.material.Color
 	if baseColor == nil {
 		baseColor = color.White
 	}
 
-	if textureColor == nil {
-		return baseColor
+	baseColorTransparency := toTransparency(surfaceUnit(float64(baseColor.A)))
+
+	albedo := baseColor
+	albedoTransparency := 0.0
+	if textureColor := textureColorAtHit(ii, scene.TextureTypeAlbedo); textureColor != nil {
+		// For texture Over base, 1 - outAlpha = (1 - textureAlpha) * (1 - baseAlpha).
+		albedoTransparency = toTransparency(float64(textureColor.A))
+
+		// Texture alpha controls RGB tint strength. Emission uses the base alpha.
+		albedo = &color.Color{
+			R: baseColor.R * (1 - (1-textureColor.R)*textureColor.A),
+			G: baseColor.G * (1 - (1-textureColor.G)*textureColor.A),
+			B: baseColor.B * (1 - (1-textureColor.B)*textureColor.A),
+			A: baseColor.A,
+		}
 	}
 
-	// Texture alpha blends the RGB multiplier from white to the texture color.
-	// Carry the material's base alpha through for emission.
-	return &color.Color{
-		R: baseColor.R * (1 - (1-textureColor.R)*textureColor.A),
-		G: baseColor.G * (1 - (1-textureColor.G)*textureColor.A),
-		B: baseColor.B * (1 - (1-textureColor.B)*textureColor.A),
-		A: baseColor.A,
+	transparency := toTransparency(
+		toOpacity(baseColorTransparency) *
+			toOpacity(albedoTransparency) *
+			toOpacity(surfaceUnit(ii.material.Transparency)))
+
+	transparencyTexture := 0.0
+	if toOpacity(transparency) > 0 {
+		if mask := textureColorAtHit(ii, scene.TextureTypeTransparency); mask != nil {
+			transparencyTexture = surfaceUnit(mask.ChannelAverage())
+		}
 	}
+	transparency = toTransparency(toOpacity(transparencyTexture) * toOpacity(transparency))
+
+	return albedo, transparency
+}
+
+func toTransparency(opacity float64) float64 {
+	return 1 - opacity
+}
+
+func toOpacity(transparency float64) float64 {
+	return 1 - transparency
 }
 
 func processFacetStructureIntersection(ray *scene.Ray, facetStructure *scene.FacetStructure, ii *IntersectionInformation) {
@@ -1017,7 +1039,7 @@ func interpolateTriangleTextureCoordinate(texture *scene.FacetTexture, vertexWei
 	if (amountVertexTextureCoordinates > 0) && (amountVertexTextureCoordinates <= len(vertexWeights)) {
 		textureCoordinate := vec2.T{0, 0}
 
-		for i := 0; i < amountVertexTextureCoordinates; i++ {
+		for i := range amountVertexTextureCoordinates {
 			weightedTextureCoordinate := texture.Coordinates[i].Scaled(vertexWeights[i])
 			textureCoordinate.Add(&weightedTextureCoordinate)
 		}

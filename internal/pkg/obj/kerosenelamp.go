@@ -66,7 +66,8 @@ func NewKeroseneLamp(scale float64, emission float64, sootness float64) *scene.F
 
 func NewKeroseneLamp2(scale float64, emission float64, sootness float64) *scene.FacetStructure {
 	flameTexture := scene.NewTexture(floatimage.LoadOrPanic("textures/misc/kerosenelamp/kerosenelamp_flame_wave.png"), scene.TextureTypeAlbedo)
-	sootSmudgeTexture := scene.NewTexture(floatimage.LoadOrPanic("textures/misc/kerosenelamp/kerosenelamp_glass_wave_mod2.png"), scene.TextureTypeAlbedo)
+	//sootSmudgeTexture := scene.NewTexture(floatimage.LoadOrPanic("textures/misc/kerosenelamp/kerosenelamp_glass_wave_mod2.png"), scene.TextureTypeAlbedo)
+	sootSmudgeTexture := scene.NewTexture(floatimage.LoadOrPanic("textures/misc/kerosenelamp/kerosenelamp_glass_wave.png"), scene.TextureTypeAlbedo)
 
 	keroseneLamp := loadKeroseneLamp2(scale)
 	//keroseneLamp.RotateZ(&vec3.T{}, math.Pi/2.0)
@@ -85,17 +86,17 @@ func NewKeroseneLamp2(scale float64, emission float64, sootness float64) *scene.
 	flameMaterial := scene.NewMaterial().N("flame").
 		C(color.White).
 		T(1.0, false, scene.RefractionIndex_Air).
-		E(color.White, emission, false).
+		E(color.KelvinTemperatureColor2(2600), emission, false).
 		CP(flameTexture, &vec3.T{flameCenterBounds[0], flame.Bounds.Ymin, flameCenterBounds[2]}, vec3.UnitZ, (vec3.UnitY).Scaled(flame.Bounds.SizeY()*0.95), false)
 
 	glassMaterial := scene.NewMaterial().N("glass").
 		//C(color.NewColor(0.93, 0.94, 0.95)).
-		T(0.99, true, scene.RefractionIndex_Glass).
-		M(0, 0.01).
+		T(0.9999, true, scene.RefractionIndex_Glass).
+		M(0, 0.00001).
 		Attenuate(color.NewColor(0.85, 0.87, 0.90), scale*(4.0/30.0))
 
 	smudgedGlassMaterial := scene.NewMaterial().N("smudged_glass").
-		C(color.WhiteTransparent).
+		C(color.Black).
 		T(1.0-sootness, false, scene.RefractionIndex_Air).
 		M(0, 1.0).
 		CP(sootSmudgeTexture, &vec3.T{glassCenterBounds[0], glass.Bounds.Ymin, glassCenterBounds[2]}, vec3.UnitX, (vec3.UnitY).Scaled(glass.Bounds.SizeY()), false)

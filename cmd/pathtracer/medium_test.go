@@ -38,8 +38,8 @@ func TestCameraMediaFirstSegment(t *testing.T) {
 func TestCameraMediaRefraction(t *testing.T) {
 	for _, name := range []string{"glass to air", "glass through water to air", "global water through glass"} {
 		t.Run(name, func(t *testing.T) {
-			glass := scene.NewMaterial().M(0, 0).T(1, true, 1.5).Absorb(color.NewColor(0.1, 0.3, 0.7))
-			water := scene.NewMaterial().M(0, 0).T(1, true, scene.RefractionIndex_Water).Absorb(color.NewColor(0.08, 0.02, 0.01))
+			glass := scene.NewMaterial().C(color.WhiteTransparent).M(0, 0).T(1, true, 1.5).Absorb(color.NewColor(0.1, 0.3, 0.7))
+			water := scene.NewMaterial().C(color.WhiteTransparent).M(0, 0).T(1, true, scene.RefractionIndex_Water).Absorb(color.NewColor(0.08, 0.02, 0.01))
 			air := scene.NewMaterial().T(1, true, scene.RefractionIndex_Air)
 			camera := &scene.Camera{RenderType: scene.Pathtracing, InitialMedia: []*scene.Material{glass}}
 			frame := &scene.Frame{Camera: camera, SceneNode: &scene.SceneNode{}}
@@ -117,7 +117,7 @@ func TestCameraMediaRefraction(t *testing.T) {
 }
 
 func TestCameraMediaTotalInternalReflection(t *testing.T) {
-	glass := scene.NewMaterial().M(0, 0).T(1, true, 1.5).Absorb(color.NewColorGrey(0.2))
+	glass := scene.NewMaterial().C(color.WhiteTransparent).M(0, 0).T(1, true, 1.5).Absorb(color.NewColorGrey(0.2))
 	frame := &scene.Frame{
 		Camera: &scene.Camera{RenderType: scene.Pathtracing, RecursionDepth: 1, InitialMedia: []*scene.Material{glass}},
 		SceneNode: &scene.SceneNode{
@@ -135,8 +135,8 @@ func TestCameraMediaTotalInternalReflection(t *testing.T) {
 }
 
 func TestCameraMediaStackIsolation(t *testing.T) {
-	water := scene.NewMaterial().T(1, true, 1).Absorb(color.NewColor(math.Ln2, 0, 0))
-	glass := scene.NewMaterial().T(1, true, 1).Absorb(color.NewColor(0, math.Ln2, 0))
+	water := scene.NewMaterial().C(color.WhiteTransparent).T(1, true, 1).Absorb(color.NewColor(math.Ln2, 0, 0))
+	glass := scene.NewMaterial().C(color.WhiteTransparent).T(1, true, 1).Absorb(color.NewColor(0, math.Ln2, 0))
 	frame := &scene.Frame{
 		WorldMedium: scene.NewMaterial().T(1, true, 1),
 		Camera:      &scene.Camera{RenderType: scene.Pathtracing, RecursionDepth: 3, InitialMedia: []*scene.Material{water}},

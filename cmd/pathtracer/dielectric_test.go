@@ -42,7 +42,7 @@ func TestTracePathSmoothGlass(test *testing.T) {
 				if normalMapped {
 					glass = normalMappedTestMaterial(shadingNormal)
 				}
-				glass.M(0, 0).T(1, true, 1.5)
+				glass.C(color.WhiteTransparent).M(0, 0).T(1, true, 1.5)
 
 				// Exercise both interpolated vertex normals and texture-derived normals.
 				plane := orientationTestPlane(glass)
@@ -313,7 +313,7 @@ func TestSmoothGlassSharedEdge(test *testing.T) {
 // preserving local emission and the medium stack.
 func TestTracePathCriticalReflection(test *testing.T) {
 	for _, emissive := range []bool{false, true} {
-		glass := scene.NewMaterial().M(0, 0).T(1, true, 1)
+		glass := scene.NewMaterial().C(color.NewColorRGBA(1, 1, 1, 0.5)).M(0, 0).T(1, true, 1)
 		expectedRadiance := color.NewColor(0, 0, 0)
 		if emissive {
 			expectedRadiance = color.NewColor(0.2, 0.3, 0.4)
@@ -337,12 +337,14 @@ func TestTracePathCriticalReflection(test *testing.T) {
 		if boundary.heading != nil || boundary.fresnel != 1 {
 			test.Fatalf("invalid critical-angle fixture: %+v", boundary)
 		}
-		expectedRadiance = expectedRadiance.Copy()
+		expectedRadiance = expectedRadiance.Copy().Multiply(0.5)
 		expectedRadiance.R += 1
 		expectedRadiance.G += 1
 		expectedRadiance.B += 1
 
-		actualRadiance := traceTransmissionPath(ray, &scene.Camera{RenderType: scene.Pathtracing, RecursionDepth: 1}, sceneNode, 0, mediumStack)
+		// Choose the transmissive component, then probe the upper limit of the Fresnel draw.
+		random := scriptedScatterDraws(test, 0, math.Nextafter(1, 0))
+		actualRadiance := tracePathSampled(ray, &scene.Camera{RenderType: scene.Pathtracing, RecursionDepth: 1}, sceneNode, 0, mediumStack, random)
 		assertTransmissionColor(test, actualRadiance, expectedRadiance)
 		if stackStorage[1] != stackSentinel {
 			test.Fatal("rejected transmission changed the medium stack")
@@ -355,8 +357,8 @@ func TestTracePathCriticalReflection(test *testing.T) {
 func TestTracePathSmoothGlassNestedMedia(test *testing.T) {
 	for _, nested := range []bool{false, true} {
 		test.Run(fmt.Sprintf("nested=%t", nested), func(test *testing.T) {
-			glass := scene.NewMaterial().M(0, 0).T(1, true, 1.5)
-			water := scene.NewMaterial().M(0, 0).T(1, true, 1.33)
+			glass := scene.NewMaterial().C(color.WhiteTransparent).M(0, 0).T(1, true, 1.5)
+			water := scene.NewMaterial().C(color.WhiteTransparent).M(0, 0).T(1, true, 1.33)
 
 			// Record each boundary and the medium on both sides in traversal order.
 			boundaryMaterials := []*scene.Material{glass, glass}
@@ -422,7 +424,7 @@ func TestTracePathShadingFresnel(test *testing.T) {
 	for _, testCase := range testCases {
 		test.Run(testCase.name, func(test *testing.T) {
 			incomingDirection, shadingNormal := dielectricTestDirections(0, testCase.normalAngleDegrees)
-			glass := normalMappedTestMaterial(shadingNormal).M(0, 0).T(1, !testCase.thin, 1.5)
+			glass := normalMappedTestMaterial(shadingNormal).C(color.WhiteTransparent).M(0, 0).T(1, !testCase.thin, 1.5)
 			mediumStack := []*scene.Material{scene.NewMaterial().T(1, true, 1)}
 			incidentIndex, transmittedIndex := 1., 1.5
 			if testCase.inside {

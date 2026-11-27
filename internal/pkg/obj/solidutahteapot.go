@@ -2,6 +2,7 @@ package obj
 
 import (
 	"path/filepath"
+	"pathtracer/internal/pkg/color"
 	"pathtracer/internal/pkg/fileformat/wavefront"
 	"pathtracer/internal/pkg/scene"
 
@@ -23,41 +24,62 @@ func NewSolidUtahTeapot(scale float64, includeBody bool, includeLid bool) *scene
 
 	utahTeaPot.ScaleUniform(&vec3.Zero, scale/utahTeaPot.Bounds.Ymax)
 
-	// porcelainMaterial := scene.NewMaterial().
-	//	N("Porcelain material").
-	//	C(color.NewColorGrey(0.85)).
-	//	M(0, 0.1).
-	//	T(0.0, true, scene.RefractionIndex_Porcelain)
-
-	// glassMaterial := scene.NewMaterial().
-	// 	N("Glass material").
-	// 	C(color.NewColor(0.95, 0.95, 0.97), 1.0).
-	// 	M(0, 0.05).
-	// 	T(1.0, true, scene.RefractionIndex_Glass)
-
-	// utahTeaPot.ClearMaterials()
-	// utahTeaPot.Material = porcelainMaterial
+	utahTeaPot.ClearMaterials()
+	utahTeaPot.Material = porcelainMaterial()
 
 	return utahTeaPot
 }
 
 func NewTeacup(scale float64, includeCup bool, includeSaucer bool, includeSpoon bool) *scene.FacetStructure {
-	teacup := wavefront.ReadFacetStructureOrPanic(filepath.Join(ObjFileDir, "teacup.obj"))
+	teacupSaucerSpoon := wavefront.ReadFacetStructureOrPanic(filepath.Join(ObjFileDir, "teacup.obj"))
 
-	if !includeCup {
-		teacup.RemoveObjectsByName("teacup")
-	}
-	if !includeSaucer {
-		teacup.RemoveObjectsByName("saucer")
-	}
-	if !includeSpoon {
-		teacup.RemoveObjectsByName("spoon")
+	if includeCup {
+		teacup := teacupSaucerSpoon.GetFirstObjectByName("teacup")
+		teacup.ClearMaterials()
+		teacup.Material = porcelainMaterial()
+	} else {
+		teacupSaucerSpoon.RemoveObjectsByName("teacup")
 	}
 
-	teacup.CenterOn(&vec3.Zero)
-	teacup.Translate(&vec3.T{0, -teacup.Bounds.Ymin, 0})
+	if includeSaucer {
+		saucer := teacupSaucerSpoon.GetFirstObjectByName("saucer")
+		saucer.ClearMaterials()
+		saucer.Material = porcelainMaterial()
+	} else {
+		teacupSaucerSpoon.RemoveObjectsByName("saucer")
+	}
 
-	teacup.ScaleUniform(&vec3.Zero, scale/teacup.Bounds.Zmax)
+	if includeSpoon {
+		spoon := teacupSaucerSpoon.GetFirstObjectByName("spoon")
+		spoon.ClearMaterials()
+		spoon.Material = steelMaterial()
+	} else {
+		teacupSaucerSpoon.RemoveObjectsByName("spoon")
+	}
 
-	return teacup
+	teacupSaucerSpoon.CenterOn(&vec3.Zero)
+	teacupSaucerSpoon.Translate(&vec3.T{0, -teacupSaucerSpoon.Bounds.Ymin, 0})
+
+	teacupSaucerSpoon.ScaleUniform(&vec3.Zero, scale/teacupSaucerSpoon.Bounds.Zmax)
+
+	teacupSaucerSpoon.ClearMaterials()
+	teacupSaucerSpoon.Material = porcelainMaterial()
+
+	return teacupSaucerSpoon
+}
+
+func porcelainMaterial() *scene.Material {
+	return scene.NewMaterial().
+		N("Porcelain").
+		C(color.NewColorGrey(0.90)).
+		M(0, 0.02).
+		T(0.0, true, scene.RefractionIndex_Porcelain)
+}
+
+func steelMaterial() *scene.Material {
+	return scene.NewMaterial().
+		N("steel").
+		C(color.NewColorGrey(0.90)).
+		M(1.0, 0.03).
+		T(0.0, true, scene.RefractionIndex_Silver)
 }

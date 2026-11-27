@@ -215,54 +215,20 @@ func (s *serializer) initFrameCache(frameInformation *FrameInformation) error {
 			}
 
 			for _, t := range textures {
-				var textureImage *floatimage.FloatImage
+				kind := scene.TextureType(t.Type)
 
-				switch scene.TextureType(t.Type) {
-
-				case scene.TextureTypeAlbedo:
-					textureImage, err = s.resourceImage(t.ImageResourceIndex, true, nil)
-					if err != nil {
-						return fmt.Errorf("could not read resource albedo image %s: %w", file.Name, err)
-					}
-
-				case scene.TextureTypeMetallicness:
-					fallthrough
-
-				case scene.TextureTypeRoughness:
-					textureImage, err = s.resourceImage(t.ImageResourceIndex, false, nil)
-					if err != nil {
-						return fmt.Errorf("could not read resource image %s: %w", file.Name, err)
-					}
-
-				case scene.TextureTypeNormalMap:
-					fallthrough
-				case scene.TextureTypeNormalMap_OpenGL:
-					textureImage, err = s.resourceImage(t.ImageResourceIndex, false, convertFloatImageToNormalMapOpenGL)
-					if err != nil {
-						return fmt.Errorf("could not read resource normal map image %s: %w", file.Name, err)
-					}
-					t.Type = scene.TextureTypeNormalMap.String()
-
-				case scene.TextureTypeNormalMap_DirectX:
-					textureImage, err = s.resourceImage(t.ImageResourceIndex, false, convertFloatImageToNormalMapDirectX)
-					if err != nil {
-						return fmt.Errorf("could not read resource normal map image %s: %w", file.Name, err)
-					}
-					t.Type = scene.TextureTypeNormalMap.String()
-
-				default:
-					textureImage, err = s.resourceImage(t.ImageResourceIndex, false, nil)
-					if err != nil {
-						return fmt.Errorf("could not read resource image %s: %w", file.Name, err)
-					}
-				}
-
+				textureImage, err := s.resourceImage(t.ImageResourceIndex, kind)
 				if err != nil {
-					return err
+					return fmt.Errorf("could not read %s texture from %s: %w", kind, file.Name, err)
 				}
+
+				if kind == scene.TextureTypeNormalMap_OpenGL || kind == scene.TextureTypeNormalMap_DirectX {
+					kind = scene.TextureTypeNormalMap
+				}
+
 				s.st = append(s.st, &scene.Texture{
 					Image:         textureImage,
-					Type:          scene.TextureType(t.Type),
+					Type:          kind,
 					Interpolation: floatimage.Interpolation(t.Interpolation),
 					Strength:      t.Strength,
 				})
@@ -350,7 +316,7 @@ func (s *serializer) deserializeCamera(camera *Camera) (*scene.Camera, error) {
 	if camera == nil {
 		return nil, fmt.Errorf("frame camera is missing")
 	}
-	apertureImage, err := s.resourceImage(camera.ApertureShape, false, nil)
+	apertureImage, err := s.resourceImage(camera.ApertureShape, "")
 	if err != nil {
 		return nil, err
 	}

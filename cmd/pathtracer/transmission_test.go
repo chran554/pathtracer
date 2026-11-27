@@ -3,11 +3,123 @@ package main
 import (
 	"math"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/scene"
 	"testing"
 
+	"github.com/ungerik/go3d/float64/vec2"
 	"github.com/ungerik/go3d/float64/vec3"
 )
+
+func TestMaterialAlphaTransmission(t *testing.T) {
+	partial := color.NewColorRGBA(1, 1, 1, 0.25)
+	halfTexel := color.NewColorRGBA(1, 1, 1, 0.5)
+	for _, tc := range []struct {
+		name         string
+		base, texel  *color.Color
+		transparency float64
+		draw         float64
+		want         *color.Color
+	}{
+		{"zero transparency", color.White, color.White, 0, 0, color.Black},
+		{"full material transparency", color.White, color.White, 1, math.Nextafter(1, 0), color.White},
+		{"fully transparent base", color.WhiteTransparent, color.White, 0, math.Nextafter(1, 0), color.White},
+		{"fully transparent texel", color.White, color.WhiteTransparent, 0, math.Nextafter(1, 0), color.White},
+		{"missing base below threshold", nil, halfTexel, 0, 0.499999, color.White},
+		{"missing base above threshold", nil, halfTexel, 0, 0.500001, color.Black},
+		// Base alpha 0.25 and material transparency 0.8 leave 0.05 opacity.
+		{"no texel below threshold", partial, nil, 0.8, 0.949999, color.White},
+		{"no texel above threshold", partial, nil, 0.8, 0.950001, color.Black},
+		// A half-alpha texel halves that remaining opacity.
+		{"half-alpha texel below threshold", partial, halfTexel, 0.8, 0.974999, color.White},
+		{"half-alpha texel above threshold", partial, halfTexel, 0.8, 0.975001, color.Black},
+	} {
+		for _, wall := range []string{"thin", "solid"} {
+			t.Run(tc.name+"/"+wall, func(t *testing.T) {
+				// Matching indices remove Fresnel reflection. Only transmission can reach the light.
+				material := scene.NewMaterial().C(tc.base).T(tc.transparency, wall == "solid", 1)
+				if tc.texel != nil {
+					addTestProjection(material, scene.TextureTypeAlbedo, tc.texel)
+				}
+				assertDiscTransmission(t, material, tc.draw, tc.want)
+			})
+		}
+	}
+}
+
+func assertDiscTransmission(t *testing.T, material *scene.Material, draw float64, want *color.Color) {
+	t.Helper()
+	scn := scene.NewSceneNode().D(
+		scene.NewDisc(&vec3.Zero, &vec3.UnitZ, 1, material),
+		scene.NewDisc(&vec3.T{0, 0, -1}, &vec3.UnitZ, 1, scene.NewMaterial().E(color.White, 1, true)),
+	)
+	ray := &scene.Ray{Origin: &vec3.UnitZ, Heading: &vec3.T{0, 0, -1}}
+	camera := &scene.Camera{RenderType: scene.Pathtracing, RecursionDepth: 1}
+	media := []*scene.Material{{RefractionIndex: 1}}
+	got := tracePathSampled(ray, camera, scn, 0, media, func() float64 { return draw })
+	assertTransmissionColor(t, got, want)
+}
+
+func TestProjectedTransparencyMap(t *testing.T) {
+	for _, wall := range []string{"thin", "solid"} {
+		t.Run(wall, func(t *testing.T) {
+			material := scene.NewMaterial().C(color.NewColorRGBA(1, 1, 1, 0.25)).T(0.8, wall == "solid", 1)
+			addTestProjection(material, scene.TextureTypeAlbedo, color.NewColorRGBA(1, 1, 1, 0.5))
+			// The mask adds 0.5 * 0.5 of the remaining 0.025 opacity to transmission.
+			mask := addTestProjection(material, scene.TextureTypeTransparency, color.NewColorRGBA(0.25, 0.5, 0.75, 0))
+			mask.Texture.S(0.5)
+			assertDiscTransmission(t, material, 0.981249, color.White)
+			assertDiscTransmission(t, material, 0.981251, color.Black)
+
+			mask.Texture.Image.Fill(color.Black)
+			assertDiscTransmission(t, material, 0.974999, color.White)
+			assertDiscTransmission(t, material, 0.975001, color.Black)
+			mask.Texture.S(1).Image.Fill(color.White)
+			assertDiscTransmission(t, material, math.Nextafter(1, 0), color.White)
+
+			mask.RepeatU = false
+			mask.Origin = &vec3.UnitX // The hit lies outside the projection.
+			assertDiscTransmission(t, material, 0.974999, color.White)
+			assertDiscTransmission(t, material, 0.975001, color.Black)
+		})
+	}
+}
+
+func TestFacetUVTransmission(t *testing.T) {
+	for _, kind := range []scene.TextureType{scene.TextureTypeAlbedo, scene.TextureTypeTransparency} {
+		t.Run(kind.String(), func(t *testing.T) {
+			image := floatimage.NewFloatImage("transmission ramp", 2, 1)
+			image.SetPixel(0, 0, color.WhiteTransparent)
+			image.SetPixel(1, 0, color.Black)
+			material := scene.NewMaterial().C(color.White).T(0, true, 1)
+			addTestProjection(material, kind, color.Black) // The fallback projection contributes zero transparency.
+			plane := orientationTestPlane(material)
+			texture := scene.NewTexture(image, kind).I(floatimage.InterpolationBilinear)
+			draw := 0.5
+			if kind == scene.TextureTypeTransparency {
+				texture.S(0.5)
+				draw = 0.25
+			}
+			plane.Facets[0].Textures = []*scene.FacetTexture{{
+				Texture:     texture,
+				Coordinates: []*vec2.T{{0, 0}, {1, 0}, {0.5, 1}},
+			}}
+			scn := scene.NewSceneNode().FS(plane).D(
+				scene.NewDisc(&vec3.T{0, 0, -1}, &vec3.UnitZ, 10, scene.NewMaterial().E(color.White, 1, true)),
+			)
+			camera := &scene.Camera{RenderType: scene.Pathtracing, RecursionDepth: 1}
+			for _, hit := range []struct {
+				x    float64
+				want *color.Color
+			}{{-4, color.White}, {4, color.Black}} {
+				// The same draw transmits at u=0.3 and scatters back at u=0.7.
+				ray := &scene.Ray{Origin: &vec3.T{hit.x, 0, 1}, Heading: &vec3.T{0, 0, -1}}
+				got := tracePathSampled(ray, camera, scn, 0, []*scene.Material{{RefractionIndex: 1}}, func() float64 { return draw })
+				assertTransmissionColor(t, got, hit.want)
+			}
+		})
+	}
+}
 
 // TestRoughDielectricBoundary checks immediate escape against analytic Snell and Fresnel values.
 // t reports incorrect directions, Fresnel branching, and weights.
@@ -63,7 +175,7 @@ func TestRoughDielectricBoundary(t *testing.T) {
 func TestTraceRoughGlassSphere(t *testing.T) {
 	// Send a central ray through a flat entry microfacet. At the opposite pole,
 	// choose a 30-degree facet on exit. Only the predicted exit ray hits the lamp.
-	glass := scene.NewMaterial().M(0, 1).T(1, true, 1.5)
+	glass := scene.NewMaterial().C(color.WhiteTransparent).M(0, 1).T(1, true, 1.5)
 	exit, _ := dielectricTestReference(0, 30, 1.5, 1)
 	target := exit.Added(&vec3.T{0, 0, -1 - epsilonDistance})
 	scn := &scene.SceneNode{
@@ -115,7 +227,7 @@ func TestTracePathTransmissionRadiance(test *testing.T) {
 
 	for _, testCase := range testCases {
 		test.Run(testCase.name, func(test *testing.T) {
-			glass := scene.NewMaterial().M(0, 0).T(1, !testCase.thin, testCase.glassIndex)
+			glass := scene.NewMaterial().C(color.NewColorRGBA(1, 1, 1, 0.5)).M(0, 0).T(1, !testCase.thin, testCase.glassIndex)
 			if testCase.mirror {
 				glass.T(0, true, testCase.glassIndex).M(1, 0)
 			}
@@ -147,13 +259,14 @@ func TestTracePathTransmissionRadiance(test *testing.T) {
 					scene.NewMaterial().E(environmentRadiance, 1, true))},
 			}
 			camera := &scene.Camera{RenderType: scene.Pathtracing, RecursionDepth: 1}
-			actualRadiance := traceTransmissionPath(&scene.Ray{Origin: &rayOrigin, Heading: &rayHeading}, camera, sceneNode, 0, mediumStack)
+			// At these angles a draw of 0.25 selects the glass component and transmits whenever refraction is possible.
+			actualRadiance := tracePathSampled(&scene.Ray{Origin: &rayOrigin, Heading: &rayHeading}, camera, sceneNode, 0, mediumStack, func() float64 { return 0.25 })
 
 			// PBRT 9.5.2 scales transmitted RGB; add local emission afterward and retain opacity.
 			expectedRadiance := color.NewColor(
-				float64(environmentRadiance.R)*testCase.expectedRadianceScale+float64(localEmission.R),
-				float64(environmentRadiance.G)*testCase.expectedRadianceScale+float64(localEmission.G),
-				float64(environmentRadiance.B)*testCase.expectedRadianceScale+float64(localEmission.B))
+				float64(environmentRadiance.R)*testCase.expectedRadianceScale+0.5*float64(localEmission.R),
+				float64(environmentRadiance.G)*testCase.expectedRadianceScale+0.5*float64(localEmission.G),
+				float64(environmentRadiance.B)*testCase.expectedRadianceScale+0.5*float64(localEmission.B))
 			assertTransmissionColor(test, actualRadiance, expectedRadiance)
 		})
 	}
@@ -168,11 +281,11 @@ func TestTracePathTransmissionRoundTrip(test *testing.T) {
 			name = "nested glass and water"
 		}
 		test.Run(name, func(test *testing.T) {
-			glass := scene.NewMaterial().M(0, 0).T(1, true, 1.5)
+			glass := scene.NewMaterial().C(color.WhiteTransparent).M(0, 0).T(1, true, 1.5)
 			surfaces := []*scene.Sphere{scene.NewSphere(&vec3.T{}, 2, glass)}
 			recursionDepth := 2
 			if nested {
-				water := scene.NewMaterial().M(0, 0).T(1, true, 1.33)
+				water := scene.NewMaterial().C(color.WhiteTransparent).M(0, 0).T(1, true, 1.33)
 				surfaces = append(surfaces, scene.NewSphere(&vec3.T{}, 1, water))
 				recursionDepth = 4
 			}
@@ -192,7 +305,7 @@ func TestTracePathTransmissionRoundTrip(test *testing.T) {
 }
 
 // assertTransmissionColor compares actualColor with expectedColor, requiring
-// RGB differences below 1e-6 and equal opacity. Both colors must be non-nil.
+// RGB differences below 1e-6 and equal toOpacity. Both colors must be non-nil.
 func assertTransmissionColor(test *testing.T, actualColor, expectedColor *color.Color) {
 	test.Helper()
 
@@ -207,8 +320,8 @@ func assertTransmissionColor(test *testing.T, actualColor, expectedColor *color.
 	}
 }
 
-// traceTransmissionPath selects the transmitted branch where it has nonzero
-// probability. It leaves Fresnel and PDF weights intact; TIR still reflects.
+// traceTransmissionPath selects transmission for fully transmissive dielectrics
+// whenever refraction is possible. Fresnel and PDF weights apply as usual.
 func traceTransmissionPath(ray *scene.Ray, camera *scene.Camera, scn *scene.SceneNode, depth int, media []*scene.Material) *color.Color {
 	return tracePathSampled(ray, camera, scn, depth, media, func() float64 { return math.Nextafter(1, 0) })
 }

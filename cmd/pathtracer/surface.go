@@ -57,9 +57,10 @@ func opaqueReflectionProbability(fresnel, roughness, incident, transmitted float
 }
 
 // sampleSurface chooses one bounce and returns its direction, RGB weight, and type.
-// material supplies the dielectric transmission fraction and boundary type.
+// material supplies the boundary type and refractive index.
 // roughness is the perceptual roughness after texture modulation.
 // metallicness is the conductor fraction after texture modulation.
+// transparency is the effective dielectric transmission fraction at the hit.
 // base is the linear RGB surface color after texture modulation.
 // geometric is the unit geometric normal facing the incident medium.
 // shading is the unit shading normal facing the incident ray.
@@ -68,9 +69,8 @@ func opaqueReflectionProbability(fresnel, roughness, incident, transmitted float
 // transmitted is the refractive index on the other side or inside a thin wall.
 // random supplies independent uniform draws in [0, 1).
 // The result includes RGB throughput with component sampling probabilities accounted for.
-func sampleSurface(material *scene.Material, roughness float64, metallicness float64, base [3]float64, geometric, shading, incoming *vec3.T, incident, transmitted float64, random func() float64) surfaceSample {
+func sampleSurface(material *scene.Material, roughness, metallicness, transparency float64, base [3]float64, geometric, shading, incoming *vec3.T, incident, transmitted float64, random func() float64) surfaceSample {
 	metallicness = surfaceUnit(metallicness)
-	transparency := surfaceUnit(material.Transparency)
 	roughness = surfaceUnit(roughness)
 
 	for channel := range base {
@@ -88,7 +88,7 @@ func sampleSurface(material *scene.Material, roughness float64, metallicness flo
 	}
 
 	choice = (choice - metallicness) / (1 - metallicness)
-	if (transparency > 0) && (choice < transparency) {
+	if choice < transparency {
 		return sampleTransmissiveDielectric(material, roughness, geometric, shading, incoming, incident, transmitted, random)
 	}
 
