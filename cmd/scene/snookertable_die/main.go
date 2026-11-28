@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/rand"
 	"pathtracer/internal/pkg/color"
+	"pathtracer/internal/pkg/floatimage"
 	"pathtracer/internal/pkg/obj"
 	"pathtracer/internal/pkg/renderfile"
 	"pathtracer/internal/pkg/scene"
@@ -95,11 +96,13 @@ func main() {
 	poolTable.CenterOn(&vec3.Zero)
 	poolTable.Scale(&vec3.Zero, &vec3.T{356.9, 1, 177.8})
 	textureTableCloth := scene.NewTextureReferenceOrPanic("textures/snooker/cloth02.png", scene.TextureTypeAlbedo)
+	textureTableClothNormalMap := scene.NewTextureReferenceOrPanic("textures/snooker/cloth02_normal.png", scene.TextureTypeNormalMap_DirectX).I(floatimage.InterpolationBicubic)
 	poolTable.Material = scene.NewMaterial().
 		C(color.White).
 		M(0, 0.9).
 		T(0.0, false, scene.RefractionIndex_Plastic).
-		PP(textureTableCloth, &vec3.T{2.5, 0, 2.5}, vec3.T{5, 0, 0}, vec3.T{0, 0, 5})
+		PP(textureTableCloth, &vec3.T{2.5, 0, 2.5}, vec3.T{5, 0, 0}, vec3.T{0, 0, 5}).
+		PP(textureTableClothNormalMap, &vec3.T{2.5, 0, 2.5}, vec3.T{5, 0, 0}, vec3.T{0, 0, 5})
 
 	var balls = [][]SnookerBall{
 		{SnookerBall01, SnookerBall02, SnookerBall03, SnookerBall04, SnookerBall05, SnookerBall06, SnookerBall07, SnookerBall08},
@@ -183,7 +186,7 @@ func NewSnookerBall(ball SnookerBall) *scene.Sphere {
 
 	radius := diameter / 2
 	ballTexture := scene.NewTextureReferenceOrPanic(fmt.Sprintf("textures/snooker/wpi/%s_wpi.png", ball), scene.TextureTypeAlbedo)
-	scratchTexture := scene.NewTextureReferenceOrPanic("textures/normal maps/ScratchedPaintedMetal01_MR_4K/ScratchedPaintedMetal01_4K_Normal.png", scene.TextureTypeNormalMap_DirectX)
+	scratchTexture := scene.NewTextureReferenceOrPanic("textures/PBR/ScratchedPaintedMetal01_MR_4K/ScratchedPaintedMetal01_4K_Normal.png", scene.TextureTypeNormalMap_DirectX)
 
 	scratchTexture.S(0.15)
 
