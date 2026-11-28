@@ -240,7 +240,7 @@ func ConvertImageToFloatImage(imageName string, textureImage img.Image) *FloatIm
 	return image
 }
 
-func WriteImage(filename string, floatImage *FloatImage) {
+func WritePngImage(filename string, floatImage *FloatImage) {
 	width := floatImage.Width
 	height := floatImage.Height
 

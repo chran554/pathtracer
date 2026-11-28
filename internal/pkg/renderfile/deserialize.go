@@ -67,6 +67,7 @@ func (s *serializer) deserializeAnimation(animationInformation *AnimationInforma
 		AnimationName:      animationInformation.Name,
 		Width:              animationInformation.Width,
 		Height:             animationInformation.Height,
+		WriteExrImageFile:  animationInformation.WriteExrImageFile,
 		WriteRawImageFile:  animationInformation.WriteRawImageFile,
 		WriteImageInfoFile: animationInformation.WriteImageInfoFile,
 	}

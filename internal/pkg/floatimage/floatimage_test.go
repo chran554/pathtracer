@@ -231,7 +231,7 @@ func TestWriteImage(t *testing.T) {
 	tmpFile := "test_write.png"
 	defer os.Remove(tmpFile)
 
-	WriteImage(tmpFile, fi)
+	WritePngImage(tmpFile, fi)
 
 	_, err := os.Stat(tmpFile)
 	assert.NoError(t, err)

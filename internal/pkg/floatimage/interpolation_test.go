@@ -63,7 +63,7 @@ func TestInterpolation_Save(t *testing.T) {
 			}
 
 			outputPath := filepath.Join(renderDir, testCase.file)
-			WriteImage(outputPath, dst)
+			WritePngImage(outputPath, dst)
 
 			_, err := os.Stat(outputPath)
 			assert.NoError(t, err, "Output file should exist: %s", outputPath)

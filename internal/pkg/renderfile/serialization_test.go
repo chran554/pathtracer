@@ -2,6 +2,7 @@ package renderfile
 
 import (
 	"archive/zip"
+	"encoding/json"
 	"image"
 	"image/png"
 	"os"
@@ -16,6 +17,59 @@ import (
 	"github.com/ungerik/go3d/float64/vec3"
 	"github.com/vmihailenco/msgpack/v5"
 )
+
+func TestAnimationImageOutputFlags(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		exr, raw bool
+	}{
+		{"neither", false, false},
+		{"exr", true, false},
+		{"raw", false, true},
+		{"both", true, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			animation := scene.NewAnimation(tc.name, 2, 2, 1, tc.exr, false)
+			require.False(t, animation.WriteRawImageFile)
+			animation.WriteRawImageFile = tc.raw
+			path := filepath.Join(t.TempDir(), "scene.render.zip")
+			require.NoError(t, WriteRenderFile(path, animation))
+
+			archive, err := zip.OpenReader(path)
+			require.NoError(t, err)
+			defer archive.Close()
+			entry, err := archive.Open("animation.json")
+			require.NoError(t, err)
+			defer entry.Close()
+			var metadata map[string]any
+			require.NoError(t, json.NewDecoder(entry).Decode(&metadata))
+			require.Equal(t, tc.exr, metadata["write-exr-image-file"])
+
+			restored, err := ReadRenderFile(path)
+			require.NoError(t, err)
+			require.Equal(t, tc.exr, restored.WriteExrImageFile)
+			require.Equal(t, tc.raw, restored.WriteRawImageFile)
+		})
+	}
+}
+
+func TestLegacyRawImageOutputFlag(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "legacy.render.zip")
+	file, err := os.Create(path)
+	require.NoError(t, err)
+	archive := zip.NewWriter(file)
+	entry, err := archive.Create("animation.json")
+	require.NoError(t, err)
+	_, err = entry.Write([]byte(`{"name":"legacy","width":2,"height":2,"write-raw-image-file":true}`))
+	require.NoError(t, err)
+	require.NoError(t, archive.Close())
+	require.NoError(t, file.Close())
+
+	restored, err := ReadRenderFile(path)
+	require.NoError(t, err)
+	require.True(t, restored.WriteRawImageFile)
+	require.False(t, restored.WriteExrImageFile)
+}
 
 func TestSharedAlbedoAndTransparencyImage(t *testing.T) {
 	dir := t.TempDir()

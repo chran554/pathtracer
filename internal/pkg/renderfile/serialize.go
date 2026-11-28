@@ -62,6 +62,7 @@ func (s *serializer) serializeAnimation(animation *scene.Animation) (*AnimationI
 		Name:               animation.AnimationName,
 		Width:              animation.Width,
 		Height:             animation.Height,
+		WriteExrImageFile:  animation.WriteExrImageFile,
 		WriteRawImageFile:  animation.WriteRawImageFile,
 		WriteImageInfoFile: animation.WriteImageInfoFile,
 		FramesInformation:  framesInformation,

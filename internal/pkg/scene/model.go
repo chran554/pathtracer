@@ -54,11 +54,12 @@ type Animation struct {
 	Frames             []*Frame
 	Width              int
 	Height             int
+	WriteExrImageFile  bool
 	WriteRawImageFile  bool
 	WriteImageInfoFile bool
 }
 
-func NewAnimation(name string, pixelWidth int, pixelHeight int, magnification float64, rawFile bool, infoFile bool) *Animation {
+func NewAnimation(name string, pixelWidth int, pixelHeight int, magnification float64, exrFile bool, infoFile bool) *Animation {
 	width := int(float64(pixelWidth) * magnification)
 	height := int(float64(pixelHeight) * magnification)
 
@@ -74,7 +75,7 @@ func NewAnimation(name string, pixelWidth int, pixelHeight int, magnification fl
 		AnimationName:      name,
 		Width:              width,
 		Height:             height,
-		WriteRawImageFile:  rawFile,
+		WriteExrImageFile:  exrFile,
 		WriteImageInfoFile: infoFile,
 	}
 }

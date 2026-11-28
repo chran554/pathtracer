@@ -10,6 +10,7 @@ type AnimationInformation struct {
 	Name               string              `json:"name"`
 	Width              int                 `json:"width"`
 	Height             int                 `json:"height"`
+	WriteExrImageFile  bool                `json:"write-exr-image-file"`
 	WriteRawImageFile  bool                `json:"write-raw-image-file"`
 	WriteImageInfoFile bool                `json:"write-image-info-file"`
 	FramesInformation  []*FrameInformation `json:"framesinformation"`

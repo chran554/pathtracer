@@ -241,7 +241,24 @@ func writeRenderedImage(animation *scene.Animation, frame *scene.Frame, rendered
 	if err != nil {
 		panic("could not write text information for frame \"" + frameInformation.imageFilename + "\":" + err.Error())
 	}
-	floatimage.WriteImage(animationFrameFilename, renderedPixelData)
+	floatimage.WritePngImage(animationFrameFilename, renderedPixelData)
+
+	var frameInfoText string
+	if animation.WriteExrImageFile || animation.WriteImageInfoFile {
+		frameInfoText = frameInformationPreRenderText(frameInformation) + "\n" + frameInformationPostRenderText(frameInformation)
+	}
+
+	if animation.WriteExrImageFile {
+		filename := filepath.Join(animationDirectory, frame.Filename+".exr")
+		metadata := &floatimage.EXRMetaData{
+			CaptureTime: frameInformation.renderEndTime,
+			Comments:    frameInfoText,
+			Owner:       "Pathtracer",
+		}
+		if err := floatimage.WriteEXRImage(filename, renderedPixelData, frameInformation.samplesPerPixel, metadata); err != nil {
+			panic(fmt.Errorf("could not write EXR image %q: %w", filename, err))
+		}
+	}
 
 	if animation.WriteRawImageFile {
 		animationFrameRawFilename := filepath.Join(animationDirectory, frame.Filename+".praw")
@@ -250,7 +267,6 @@ func writeRenderedImage(animation *scene.Animation, frame *scene.Frame, rendered
 
 	if animation.WriteImageInfoFile {
 		frameInfoTextFilename := filepath.Join(animationDirectory, frame.Filename+".txt")
-		frameInfoText := fmt.Sprintf("%s\n%s", frameInformationPreRenderText(frameInformation), frameInformationPostRenderText(frameInformation))
 		err = os.WriteFile(frameInfoTextFilename, []byte(frameInfoText), 0644)
 		if err != nil {
 			panic("could not write text information for frame \"" + frameInformation.imageFilename + "\":" + err.Error())
